@@ -13,8 +13,6 @@ tags:
 * content
 {:toc}
 
-# 使用Motrix接管Linux下Firefox的下载
-
 ## 安装Motrix
 
 首先去[Motrix官网](https://motrix.app/)下载AppImage文件
