@@ -11,7 +11,7 @@ type: page
 
 ## 关于我
 
-<iframe src="http://githubbadge.appspot.com/zhullyb?s=1" style="border: 0;height: 128px;width: 200px;overflow: hidden;" frameBorder="0"></iframe>
+​		Hey，我是**竹林里有冰(zhullyb)**，一只高中生，目前是crDroid的小米8官方维护者。
 
 ## 联系我
 
