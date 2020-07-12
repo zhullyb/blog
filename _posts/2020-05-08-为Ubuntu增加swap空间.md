@@ -1,16 +1,18 @@
 ---
 layout:     post
 title:      为Ubuntu增加swap空间
-subtitle:   什么？内存条太贵了买不起？拿swap顶上！！！
 date:       2020-05-08
 author:     竹林里有冰
-header-img: img/post-bg-ios9-web.jpg
-catalog: true
+categories: Shell
 tags:
     - Linux
     - 技术文档
     - 教程
 ---
+
+* content
+{:toc}
+
 ## 什么是swap？
 
 swap就是交换分区，你可以理解为虚拟内存，在内存不够用的时候暂时拿硬盘顶上，会影响运行速度，因此在电脑运行的时候一般不会主动使用swap，而会优先使用物理内存。但是在某些特定的场合，swap真的能够救你一命！

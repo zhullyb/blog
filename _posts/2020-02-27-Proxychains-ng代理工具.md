@@ -1,17 +1,19 @@
 ---
 layout:     post
 title:      Proxychains-ng代理工具
-subtitle:   使用Procychains-ng作为代理工具，灵活便捷
 date:       2020-02-27
 author:     竹林里有冰
-header-img: img/post-bg-ios9-web.jpg
-catalog: true
+categories: Shell
 tags:
     - Linux
     - 技术文档
     - 教程
     - 网络
 ---
+
+* content
+{:toc}
+
 # 代理详解
 
 本篇中，我使用的是[electron-ssr](https://github.com/shadowsocksrr/electron-ssr)，配合Proxychains-ng获得了完美体验！

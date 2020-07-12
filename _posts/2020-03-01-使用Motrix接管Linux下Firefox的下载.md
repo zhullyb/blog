@@ -1,17 +1,18 @@
 ---
 layout:     post
 title:      使用Motrix接管Linux下Firefox的下载
-subtitle:   什么？你说Linux下没有能够接管Firxfox的下载器
 date:       2020-03-01
 author:     竹林里有冰
-header-img: img/post-bg-ios9-web.jpg
-catalog: true
 tags:
     - Linux
     - 技术文档
     - 教程
     - 网络
 ---
+
+* content
+{:toc}
+
 # 使用Motrix接管Linux下Firefox的下载
 
 ## 安装Motrix
