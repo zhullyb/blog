@@ -1,7 +1,7 @@
 #!/usr/bin/venv python
 
 """
-本程序需要导入easygui模块和time模块
+本程序需要额外下载easygui模块
 """
 
 import time
