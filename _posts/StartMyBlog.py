@@ -1,4 +1,4 @@
-#!/usr/bin/venv python
+#!/usr/bin/python3
 
 """
 本程序需要额外下载easygui模块
