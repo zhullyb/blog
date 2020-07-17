@@ -16,7 +16,7 @@ type: page
 ## 联系我
 
 * GitHub：[zhullyb](https://github.com/zhullyb)
-* email：5435486@qq.com
+* Email：5435486@qq.com
 * [Weibo](https://weibo.com/u/6141899043)
 * [知乎](https://www.zhihu.com/people/zhu-lin-li-you-bing)
 
