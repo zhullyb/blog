@@ -24,7 +24,7 @@ tags:
 
 下载[electron-ssr](https://github.com/shadowsocksrr/electron-ssr/releases),这里建议下载[AppImage](https://github.com/shadowsocksrr/electron-ssr/releases/download/v0.2.7/electron-ssr-0.2.7.AppImage)格式的包，不会有任何的依赖问题。
 
-```
+```shell
 cd xxx #xxx指的是源码所在路径
 sudo chmod +x electron-ssr-0.2.7.AppImage
 ```
@@ -41,23 +41,23 @@ sudo chmod +x electron-ssr-0.2.7.AppImage
 
 这里需要git支持，为了保险起见可以再安装一遍
 
-```
+```shell
 sudo apt install git
 ```
 
 接着clone对应的仓库
 
-```
+```shell
 git clone https://github.com/rofl0r/proxychains-ng.git --depth=1 && cd proxychains-ng
 ```
 
 完成以后即可使用su权限进行编译
 
-```
+```shell
 sudo su      #获取su权限
 ```
 
-```
+```shell
 ./configure --prefix=/usr --sysconfdir=/etc
 make 
 make install
@@ -66,7 +66,7 @@ make install-config
 
 ### 配置Proxychains-ng
 
-```
+```shell
 sudo nano /etc/proxychains.conf
 ```
 
@@ -91,7 +91,7 @@ Ctrl+X离开编辑器
 
 在最末尾行加上(tizi可以改为自己喜欢的字符串)
 
-```
+```shell
 alias tizi='proxychains4'
 ```
 
@@ -101,7 +101,7 @@ e.g.```tizi curl www.google.com```
 
 同样，我们也可以在```.bashrc```后面再加一行（daili也可以改为自己喜欢的字符串）
 
-```
+```shell
 alias daili='proxychains4 -q /bin/bash'
 ```
 
@@ -109,7 +109,7 @@ alias daili='proxychains4 -q /bin/bash'
 
 使用如下命令即可一键添加tizi、daili两个别名
 
-```
+```shell
 echo “alias tizi='proxychains4'
 alias daili='proxychains4 -q /bin/bash'" >> ~/.bashrc
 ```

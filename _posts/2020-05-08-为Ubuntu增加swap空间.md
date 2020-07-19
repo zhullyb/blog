@@ -21,7 +21,7 @@ swap就是交换分区，你可以理解为虚拟内存，在内存不够用的�
 
 我们可以通过一下命令查看swap和物理内存的大小
 
-```
+```shell
 free -m
 ```
 
@@ -33,14 +33,14 @@ free -m
 
 ## 创建swap路径
 
-```
+```shell
 mkdir swap
 cd swap
 ```
 
 ## 添加swap文件
 
-```swift
+```shell
 sudo dd if=/dev/zero of=sfile bs=1024 count=1000000
 ```
 
@@ -48,36 +48,34 @@ Ps：count=1000000参数代表数量，这个正好是1g，直接增大1g
 
 ## 转化为swap文件
 
-```
+```shell
 sudo mkswap sfile
 ```
 
 ## 激活swap文件
 
-```
+```shell
 sudo swapon sfile
 ```
 
 # 到这里，我们就成功添加了swap，只不过是临时的，如需永久添加swap，那么需要修改fstab文件
 
-```
+```shell
 sudo nano /etc/fstab
 ```
 
 在最后一行加上
 
-```
+```shell
 # swap
 /home/xxx(你的用户名)/swap/sfile none swap sw 0 0
 ```
 
-```
-Ctrl+O保存，回车保存文件名，Ctrl+X退出
-```
+Ps: Ctrl+O保存，回车保存文件名，Ctrl+X退出
 
 # 方法二：重新分配已有swap(20200508新增)
 
-```
+```shell
 cd /
 sudo su
 swapoff /swapfile

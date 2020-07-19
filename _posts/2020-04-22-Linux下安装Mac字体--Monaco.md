@@ -19,13 +19,13 @@ tags:
 
 ### 适用于大多发行版：
 
-```
+```shell
 cd /usr/share/fonts/truetype/ && sudo mkdir ttf-monaco && cd ttf-monaco/ && sudo wget https://gitee.com/zhullyb/bin/raw/master/Monaco_Linux.ttf && sudo mkfontdir && cd .. && fc-cache
 ```
 
 ### Arch系：
 
-```
+```shell
 yay -S ttf-monaco
 ```
 

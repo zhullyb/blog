@@ -20,13 +20,13 @@ tags:
 
 #### ShadowsocksR
 
-```
+```powershell
 set http_proxy=http://127.0.0.1:1080
 set https_proxy=http://127.0.0.1:1080
 ```
 #### v2ray
 
-```
+```powershell
 set http_proxy=http://127.0.0.1:10808
 set https_proxy=http://127.0.0.1:10808
 ```
@@ -35,14 +35,14 @@ set https_proxy=http://127.0.0.1:10808
 
 #### ShadowsocksR
 
-```
+```powershell
 git config --global http.proxy http://127.0.0.1:1080
 git config --global https.proxy http://127.0.0.1:1080
 ```
 
 #### v2ray
 
-```
+```powershell
 git config --global http.proxy http://127.0.0.1:10808
 git config --global https.proxy http://127.0.0.1:10808
 ```
