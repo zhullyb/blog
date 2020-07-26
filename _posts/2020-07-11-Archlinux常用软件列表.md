@@ -20,7 +20,7 @@ tags:
 清华aur的帮助界面打开总是跳转404，不清楚什么情况，我在此记录下yay配置清华源的命令
 
 ```
-yay --aururl "https://aur.tuna,tsinghua.edu.cn" --save
+yay --aururl "https://aur.tuna.tsinghua.edu.cn" --save
 ```
 
 ### pacman:
