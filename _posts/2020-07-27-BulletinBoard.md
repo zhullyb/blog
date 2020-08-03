@@ -7,9 +7,17 @@ categories:
 tags:       
 ---
 
+### 群公告
 
+QQ群：[1002951427](https://jq.qq.com/?_wv=1027&k=3pIv122w)
 
-### 常用下载链接
+TG群：[@BamiceGroup](https://t.me/BamiceGroup)
+
+**找我？直接群里吼我就行了，平常TG群待得比较多，因为TG的Linux客户端占用资源比较小**
+
+### 刷机资源
+
+#### 常用下载链接
 
 [Magisk](https://github.com/topjohnwu/Magisk/releases)
 
@@ -27,7 +35,7 @@ tags:
 
 [OrangeFox](https://sourceforge.net/projects/orangefox/files/dipper/)
 
-### 搬运&镜像
+#### 搬运&镜像
 
 [Magisk](https://zhullyb.lanzous.com/b03yvo3ja)
 
