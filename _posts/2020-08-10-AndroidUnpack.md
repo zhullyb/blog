@@ -15,8 +15,4 @@ sdat2img system.transfer.list system.new.dat
 mount system.img {known_path}
 ```
 
-[brotli]: https://github.com/google/brotli
-[sdat2img]: https://github.com/xpirt/sdat2img
-
-
-
+Get brotli [here](https://github.com/google/brotli) & sdat2img [here](https://github.com/xpirt/sdat2img)
