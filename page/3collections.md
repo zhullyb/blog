@@ -11,6 +11,7 @@ type: page
 
 ### 工具类
 [PDF转换](https://pdfcandy.com/)
+[TPD Quick Fix](https://ptstpd.lenovo.com.cn/home#/index)
 
 ### 资源类
 [Firefox完整包下载地址](https://www.mozilla.org/zh-CN/firefox/installer-help/?channel=release&installer_lang=zh-CN)
