@@ -21,4 +21,4 @@ tags:       Rom
 
 ![](https://od.zhullyb.workers.dev/?file=/PicBed/Screenshot_20200826-050158524.jpg)
 
-![](https://od.zhullyb.workers.dev/?file=/PicBed/2020-08-26_05-04.png)
+![](https://od.zhullyb.workers.dev/?file=/PicBed/vlcsnap-2020-08-26-05h27m38s527.png)
