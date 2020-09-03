@@ -22,7 +22,7 @@ type: page
 
 ## 友情链接
 
-[ALK阿狸控](https://alkalikong.github.io) \| [PedorZ的杂物间](https://pedorz.top)
+[ALK阿狸控](https://alkalikong.github.io) \| [PedroZ的杂物间](https://pedroz.top)
 
 ## Comments
 
