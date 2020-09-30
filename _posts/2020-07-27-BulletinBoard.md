@@ -35,6 +35,8 @@ TG群：[@BamiceGroup](https://t.me/BamiceGroup)
 
 [OrangeFox](https://sourceforge.net/projects/orangefox/files/dipper/)
 
+[Bitgapps](https://bitgapps.cf/arm64/)
+
 #### 搬运&镜像
 
 [Magisk](https://zhullyb.lanzous.com/b03yvo3ja)
