@@ -36,3 +36,7 @@ YA18K-0WY8P-H85DY-L4NZG-X7RAD
 ##### 16系列激活码：
 
 ZF3R0-FHED2-M80TY-8QYGC-NPKYF
+
+#### [IDM破解](https://carrotchou.lanzous.com/b0gwopzc)
+
+#### [Winrar烈火汉化版](https://carrotchou.lanzous.com/b0gy490d)
