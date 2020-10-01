@@ -7,7 +7,7 @@
 import time
 import easygui
 date = time.strftime("%Y-%m-%d", time.localtime())
-title = easygui.enterbox("请输入urllink")
+urllink = easygui.enterbox("请输入urllink")
 title = easygui.enterbox("请输入文章标题")
 categories = easygui.enterbox("请输入文章分类")
 tags = easygui.enterbox("请输入文章标签")
