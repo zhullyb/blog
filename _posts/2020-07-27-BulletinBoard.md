@@ -19,6 +19,14 @@ TG群：[@BamiceGroup](https://t.me/BamiceGroup)
 
 #### 常用下载链接
 
+##### 搬运&镜像
+
+[Magisk](https://zhullyb.lanzous.com/b03yvo3ja)
+
+[Firmware](https://mirrors.bfsu.edu.cn/osdn//storage/g/x/xi/xiaomifirmwareupdater/)
+
+##### 初始下载链接
+
 [Magisk](https://github.com/topjohnwu/Magisk/releases)
 
 [Firmware](https://xiaomifirmwareupdater.com/)
@@ -36,9 +44,3 @@ TG群：[@BamiceGroup](https://t.me/BamiceGroup)
 [OrangeFox](https://sourceforge.net/projects/orangefox/files/dipper/)
 
 [Bitgapps](https://bitgapps.cf/arm64/)
-
-#### 搬运&镜像
-
-[Magisk](https://zhullyb.lanzous.com/b03yvo3ja)
-
-[Firmware](https://mirrors.bfsu.edu.cn/osdn//storage/g/x/xi/xiaomifirmwareupdater/)
