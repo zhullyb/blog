@@ -23,3 +23,12 @@ tags:       Rom
 
 我这边确实收到了很多用户的反馈，说我们的类原生11打不开微信，目前情况未知，但是可以确定的是，刷了gapps的用户都没有出现这个问题，因此你可以尝试下输入gapps，如果对于gapps不怎么使用的用户我这边推荐你刷bitgapps，刷完以后不用打开放在那里就行。
 
+## 这个包带不带gapps/firmware/vendor，我该用什么版本的firmware？
+
+带不带vendor或者firmware其实很容易判断，打开zip包看一眼就知道了，如图：
+
+![图为小米8带gapps带firmware的derpfest](https://od.zhullyb.workers.dev/?file=/PicBed/IMG_20201113_213237.jpg)
+
+至于没有firmware的包直接用最新开发版的firmware就可以了。
+
+带不带gapps可以直接从包的大小看出，带gapps的包比不带gapps的包要大上个两三百MB，像PixelExperience带了完整全家桶的还会更大。对于小米8的类原生来说你可以直接以包是否大于1G来作为判断依据，大于1G的基本上都是带gapps的。
