@@ -12,27 +12,27 @@ tags:       UOS Linux 引导 Grub 大佬对话笔记
 
 以下内容来自2020年12月22日晚上的大佬对话，非本人原创。
 
-吃瓜群众:
+**吃瓜群众:**
 
 话说UOS到底有没有Secure boot签名啊
 
-某dalao:
+**某dalao:**
 
 用的是ubuntu的
 
-吃瓜群众:
+**吃瓜群众:**
 
 哪来的签名？
 
-某dalao:
+**某dalao:**
 
 这就不得不讲到另一个槽点了s
 
-吃瓜群众:
+**吃瓜群众:**
 
 ubuntu给他们签？
 
-某dalao:
+**某dalao:**
 
 不不不，用的是ubuntu签好名的那个binary
 
