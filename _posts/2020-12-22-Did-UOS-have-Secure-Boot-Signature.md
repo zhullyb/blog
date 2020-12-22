@@ -23,7 +23,7 @@ tags:       UOS Linux 引导 Grub 大佬对话笔记
 
 **吃瓜群众:**
 
-**哪来的签名**？
+> 哪来的签名？
 
 **某dalao:**
 
@@ -32,7 +32,8 @@ tags:       UOS Linux 引导 Grub 大佬对话笔记
 
 **吃瓜群众:**
 
-**ubuntu**给他们签？
+> ubuntu给他们签？
+>
 
 **某dalao:**
 
