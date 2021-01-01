@@ -27,7 +27,7 @@ Manjaro是一款基于Archlinux的滚动发行版，部分软件同样基于上�
 
 ### 接下来就是正文
 
-#### Both Archlinux and Manjaro don't suit a Linux beginner
+#### Both Archlinux and Manjaro do not suit a Linux beginner
 
 Archlinux和Manjaro都是激进的滚动发行版，作为一个滚动发行版都会有滚坏的风险，这就要求用户有一定的Linux使用基础，能够多关注更新动态，在系统罢工后有修复系统的能力，因此我不会给小白推荐Archlinux/Manjaro这样的发行版（虽说能够用纯cli界面安装Archlinux的用户其实已经有一定的水平了）。
 
