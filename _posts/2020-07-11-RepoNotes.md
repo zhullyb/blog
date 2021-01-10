@@ -18,6 +18,12 @@ tags:
 在```源码路径/.repo```下搜索tmp_pack
 将搜索结果中出现的所有文件全部删除
 
+以下命令仅供参考
+
+```bash
+rm -rf */*/*/*/objects/pack/tmp_pack_*
+```
+
 ### repo自动同步
 
 ##### 下载脚本
