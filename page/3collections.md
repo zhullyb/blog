@@ -19,9 +19,19 @@ type: page
 [TPD Quick Fix](https://ptstpd.lenovo.com.cn/home#/index)
 
 ### 资源类
-#### [Firefox完整包下载地址](https://www.mozilla.org/zh-CN/firefox/installer-help/?channel=release&installer_lang=zh-CN)
+[Firefox最新国际版完整包下载地址](https://www.mozilla.org/zh-CN/firefox/installer-help/?channel=release&installer_lang=zh-CN)
 
-#### [VmwareWorkstationPro官方下载](https://www.vmware.com/products/workstation-pro/workstation-pro-evaluation.html)
+[Firefox国际版FTP服务器](http://ftp.mozilla.org/pub/firefox/releases/)
+
+[VLC](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc/last/)
+
+[vlc安卓版](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc-android/)
+
+[IDM破解](https://carrotchou.lanzous.com/b0gwopzc)
+
+[Winrar烈火汉化版](https://carrotchou.lanzous.com/b0gy490d)
+
+[VmwareWorkstationPro官方下载](https://www.vmware.com/products/workstation-pro/workstation-pro-evaluation.html)
 
 ##### 15系列激活码：
 
@@ -40,7 +50,3 @@ YA18K-0WY8P-H85DY-L4NZG-X7RAD
 ##### 16系列激活码：
 
 ZF3R0-FHED2-M80TY-8QYGC-NPKYF
-
-#### [IDM破解](https://carrotchou.lanzous.com/b0gwopzc)
-
-#### [Winrar烈火汉化版](https://carrotchou.lanzous.com/b0gy490d)
