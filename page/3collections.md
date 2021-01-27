@@ -19,7 +19,7 @@ type: page
 [TPD Quick Fix](https://ptstpd.lenovo.com.cn/home#/index)
 
 ### 资源类
-[Firefox最新国际版完整包下载地址](https://www.mozilla.org/zh-CN/firefox/installer-help/?channel=release&installer_lang=zh-CN)
+[Firefox最新国际版完整包下载地址](https://www.mozilla.org/zh-CN/firefox/all/#product-desktop-release)
 
 [Firefox国际版FTP服务器](http://ftp.mozilla.org/pub/firefox/releases/)
 
