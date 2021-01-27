@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd (Português)/Journal (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd_Português_Journal_Português rootpage-Systemd_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd (Português)/Journal (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../pt/Systemd.html" title="Systemd (Português)">Systemd (Português)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Systemd/Journal.html" title="Systemd/Journal">systemd/Journal</a>. Data da última tradução: 2019-10-13. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Systemd/Journal&amp;diff=0&amp;oldid=583479">alterações</a> na versão em inglês.</div>
+<p><i>systemd</i> tem o seu próprio sistema de registro chamado de o journal e, portanto, a execução de uma daemon <code>syslog</code> não é mais necessário. Para ler o registro, utilize:
+</p>
+<pre># journalctl
+</pre>
+<p>No Arch Linux, o diretório <code>/var/log/journal/</code> faz parte do pacote <i>systemd</i> e o journal (quando <code>Storage=</code> está definido para <code>auto</code> em <code>/etc/systemd/journald.conf</code>) vai escrever para <code>/var/log/journal/</code>. Se você ou algum programa excluir esse diretório, systemd <b>não</b> vai recriá-lo automaticamente e, em vez disso,vai escrever seus logs em <code>/run/systemd/journal</code> em uma forma não persistente. Porém, a pasta será recriada quando você definir <code>Storage=persistent</code> e <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Reiniciar">reiniciar</a> <code>systemd-journald.service</code> (ou reinicializar o sistema).
+</p>
+<p>O journal do systemd classifica mensagens por <a href="#N%C3%ADvel_de_prioridade">nível de prioridade</a> e <a href="#Facilidade">facilidade</a>. A classificação de registro de logs corresponde ao clássico protocolo do <a href="https://en.wikipedia.org/wiki/pt:Syslog" class="extiw" title="wikipedia:pt:Syslog">Syslog</a> (<a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424">RFC 5424</a>).
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#N%C3%ADvel_de_prioridade"><span class="tocnumber">1</span> <span class="toctext">Nível de prioridade</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Facilidade"><span class="tocnumber">2</span> <span class="toctext">Facilidade</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Filtrando_sa%C3%ADda"><span class="tocnumber">3</span> <span class="toctext">Filtrando saída</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Limite_no_tamanho_do_journal"><span class="tocnumber">4</span> <span class="toctext">Limite no tamanho do journal</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Limpar_arquivos_de_journal_manualmente"><span class="tocnumber">5</span> <span class="toctext">Limpar arquivos de journal manualmente</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Journald_em_conjunto_com_o_syslog"><span class="tocnumber">6</span> <span class="toctext">Journald em conjunto com o syslog</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Encaminhar_journald_para_/dev/tty12"><span class="tocnumber">7</span> <span class="toctext">Encaminhar journald para /dev/tty12</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Especificar_um_journal_diferente_para_ver"><span class="tocnumber">8</span> <span class="toctext">Especificar um journal diferente para ver</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="N.C3.ADvel_de_prioridade"></span><span class="mw-headline" id="Nível_de_prioridade">Nível de prioridade</span>
+</h2>
+<p>Um código de severidade do syslog (em systemd chamado de prioridade) é usado para marcar a importância de uma mensagem <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424#section-6.2.1">RFC 5424 Seção 6.2.1</a>.
+</p>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<th>Valor</th>
+<th>Severidade</th>
+<th>Palavra-chave</th>
+<th>Descrição</th>
+<th>Exemplos
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>Emergência</td>
+<td>emerg</td>
+<td>Sistema não está usável</td>
+<td>BUG de kernel severo, núcleo do systemd despejado.<br>Esse nível não deve ser usado por aplicativos.
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Alerta</td>
+<td>alert</td>
+<td>Deve ser corrigido imediatamente</td>
+<td>Subsistema vital parou de funcionar. Perda de dados. <br><code>kernel: BUG: unable to handle kernel paging request at ffffc90403238ffc</code>.
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Crítico</td>
+<td>crit</td>
+<td>Condições críticas</td>
+<td>Travamentos, despejos de núcleo. Como flash familiar:<br><code>systemd-coredump[25319]: Process 25310 (plugin-containe) of user 1000 dumped core</code><br>Falha no aplicativo de sistema principal, como o X11.
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Erro</td>
+<td>err</td>
+<td>Condições de erro</td>
+<td>Erro não severo relatado:<br><code>kernel: usb 1-3: 3:1: cannot get freq at ep 0x84</code>,<br><code>systemd[1]: Failed unmounting /var.</code>,<br><code>libvirtd[1720]: internal error: Failed to initialize a valid firewall backend</code>.
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Aviso</td>
+<td>warning</td>
+<td>Pode indicar que um erro vai ocorrer se uma ação não for tomada.</td>
+<td>Um sistema de arquivos não raiz tem apenas 1GB livre.<br><code>org.freedesktop. Notifications[1860]: (process:5999): Gtk-WARNING **: Locale not supported by C library. Using the fallback 'C' locale</code>.
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Nota</td>
+<td>notice</td>
+<td>Eventos que são incomuns, mas não condições de erro.</td>
+<td>
+<code>systemd[1]: var.mount: Directory /var to mount over is not empty, mounting anyway</code>. <code>gcr-prompter[4997]: Gtk: GtkDialog mapped without a transient parent. This is discouraged</code>.
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Informacional</td>
+<td>info</td>
+<td>Mensagens de operação normais que exigem nenhuma ação.</td>
+<td>
+<code>lvm[585]:   7 logical volume(s) in volume group "archvg" now active</code>.
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Depuração</td>
+<td>debug</td>
+<td>Informações úteis para desenvolvedores para depurar o aplicativo.</td>
+<td>
+<code>kdeinit5[1900]: powerdevil: Scheduling inhibition from ":1.14" "firefox" with cookie 13 and reason "screen"</code>.
+</td>
+</tr>
+</tbody>
+</table>
+<p>Se você não encontrar uma mensagem no nível de prioridade esperado, pesquise também alguns níveis acima e abaixo: essas regras são recomendações, e o desenvolvedor do aplicativo afetado pode ter uma percepção diferente da importância do problema.
+</p>
+<h2><span class="mw-headline" id="Facilidade">Facilidade</span></h2>
+<p>Um código de facilidade syslog é usado para especificar o tipo de programa que está registrando a mensagem <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424#section-6.2.1">RFC 5424 Seção 6.2.1</a>.
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Código de facilidade</th>
+<th>Palavra-chave</th>
+<th>Descrição</th>
+<th>Informação
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>kern</td>
+<td>mensagens de kernel
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>user</td>
+<td>mensagens de nível de usuário
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>mail</td>
+<td>sistema de correio</td>
+<td>O POSIX arcaico ainda tem suporte e é por vezes usado (para mais <span class="plainlinks archwiki-template-man" title="$ man 1 mail"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mail.1">mail(1)</a></span>)
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>daemon</td>
+<td>daemons de sistemas</td>
+<td>Todos os daemons, incluindo systemd e seus subsistemas
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>auth</td>
+<td>mensagens de segurança/autorização</td>
+<td>Também monitora a facilidade 10
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>syslog</td>
+<td>mensagens geradas internamente pelo syslogd</td>
+<td>Padronizado para syslog, não sendo usado pelo systemd (veja facilidade 3)
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>lpr</td>
+<td>subsistema de impressora de linha (subsistema arcaico)
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>news</td>
+<td>subsistema de notícias de rede (subsistema arcaico)
+</td>
+</tr>
+<tr>
+<td>8</td>
+<td>uucp</td>
+<td>subsistema UUCP (subsistema arcaico)
+</td>
+</tr>
+<tr>
+<td>9</td>
+<td></td>
+<td>daemon de relógio</td>
+<td>systemd-timesyncd
+</td>
+</tr>
+<tr>
+<td>10</td>
+<td>authpriv</td>
+<td>mensagens de segurança/autorização</td>
+<td>Também monitora a facilidade 4
+</td>
+</tr>
+<tr>
+<td>11</td>
+<td>ftp</td>
+<td>daemon FTP
+</td>
+</tr>
+<tr>
+<td>12</td>
+<td>-</td>
+<td>subsistema NTP
+</td>
+</tr>
+<tr>
+<td>13</td>
+<td>-</td>
+<td>auditoria de log
+</td>
+</tr>
+<tr>
+<td>14</td>
+<td>-</td>
+<td>alerta de log
+</td>
+</tr>
+<tr>
+<td>15</td>
+<td>cron</td>
+<td>daemon de agendamento
+</td>
+</tr>
+<tr>
+<td>16</td>
+<td>local0</td>
+<td>uso local 0  (local0)
+</td>
+</tr>
+<tr>
+<td>17</td>
+<td>local1</td>
+<td>uso local 1  (local1)
+</td>
+</tr>
+<tr>
+<td>18</td>
+<td>local2</td>
+<td>uso local 2  (local2)
+</td>
+</tr>
+<tr>
+<td>19</td>
+<td>local3</td>
+<td>uso local 3  (local3)
+</td>
+</tr>
+<tr>
+<td>20</td>
+<td>local4</td>
+<td>uso local 4  (local4)
+</td>
+</tr>
+<tr>
+<td>21</td>
+<td>local5</td>
+<td>uso local 5  (local5)
+</td>
+</tr>
+<tr>
+<td>22</td>
+<td>local6</td>
+<td>uso local 6  (local6)
+</td>
+</tr>
+<tr>
+<td>23</td>
+<td>local7</td>
+<td>uso local 7  (local7)
+</td>
+</tr>
+</tbody>
+</table>
+<p>Então, facilidades que é útil monitorar: 0,1,3,4,9,10,15.
+</p>
+<h2>
+<span id="Filtrando_sa.C3.ADda"></span><span class="mw-headline" id="Filtrando_saída">Filtrando saída</span>
+</h2>
+<p><i>journalctl</i> permite filtrar a saída por campos específicos. Esteja ciente de que, se houver muitas mensagens para exibir ou filtrar um grande intervalo de tempo, a saída desse comando poderá ser atrasada por algum tempo.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Sendo o journal armazenado em um formato binário, o conteúdo das mensagens armazenadas não é modificado. Isso significa que ele é visível com <i>strings</i>, por exemplo, para recuperação em um ambiente que não tenha <i>systemd</i> instalado. Exemplo de comando:
+<pre>$ strings /mnt/arch/var/log/journal/af4967d77fba44c6b093d0e9862f6ddd/system.journal | grep -i <i>mensagem</i></pre>
+</div>
+<p>Exemplos:
+</p>
+<ul>
+<li>Mostrar todas mensagens desta inicialização: <pre># journalctl -b</pre> No entanto, muitas vezes, alguém está interessado em mensagens que não são da atual, mas da inicialização anterior (por exemplo, se uma falha irrecuperável de sistema ocorrer). Isso é possível através do parâmetro de deslocamento opcional da opção <code>-b</code>: <code>journalctl -b -0</code> mostra mensagens da inicialização atual, <code>journalctl -b -1</code> da inicialização anterior, <code>journalctl -b -2</code> da segunda anterior e por aí vai – você pode ver a lista de inicializações com seus números usando <code>journalctl --list-boots</code>. Veja <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span> para descrição completa, a semântica é muito mais poderosa.</li>
+<li>Mostrar todas as mensagens da data (e hora opcional): <pre># journalctl --since="2012-10-30 18:17:16"</pre>
+</li>
+<li>Mostrar todas as mensagens desde 20 minutos atrás: <pre># journalctl --since "20 min ago"</pre>
+</li>
+<li>Seguir novas mensagens: <pre># journalctl -f</pre>
+</li>
+<li>Mostrar novas mensagens por um executável específico: <pre># journalctl /usr/lib/systemd/systemd</pre>
+</li>
+<li>Mostrar todas as mensagens por um processo específico: <pre># journalctl _PID=1</pre>
+</li>
+<li>Mostrar todas as mensagens por uma unit específica: <pre># journalctl -u man-db.service</pre>
+</li>
+<li>Mostrar o <i>ring buffer</i> do kernel: <pre># journalctl -k</pre>
+</li>
+<li>Mostrar apenas mensagens de prioridade de erro, crítico e alerta <pre># journalctl -p err..alert</pre> Números também podem ser usados, <code>journalctl -p 3..1</code>. Se somente um número/uma palavra-chave usado(a), <code>journalctl -p 3</code> - todos os níveis de prioridade maiores também são incluídos.</li>
+<li>Mostrar equivalente a auth.log filtrando na facilidade do syslog: <pre># journalctl SYSLOG_FACILITY=10</pre>
+</li>
+<li>Se o diretório do journal (por padrão, localizado sob <code>/var/log/journal</code>) contém quantidade imensa de dados de log, então <code>journalctl</code> pode levar vários minutos filtrando a saída. Você pode acelerar significativamente usando a opção <code>--file</code> para forçar o <code>journalctl</code> a procurar apenas no journal mais recente: <pre># journalctl --file /var/log/journal/*/system.journal -f</pre>
+</li>
+</ul>
+<p>Veja <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span>, <span class="plainlinks archwiki-template-man" title="$ man 7 systemd.journal-fields"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.journal-fields.7">systemd.journal-fields(7)</a></span> ou a <a rel="nofollow" class="external text" href="http://0pointer.de/blog/projects/journalctl.html">publicação de blogue</a> do  Lennart para detalhes.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Por padrão, <i>journalctl</i> trunca linhas maiores que a largura da tela, mas em alguns casos pode ser melhor habilitar <i>wrapping</i> em vez de trucamento'. Isso pode ser controlado pela <a href="../pt/Environment_variables.html" class="mw-redirect" title="Variável de ambiente">variável de ambiente</a> <code>SYSTEMD_LESS</code>, que contém opções passadas ao <a href="../pt/Core_utilities.html#Essenciais" class="mw-redirect" title="Utilitários principais">less</a> (o paginador padrão) e usa como padrão <code>FRSXMK</code> (veja <span class="plainlinks archwiki-template-man" title="$ man 1 less"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/less.1">less(1)</a></span> e <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span> para detalhes).
+<p>Ao omitir a opção <code>S</code>, a saída estará sob <i>wrap</i> em vez de truncamento. Por exemplo, inicie <i>journalctl</i> da seguinte forma:
+</p>
+<pre>$ SYSTEMD_LESS=FRXMK journalctl
+</pre>
+Se você quiser definir esse comportamento como padrão, <a href="../pt/Environment_variables.html#Por_usu%C3%A1rio" class="mw-redirect" title="Variável de ambiente">exporte</a> a variável a partir de <code>~/.bashrc</code> ou <code>~/.zshrc</code>.</div>
+<h2><span class="mw-headline" id="Limite_no_tamanho_do_journal">Limite no tamanho do journal</span></h2>
+<p>Se o journal é persistente (não volátil), seu tamanho limite é definido para um valor padrão de 10% do tamanho do respectivo sistema de arquivos, mas limitado a 4 GB. Por exemplo, com o <code>/var/log/journal</code> localizado em uma partição de 20 GB, o journal pode usar até 2 GB. Em uma partição de 50 GB, ela usaria no máximo até 4 GB.
+</p>
+<p>O tamanho máximo do journal persistente pode ser controlado removendo o comentário e alterando o seguinte:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SystemMaxUse=50M</pre>
+<p>Também é possível usar o mecanismo de substituição de configuração de snippets de <i>drop-in</i>, em vez de editar o arquivo de configuração global. Neste caso, não esqueça de colocar as sobrescrições no cabeçalho <code>[Journal]</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf.d/00-journal-size.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Journal]
+SystemMaxUse=50M</pre>
+<p><a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Reinicie">Reinicie</a> o <code>systemd-journald.service</code> após alterar essa configuração para aplicar imediatamente o novo limite.
+</p>
+<p>Veja <span class="plainlinks archwiki-template-man" title="$ man 5 journald.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journald.conf.5">journald.conf(5)</a></span> para mais informações.
+</p>
+<h2><span class="mw-headline" id="Limpar_arquivos_de_journal_manualmente">Limpar arquivos de journal manualmente</span></h2>
+<p>Os arquivos de journal podem ser removidos globalmente de <code>/var/log/journal/</code> usando, por exemplo, <code>rm</code> ou podem ser aparados de acordo com vários critérios usando <code>journalctl</code> . Exemplos:
+</p>
+<ul>
+<li>Remova arquivos de journal armazenados até que o espaço em disco que eles usam fique abaixo de 100 MB: <pre># journalctl --vacuum-size=100M</pre>
+</li>
+<li>Faça com que todos os arquivos de diário não contenham dados com mais de 2 semanas. <pre># journalctl --vacuum-time=2weeks</pre>
+</li>
+</ul>
+<p>Veja <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span> para mais informações.
+</p>
+<h2><span class="mw-headline" id="Journald_em_conjunto_com_o_syslog">Journald em conjunto com o syslog</span></h2>
+<p>Compatibilidade com uma implementação clássica, sem journald, do <a href="../en/Syslog-ng.html" title="Syslog-ng">syslog</a> pode ser fornecida deixando o <i>systemd</i> encaminhar  todas as mensagens pelo soquete <code>/run/systemd/journal/syslog</code>. Para fazer funcionar o daemon do syslog com o journal, ele tem que associar a este soquete em vez de <code>/dev/log</code> (<a rel="nofollow" class="external text" href="http://lwn.net/Articles/474968/">anúncio oficial</a>).
+</p>
+<p>O <code>journald.conf</code> padrão para encaminhar para o soquete é <code>ForwardToSyslog=no</code> para evitar sobrecarga de sistema, porque <a href="../en/Rsyslog.html" title="Rsyslog">rsyslog</a> ou <a href="../en/Syslog-ng.html" title="Syslog-ng">syslog-ng</a> obtêm as mensagens do journal <a rel="nofollow" class="external text" href="https://lists.freedesktop.org/archives/systemd-devel/2014-August/022295.html#journald">eles mesmo</a>. 
+</p>
+<p>Veja <a href="../en/Syslog-ng.html#Overview" title="Syslog-ng">Syslog-ng#Overview</a> e <a href="../en/Syslog-ng.html#syslog-ng_and_systemd_journal" title="Syslog-ng">Syslog-ng#syslog-ng and systemd journal</a> e <a href="../en/Rsyslog.html" title="Rsyslog">rsyslog</a>, para detalhes sobre a configuração.
+</p>
+<h2>
+<span id="Encaminhar_journald_para_.2Fdev.2Ftty12"></span><span class="mw-headline" id="Encaminhar_journald_para_/dev/tty12">Encaminhar journald para /dev/tty12</span>
+</h2>
+<p>Crie um <a href="#Editando_units_fornecidas">diretório de <i>drop-in</i></a><sup>[<a href="../pt/Help:Procedures.html#Corrigir_links_quebrados_de_se%C3%A7%C3%B5es" class="mw-redirect" title="Help:Procedimentos">link quebrado</a>: seção inválida]</sup> <code>/etc/systemd/journald.conf.d</code> e crie um arquivo <code>fw-tty12.conf</code> nele:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf.d/fw-tty12.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Journal]
+ForwardToConsole=yes
+TTYPath=/dev/tty12
+MaxLevelConsole=info</pre>
+<p>Então, <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Reinicie">reinicie</a> <code>systemd-journald.service</code>.
+</p>
+<h2><span class="mw-headline" id="Especificar_um_journal_diferente_para_ver">Especificar um journal diferente para ver</span></h2>
+<p>Pode ser necessário verificar os logs de outro sistema que esteja inativo na água, como a inicialização de um sistema ativo para recuperar um sistema de produção. Nesse caso, pode-se montar o disco em, p. ex., <code>/mnt</code> e especificar o caminho do journal via <code>-D</code>/<code>--directory</code>, assim:
+</p>
+<pre>$ journalctl -D <i>/mnt</i>/var/log/journal -xe
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../pt/Category:Logging.html" title="Category:Logging (Português)">Logging (Português)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd_(Portugu%C3%AAs)/Journal_(Portugu%C3%AAs)&amp;oldid=628034">https://wiki.archlinux.org/index.php?title=Systemd_(Português)/Journal_(Português)&amp;oldid=628034</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 1 August 2020, at 22:16.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

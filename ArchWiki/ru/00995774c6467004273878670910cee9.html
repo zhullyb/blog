@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Power management (Русский)/Suspend and hibernate (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Power_management_Русский_Suspend_and_hibernate_Русский rootpage-Power_management_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Power management (Русский)/Suspend and hibernate (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Ссылки по теме</p>
+<ul>
+<li><a href="../en/Uswsusp.html" title="Uswsusp">Uswsusp</a></li>
+<li><a href="../en/ArchWiki:Archive.html" class="mw-redirect" title="TuxOnIce">TuxOnIce</a></li>
+<li><a href="../ru/Systemd.html" title="Systemd (Русский)">systemd (Русский)</a></li>
+<li><a href="../en/Power_management.html" title="Power management">Power management</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Power_management/Suspend_and_hibernate.html" title="Power management/Suspend and hibernate">Power management/Suspend and hibernate</a>. Дата последней синхронизации: 22 июля 2017. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Power_management/Suspend_and_hibernate&amp;diff=0&amp;oldid=482651">изменения</a>.</div>
+<p>В настоящее время существует три метода приостановки работы компьютера: <b>suspend to RAM</b> обычно называемая просто <b>suspend</b>(приостановка, ждущий режим, сон, STR, S3 ), <b>suspend to disk</b> известный как <b>hibernate</b>( гибернация, спящий режим, STD, S4 ), и <b>hybrid suspend</b>( гибридная приостановка, гибридный спящий режим, иногда применяется название <b>suspend to both</b>):
+</p>
+<ul><li>
+<b>Suspend to RAM</b> отключает питание большинства частей компьютера, кроме ОЗУ, что требуется для восстановления состояния машины. Из-за большой экономии энергии рекомендуется, чтобы ноутбуки автоматически входили в этот режим, когда компьютер работает от батарей, и крышка закрыта или пользователь неактивен в течение некоторого времени.</li></ul>
+<ul><li>
+<b>Suspend to disk</b> метод сохраняет состояние машины на диске <a href="../ru/Swap.html" title="Swap (Русский)">Swap (Русский)</a> и полностью отключает компьютер, потребления электроэнергии нет. Когда устройство включается, состояние восстанавливается.</li></ul>
+<ul><li>
+<b>Suspend to both</b> сохраняет состояние машины на диске в свопе, но не выключает ее. Вместо этого  выполняется обычная приостановка в ОЗУ. Поэтому, если батарея не разряжена, система может возобновиться из ОЗУ. Если батарея разряжена, система может быть возобновлена с диска, что намного медленнее, чем возобновление работы из ОЗУ, но состояние машины не будет потеряно.</li></ul>
+<p>Существует несколько низкоуровневых интерфейсов, обеспечивающих базовые функции, а также некоторые интерфейсы высокого уровня, обеспечивающие трюки для обработки проблемных аппаратных драйверов / модулей ядра (например, повторная инициализация видеокарты).
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%D0%9D%D0%B8%D0%B7%D0%BA%D0%BE%D1%83%D1%80%D0%BE%D0%B2%D0%BD%D0%B5%D0%B2%D1%8B%D0%B5_%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81%D1%8B"><span class="tocnumber">1</span> <span class="toctext">Низкоуровневые интерфейсы</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#kernel_(swsusp)"><span class="tocnumber">1.1</span> <span class="toctext">kernel (swsusp)</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#uswsusp"><span class="tocnumber">1.2</span> <span class="toctext">uswsusp</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%D0%98%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81%D1%8B_%D0%B2%D1%8B%D1%81%D0%BE%D0%BA%D0%BE%D0%B3%D0%BE_%D1%83%D1%80%D0%BE%D0%B2%D0%BD%D1%8F"><span class="tocnumber">2</span> <span class="toctext">Интерфейсы высокого уровня</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#systemd"><span class="tocnumber">2.1</span> <span class="toctext">systemd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#%D0%93%D0%B8%D0%B1%D0%B5%D1%80%D0%BD%D0%B0%D1%86%D0%B8%D1%8F"><span class="tocnumber">3</span> <span class="toctext">Гибернация</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#%D0%9F%D1%80%D0%BE_%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%80_%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB%D0%B0/%D1%84%D0%B0%D0%B9%D0%BB%D0%B0_%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%87%D0%BA%D0%B8"><span class="tocnumber">3.1</span> <span class="toctext">Про размер раздела/файла подкачки</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#%D0%9D%D0%B5%D0%BE%D0%B1%D1%85%D0%BE%D0%B4%D0%B8%D0%BC%D1%8B%D0%B5_%D0%BF%D0%B0%D1%80%D0%B0%D0%BC%D0%B5%D1%82%D1%80%D1%8B_%D1%8F%D0%B4%D1%80%D0%B0"><span class="tocnumber">3.2</span> <span class="toctext">Необходимые параметры ядра</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#%D0%93%D0%B8%D0%B1%D0%B5%D1%80%D0%BD%D0%B0%D1%86%D0%B8%D1%8F_%D0%B2_%D1%84%D0%B0%D0%B9%D0%BB_%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%87%D0%BA%D0%B8"><span class="tocnumber">3.2.1</span> <span class="toctext">Гибернация в файл подкачки</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10"><a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_initramfs"><span class="tocnumber">3.3</span> <span class="toctext">Настройка initramfs</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%D0%98%D1%81%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BF%D1%80%D0%BE%D0%B1%D0%BB%D0%B5%D0%BC"><span class="tocnumber">4</span> <span class="toctext">Исправление проблем</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#ACPI_OS_NAME"><span class="tocnumber">4.1</span> <span class="toctext">ACPI_OS_NAME</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#%D0%9F%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F%D0%BC_VAIO"><span class="tocnumber">4.2</span> <span class="toctext">Пользователям VAIO</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#%D0%96%D0%B4%D1%83%D1%89%D0%B8%D0%B9/%D0%A1%D0%BF%D1%8F%D1%89%D0%B8%D0%B9_%D1%80%D0%B5%D0%B6%D0%B8%D0%BC_%D0%BD%D0%B5_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%D0%B5%D1%82_%D0%B8%D0%BB%D0%B8_%D1%81%D0%B1%D0%BE%D0%B8%D1%82"><span class="tocnumber">4.3</span> <span class="toctext">Ждущий/Спящий режим не работает или сбоит</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Wake-on-LAN"><span class="tocnumber">4.4</span> <span class="toctext">Wake-on-LAN</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Instantaneous_wakeups_from_suspend"><span class="tocnumber">4.5</span> <span class="toctext">Instantaneous wakeups from suspend</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id=".D0.9D.D0.B8.D0.B7.D0.BA.D0.BE.D1.83.D1.80.D0.BE.D0.B2.D0.BD.D0.B5.D0.B2.D1.8B.D0.B5_.D0.B8.D0.BD.D1.82.D0.B5.D1.80.D1.84.D0.B5.D0.B9.D1.81.D1.8B"></span><span class="mw-headline" id="Низкоуровневые_интерфейсы">Низкоуровневые интерфейсы</span>
+</h2>
+<p>Хотя эти интерфейсы могут использоваться напрямую, рекомендуется использовать какой-либо из <a href="#%D0%98%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81%D1%8B_%D0%B2%D1%8B%D1%81%D0%BE%D0%BA%D0%BE%D0%B3%D0%BE_%D1%83%D1%80%D0%BE%D0%B2%D0%BD%D1%8F">#Интерфейсы высокого уровня</a> для ждущего / спящего режима. Использование низкоуровневых интерфейсов напрямую существенно быстрее, чем использование любого интерфейса высокого уровня, поскольку запуск всех хуков  перед и после режима приостановки требует времени, но хуки могут правильно устанавливать аппаратные часы, восстанавливать беспроводное соединение и т.д.
+</p>
+<p><br>
+</p>
+<h3>
+<span id="kernel_.28swsusp.29"></span><span class="mw-headline" id="kernel_(swsusp)">kernel (swsusp)</span>
+</h3>
+<p>Самый простой подход для входа в режим сна заключается в прямом информировании встроенного программного кода ядра (swsusp); точный метод и состояние зависят от уровня аппаратной поддержки. В современных ядрах основным механизмом переключения режимов является запись соответствующих значений в <code>/sys/power/state</code>.
+</p>
+<p>Cмотрите <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/power/states.txt">документацию</a> для подробностей.
+</p>
+<h3><span class="mw-headline" id="uswsusp">uswsusp</span></h3>
+<p>Uswsusp ('Userspace Software Suspend') представляет собой оболочку ядерного механизма приостановки в ОЗУ, которая выполняет некоторые манипуляции с графическим адаптером из пользовательского пространства перед приостановкой и после возобновления.
+</p>
+<p>Смотрите основную статью <a href="../en/Uswsusp.html" title="Uswsusp">Uswsusp</a>.
+</p>
+<h2>
+<span id=".D0.98.D0.BD.D1.82.D0.B5.D1.80.D1.84.D0.B5.D0.B9.D1.81.D1.8B_.D0.B2.D1.8B.D1.81.D0.BE.D0.BA.D0.BE.D0.B3.D0.BE_.D1.83.D1.80.D0.BE.D0.B2.D0.BD.D1.8F"></span><span class="mw-headline" id="Интерфейсы_высокого_уровня">Интерфейсы высокого уровня</span>
+</h2>
+<p>Конечной целью этих пакетов является предоставление программ( двоичных файлов/скриптов), которые могут быть вызваны для выполнения приостановки компьютера. Фактическая привязка их к кнопкам питания, щелчкам меню или событиям крышки ноутбука обычно предоставляется другим инструментам. Чтобы автоматически приостановить работу при определенных событиях, таких как закрытие крышки ноутбука или процент истощения батареи, вам может потребоваться запустить <a href="../en/Acpid.html" title="Acpid">Acpid</a>.
+</p>
+<h3><span class="mw-headline" id="systemd">systemd</span></h3>
+<p><a href="../ru/Systemd.html" title="Systemd (Русский)">systemd</a> предоставляет собственные команды для ждущего, спящего и гибридного режима приостановки, смотрите <a href="../en/Power_management.html#Power_management_with_systemd" title="Power management">Power management#Power management with systemd</a> для деталей. Это интерфейс по умолчанию, используемый в Arch Linux.
+Смотрите <a href="../en/Power_management.html#Sleep_hooks" title="Power management">Power management#Sleep hooks</a> для получения дополнительной информации о настройке хуков режимов сна. Также смотрите <span class="plainlinks archwiki-template-man" title="$ man 1 systemctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemctl.1">systemctl(1)</a></span>, <span class="plainlinks archwiki-template-man" title="$ man 8 systemd-sleep"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-sleep.8">systemd-sleep(8)</a></span> и <span class="plainlinks archwiki-template-man" title="$ man 7 systemd.special"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.special.7">systemd.special(7)</a></span>.
+</p>
+<h2>
+<span id=".D0.93.D0.B8.D0.B1.D0.B5.D1.80.D0.BD.D0.B0.D1.86.D0.B8.D1.8F"></span><span class="mw-headline" id="Гибернация">Гибернация</span>
+</h2>
+<p>Чтобы использовать спящий режим, вам нужно создать <a href="../en/Swap.html" title="Swap">swap</a> раздел или файл. Вам нужно будет указать ядру на своп, используя параметр <code>resume=</code>, который настраивается через загрузчик. Вам также понадобится <a href="#Configure_the_initramfs">настроить initramfs</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">ссылка недействительна</a>: раздел не найден]</sup>. Это говорит ядру попытаться возобновить работу с указанного свопа в раннем пользовательском пространстве. Эти три этапа подробно описаны ниже.
+</p>
+<h3>
+<span id=".D0.9F.D1.80.D0.BE_.D1.80.D0.B0.D0.B7.D0.BC.D0.B5.D1.80_.D1.80.D0.B0.D0.B7.D0.B4.D0.B5.D0.BB.D0.B0.2F.D1.84.D0.B0.D0.B9.D0.BB.D0.B0_.D0.BF.D0.BE.D0.B4.D0.BA.D0.B0.D1.87.D0.BA.D0.B8"></span><span class="mw-headline" id="Про_размер_раздела/файла_подкачки">Про размер раздела/файла подкачки</span>
+</h3>
+<p>Даже если ваш раздел подкачки меньше ОЗУ, у вас все еще есть большая вероятность успешно перейти в спящий режим. Согласно <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/power/interface.txt">ядерной документации</a>:
+</p>
+<p><i><code>/sys/power/image_size</code> управляет размером образа, создаваемого механизмом приостановки на диск. Это может быть строка, представляющая неотрицательное целое число, которое будет использоваться в качестве верхнего предела размера образа в байтах. Механизм приостановки сделает все возможное, чтобы размер образа не превышал это число. Однако, если это окажется невозможным, он попытается приостановить все равно, используя наименьший возможный размер образа. В частности, если в этот файл записать «0», размер образа будет настолько мал на сколько это возможно. Чтение из этого файла отображает текущее ограничение размера образа, которое по умолчанию установлено на 2/5 доступного ОЗУ. </i>
+</p>
+<p>Вы можете либо уменьшить значение <code>/sys/power/image_size</code>, чтобы сделать образ как можно меньшим (для небольших разделов подкачки) или увеличить его, чтобы ускорить процесс гибернации.
+</p>
+<h3>
+<span id=".D0.9D.D0.B5.D0.BE.D0.B1.D1.85.D0.BE.D0.B4.D0.B8.D0.BC.D1.8B.D0.B5_.D0.BF.D0.B0.D1.80.D0.B0.D0.BC.D0.B5.D1.82.D1.80.D1.8B_.D1.8F.D0.B4.D1.80.D0.B0"></span><span class="mw-headline" id="Необходимые_параметры_ядра">Необходимые параметры ядра</span>
+</h3>
+<p>Должен быть использован параметр ядра <code>resume=<i>swap_partition</i></code>. Либо имя, назначенное ядром для раздела, либо его <a href="../en/Persistent_block_device_naming.html#by-uuid" class="mw-redirect" title="UUID">UUID</a>, можно использовать как <code><i>swap_partition</i></code>. Например:
+</p>
+<ul>
+<li><code>resume=/dev/sda1</code></li>
+<li><code>resume=UUID=4209c845-f495-4c43-8a03-5363dd433153</code></li>
+<li>
+<code>resume=/dev/mapper/archVolumeGroup-archLogicVolume</code> -- если используется LVM</li>
+</ul>
+<p>В общем, метод именования, используемый для параметра <code>resume</code>, должен быть таким же, как и для параметра <code>root</code>.
+Конфигурация зависит от используемого <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a>, обратитесь к <a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel parameters</a> за деталями.
+</p>
+<p><br>
+</p>
+<h4>
+<span id=".D0.93.D0.B8.D0.B1.D0.B5.D1.80.D0.BD.D0.B0.D1.86.D0.B8.D1.8F_.D0.B2_.D1.84.D0.B0.D0.B9.D0.BB_.D0.BF.D0.BE.D0.B4.D0.BA.D0.B0.D1.87.D0.BA.D0.B8"></span><span class="mw-headline" id="Гибернация_в_файл_подкачки">Гибернация в файл подкачки</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> <a href="../en/Btrfs.html#Swap_file" title="Btrfs">Btrfs</a> не поддерживает файлы подкачки. Несоблюдение этого предупреждения может привести к повреждению файловой системы. В то же время когда файл подкачки монтируется через устройство <code>/dev/loop</code> его можно использовать и на Btrfs, но это приведет к значительному ухудшению производительности подкачки.</div>
+<p>Использование файла вместо раздела подкачки требует дополнительного параметра для ядра <code>resume_offset=<i>swap_file_offset</i></code>.
+</p>
+<p>Значение <code><i>swap_file_offset</i></code> можно получить запустив <code>filefrag -v <i>swap_file</i></code>, требуемое значение расположено в столбце  <code>physical_offset</code> первого ряда таблицы выводимой командой. Например:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># filefrag -v /swapfile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Filesystem type is: ef53
+File size of /swapfile is 4294967296 (1048576 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:      38912..     38912:      1:            
+   1:        1..   22527:      38913..     61439:  22527:             unwritten
+   2:    22528..   53247:     899072..    929791:  30720:      61440: unwritten
+...
+</pre>
+<p>В этом примере значение <code><i>swap_file_offset</i></code> это первое число <code>38912</code> с двумя точками.
+</p>
+<p>Значение <code><i>swap_file_offset</i></code> так же может быть получено с помощью <code>swap-offset <i>swap_file</i></code>. Файл команды <i>swap-offset</i> предоставляется пакетом <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/uswsusp-git/">uswsusp-git</a></span><sup><small>AUR</small></sup>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> 
+<ul>
+<li>Параметр ядра <code>resume</code> определяет устройство, раздел которого содержит файл подкачки, а не сам файл подкачки. О местонахождении файла подкачки на утройстве возобновления систему информирует параметр <code>resume_offset</code>. Перед первой гибернацией требуется перезагрузка для их активации.</li>
+<li>Если вы используете <a href="../en/Uswsusp.html" title="Uswsusp">uswsusp</a>, то эти два параметра должны быть представлены в <code> /etc/suspend.conf</code> с помощью ключей <code>resume device</code> и <code>resume offset</code>. В этом случае перезагрузка не требуется.</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Совет:</strong> Возможно, вы захотите уменьшить <a href="../en/Swap.html#Swappiness" title="Swap">Swap#Swappiness</a> для вашего файла подкачки, если единственная цель способность обеспечить спящий режим, а не расширение ОЗУ.</div>
+<h3>
+<span id=".D0.9D.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0_initramfs"></span><span class="mw-headline" id="Настройка_initramfs">Настройка initramfs</span>
+</h3>
+<ul><li>Когда используется <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> с хуком <code>base</code>, а по умолчанию это так, хук <code>resume</code> требуется в <code>/etc/mkinitcpio.conf</code>. Будь то по метке или по UUID раздел подкачки ссылается на файл устройства создаваемый udev, поэтому хук <code>resume</code> должен идти «после» хука <code>udev</code>. Этот пример был сделан на основе конфигурации хуков по умолчанию:</li></ul>
+<dl><dd><pre>HOOKS="base udev <b>resume</b> autodetect modconf block filesystems keyboard fsck"</pre></dd></dl>
+<dl><dd>Не забудьте <a href="../en/Mkinitcpio.html#Image_creation_and_activation" title="Mkinitcpio">пересобрать образ initramfs</a> чтобы эти изменения вступили в силу.</dd></dl>
+<dl><dd><div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> <a href="../en/LVM.html" title="LVM">LVM</a> пользователи должны добавить <code>resume</code> хук после <code>lvm2</code>.</div></dd></dl>
+<ul><li>Когда используется initramfs с хуком <code>systemd</code>, механизм возобновления уже предоставлен и дополнительные хуки не нужны.</li></ul>
+<h2>
+<span id=".D0.98.D1.81.D0.BF.D1.80.D0.B0.D0.B2.D0.BB.D0.B5.D0.BD.D0.B8.D0.B5_.D0.BF.D1.80.D0.BE.D0.B1.D0.BB.D0.B5.D0.BC"></span><span class="mw-headline" id="Исправление_проблем">Исправление проблем</span>
+</h2>
+<h3><span class="mw-headline" id="ACPI_OS_NAME">ACPI_OS_NAME</span></h3>
+<p>Возможно, вы захотите настроить свою <b>таблицу DSDT</b>, чтобы заставить ее работать. Смотрите статью <a href="../en/DSDT.html" title="DSDT">DSDT</a>
+</p>
+<h3>
+<span id=".D0.9F.D0.BE.D0.BB.D1.8C.D0.B7.D0.BE.D0.B2.D0.B0.D1.82.D0.B5.D0.BB.D1.8F.D0.BC_VAIO"></span><span class="mw-headline" id="Пользователям_VAIO">Пользователям VAIO</span>
+</h3>
+<p>Добавьте <b>acpi_sleep=nonvs</b> параметр ядра в ваш загрузчик и возьмите себе с полки пирожок!
+</p>
+<h3>
+<span id=".D0.96.D0.B4.D1.83.D1.89.D0.B8.D0.B9.2F.D0.A1.D0.BF.D1.8F.D1.89.D0.B8.D0.B9_.D1.80.D0.B5.D0.B6.D0.B8.D0.BC_.D0.BD.D0.B5_.D1.80.D0.B0.D0.B1.D0.BE.D1.82.D0.B0.D0.B5.D1.82_.D0.B8.D0.BB.D0.B8_.D1.81.D0.B1.D0.BE.D0.B8.D1.82"></span><span class="mw-headline" id="Ждущий/Спящий_режим_не_работает_или_сбоит">Ждущий/Спящий режим не работает или сбоит</span>
+</h3>
+<p>There have been many reports about the screen going black without easily viewable errors or the ability to do anything when going into and coming back from suspend and/or hibernate. These problems have been seen on both laptops and desktops. This is not an official solution, but switching to an older kernel, especially the LTS-kernel, will probably fix this.
+</p>
+<p>Sometimes the screen goes black due to device initialization from within the initramfs. Removing any modules you might have in <a href="../en/Mkinitcpio.html#MODULES" title="Mkinitcpio">Mkinitcpio#MODULES</a> and rebuilding the initramfs, can possibly solve this issue, specially graphics drivers for <a href="../en/Kernel_mode_setting.html#Early_KMS_start" title="Kernel mode setting">early KMS</a>. Initializing such devices before resuming can cause inconsistencies that prevents the system resuming from hibernation. This does not affect resuming from RAM. Also, check this <a rel="nofollow" class="external text" href="https://01.org/blogs/rzhang/2015/best-practice-debug-linux-suspend/hibernate-issues">article</a> for the best practices to debug suspend/hibernate issues.
+</p>
+<p>For Intel graphics drivers, enabling early KMS may help to solve the blank screen issue. Refer to <a href="../en/Kernel_mode_setting.html#Early_KMS_start" title="Kernel mode setting">Kernel mode setting#Early KMS start</a> for details.
+</p>
+<h3><span class="mw-headline" id="Wake-on-LAN">Wake-on-LAN</span></h3>
+<p>If <a href="../en/Wake-on-LAN.html" title="Wake-on-LAN">Wake-on-LAN</a> is active, the network interface card will consume power even if the computer is hibernated.
+</p>
+<h3><span class="mw-headline" id="Instantaneous_wakeups_from_suspend">Instantaneous wakeups from suspend</span></h3>
+<p>For some Intel Haswell systems with the LynxPoint and LynxPoint-LP chipset, instantaneous wakeups after suspend are reported. They are linked to erroneous BIOS ACPI implementations and how the <code>xhci_hcd</code> module interprets it during boot. As a work-around reported affected systems are added to a blacklist (named <code>XHCI_SPURIOUS_WAKEUP</code>) by the kernel case-by-case.<a rel="nofollow" class="external autonumber" href="https://bugzilla.kernel.org/show_bug.cgi?id=66171#c6">[1]</a> 
+</p>
+<p>Instantaneous resume may happen, for example, if a USB device is plugged during suspend and ACPI wakeup triggers are enabled. A viable work-around for such a system, if it is not on the blacklist yet, is to disable the wakeup triggers. An example to disable wakeup through USB is described as follows.<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617">[2]</a> 
+</p>
+<p>To view the current configuration:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/acpi/wakeup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Device  S-state   Status   Sysfs node
+...
+EHC1      S3    *enabled  pci:0000:00:1d.0
+EHC2      S3    *enabled  pci:0000:00:1a.0
+XHC       S3    *enabled  pci:0000:00:14.0
+...
+</pre>
+<p>The relevant devices are <code>EHC1</code>, <code>EHC1</code> and <code>XHC</code> (for USB 3.0). To toggle their state you have to echo the device name to the file as root.
+</p>
+<pre># echo EHC1 &gt; /proc/acpi/wakeup
+# echo EHC2 &gt; /proc/acpi/wakeup
+# echo XHC &gt; /proc/acpi/wakeup
+</pre>
+<p>This should result in suspension working again. However, this settings are only temporary and would have to be set at every reboot. To automate this take a look at <a href="../ru/Systemd.html#%D0%9D%D0%B0%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5_%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2_%D1%8E%D0%BD%D0%B8%D1%82%D0%BE%D0%B2" title="Systemd (Русский)">systemd#Написание файлов юнитов</a>. See <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617#p1575617">BBS thread</a> for a possible solution and more information.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Power_management.html" title="Category:Power management (Русский)">Power management (Русский)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Power_management_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Suspend_and_hibernate_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=645130">https://wiki.archlinux.org/index.php?title=Power_management_(Русский)/Suspend_and_hibernate_(Русский)&amp;oldid=645130</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 December 2020, at 14:19.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

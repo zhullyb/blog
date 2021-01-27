@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>JFS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-JFS rootpage-JFS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">JFS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/File_systems.html" title="File systems">File systems</a></li>
+</ul>
+</div>
+<p>The <a href="https://en.wikipedia.org/wiki/Journaled_File_System" class="extiw" title="w:Journaled File System">Journaled File System</a> (JFS) is a <a href="https://en.wikipedia.org/wiki/journaling_file_system" class="extiw" title="w:journaling file system">journaling file system</a> that was open-sourced by IBM in 1999 and support for which has been available in the Linux kernel since 2002. 
+</p>
+<p>This article introduces the reader to the JFS file system. In particular, procedures for implementation, maintenance and optimization will be presented along with background information on the file system itself and some cautionary notes on precarious implementations.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Background"><span class="tocnumber">1</span> <span class="toctext">Background</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#GNU/Linux_development_team"><span class="tocnumber">1.1</span> <span class="toctext">GNU/Linux development team</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Technical_features"><span class="tocnumber">1.2</span> <span class="toctext">Technical features</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Implementing_on_GNU/Linux"><span class="tocnumber">2</span> <span class="toctext">Implementing on GNU/Linux</span></a></li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Optimizations"><span class="tocnumber">3</span> <span class="toctext">Optimizations</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Defragmenting_JFS"><span class="tocnumber">3.1</span> <span class="toctext">Defragmenting JFS</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Deadline_I/O_scheduler"><span class="tocnumber">3.2</span> <span class="toctext">Deadline I/O scheduler</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#External_journal"><span class="tocnumber">3.3</span> <span class="toctext">External journal</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#noatime_fstab_attribute"><span class="tocnumber">3.4</span> <span class="toctext">noatime fstab attribute</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Journal_modes"><span class="tocnumber">3.5</span> <span class="toctext">Journal modes</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Variable_block_sizes"><span class="tocnumber">3.6</span> <span class="toctext">Variable block sizes</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#fsck_and_recovery"><span class="tocnumber">4</span> <span class="toctext">fsck and recovery</span></a></li>
+<li class="toclevel-1 tocsection-13">
+<a href="#Cautionary_notes"><span class="tocnumber">5</span> <span class="toctext">Cautionary notes</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14"><a href="#JFS_root_mounts_read_only_on_startup"><span class="tocnumber">5.1</span> <span class="toctext">JFS root mounts read only on startup</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#JFS_and_secure_deletions"><span class="tocnumber">5.2</span> <span class="toctext">JFS and secure deletions</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Forced_fsck_on_JFS_root_file_system"><span class="tocnumber">5.3</span> <span class="toctext">Forced fsck on JFS root file system</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#JFS_losing_files"><span class="tocnumber">5.4</span> <span class="toctext">JFS losing files</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-18"><a href="#Benchmarks"><span class="tocnumber">6</span> <span class="toctext">Benchmarks</span></a></li>
+<li class="toclevel-1 tocsection-19"><a href="#Conclusions"><span class="tocnumber">7</span> <span class="toctext">Conclusions</span></a></li>
+<li class="toclevel-1 tocsection-20"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Background">Background</span></h2>
+<ul>
+<li>In 1990, JFS1, (then simply called JFS), was released for AIX version 3.1. The filesystem was closely tied to its targeted hardware, IBM's AIX line of UNIX servers, being a proprietary design.</li>
+<li>In 1995, heavy development began on improving JFS, focusing on scalability and expanded features.</li>
+<li>In 1997, parallel development began on moving the improved JFS source back to AIX.</li>
+<li>In 1999, the improved JFS design was released for OS/2.</li>
+<li>In 2001, the improved filesystem (newly termed JFS2), was released for AIX 5L.</li>
+<li>The current GNU/Linux version is a port based on JFS for OS/2.</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> While there are potential issues, JFS file systems for OS/2 and GNU/Linux are inter-operable.<a rel="nofollow" class="external autonumber" href="http://72.14.253.104/search?q=cache:xrFItCW2XdUJ:osdir.com/ml/file-systems.jfs.general/2006-02/msg00008.html+jfs+os/2+linux&amp;hl=en&amp;ct=clnk&amp;cd=1&amp;gl=au&amp;client=firefox-a">[1]</a>.</div>
+<p>While it is difficult to make general comparisons between JFS and other file systems available on UNIX and UNIX-like operating systems, it is claimed that JFS uses less CPU resources than other GNU/Linux file systems <a rel="nofollow" class="external autonumber" href="http://www.debian-administration.org/articles/388">[2]</a>. With certain optimizations, JFS has also been claimed to be faster for certain file operations, as compared to other GNU/Linux file systems (see <a rel="nofollow" class="external autonumber" href="http://www.redhat.com/archives/ext3-users/2005-July/msg00018.html">[3]</a>,<a href="#Benchmarks">Benchmarks</a>). 
+</p>
+<h3>
+<span id="GNU.2FLinux_development_team"></span><span class="mw-headline" id="GNU/Linux_development_team">GNU/Linux development team</span>
+</h3>
+<p>The development of the GNU/Linux JFS port is headed by
+</p>
+<ul>
+<li>Dave Kleikamp (dave dot kleikamp at oracle dot com)</li>
+<li>HP: <a rel="nofollow" class="external free" href="http://jfs.sourceforge.net/">http://jfs.sourceforge.net/</a>
+</li>
+</ul>
+<h3><span class="mw-headline" id="Technical_features">Technical features</span></h3>
+<p>JFS is a modern file system supporting many features, a few of which are listed here.
+</p>
+<ul>
+<li>fully 64-bit.</li>
+<li>dynamic space allocation for i-nodes, i.e. no running out of i-nodes on file systems with large number of small files.</li>
+<li>Directory structures designed for speed and efficiency:</li>
+</ul>
+<dl>
+<dd>- directories with eight or fewer entries have their contents storied inline within that directory's i-node.</dd>
+<dd>- directories with more than eight entries have their contents stored in a <a href="https://en.wikipedia.org/wiki/B%2B_tree" class="extiw" title="wikipedia:B+ tree">B+ tree</a> keyed on name.</dd>
+</dl>
+<ul>
+<li>JFS utilizes extents for allocating blocks for large files.</li>
+<li>Support for extended attributes in addition to standard Unix-style permissions.</li>
+<li>Support for both internal and external logs (<a href="#External_journal">see below</a>).</li>
+<li>Extremely Scalable; Consistent performance from minimum file size up to 4 petabytes.</li>
+<li>Algorithms designed for high performance on very large systems.</li>
+<li>Performance tuned for GNU/Linux.</li>
+<li>Designed from the ground up to provide Transaction/Log (not an add-on).</li>
+<li>Restarts after a system failure &lt; 1 sec.</li>
+<li>Proven Journaling FS technology (10+ years in AIX).</li>
+<li>Original design goals: Performance, Robustness, SMP.</li>
+<li>Team members from the original AIX JFS Designed/Developed this file system.</li>
+<li>Designed to operate on SMP hardware, with code optimized for at least a 4-way SMP machine.</li>
+<li>TRIM support (since Kernel 3.7).</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> JFS uses a journal to maintain consistency of metadata <i>only</i>. Thus, only consistency of metadata (and not actual file contents) can be assured in the case of improper shutdown. This is also the case for XFS and ReiserFS. Ext3, on the other hand, does support journaling of <i>both</i> metadata and data <a rel="nofollow" class="external autonumber" href="http://www.thehackademy.net/madchat/ebooks/FileSystem/up2-6Galli.pdf">[4]</a>, though with a significant performance penalty, and not by default.</div>
+<p>A more comprehensive (and technical) overview of the features in JFS can be found in the <a rel="nofollow" class="external text" href="http://jfs.sourceforge.net/project/pub/jfs.pdf">JFS Overview</a> authored by developer Steve Best.
+</p>
+<h2>
+<span id="Implementing_on_GNU.2FLinux"></span><span class="mw-headline" id="Implementing_on_GNU/Linux">Implementing on GNU/Linux</span>
+</h2>
+<p>Implementing a JFS file system is just like implementing most other file systems under GNU/Linux. JFS was merged into the Linux kernel as of version   2.4 <a rel="nofollow" class="external autonumber" href="http://kerneltrap.org/node/385">[5]</a><sup title="Last check status: domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>. The JFS driver is built as a module in the standard Arch kernel packages. If building a custom kernel on a machine that will be (or does) use JFS file systems, be sure to enable JFS in your kernel config:
+</p>
+<pre>File systems
+        ---&gt; [*/M] JFS filesystem support
+</pre>
+<p>If extended attributes are desired, one will also need to enable "JFS POSIX Access Control Lists" and/or "JFS Security Labels"
+</p>
+<pre>File systems
+    ---&gt; [*/M] JFS filesystem support 
+        ---&gt; [*] JFS POSIX Access Control Lists
+        ---&gt; [*] JFS Security Labels
+</pre>
+<p>Next, the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=jfsutils">jfsutils</a></span> package will be needed to perform all file system related tasks.
+</p>
+<p>Actual creation of a JFS file system can be done with the either:
+</p>
+<pre># mkfs.jfs /dev/target_dev
+</pre>
+<p>or:
+</p>
+<pre># jfs_mkfs /dev/target_dev
+</pre>
+<p>Both commands are equivalent.
+</p>
+<h2><span class="mw-headline" id="Optimizations">Optimizations</span></h2>
+<p>There are several concepts that can be implemented with a JFS filesystem to boost its performance:
+</p>
+<ul>
+<li>Periodic defragmentation of the file system.</li>
+<li>Using the deadline I/O scheduler.</li>
+<li>Utilizing an external journal.</li>
+<li>Attaching the <i>noatime</i> attribute the the file system in <code>/etc/fstab</code>.</li>
+</ul>
+<h3><span class="mw-headline" id="Defragmenting_JFS">Defragmenting JFS</span></h3>
+<p>JFS, like all file systems, will degrade in performance over time due to file fragmentation <a rel="nofollow" class="external autonumber" href="http://docs.hp.com/en/5576/JFS_Tuning.pdf">[6]</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-02-24]</sup>. While there is in-place defragmentation code in the JFS utilities, this is code held over from the OS/2 port and has yet to be implemented <a rel="nofollow" class="external autonumber" href="http://www.mail-archive.com/jfs-discussion@lists.sourceforge.net/msg00573.html">[7]</a>. For file systems that can be taken off-line for a time, one can execute a script like the following to defragment their JFS file system
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This script is <b>dangerous</b> and may result in the wiping of an entire hard disk, if arguments get switched! Doing this type of operation is only recommended for people who have confidence in doing backups and file system operations.</div>
+<pre>umount /dev/hdc1
+dd bs=4k if=/dev/hdc1 of=/dev/hdj1
+jfs_fsck /dev/hdj1
+mount -o ro /dev/hdj1 /fs/hdj1
+jfs_mkfs /dev/hdc1
+mount -o rw /dev/hdc1 /fs/hdc1
+(cd /fs/hdj1 &amp;&amp; tar -cS -b8 --one-file-system -f - .) | (cd /fs/hdc1 &amp;&amp; tar -xS -b8 -p -f -)
+umount /dev/hdj1
+</pre>
+<p>In this example, <code>/dev/hdc1</code> is the device with the data that needs backing up and <code>/dev/hdj1</code> is the device that holds the backup. 
+</p>
+<p>Basically, this script copies the data off the JFS file system to a backup drive, formats the original JFS file system and finally writes back the data from the backup to the freshly formatted drive in a way that JFS will write its allocation trees in a defragmentated way.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If a VMWare session is sitting on an underlying JFS partition that is highly fragmented, performance of the virtual machine may be significantly degraded.</div>
+<h3>
+<span id="Deadline_I.2FO_scheduler"></span><span class="mw-headline" id="Deadline_I/O_scheduler">Deadline I/O scheduler</span>
+</h3>
+<p>JFS seems to perform better when the kernel has been configured to use the <a href="../en/Improving_performance.html#Input/output_schedulers" title="Improving performance">Deadline I/O Scheduler</a>. Indeed, JFS's performance seems to exceed that of other GNU/Linux file systems with this particular scheduler being employed <a rel="nofollow" class="external autonumber" href="http://www.redhat.com/archives/ext3-users/2005-July/msg00018.html">[8]</a>.
+</p>
+<h3><span class="mw-headline" id="External_journal">External journal</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> As this is a relatively new feature to the GNU/Linux port of JFS, it is recommended to upgrade to the very latest version of jfsutils before attempting to implement an external journal (earlier versions seem to give errors when trying to create the journal device).</div>
+<p>As with any journaled file system, a journal is constantly accessed in accordance with disk activity. Having the journal log on the same device as the its corresponding file system thus can cause a degradation in I/O throughput. This degradation can be alleviated by putting the journal log on a separate device all together. 
+</p>
+<p>To make a journal device, first create a partition that is 128MB. Using a partition that is bigger than 128MB results in the excess being ignored, according to mkfs.jfs. You can either create an external log for an already-existing JFS file system by executing the following:
+</p>
+<pre># mkfs.jfs -J journal_dev /dev/external_journal             # creates a journal on device /dev/external_journal
+# mkfs.jfs -J device=/dev/external_journal /dev/jfs_device  # attaches the external journal to the existing file 
+                                                          #   system on /dev/jfs_device
+</pre>
+<p>or a command can be issued to create both a new external journal and its corresponding JFS file system:
+</p>
+<pre># mkfs.jfs -j /dev/external_journal /dev/jfs_device
+</pre>
+<p>This last command formats BOTH the external journal and the JFS file system.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Obviously, an external journal is only effective if the journal and its file system exists on separate <i>physical</i> devices.</div>
+<h3><span class="mw-headline" id="noatime_fstab_attribute">noatime fstab attribute</span></h3>
+<p>Every time a file is accessed (read or write) the default for most file systems is to append the metadata associated with that file with an updated access time. Thus, even read operations incur an overhead associated with a write to the file system. This can lead to a significant degradation in performance in some usage scenarios. Appending <i>noatime</i> to the fstab line for a JFS file system stops this action from happening. As access time is of little importance in most scenarios, this alteration has been widely touted as a fast and easy way to get a performance boost out of one's hardware. Even Linus Torvalds seems to be a proponent of this optimization <a rel="nofollow" class="external autonumber" href="http://kerneltrap.org/node/14148">[9]</a><sup title="Last check status: domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>One may also specify a <b>relatime</b> option which updates the atime if the previous atime is older than the mtime or ctime <a rel="nofollow" class="external autonumber" href="http://kerneltrap.org/node/14148">[10]</a><sup title="Last check status: domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>. In terms of performance, this will not be as fast as the <i>noatime</i> mount option, but is useful if using applications that need to know when files were last read (like <i>mutt</i>).</li>
+<li>Using the <i>noatime/relatime</i> option can improve disk performance with any file system, not just JFS.</li>
+</ul>
+</div>
+<p>Here is an example <code>/etc/fstab</code> entry with the <b>noatime</b> tag:
+</p>
+<pre>/dev/sdb1 /media/backup jfs rw,users,noauto,noatime 0  0
+</pre>
+<p>One may also mount a file system with the <b>noatime</b> attribute by invoking something similar to the following:
+</p>
+<pre># mount -o noatime -t jfs /dev/jfs_dev /mnt/jfs_fs
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Access time is NOT the same as the <i>last-modified</i> time. Disabling access time will still enable you to see when files were last modified by a write operation.</div>
+<h3><span class="mw-headline" id="Journal_modes">Journal modes</span></h3>
+<p>JFS does not support various journal modes like <a href="../en/Ext3.html" title="Ext3">ext3</a>. Thus, passing the mount option <i>data=writeback</i> with <i>mount</i> or in <code>/etc/fstab</code> will have no effect on a JFS file system. JFS's current journaling mode is similar to Ext3's default journaling mode: <i>ordered</i> <a rel="nofollow" class="external autonumber" href="http://www.ibm.com/developerworks/linux/linux390/perf/tuning_res_journaling.html">[11]</a>.
+</p>
+<h3><span class="mw-headline" id="Variable_block_sizes">Variable block sizes</span></h3>
+<p>While the OS/2 port of JFS supports block sizes of 512, 1024, 2048, and 4096 bytes, the Linux port of JFS is only able to use 4k blocks. Even though code exists in JFS utilities that correspond to file systems using variable size blocks, this has yet to be implemented <a rel="nofollow" class="external autonumber" href="http://osdir.com/ml/file-systems.jfs.general/2003-02/msg00017.html">[12]</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>. As larger block sizes tend to favor performance (smaller ones favor efficient space usage), implementing smaller block sizes for JFS in Linux has been given a low priority for implementation by JFS developers.
+</p>
+<h2><span class="mw-headline" id="fsck_and_recovery">fsck and recovery</span></h2>
+<p>In the event that the file system does not get properly unmounted before being powered down, one will usually have to run <b>fsck</b> on a JFS file system in order to be able to remount it. This procedure usually only takes a few seconds, unless the log has been damaged. If running fsck returns an unrecognized file system error, try running <b>fsck.jfs</b> on the target device. Normally, <i>fsck</i> is all that is needed.
+</p>
+<p>If the superblock on your file system gets destroyed, it may be possible to recover some parts of the file system. Currently, the only tool able to do this is a utility called <b>jfsrec</b>. JFSrec is currently available from the AUR using the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/jfsrec-svn/">jfsrec-svn</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup> package.
+</p>
+<p>There is also an AUR package called <i>jfsrec</i>, but this is merely a placeholder for <i>jfsrec-svn</i> as JFSrec is currently only in its seventh SVN revision. Once installed, one simply need to type:
+</p>
+<pre># jfsrec
+</pre>
+<p>to get a help menu explaining how to use this utility. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> As stated above, JFSrec is only in its seventh SVN revision; and it is not known how actively the project is maintained. So use JFSrec with caution.</div>
+<h2><span class="mw-headline" id="Cautionary_notes">Cautionary notes</span></h2>
+<p>While JFS is very stable in its current stage of development, there are some cautionary notes on using this file system.
+</p>
+<h3><span class="mw-headline" id="JFS_root_mounts_read_only_on_startup">JFS root mounts read only on startup</span></h3>
+<p>Occasionally, a JFS root partition will be unable to mount in normal read-write mode. This is usually due to the fact that the JFS root file system fails its fsck after an unclean shutdown. It is rare that JFS fails out of fsck, and it's usually due to the JFS log itself being corrupted.
+</p>
+<p>All that is required in this scenario is to boot your machine with a relatively recent Arch Linux LiveCD. Booting an Arch Linux livecd will give you access to all the JFS utilities and will load a kernel that is able to recognize JFS file systems. After booting the CD simply run <i>fsck</i> (or possibly <i>fsck.jfs</i>) on your JFS root and it should recover just fine (even though the fsck will probably take longer than normal due to the log probably being damaged). Once the <i>fsck</i> finishes, you should be able to boot your machine like normal.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This scenario happens less than 10% of the time in the case of an improper shutdown.</div>
+<h3><span class="mw-headline" id="JFS_and_secure_deletions">JFS and secure deletions</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This section applies to any journaled file system, not just JFS.</div>
+<p>The effectiveness of deleting files by overwriting their corresponding file system blocks with random data (i.e. using utilities like <i>shred</i>) can not be assured <a rel="nofollow" class="external autonumber" href="https://lists.kde.org/?l=kfm-devel&amp;m=105770965822522&amp;w=2">[13]</a>. Given the design of journaled file systems, maintenance issues, and performance liabilities; reliable shredding of files as a deletion method does not sit highly on the priority list for implementation on any journaled file system.
+</p>
+<h3><span class="mw-headline" id="Forced_fsck_on_JFS_root_file_system">Forced fsck on JFS root file system</span></h3>
+<p>One may force a fsck file system check on the root file system by entering:
+</p>
+<pre>touch /forcefsck
+</pre>
+<p>and rebooting. On Arch linux systems with a JFS root on a partition under control of <i>device-mapper</i> (i.e. the root device is a <i>lvm</i> or a LUKS encrypted one), forcing an fsck can sometimes remove the <i>/usr/man/man3</i> directory. The reason for this issue is not clear, but the problem has been able to be replicated <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=41261">[14]</a>. 
+</p>
+<p>It is suggested to get a list of Arch Packages that use <code>/usr/man/man3</code> by issuing a command similar to
+</p>
+<pre>find /var/lib/pacman/local/ -name files | xargs fgrep /man/man3/ | cut -d: -f1 | sort -u | awk -F/ '{print $6}' &gt; man3_pkg_list
+</pre>
+<p>before attempting a forced fsck on a JFS root partition (<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=41261">[15]</a> post #1). If <code>/usr/man/man3</code> does indeed disappear, simply reinstall all the packages listed in <i>man3_pkg_list</i>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If this problem does indeed happen, reinstalling all the packages using <i>/usr/man/man3</i> does appear to fix the issue (<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=41261">[16]</a> post #4).</div>
+<p>As stated above, the reason for this issue isn't clear at the moment; but it may have something to do with the fact that a forced fsck runs through higher phases of file system checks that only happen when a JFS log gets damaged in an improper dismounting of the partition.
+</p>
+<h3><span class="mw-headline" id="JFS_losing_files">JFS losing files</span></h3>
+<p>In JFS; journal writes are indefinitely postponed until there is another trigger such as memory pressure or an unmount operation. This infinite write delay limits reliability, as a crash can result in data loss even for data that was written minutes or hours before.<a rel="nofollow" class="external autonumber" href="https://www.usenix.org/events/usenix05/tech/general/full_papers/prabhakaran/prabhakaran.pdf">[17]</a>
+</p>
+<h2><span class="mw-headline" id="Benchmarks">Benchmarks</span></h2>
+<p>As benchmarks measuring file system performance tend to be focused at specific types of disk usage, it is difficult to decipher good general comparisons rating how well JFS performs against other files systems. As mentioned before, it has been noted that JFS has a tendency to use less CPU resources than other GNU/Linux file systems and (with the right optimizations) is faster than other GNU/Linux file systems for certain types of file operations. It has been noted that JFS slows down when working with many files, however<a rel="nofollow" class="external autonumber" href="http://fsbench.netnation.com/">[18]</a><sup title="Last check status: 403">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup><a rel="nofollow" class="external autonumber" href="http://www.debian-administration.org/articles/388">[19]</a>. In the references are some links to benchmarks; but as always, it is best to test and see what works best for your own system and work load.
+</p>
+<h2><span class="mw-headline" id="Conclusions">Conclusions</span></h2>
+<p>JFS is a stable, feature-rich file system that hasn't been publicized as much as some of the other Linux file systems. With optimizations, JFS is stable, CPU efficient and fast. In particular, VMWare sessions stand to benefit enormously from a properly optimized and defragmented, underlying JFS file system.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>A more technical <a rel="nofollow" class="external text" href="http://jfs.sourceforge.net/project/pub/jfs.pdf">overview</a> of JFS</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.linux.com/feature/119025">30 days with JFS</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>
+</li>
+<li>JFS <a rel="nofollow" class="external text" href="http://jfs.sourceforge.net/">Sourceforge</a> page</li>
+<li>Note on <a rel="nofollow" class="external text" href="http://www.sabi.co.uk/blog/anno06-2nd.html#060422b">defragmenting</a> JFS file systems</li>
+<li>JFS Recovery <a rel="nofollow" class="external text" href="https://sourceforge.net/projects/jfsrec">Sourceforge</a> page</li>
+<li>
+<a rel="nofollow" class="external text" href="http://conferences.oreillynet.com/presentations/os2002/best_steve.pdf">Presentation</a> on JFS given by Steve Best (pdf)</li>
+<li><a rel="nofollow" class="external text" href="http://www.debian-administration.org/articles/388">Debian file system comparison</a></li>
+<li><a href="https://en.wikipedia.org/wiki/JFS_(file_system)" class="extiw" title="wikipedia:JFS (file system)">Wikipedia:JFS (file system)</a></li>
+<li>Some <a rel="nofollow" class="external text" href="http://fsbench.netnation.com/">filesystem benchmarks</a><sup title="Last check status: 403">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>
+</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=JFS&amp;oldid=643893">https://wiki.archlinux.org/index.php?title=JFS&amp;oldid=643893</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 7 December 2020, at 11:28.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

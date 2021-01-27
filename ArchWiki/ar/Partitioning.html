@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Partitioning (العربية) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Partitioning_العربية rootpage-Partitioning_العربية skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Partitioning (العربية)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div style="text-align: right; direction:rtl; margin-right:30px;">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Fstab.html" title="Fstab">fstab</a></li>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+<li><a href="../en/Swap.html" title="Swap">Swap</a></li>
+<li><a href="../en/File_systems.html#Create_a_file_system" class="mw-redirect" title="Format a device">Format a device</a></li>
+<li><a href="../en/File_systems.html" class="mw-redirect" title="File Systems">File Systems</a></li>
+</ul>
+</div>
+<p>توفر عملية تقسيم القرص الصلب <i>Partitioning</i> إدارة المساحة المتوفرة وتقسيمها بشكل منطقي إلى عدة أقسام يمكن الوصول إليها كل على حدى، ويتم حفظ معلومات القسم ضمن جدول تقسيم <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table</a> أو سجل الإقلاع الرئيسي <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a>.
+</p>
+<p>يمكن ترك مساحة القرص الصلب كاملةً ضمن قسم واحد أو يمكن تقسيم هذه المساحة إلى عدة أقسام حيث أن هناك العديد من الحالات التي تتطلب إنشاء عدة أقسام على القرص الصلب مثل: تثبيت أكثر من نظام تشغيل على القرص نفسه أو إنشاء قرص خاص لـ <a href="../en/Swap.html" title="Swap">swap</a>، كما يُستعمل التقسيم في حالات أخرى لفصل الملفات وترتيبها كأن يقوم المستخدم بإنشاء قسم للملفات الصوتية وقسم آخر لملفات الفيديو، وسيتم شرح مخططات التقسيم الشائعة في هذا المقال.
+</p>
+<p>يجب عمل تهيئة Format للقسم بأحد أنظمة الملفات <a href="../en/File_systems.html" title="File systems">file system type</a>  قبل استخدامه.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%D8%A3%D9%86%D9%88%D8%A7%D8%B9_%D8%A7%D9%84%D8%A3%D9%82%D8%B3%D8%A7%D9%85"><span class="tocnumber">1</span> <span class="toctext">أنواع الأقسام</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#MBR"><span class="tocnumber">1.1</span> <span class="toctext">MBR</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#GPT"><span class="tocnumber">1.2</span> <span class="toctext">GPT</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%D9%85%D8%AE%D8%B7%D8%B7%D8%A7%D8%AA_%D8%A7%D9%84%D8%AA%D9%82%D8%B3%D9%8A%D9%85"><span class="tocnumber">2</span> <span class="toctext">مخططات التقسيم</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#%D9%82%D8%B3%D9%85_%D9%88%D8%A7%D8%AD%D8%AF_%D9%84%D9%84%D8%AC%D8%B0%D8%B1"><span class="tocnumber">2.1</span> <span class="toctext">قسم واحد للجذر</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#%D8%A7%D9%84%D8%A3%D9%82%D8%B3%D8%A7%D9%85_%D8%A7%D9%84%D9%85%D9%86%D9%81%D8%B5%D9%84%D8%A9"><span class="tocnumber">2.2</span> <span class="toctext">الأقسام المنفصلة</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#%D9%86%D9%82%D8%A7%D8%B7_%D8%A7%D9%84%D8%B1%D8%A8%D8%B7"><span class="tocnumber">2.3</span> <span class="toctext">نقاط الربط</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#%D9%82%D8%B3%D9%85_%D8%A7%D9%84%D8%AC%D8%B0%D8%B1"><span class="tocnumber">2.3.1</span> <span class="toctext">قسم الجذر</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#%D9%85%D8%AC%D9%84%D8%AF_/boot"><span class="tocnumber">2.3.2</span> <span class="toctext">مجلد /boot</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#%D9%85%D8%AC%D9%84%D8%AF_/home"><span class="tocnumber">2.3.3</span> <span class="toctext">مجلد /home</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#%D9%85%D8%AC%D9%84%D8%AF_/var"><span class="tocnumber">2.3.4</span> <span class="toctext">مجلد /var</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#%D9%85%D8%AC%D9%84%D8%AF_/tmp"><span class="tocnumber">2.3.5</span> <span class="toctext">مجلد /tmp</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#%D8%B3%D9%88%D8%A7%D8%A8"><span class="tocnumber">2.3.6</span> <span class="toctext">سواب</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#%D9%85%D8%A7_%D9%87%D9%8A_%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%AD%D8%A9_%D8%A7%D9%84%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%A9_%D9%84%D9%83%D9%84_%D9%82%D8%B3%D9%85%D8%9F"><span class="tocnumber">2.3.7</span> <span class="toctext">ما هي المساحة المناسبة لكل قسم؟</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#%D8%A3%D8%AF%D9%88%D8%A7%D8%AA_%D8%A7%D9%84%D8%AA%D9%82%D8%B3%D9%8A%D9%85"><span class="tocnumber">3</span> <span class="toctext">أدوات التقسيم</span></a></li>
+<li class="toclevel-1 tocsection-16">
+<a href="#%D9%85%D8%AD%D8%A7%D8%B0%D8%A7%D8%A9_%D8%A7%D9%84%D9%82%D8%B3%D9%85"><span class="tocnumber">4</span> <span class="toctext">محاذاة القسم</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#%D9%86%D8%B8%D8%B1%D8%A9_%D8%B9%D8%A7%D9%85%D8%A9"><span class="tocnumber">4.1</span> <span class="toctext">نظرة عامة</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#%D8%A7%D9%84%D8%A7%D8%AE%D8%AA%D9%8A%D8%A7%D8%B1_%D8%A8%D9%8A%D9%86_GPT_%D9%88_MBR"><span class="tocnumber">4.2</span> <span class="toctext">الاختيار بين GPT و MBR</span></a></li>
+<li class="toclevel-2 tocsection-19">
+<a href="#%D8%A7%D8%B3%D8%AA%D8%AE%D8%AF%D8%A7%D9%85_GPT_-_%D8%A7%D9%84%D8%B7%D8%B1%D9%8A%D9%82%D8%A9_%D8%A7%D9%84%D8%AD%D8%AF%D9%8A%D8%AB%D8%A9"><span class="tocnumber">4.3</span> <span class="toctext">استخدام GPT - الطريقة الحديثة</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#%D9%85%D9%84%D8%AE%D8%B5_%D8%A7%D8%B3%D8%AA%D8%B9%D9%85%D8%A7%D9%84_%D8%A3%D8%AF%D8%A7%D8%A9_Gdisk"><span class="tocnumber">4.3.1</span> <span class="toctext">ملخص استعمال أداة Gdisk</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-21">
+<a href="#%D8%A7%D8%B3%D8%AA%D8%B9%D9%85%D8%A7%D9%84_MBR_-_%D8%B7%D8%B1%D9%8A%D9%82%D8%A9_legacy"><span class="tocnumber">4.4</span> <span class="toctext">استعمال MBR - طريقة legacy</span></a>
+<ul>
+<li class="toclevel-3 tocsection-22"><a href="#%D9%85%D9%84%D8%AE%D8%B5_%D8%A7%D8%B3%D8%AA%D8%B9%D9%85%D8%A7%D9%84_Fdisk"><span class="tocnumber">4.4.1</span> <span class="toctext">ملخص استعمال Fdisk</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23"><a href="#%D8%A7%D9%86%D8%B8%D8%B1_%D8%A3%D9%8A%D8%B6%D8%A7%D9%8B"><span class="tocnumber">5</span> <span class="toctext">انظر أيضاً</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".D8.A3.D9.86.D9.88.D8.A7.D8.B9_.D8.A7.D9.84.D8.A3.D9.82.D8.B3.D8.A7.D9.85"></span><span class="mw-headline" id="أنواع_الأقسام">أنواع الأقسام</span>
+</h2>
+<p>عملية تقسيم القرص الصلب عبارة عن تقسيم للمساحة التخزينية المتوفرة على القرص إلى عدة أجزاء، هذه الأجزاء يطلق عليها اسم "أقسام partitions"، كل قسم يتصرف كأنه قرص مستقل ويُهيأ بنظام ملفات معين.
+</p>
+<h3><span class="mw-headline" id="MBR">MBR</span></h3>
+<p>هناك 3 أنواع من أقسام القرص الصلب في MBR:
+</p>
+<ul>
+<li>أساسي Primary</li>
+<li>ممتد Extended
+<ul><li>منطقي Logical</li></ul>
+</li>
+</ul>
+<p>الأقسام من النوع <b>الأساسي Primary</b> يمكن الإقلاع منها "Bootable" ويمكنك تعيين أربعة أقسام أساسية فقط لكل قرص صلب أو قرص RAID، وعند الاحتياج لأكثر من أربعة أقسام يتم استخدام قسم <b>ممتد Extended</b> يحوي بداخله أقسام <b>منطقية Logical</b>، فالقسم الممتد يعتبر حاوية للأقسام المنطقية حيث يمكن وضع عدد غير محدود من الأقسام المنطقية داخل القسم الممتد لكن يمكن تعيين قسم ممتد واحد فقط لكل قرص صلب ويُعامل القسم الممتد كأنه قسم أساسي، أي أنه في حال تواجد قسم ممتد على قرص ما فيمكن تعيين ثلاثة أقسام أساسية فقط بجانبه، وفي حال تثبيت نظامين تشغيل أحدهما ويندوز Windows يجب وضع نظام الويندوز في قسم أساسي.
+</p>
+<p>الطريقة المتعارف عليها في ترقيم الأقسام هي أن تُرقم الأقسام الأساسية من <code>sda1</code> إلى <code>sda3</code> ومن ثم القسم الممتد <code>sda4</code>، أما الأقسام المنطقية داخل القسم الممتد <code>sda4</code> فيتم ترقيمها <code>sda5</code>، <code>sda6</code> ... إلخ.
+</p>
+<h3><span class="mw-headline" id="GPT">GPT</span></h3>
+<p>هنا يتوفر نوع واحد فقط من الأقسام وهي الأقسام <b>الأساسية Primary</b>، وعدد الأقسام الأساسية الممكن إنشاؤها على القرص الصلب أو قرص RAID غير محدود.
+</p>
+<h2>
+<span id=".D9.85.D8.AE.D8.B7.D8.B7.D8.A7.D8.AA_.D8.A7.D9.84.D8.AA.D9.82.D8.B3.D9.8A.D9.85"></span><span class="mw-headline" id="مخططات_التقسيم">مخططات التقسيم</span>
+</h2>
+<p>ليس هناك قواعد صارمة في تقسيم القرص الصلب لكن يمكن للمستخدم أن يتبع الإرشادات العامة المذكورة أدناه، يتم تحديد مخطط التقسيم وفقاً لرغبة المستخدم في المرونة أو السرعة أو الحماية وأيضاً وفق المساحة المتوفرة على القرص حيث أن المخطط بالنهاية خيار شخصي للمستخدم، إذا كنت ترغب بتثبيت نظامي آرتش لينوكس وويندوز فالرجاء قراءة <a href="../en/Dual_boot_with_Windows.html" class="mw-redirect" title="Windows and Arch Dual Boot">Windows and Arch Dual Boot</a>.
+</p>
+<h3>
+<span id=".D9.82.D8.B3.D9.85_.D9.88.D8.A7.D8.AD.D8.AF_.D9.84.D9.84.D8.AC.D8.B0.D8.B1"></span><span class="mw-headline" id="قسم_واحد_للجذر">قسم واحد للجذر</span>
+</h3>
+<p>هذا المخطط هو الأبسط ومن المفترض أن يفي بالغرض في أغلب حالات الاستخدام، يمكن إنشاء ملف سواب <a href="../en/Swap.html#Swap_file" class="mw-redirect" title="Swapfile">swapfile</a> ويمكن تغيير مساحته بسهولة عند الضرورة، وعادة يتم تعيين قسم للجذر "/" بدايةً ومن ثم يتم إنشاء باقي الأقسام بناءً على الغرض من الاستخدام مثل raid أو التشفير أو قسم لمشاركة الوسائط أو غيرها.
+</p>
+<h3>
+<span id=".D8.A7.D9.84.D8.A3.D9.82.D8.B3.D8.A7.D9.85_.D8.A7.D9.84.D9.85.D9.86.D9.81.D8.B5.D9.84.D8.A9"></span><span class="mw-headline" id="الأقسام_المنفصلة">الأقسام المنفصلة</span>
+</h3>
+<p>وضع مجلد معين على قسم منفصل يُمكِّن المستخدم من اختيار نظام الملفات الخاص بهذا المجلد ويجعله قادراً على ضبط خيارات ربط mount هذا القسم، في بعض الحالات من مثل القسم المحتوي على الوسائط فمن الممكن مشاركة هذه القسم بين أنظمة التشغيل.
+</p>
+<h3>
+<span id=".D9.86.D9.82.D8.A7.D8.B7_.D8.A7.D9.84.D8.B1.D8.A8.D8.B7"></span><span class="mw-headline" id="نقاط_الربط">نقاط الربط</span>
+</h3>
+<p>نقاط الربط التالية هي الاختيارات المحتملة عند ربط الأقسام المنفصلة بالنظام، قم بالاختيار بناءً على احتياجاتك الفعلية.
+</p>
+<h4>
+<span id=".D9.82.D8.B3.D9.85_.D8.A7.D9.84.D8.AC.D8.B0.D8.B1"></span><span class="mw-headline" id="قسم_الجذر">قسم الجذر</span>
+</h4>
+<p>مجلد الجذر هو قمة السُلَّم وهو المكان الذي تربط به ملفات النظام الرئيسية ومنه تنبثق كافة الملفات، كل الملفات والمجلدات تظهر تحت مجلد الجذر <b>/</b> حتى لو كانت مخزنة على قرص آخر، ملفات الجذر يجب أن تكون كافية للإقلاع والاسترجاع restore والاستعادة recover و/أو إصلاح النظام، ولذلك فإن بعض المجلدات المعينة تحت المسار <b>/</b> لا يمكن وضعها على أقسام منفصلة.
+</p>
+<p>قسم الجذر <b>/</b> هو القسم الأهم في النظام أما باقي الأقسام فمن الممكن الاستغناء عنها وتضمينها مع قسم الجذر.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>تحذير:</strong>  المجلدات الأساسية لعملية الإقلاع (ليس المقصود مجلد <b>/boot</b>) <b>يجب</b> أن تكون على نفس القسم المتواجد عليه الجذر <b>/</b> أو أن يتم ربطها في وقت مبكر بواسطة سكربت <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a>، هذه المجلدات الأساسية هي:<b>/bin</b>، <b>/etc</b>، <b>/lib</b>، <b>/sbin</b> و<b>/usr</b>. <a rel="nofollow" class="external autonumber" href="https://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken">[1]</a>.</div>
+<h4>
+<span id=".D9.85.D8.AC.D9.84.D8.AF_.2Fboot"></span><span class="mw-headline" id="مجلد_/boot">مجلد /boot</span>
+</h4>
+<p>يحوي مجلد <b>/boot</b> على النواة و ramdisk images إضافة إلى ملف إعداد مُحمِّل الإقلاع والمراحل التي يتبعها، كما أنه يخزن بيانات يتم استخدامها قبل أن تقوم النواة بتشغيل برامج المستخدم user-space، مجلد <b>/boot</b> غير مطلوب أثناء القيام بالعمليات الاعتيادية من قبل النظام إنما يكون مطلوباً فقط أثناء إقلاع النظام وأثناء ترقية النواة (عند إعادة توليد initial ramdisk).
+</p>
+<p>من الضروري وضع مجلد <b>/boot</b> على قسم منفصل عند تثبيت برمجيات RAID0 (stripe) system.
+</p>
+<h4>
+<span id=".D9.85.D8.AC.D9.84.D8.AF_.2Fhome"></span><span class="mw-headline" id="مجلد_/home">مجلد /home</span>
+</h4>
+<p>يحوي مجلد <b>/home</b> على العديد من الملفات الخاصة بالمستخدم مثل ملفات الإعدادات وملفات التخزين المؤقت caches وبيانات التطبيقات application data وملفات الوسائط.
+</p>
+<p>فصل المجلد <b>/home</b> ووضعه على قسم خاص يُمكِّن المستخدم من إعادة تقسيم مجلد الجذر <b>/</b> بدون أن يؤثر هذا الأمر على الملفات الموجودة على المجلد <b>/home</b>، لكن لاحظ أنه يمكنك إعادة تثبيت آرتش دون أن تؤثر على المجلد <b>/home</b> حتى لو كان هذا المجلد غير منفصل (فقط المجلدات العليا يجب حذفها ومن ثم يتم تشغيل pacstrap).
+</p>
+<p>يجب عليك عدم مشاركة مجلد المنزل بين التوزيعات المختلفة لأنها تستخدم برامج وباتشات غير متوافقة مع التوزيعات الأخرى،  بدلاً من ذلك قم بمشاركة قسم وسائط أو على الأقل قم باستخدام مجلدات منزل مختلفة على نفس قسم <b>/home</b>.
+</p>
+<h4>
+<span id=".D9.85.D8.AC.D9.84.D8.AF_.2Fvar"></span><span class="mw-headline" id="مجلد_/var">مجلد /var</span>
+</h4>
+<p>يقوم مجلد <b>/var</b> بتخزين البيانات المتغيرة مثل مجلدات وملفات spool، البيانات الإدارية وبيانات التسجيل، ملفات مدير الحزم <a href="../en/Pacman.html" title="Pacman">pacman</a> المؤقتة، هيكل <a href="../en/Arch_Build_System.html" title="Arch Build System">ABS</a> ... إلخ، ويستخدم للتخزين والتسجيل المؤقتين وأيضاً الكتابة والقراءة المتكررة، وضع هذا المجلد على قسم منفصل يساعد في تجنب نفاذ المساحة نتيجة لتزايد السجلات والملفات ... إلخ.
+</p>
+<p>فهو موجود لكي يجعل من ربط قسم <b>/usr</b> في وضع القراءة فقط ممكناً، كل ما تتم كتابته أثناء عمليات النظام (في مقابل التثبيت وإدارة البرمجيات) يجب أن يوضع ضمن <b>/var</b>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong>  يحوي مجلد <b>/var</b> على الكثير من الملفات الصغيرة، وبالتالي يجب أخذ هذا الأمر بعين الاعتبار عند اختيار نوع نظام الملفات في حال وضع المجلد على قسم منفصل.</div>
+<h4>
+<span id=".D9.85.D8.AC.D9.84.D8.AF_.2Ftmp"></span><span class="mw-headline" id="مجلد_/tmp">مجلد /tmp</span>
+</h4>
+<p>هذا المجلد وبشكل افتراضي يوجد على قسم منفصل، بحكم أنه يتم ربطه كـ <b>tmpfs</b> بواسطة systemd.
+</p>
+<h4>
+<span id=".D8.B3.D9.88.D8.A7.D8.A8"></span><span class="mw-headline" id="سواب">سواب</span>
+</h4>
+<p>يوفر قسم <a href="../en/Swap.html" title="Swap">swap</a> مساحة يمكن استعمالها كذاكرة عشوائية RAM وهمية، يمكن مشاركة قسم سواب بين أنظمة التشغيل لكن ليس أثناء وضعية الإسبات، هناك أيضاً ملف سواب <a href="../en/Swap.html#Swap_file" class="mw-redirect" title="Swapfile">swapfile</a> الذي يجب أخذه بعين الاعتبار، صحيح أن أداءه أقل مقارنة بقسم سواب لكن من السهل جداً تغيير حجمه عند الضرورة، 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong>  القاعدة القديمة في مطابقة مساحة قسم سواب مع الذاكرة العشوائية المتوفرة أثناء تنفيذ الأمر <a href="../en/Power_management/Suspend_and_hibernate.html" class="mw-redirect" title="Suspend to Disk">suspend-to-disk</a> لم تعد تُطبق، الطريقة الافتراضية لـ suspend باتت تستخدم صورة 40% من ذاكرة RAM المتوفرة، وحتى مع استعمال <a href="../en/ArchWiki:Archive.html" class="mw-redirect" title="TuxOnIce">TuxOnIce</a> فإن النسخة المتطابقة تملك فقط حوالي 70% بعد الضغط. <a rel="nofollow" class="external autonumber" href="http://tuxonice.net/features">[2]</a>
+</div>
+<h4>
+<span id=".D9.85.D8.A7_.D9.87.D9.8A_.D8.A7.D9.84.D9.85.D8.B3.D8.A7.D8.AD.D8.A9_.D8.A7.D9.84.D9.85.D9.86.D8.A7.D8.B3.D8.A8.D8.A9_.D9.84.D9.83.D9.84_.D9.82.D8.B3.D9.85.D8.9F"></span><span class="mw-headline" id="ما_هي_المساحة_المناسبة_لكل_قسم؟">ما هي المساحة المناسبة لكل قسم؟</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong>  المذكور أدناه مجرد نصائح غير ملزمة حيث أنه لا توجد قواعد صارمة في تقسيم القرص الصلب.</div>
+<p>تحديد مساحة كل قسم يعتمد على الشخص نفسه واحتياجاته، المعلومات التالية قد تكون مفيدة:
+</p>
+<dl>
+<dt>
+<b>/boot</b> - 200 ميغابايت</dt>
+<dd>يحتاج قسم <b>/boot</b> حوالي 100 ميغابايت فقط، لكن في حال أنك تريد الاحتفاظ بأكثر من نواة فيستحسن اختيار 200 أو 300 ميغابايت.</dd>
+<dt>
+<b>/</b> - من 15 إلى 20 غيغابايت</dt>
+<dd>يحوي مجلد الجذر <b>/</b> على مجلد <b>/usr</b> الذي يزداد حجمه كلما تم تثبيت برامج جديدة، 15 إلى 20 غيغابايت من المفترض أن تكون كافية لأغلب المستخدمين الممتلكين لأقراص صلبة حديثة.</dd>
+<dt>
+<b>/var</b> - من 8 إلى 12 غيغابايت</dt>
+<dd>من بين عدة بيانات ستُخزَن على هذا القسم فإنه سيحوي على هيكل <a href="../en/Arch_Build_System.html" title="Arch Build System">ABS</a> وملفات وحزم مخبأة cache لمدير الحزم <a href="../en/Pacman.html" title="Pacman">pacman</a>، الحفاظ على نسخ من الحزم أمر مفيد حيث أنه يسمح للمستخدم الانتقال من نسخة أحدث إلى نسخة أقدم إذا لزم الأمر ولكن ستقل المساحة الخالية على القسم كنتيجة لهذه العملية حيث أن الحزم والملفات المخبأة من قبل pacman ستزيد كلما قمت بتحديث النظام أو قمت بتثبيت حزم جديدة، لكن بالطبع يمكن حذف هذه الملفات والحزم في حال أردت المزيد من المساحة الخالية على القسم،  8 إلى 12 غيغابايت من المفترض أن تكون كافية لقسم <b>/var</b> بالاعتماد على عدد الحزم التي سيتم تثبيتها.</dd>
+<dt>
+<b>/home</b> - الحجم يختلف من مستخدم لآخر</dt>
+<dd>قسم <b>/home</b> هو المكان الذي تُخزن فيه بيانات المستخدم والملفات المُحمَّلة من الإنترنت وملفات الوسائط، بالنسبة لنظام سطح مكتب فإن نظام ملفات <b>/home</b> هو الأكبر على القرص كما لديه هامش كبير.</dd>
+<dt>
+<b>swap</b> - الحجم يختلف من مستخدم لآخر</dt>
+<dd>تاريخياً القاعدة العامة لتحديد مساحة قسم سواب هو اختيار ضعف سعة الذاكرة العشوائية RAM لكن مع التطور والزيادة في سعات الذواكر العشوائية تم إلغاء هذه القاعدة، في حال الحواسيب التي تحوي على ذاكرة RAM بسعة 512 ميغابايت فإن القاعدة السابقة تكون مناسبة وكافية، أما إذا كانت سعة الذاكرة العشوائية كبيرة (أكبر من 1024 ميغابايت) فمن الممكن أن تقلل مساحة قسم سواب أو أن تلغيه نهائياً، وعند امتلاك ذاكرة أكبر من 2 غيغابايت فمن المتوقع أن يكون أداء الجهاز ممتازاً حتى بدون تخصيص قسم سواب.</dd>
+<dt>
+<b>/data</b> - الحجم يختلف من مستخدم لآخر</dt>
+<dd>يمكن للمستخدم أن يخصص قسم "data" لوضع الملفات التي يريد أن يشاركها مع كل المستخدمين على الجهاز نفسه، ومن الممكن أيضاً الاكتفاء باستخدام قسم <b>/home</b> لنفس الغرض.</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong>  إذا كنت تملك فائضاً من المساحة على القرص فإن زيادة مساحة الأقسام السابقة بمقدار 25% سيجعلك في مأمن من الحاجة لمساحة إضافية في المستقبل كما سيغنيك عن التجزئة.</div>
+<h2>
+<span id=".D8.A3.D8.AF.D9.88.D8.A7.D8.AA_.D8.A7.D9.84.D8.AA.D9.82.D8.B3.D9.8A.D9.85"></span><span class="mw-headline" id="أدوات_التقسيم">أدوات التقسيم</span>
+</h2>
+<ul><li>
+<b>fdisk</b> — أداة للتقسيم من داخل الطرفية تأتي مضمنة مع لينوكس.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<ul><li>
+<b>cfdisk</b> — أداة للتقسيم من داخل الطرفية كُتبت بواسطة مكتبات ncurses.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>تحذير:</strong> القسم الأول الذي تنشئه أداة "cfdisk" يبدأ من القطاع رقم 63 بدلاً من القطاع المعتاد 2048، هذا الأمر قد يسبب أداءً منخفضاً في أقراص الحالة الصلبة SSD وأقراص البنية المتقدمة advanced format (4k sector) drives، كما سيسبب أخطاءً مع <a href="../en/GRUB.html#msdos-style_error_message" class="mw-redirect" title="GRUB2">GRUB2</a>، أما مُحمِّل الإقلاع GRUB legacy و Syslinux فمن المفترض أن يعملا بشكل جيد.</div>
+<ul><li>
+<b>gdisk</b> — نسخة <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a> من أداة fdisk.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b>cgdisk</b> — نسخة GPT من أداة cfdisk.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b>GNU Parted</b> — أداة تقسيم تعمل من الطرفية.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.gnu.org/software/parted/parted.html">https://www.gnu.org/software/parted/parted.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=parted">parted</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Parted.html" class="mw-redirect" title="GParted">GParted</a></b> — أداة بواجهة رسومية كُتبت بواسطة GTK.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://gparted.sourceforge.net/">http://gparted.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gparted">gparted</a></span>
+</dd></dl>
+<ul><li>
+<b>Partitionmanager</b> — أداة بواجهة رسومية كُتبت بواسطة QT.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://sourceforge.net/projects/partitionman/">https://sourceforge.net/projects/partitionman/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=partitionmanager">partitionmanager</a></span>
+</dd></dl>
+<ul><li>
+<b>QtParted</b> — مشابهة لأداة Partitionmanager ومتوفرة في مستودع <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a>.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://qtparted.sourceforge.net/">http://qtparted.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/qtparted/">qtparted</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup>
+</dd></dl>
+<h2>
+<span id=".D9.85.D8.AD.D8.A7.D8.B0.D8.A7.D8.A9_.D8.A7.D9.84.D9.82.D8.B3.D9.85"></span><span class="mw-headline" id="محاذاة_القسم">محاذاة القسم</span>
+</h2>
+<h3>
+<span id=".D9.86.D8.B8.D8.B1.D8.A9_.D8.B9.D8.A7.D9.85.D8.A9"></span><span class="mw-headline" id="نظرة_عامة">نظرة عامة</span>
+</h3>
+<p><b>المحاذاة الصحيحة للقسم أمر أساسي للحصول على الأداء الأمثل والعمر الطويل،</b> التقسيم (كحد أدنى) وفقاً لـ EBS (حجم كتلة المسح Erase Block Size) الخاص بقرص SSD هو الطريقة المثلى للحصول على محاذاة صحيحة.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong> * حجم  الـ EBS خاص لكل شركة، يمكنك القيام ببحث على غوغل عن الطراز المطلوب، على سبيل المثال يُعتقد أن الـ Intel X25-M يملك EBS بـمقدار 512 كيلوبايت لكن إنتل لم تعلن أي شي رسمي عنه لوقت كتابة هذا المقال.
+<ul><li>إذا لم تكن تعرف قيمة EBS الخاصة بقرص الحالة الصلبة SSD الخاص بك فقم باختيار القيمة 512 كيلوبايت، هذا الرقم أكبر من أو يساوي كل قيم EBS المنتشرة تقريباً، ضبط القسم على قيمة EBS السابقة سيمكن القسم من محاذاة جميع القيم الأصغر، هذه هي الطريقة التي يتبعها ويندوز 7 و أوبونتو في إعداد الأقسام لكي تعمل مع أقراص الحالة الصلبة.</li></ul>
+</div>
+<p>إذا لم يتم محاذاة الأقسام بحيث تبدأ من مضاعفات الـ EBS (على سبيل المثال 512 كيلوبايت) فإن عملية المحاذاة لا فائدة منها لأن كل شيء سينحرف عند بداية الإزاحة في القسم، بشكل تقليدي فإن البيانات المراد قراءتها أو كتابتها على القرص الصلب يتم عنونتها بالإشارة إلى "الأسطوانة" و "الرأس" و "القطاع" حيث أنهم يمثلون على التوالي الموقع القُطْري و الرأس (القرص والمحور) والموقع المحوري للبيانات، لكن في LBA (عنونة الكتلة المنطقية logical block addressing) لم يعد هذا هو الحال فبدلاً من ذلك تم عنونة كل القرص الصلب كتيار متواصل من البيانات.
+</p>
+<h3>
+<span id=".D8.A7.D9.84.D8.A7.D8.AE.D8.AA.D9.8A.D8.A7.D8.B1_.D8.A8.D9.8A.D9.86_GPT_.D9.88_MBR"></span><span class="mw-headline" id="الاختيار_بين_GPT_و_MBR">الاختيار بين GPT و MBR</span>
+</h3>
+<p>جدول تقسيم <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table</a> (GPT) عبارة عن طريقة تقسيم حديثة تهدف إلى استبدال نظام <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a> (MBR) القديم، يتفوق GPT بعدة أمور على MBR الذي يحوي على مراوغات يعود تاريخها إلى MS-DOS، ومع التطويرات الجديدة على أدوات التهيئة <i>fdisk</i> (MBR) و <i>gdisk</i> (GPT) فأصبح من السهل الاختيار بين GPT أو MBR والحصول على الأداء الأفضل.
+</p>
+<p>الاختيار محصور بالتالي:
+</p>
+<ul>
+<li>إذا كنت تستخدم GRUB legacy كمُحمَِل إقلاع فيجب استخدام MBR.</li>
+<li>للإقلاع الثنائي مع ويندوز يجب استخدام MBR.
+<ul><li>هناك استثناء خاص لهذه القاعدة: عند الإقلاع الثنائي مع نظام ويندوز 64 بت باستخدام <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> بدلاً من BIOS يجب استخدام GPT.</li></ul>
+</li>
+<li>إذا لم تنطبق عليك الأمور السابقة فلك مطلق الحرية باستعمال GPT أو MBR، وبما أن GPT هو الأحدث فيفضل استعماله.</li>
+</ul>
+<h3>
+<span id=".D8.A7.D8.B3.D8.AA.D8.AE.D8.AF.D8.A7.D9.85_GPT_-_.D8.A7.D9.84.D8.B7.D8.B1.D9.8A.D9.82.D8.A9_.D8.A7.D9.84.D8.AD.D8.AF.D9.8A.D8.AB.D8.A9"></span><span class="mw-headline" id="استخدام_GPT_-_الطريقة_الحديثة">استخدام GPT - الطريقة الحديثة</span>
+</h3>
+<h4>
+<span id=".D9.85.D9.84.D8.AE.D8.B5_.D8.A7.D8.B3.D8.AA.D8.B9.D9.85.D8.A7.D9.84_.D8.A3.D8.AF.D8.A7.D8.A9_Gdisk"></span><span class="mw-headline" id="ملخص_استعمال_أداة_Gdisk">ملخص استعمال أداة Gdisk</span>
+</h4>
+<p>عند استعمال GPT فإن أداة تعديل جدول التقسيم تدعى <code>gdisk</code>، يمكن لهذه الأداة أن تتكفل بمحاذاة القسم تلقائياً على 2048 قطاع (أو كتلة بحجم 1024 كيلوبايت) والذي من المفروض أن يتوافق مع غالبية أقراص SSD إذا لم يكن كلها، GNU parted أيضاً يدعم GPT لكنه أقل ملائمة للمستخدم <a rel="nofollow" class="external text" href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=601813">less user-friendly</a> في عملية تنظيم القسم، ملخص للاستعمال القياسي لأداة <code>gdisk</code>:
+</p>
+<ul>
+<li>قم بتثبيت <code>gdisk</code> من خلال حزمة <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>.</li>
+<li>شغل <code>gdisk</code>على القرص.</li>
+<li>إذا كان القرص جديداً أو كنت تريد أن تقسمه من جديد قم بإنشاء جدول تقسيم GUID فارغ جديد بواسطة الأمر <code>o</code>.</li>
+<li>قم بإنشاء قسم جديد بواسطة الأمر <code>n</code> (النوع أساسي/القسم الأول).</li>
+<li>على فرض أن القسم جديد، سيقوم gdisk باختيار أكبر محاذاة ممكنة، أو بعبارة أخرى فإنه سيختار أكبر قوة للعدد 2 والتي تقسم كل الانزياحات على القسم.</li>
+<li>إذا قمت باختيار قطاع قبل القطاع 2048 كنقطة للبدء فإن gdisk سيقوم تلقائياً بنقل نقطة البدء إلى القطاع 2048، هذا الأمر لكي يتم ضمان المحاذاة بمقدار 2048 قطاع (بما أن القطاع يساوي 512 بايت، تكون المحاذاة تساوي 1024 كيلوبايت والتي من المفروض أن تناسب أي قرص SSD NAND erase block).</li>
+<li>استعمل صيغة <code>+x{M,G}</code> لكي تزيد من القسم بمقدار <code>x</code> ميغابايت أو غيغابايت، إذا تم اختيار قيمة ليست من مضاعفات قيمة المحاذاة (1024 كيلوبايت) فإن gdisk سيقوم بتخفيض القسم إلى أقرب منزلة في المضاعف.</li>
+<li>قم باختيار مُعرّف نوع القسم، الافتراضي هو <code>Linux/Windows data</code> (code <code>0700</code>) والذي من المفترض أن يعمل جيداً في أغلب الاستخدامات، اضغط على المفتاح <code>L</code>لإظهار قائمة بالأرقام، وإذا كنت تخطط لاستخدام LVM اختر Linux LVM (8e00).</li>
+<li>قم بتخصيص باقي الأقسام بنفس الطريقة.</li>
+<li>قم بكتابة الجدول إلى القرص ثم اخرج بواسطة الأمر <code>w</code>.</li>
+<li>قم بتهيئة الأقسام الجديدة بواسطة <a href="../en/File_systems.html" title="File systems">file system</a>.</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>ملاحظة:</strong> * للإقلاع من قرص مقسم وفق GPT على نظام BIOS يجب عليك إنشاء -يفضل أن يكون في بداية القرص- <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="GRUB2">BIOS boot partition</a> من دون نظام ملفات ومع نوع تقسيم مثل <code>BIOS boot</code> أو <code>bios_grub</code>، هذا في حال الإقلاع بواسطة <a href="../en/GRUB.html" title="GRUB">GRUB</a>، أنا في حال <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a> فلا يجب عليك إنشاء قسم bios_grub السابق بل تحتاج إلى قسم خاص لـ <code>/boot</code> والقيام بتفعيل سمة <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="GRUB2">BIOS boot partition</a> الخاصة بهذا القسم (بواسطة gdisk).
+<ul><li>مُحمِّل الإقلاع <a href="../en/GRUB_Legacy.html" title="GRUB Legacy">GRUB Legacy</a> لا يدعم GPT، يجب على المستخدمين أن يستعملوا <a href="../en/GRUB.html" class="mw-redirect" title="BURG">BURG</a> أو <a href="../en/GRUB.html" title="GRUB">GRUB</a> أو <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a>.</li></ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>تحذير:</strong>  إذا كنت تريد أن تقلع ثنائياً مع نظام ويندوز في وضعية BIOS (هذا هو الخيار الوحيد لنسخ 32 بت من ويندوز ونسخة 64 بت من ويندوز XP) <b>فلا</b> تستعمل GPT حيث أن ويندوز <b>لا</b> يدعم الإقلاع من قرص GPT في أنظمة BIOS! أنت تحتاج إلى استعمال MBR ومن ثم الإقلاع بوضعية BIOS كما هو موضح أدناه، هذا الشيء لا ينطبق في حال الإقلاع بنسخة 64 بت حديثة من ويندوز في وضعية UEFI.</div>
+<h3>
+<span id=".D8.A7.D8.B3.D8.AA.D8.B9.D9.85.D8.A7.D9.84_MBR_-_.D8.B7.D8.B1.D9.8A.D9.82.D8.A9_legacy"></span><span class="mw-headline" id="استعمال_MBR_-_طريقة_legacy">استعمال MBR - طريقة legacy</span>
+</h3>
+<p>عند استعمال MBR تدعى أداة تعديل جدول التقسيم بـ <code>fdisk</code>، النسخ الحديثة من fdisk تخلت عن النظام المهمل في عرض الأسطوانات كوحدة عرض افتراضية إضافة إلى التوافق مع MS-DOS بشكل افتراضي، النسخة الأخيرة من fdisk تقوم بشكل تلقائي بمحاذاة كل الأقسام إلى 2048 قطاع أو 1024 كيلوبايت والذي من المفروض أن يعمل مع كل أحجام EBS التي تُستخدم من قبل مُصنّعي أقراص SSD، هذا يعني أن الإعدادات الافتراضية ستقدم لك محاذاة صحيحة.
+</p>
+<p>لاحظ أن أداة fdisk قديماً كانت تستعمل الأسطوانات كوحدة عرض افتراضية، وحافظت على التوافقية مع MS-DOS التي فقدت مع محاذاة أقراص SSD، لذلك ستجد الكثير من الأدلة على الإنترنت من حوالي عامي 2008-2009 التي تساعد في جعل كل الإعدادات صحيحة، مع النسخة الأحدث من fdisk فإن الأمور أصبحت أكثر بساطة كما هو مبين في هذا الدليل.
+</p>
+<h4>
+<span id=".D9.85.D9.84.D8.AE.D8.B5_.D8.A7.D8.B3.D8.AA.D8.B9.D9.85.D8.A7.D9.84_Fdisk"></span><span class="mw-headline" id="ملخص_استعمال_Fdisk">ملخص استعمال Fdisk</span>
+</h4>
+<ul>
+<li>شغل <code>fdisk</code> ضمن القرص المطلوب.</li>
+<li>إذا كان القرص جديداً أو كنت تريد أن تقسمه من جديد قم بإنشاء جدول تقسيم DOS جديد وفارغ بواسطة الأمر <code>o</code>.</li>
+<li>قم بإنشاء قسم جديد بواسطة الأمر <code>n</code> (النوع أساسي/القسم الأول).</li>
+<li>قم باستعمال الصيغة <code>+xG</code> لزيادة حجم القسم بمقدار <code>x</code> غيغابايت.</li>
+<li>قم بتغيير مُعرف نظام القسم من النوع الافتراضي لينوكس (<code>type 83</code>) إلى النوع المطلوب بواسطة الأمر <code>t</code>، هذه خطوة اختيارية في حال أراد المستخدم إنشاء نوع آخر من الأقسام مثل swap أو NTFS أو LVM ... إلخ، لاحظ أنه بإمكانك الاطلاع على قائمة بكل الأنواع الصالحة بواسطة الأمر <code>l</code>.</li>
+<li>قم بتخصيص باقي الأقسام بنفس الطريقة.</li>
+<li>قم بكتابة الجدول إلى القرص ثم اخرج بواسطة الأمر <code>w</code>.</li>
+<li>قم بتهيئة الأقسام الجديدة بواسطة <a href="../en/File_systems.html" title="File systems">file system</a>.</li>
+</ul>
+<h2>
+<span id=".D8.A7.D9.86.D8.B8.D8.B1_.D8.A3.D9.8A.D8.B6.D8.A7.D9.8B"></span><span class="mw-headline" id="انظر_أيضاً">انظر أيضاً</span>
+</h2>
+<ul>
+<li>
+<a href="../en/Ext4.html#Creating_ext4_partitions_from_scratch" title="Ext4">Creating ext4 partitions from scratch</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>
+</li>
+<li><a href="https://en.wikipedia.org/wiki/Disk_partitioning" class="extiw" title="wikipedia:Disk partitioning">Wikipedia:Disk partitioning</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../ar/Category:File_systems.html" title="Category:File systems (العربية)">File systems (العربية)</a></li>
+<li><a href="../en/Category:26b1b2b0a4193aabcc33455732de89ac.html" title="Category:العربية">العربية</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Partitioning_(%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9)&amp;oldid=638565">https://wiki.archlinux.org/index.php?title=Partitioning_(العربية)&amp;oldid=638565</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:16.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt (Español)/Swap encryption (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_Español_Swap_encryption_Español rootpage-Dm-crypt_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt (Español)/Swap encryption (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Dm-crypt.html" title="Dm-crypt (Español)">Dm-crypt (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Dm-crypt/Swap_encryption.html" title="Dm-crypt/Swap encryption">Dm-crypt/Swap encryption</a> revisada por última vez el <b>2018-11-22</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Dm-crypt/Swap_encryption&amp;diff=0&amp;oldid=548465">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<p>Dependiendo de los requisitos, se pueden usar diferentes métodos para cifrar la partición <a href="../es/Swap.html" title="Swap (Español)">de intercambio</a>, los cuales se describen a continuación. Una configuración en la que el cifrado del espacio de intercambio se reinicializa en cada arranque (con un nuevo cifrado) proporciona una mayor protección de datos, ya que evita los fragmentos de archivos confidenciales que pueden haber sido intercambiados hace tiempo sin sobrescribirlos. Sin embargo, volver a cifrar el espacio de intercambio también inhibe el uso de una función de suspensión en disco en general.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Sin_soporte_para_suspensi%C3%B3n_en_disco"><span class="tocnumber">1</span> <span class="toctext">Sin soporte para suspensión en disco</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#UUID_y_LABEL"><span class="tocnumber">1.1</span> <span class="toctext">UUID y LABEL</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Con_soporte_para_suspensi%C3%B3n_en_disco"><span class="tocnumber">2</span> <span class="toctext">Con soporte para suspensión en disco</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#LVM_sobre_LUKS"><span class="tocnumber">2.1</span> <span class="toctext">LVM sobre LUKS</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Hook_de_mkinitcpio"><span class="tocnumber">2.2</span> <span class="toctext">Hook de mkinitcpio</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Utilizar_un_archivo_de_intercambio"><span class="tocnumber">2.3</span> <span class="toctext">Utilizar un archivo de intercambio</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Problemas_conocidos"><span class="tocnumber">3</span> <span class="toctext">Problemas conocidos</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Sin_soporte_para_suspensi.C3.B3n_en_disco"></span><span class="mw-headline" id="Sin_soporte_para_suspensión_en_disco">Sin soporte para suspensión en disco</span>
+</h2>
+<p>En los sistemas en los que la suspensión en disco (hibernación) no es una función deseada, se puede configurar <code>/etc/crypttab</code> para descifrar la partición de intercambio con una contraseña aleatoria en el momento del arranque con la modalidad plain de dm-crypt. La contraseña aleatoria se descarta al cerrarse, dejando solo datos cifrados e inaccesibles en el dispositivo de intercambio.
+</p>
+<p>Para activar esta función, simplemente elimine el comentario de la línea que comienza con <code>swap</code> en <code>/etc/crypttab</code>. Cambie el parámetro <code>&lt;dispositivo&gt;</code> con el nombre de su dispositivo de intercambio. Por ejemplo, se verá algo como esto:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/crypttab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># &lt;name&gt;  &lt;device&gt;     &lt;password&gt;     &lt;options&gt;
+swap      /dev/sd<i>X#</i>    /dev/urandom   swap,cipher=aes-xts-plain64,size=256</pre>
+<p>Esto mapeará <code>/dev/sd<i>X#</i></code> en <code>/dev/mapper/swap</code> como una partición de intercambio que se puede agregar en <code>/etc/fstab</code> como un espacio de intercambio normal. Si antes tenía una partición de intercambio no cifrada, no olvide desactivarla, o reutilice la entrada de <a href="../en/Fstab.html" title="Fstab">fstab</a> cambiando el dispositivo a <code>/dev/mapper/swap</code>. Las opciones predeterminadas deben ser suficientes para la mayoría al uso. Para otras opciones y una explicación de cada columna, vea <span class="plainlinks archwiki-template-man" title="$ man 5 crypttab"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/crypttab.5">crypttab(5)</a></span> así como <a rel="nofollow" class="external text" href="https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions#2-setup">point cryptsetup FAQ 2.3</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> Todo el contenido del dispositivo nombrado se <b>eliminará</b> permanentemente. Es peligroso usar el nombre simple dado por el kernel para un dispositivo de intercambio, ya que el orden de su nombre (<i>por ejemplo</i> <code>/dev/sda</code>, <code>/dev/sdb</code>) cambia en cada arranque . Las opciones son:
+<ul>
+<li>Utilice las rutas <code>by-id</code> y <code>by-path</code>. Sin embargo, ambos son susceptibles a los cambios de hardware. Consulte <a href="../es/Persistent_block_device_naming.html#by-id_y_by-path" title="Persistent block device naming (Español)">Persistent block device naming (Español)#by-id y by-path</a>.</li>
+<li>Use el nombre del volumen lógico <a href="../es/LVM.html" title="LVM (Español)">LVM (Español)</a>.</li>
+<li>Utilice el método descrito en <a href="#UUID_y_LABEL">#UUID y LABEL</a>. Las etiquetas (label) y <a href="../es/Persistent_block_device_naming.html#by-uuid" title="Persistent block device naming (Español)">UUIDS</a> <b>no pueden</b> utilizarse directamente debido a la recreación y recifrado del dispositivo de intercambio en cada inicio con <code>mkswap</code>, consulte <a rel="nofollow" class="external text" href="https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions#2-setup">FAQ de cryptsetup</a>.</li>
+</ul>
+</div>
+<p>Para usar un nombre de dispositivo persistente <code>by-id</code> en lugar del nombre simple dado por el kernel, primero identifique el dispositivo de intercambio:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># find -L /dev/disk -samefile /dev/<i>sdaX</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/disk/by-id/ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-part<i>X</i>
+/dev/disk/by-id/wwn-0x60015ee0000b237f-part<i>X</i>
+</pre>
+<p>Luego utilice como una referencia persistente para la partición de ejemplo <code>/dev/sd<i>X#</i></code> (si se devuelven dos resultados como lo anterior, elija uno de ellos):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/crypttab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># &lt;name&gt;  &lt;device&gt;                                                         &lt;password&gt;     &lt;options&gt;
+swap      /dev/disk/by-id/ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-partX  /dev/urandom   swap,cipher=aes-cbc-essiv:sha256,size=256</pre>
+<p>Después de reiniciar para activar el espacio intercambio cifrado, observará que al ejecutar la orden <code>swapon -s</code> se muestra una entrada de mapeado de dispositivo arbitraria (por ejemplo, <code>/dev/dm-1</code>), mientras que la orden <code>lsblk</code> muestra <b>crypt</b> en la columna <code>FSTYPE</code>. Debido a que se cifra en cada inicio, el UUID para <code>/dev/mapper/swap</code> cambiará cada vez.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Si la partición elegida para el intercambio era anteriormente una partición LUKS, crypttab no sobrescribirá la partición para crear una partición de intercambio. Esta es una medida de seguridad para evitar la pérdida de datos por una identificación errónea accidental de la partición de intercambio en crypttab. Para utilizar una partición de este tipo, el <a href="../es/1daf578c03eb9295437449223bde02c3.html#Limpiar_el_encabezado_LUKS" class="mw-redirect" title="Dm-crypt/Drive preparation (Español)">encabezado LUKS debe sobrescribirse</a> al menos una vez.</div>
+<h3><span class="mw-headline" id="UUID_y_LABEL">UUID y LABEL</span></h3>
+<p>Es peligroso utilizar el espacio intercambio en el archivo crypttab con los simples nombres de los dispositivos proporcionados por el kernel  tales como <code>/dev/sdX#</code> o incluso <code>/dev/disk/by-id/ata-SERIAL-partX</code>. Un pequeño cambio en los nombres de los dispositivos o en el diseño de la partición y <code>/etc/crypttab</code> hará que sus valiosos datos sean formateados en el próximo arranque. Lo mismo cabe decir si usa PARTUUID y luego decide usar esa partición para otra cosa sin eliminar primero su entrada en crypttab.
+</p>
+<p>Es más confiable identificar la partición correcta al darle un UUID o ETIQUETA (LABEL en inglés) genuino. Por defecto, eso no funciona porque dm-crypt y <code>mkswap</code> simplemente sobrescribirían cualquier contenido en esa partición que eliminaría también el UUID y el LABEL; sin embargo, es posible especificar un <a href="https://en.wikipedia.org/wiki/es:Offset_(inform%C3%A1tica)" class="extiw" title="wikipedia:es:Offset (informática)">offset</a> (desplazamiento) para el espacio de intercambio. Esto permite crear un sistema de archivos muy pequeño, vacío y falso, sin otro propósito que el de proporcionar un UUID o una ETIQUETA persistentes para el cifrado del espacio intercambio.
+</p>
+<p>Cree un <a href="../es/File_systems.html" title="File systems (Español)">sistema de archivos</a> con la etiqueta («<i>L</i> de <i>label</i>») de su elección:
+</p>
+<pre># mkfs.ext2 -L <i>cryptswap</i> /dev/sd<i>X#</i> 1M
+</pre>
+<p>El parámetro poco habitual que hay después del nombre del dispositivo, limita el tamaño del sistema de archivos a 1 MiB, dejando un hueco para el espacio de intercambio cifrado.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid /dev/sdX#</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/sdX#: LABEL="cryptswap" UUID="b72c384e-bd3c-49aa-b7a7-a28ea81a2605" TYPE="ext2"</pre>
+<p>Con esto, <code>/dev/sdX#</code> puede ahora ser identificado fácilmente por su UUID o LABEL, independientemente de cómo pueda cambiar en el futuro el nombre del dispositivo o incluso el número de la partición. Lo relevante serán dichas entradas en <code>/etc/crypttab</code> y <code>/etc/fstab</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/crypttab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># &lt;name&gt; &lt;device&gt;         &lt;password&gt;    &lt;options&gt;
+swap     LABEL=<i>cryptswap</i>  /dev/urandom  swap,offset=2048,cipher=aes-xts-plain64,size=512</pre>
+<p>Nota sobre offset: este espacio es de 2048 sectores de 512 bytes, por lo tanto 1 MiB. De esta manera, el espacio de intercambio que se cifrará no afectará al UUID/LABEL del sistema de archivos (que queda dentro del espacio offset), y la alineación de los datos también funcionará.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># &lt;filesystem&gt;    &lt;dir&gt;  &lt;type&gt;  &lt;options&gt;  &lt;dump&gt;  &lt;pass&gt;
+/dev/mapper/swap  none   swap    defaults   0       0</pre>
+<p>Usando esta configuración, el cifrado del espacio de intercambio solo intentará usar la partición con la ETIQUETA («<i>LABEL</i>») correspondiente, independientemente de cuál sea el nombre del dispositivo. En caso de que decida utilizar la partición para otra cosa, al formatearla también se eliminará el LABEL utilizado para el crifrado, por lo que cryptswap no lo sobrescribirá en su próximo arranque.
+</p>
+<h2>
+<span id="Con_soporte_para_suspensi.C3.B3n_en_disco"></span><span class="mw-headline" id="Con_soporte_para_suspensión_en_disco">Con soporte para suspensión en disco</span>
+</h2>
+<p>Para poder reanudar después de suspender el equipo en el disco (hibernación), es necesario mantener el espacio de intercambio intacto. Por lo tanto, se requiere tener una partición o archivo de intercambio preexistente cifrado con LUKS, que se pueda almacenar en el disco o ingresar manualmente al reanudar.
+</p>
+<p>Los siguientes tres métodos son alternativas para configurar un espacio de intercambio cifrado para suspender en disco. Si aplica alguno de ellos, tenga en cuenta que los datos críticos intercambiados por el sistema pueden permanecer en el espacio de intercambio durante un período de tiempo prolongado (es decir, hasta que se vuelva a sobrescribir). Para reducir este riesgo, considere configurar un «<i>job</i>» (trabajo) del sistema que vuelva a cifrar el espacio de intercambio, por ejemplo, cada vez que el sistema entre en un cierre regular, junto con el método de su elección.
+</p>
+<h3><span class="mw-headline" id="LVM_sobre_LUKS">LVM sobre LUKS</span></h3>
+<p>Una forma sencilla de realizar un espacio de intercambio cifrado con soporte para suspensión en disco es mediante el uso de un dispositivo de intercambio <a href="../es/LVM.html" title="LVM (Español)">LVM (Español)</a> en la misma capa de cifrado que el volumen raíz, de modo que ambos se abren mediante el hook <code>encrypt</code> en el arranque. Siga las instrucciones de <a href="../es/127964ad0f6496c88e5c9b2f38852d14.html#LVM_sobre_LUKS" class="mw-redirect" title="Dm-crypt/Encrypting an entire system (Español)">Dm-crypt/Encrypting an entire system (Español)#LVM sobre LUKS</a> y luego configure los <a href="../en/Power_management/Suspend_and_hibernate.html#Required_kernel_parameters" class="mw-redirect" title="Suspend and hibernate">parámetros de kernel necesarios</a>.
+</p>
+<p>Suponiendo que ha configurado LVM sobre LUKS con un volumen lógico de intercambio (en <code>/dev/MyStorage/swap</code> por ejemplo), todo lo que debe hacer es agregar el hook <b>resume</b> a <a href="../es/Mkinitcpio.html" title="Mkinitcpio (Español)">mkinitcpio (Español)</a> y añadir el parámetro del kernel <code>resume=/dev/MyStorage/swap</code> a su cargador de arranque. Para <a href="../es/GRUB.html" title="GRUB (Español)">GRUB (Español)</a>, esto se puede hacer agregando la variable a la línea <code>GRUB_CMDLINE_LINUX_DEFAULT</code> en <code>/etc/default/grub</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"> / etc / default / grub </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">GRUB_CMDLINE_LINUX_DEFAULT = "... resume = / dev / MyStorage / swap"</pre>
+<p>luego ejecute <code>grub-mkconfig -o /boot/grub/grub.cfg</code> para actualizar el archivo de configuración de GRUB.
+Para agregar el hook a mkinitcpio, modifique la siguiente línea en el archivo <code>mkinitcpio.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">HOOKS=(... encrypt lvm2 <b>resume</b> ... filesystems ...)</pre>
+<p>después <a href="../es/Mkinitcpio.html#Creaci%C3%B3n_de_la_imagen_y_activaci%C3%B3n" title="Mkinitcpio (Español)">regenere initramfs</a>.
+</p>
+<h3><span class="mw-headline" id="Hook_de_mkinitcpio">Hook de mkinitcpio</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Esta sección solo es aplicable cuando se utiliza el hook <code>encrypt</code>, que solo puede desbloquear un único dispositivo (<a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/23182">FS#23182</a>). Con <code>sd-encrypt</code> se pueden desbloquear varios dispositivos (consulte <a href="../en/Dm-crypt/System_configuration.html#Using_sd-encrypt_hook" title="Dm-crypt/System configuration">Dm-crypt/System configuration#Using sd-encrypt hook</a>), pero la autodetección del espacio de intercambio aún no está disponible. <a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/4878">número de systemd 4878</a>
+</div>
+<p>Si el dispositivo de intercambio está en un dispositivo diferente al del sistema de archivos raíz, no se abrirá con el hook <code>encrypt</code>, es decir, la reanudación se realizará antes de que <code>/etc/crypttab</code> se pueda usar, por lo tanto, se requiere crear un hook en <code>/etc/mkinitcpio.conf</code> para abrir el dispositivo de intercambio LUKS antes de reanudar.
+</p>
+<p>Si desea usar una partición que actualmente esté usando el sistema, primero debe desactivarla:
+</p>
+<pre># swapoff /dev/&lt;dispositivo&gt;
+</pre>
+<p>También debe asegurarse de eliminar cualquier línea en <code>/etc/crypttab</code> que apunte a dicho dispositivo.
+</p>
+<p>Si está reutilizando una <a href="../es/Partitioning.html" title="Partitioning (Español)">partición</a> de intercambio existente, y si la partición está en una tabla de particionado GPT, necesitará usar <a href="../en/GPT_fdisk.html" class="mw-redirect" title="Gdisk">gdisk</a> para ajustar el <a href="../en/GPT_fdisk.html#Prevent_GPT_partition_automounting" class="mw-redirect" title="Gdisk">atributo 63 de la partición para «que no se monte automáticamente»</a> en ella. Esto evitará que systemd-gpt-auto-generator descubra y active la partición en el arranque.
+</p>
+<p>La siguiente configuración tiene la desventaja de tener que insertar una contraseña adicional para la partición de intercambio manualmente en cada arranque.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> No utilice esta configuración con un archivo de claves si <code>/boot</code> no está cifrado. Lea acerca del problema reportado <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Talk:Dm-crypt&amp;oldid=255742#Suspend_to_disk_instructions_are_insecure">aquí</a>. Alternativamente, use un archivo de claves cifrado con gnupg según <a rel="nofollow" class="external free" href="https://bbs.archlinux.org/viewtopic.php?id=120181">https://bbs.archlinux.org/viewtopic.php?id=120181</a>
+</div>
+<p>Para formatear el contenedor encriptado, destinado a la partición de intercambio, cree un ranura de clave («<i>keyslot</i>») para una frase de contraseña memorizable por el usuario.
+</p>
+<pre># cryptsetup luksFormat --type luks2 /dev/&lt;dispositivo&gt;
+</pre>
+<p>Abra la partición en <code>/dev/mapper</code>:
+</p>
+<pre># cryptsetup open /dev/&lt;dispositivo&gt; swapDevice
+</pre>
+<p>Cree un sistema de archivos de intercambio en la partición mapeada:
+</p>
+<pre># mkswap /dev/mapper/swapDevice
+</pre>
+<p>Ahora tiene que crear un hook para abrir el espacio de intercambio en el momento del arranque. Puede <a href="../es/Help:Reading.html#Instalaci%C3%B3n_de_paquetes" title="Help:Reading (Español)">instalar</a> y configurar <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mkinitcpio-openswap/">mkinitcpio-openswap</a></span><sup><small>AUR</small></sup>, o seguir las siguientes instrucciones. Cree un archivo de hook que contenga la orden de abrir:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/initcpio/hooks/openswap</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">run_hook ()
+{
+    cryptsetup open /dev/&lt;dispositivo&gt; swapDevice
+}
+</pre>
+<p>para abrir el dispositivo de intercambio escribiendo su contraseña o
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/initcpio/hooks/openswap</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">run_hook ()
+{
+    ## Optional: To avoid race conditions
+    x=0;
+    while [ ! -b /dev/mapper/&lt;root-device&gt; ] &amp;&amp; [ $x -le 10 ]; do
+       x=$((x+1))
+       sleep .2
+    done
+    ## End of optional
+
+    mkdir crypto_key_device
+    mount /dev/mapper/&lt;root-device&gt; crypto_key_device
+    cryptsetup open --key-file crypto_key_device/&lt;path-to-the-key&gt; /dev/&lt;device&gt; swapDevice
+    umount crypto_key_device
+}
+</pre>
+<p>para abrir el dispositivo de intercambio cargando un archivo de claves desde un dispositivo raíz cifrado.
+</p>
+<p>En algunos equipos, las condiciones de velocidad pueden hacer que mkinitcpio intente montar el dispositivo antes de que se complete el proceso de descifrado y de numeración del dispositivo. El bloque <i>Optional</i> comentado retrasará el proceso de arranque hasta 2 segundos, momento en el que el dispositivo raíz estará listo para montarse.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Si el espacio de intercambio está en un disco de estado sólido (SSD) y se desea utilizar la orden Discard/<a href="https://en.wikipedia.org/wiki/es:TRIM" class="extiw" title="wikipedia:es:TRIM">TRIM</a>, la opción <code>--allow-discards</code> debe agregarse a la línea de cryptsetup antes del hook openswap. Consulte <a href="../en/Dm-crypt/Specialties.html#Discard/TRIM_support_for_solid_state_drives_(SSD)" title="Dm-crypt/Specialties">Dm-crypt/Specialties#Discard/TRIM support for solid state drives (SSD)</a> o <a href="../en/Solid_state_drive.html" title="Solid state drive">Solid state drive</a> para obtener más información sobre «discard». Además, debe agregar la opción de montaje 'discard' a su entrada de fstab para el dispositivo de intercambio.</div>
+<p>Luego cree y edite el archivo de configuración del hook:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/initcpio/install/openswap</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">build ()
+{
+   add_runscript
+}
+help ()
+{
+cat&lt;&lt;HELPEOF
+  Esto abre la partición de intercambio cifrada /dev/&lt;dispositivo&gt; en /dev/mapper/swapDevice
+HELPEOF
+}
+</pre>
+<p>Agregue el hook <code>openswap</code> en la matriz <code>HOOKS</code> en el archivo <code>/etc/mkinitcpio.conf</code>, antes de <code>filesystem</code> pero después de <code>encrypt</code>. No olvide agregar el hook <code>resume</code> después de <code>openswap</code>.
+</p>
+<pre>HOOKS=(... encrypt openswap resume filesystems ...)
+</pre>
+<p><a href="../es/Mkinitcpio.html#Creaci%C3%B3n_de_la_imagen_y_activaci%C3%B3n" title="Mkinitcpio (Español)">Regenere initramfs</a>.
+</p>
+<p>Añada la partición mapeada a <code>/etc/fstab</code> agregando la siguiente línea:
+</p>
+<pre>/dev/mapper/swapDevice swap swap defaults 0 0
+</pre>
+<p>Configure su sistema para reanudar desde <code>/dev/mapper/swapDevice</code>. Por ejemplo, si usa <a href="../es/GRUB.html" title="GRUB (Español)">GRUB (Español)</a> con el soporte de hibernación del kernel, añada el parámetro del kernel <code>resume=/dev/mapper/swapDevice</code> a GRUB en la línea <code>GRUB_CMDLINE_LINUX_DEFAULT</code> del archivo <code>/etc/default/grub</code>. Una línea del kernel con particiones raíz y de intercambio cifradas puede verse así:
+</p>
+<pre>kernel /vmlinuz-linux cryptdevice=/dev/sda2:rootDevice root=/dev/mapper/rootDevice resume=/dev/mapper/swapDevice ro
+</pre>
+<p>En el momento del arranque, el hook <code>openswap</code> abrirá la partición de intercambio, por lo que se podrá usar la «reanudación» del kernel. Si utiliza hook especiales para reanudar desde la hibernación, asegúrese de que estén colocados <b>después de</b> <code>openswap</code> en la matriz <code>HOOKS</code>. Tenga en cuenta que debido a la apertura del espacio de intercambio de initrd, no es necesaria ninguna entrada para swapDevice en <code>/etc/crypttab</code> en este caso.
+</p>
+<h3><span class="mw-headline" id="Utilizar_un_archivo_de_intercambio">Utilizar un archivo de intercambio</span></h3>
+<p>Se puede utilizar un archivo de intercambio para reservar un espacio de intercambio dentro de una partición existente y también se puede configurar dentro de una partición cifrada. Al reanudar desde un archivo de intercambio, se debe proporcionar el hook <code>resume</code> con la contraseña para desbloquear el dispositivo donde se encuentra el archivo de intercambio.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> <a href="../en/Dm-crypt/Drive_preparation.html#Btrfs_subvolumes" title="Dm-crypt/Drive preparation">Btrfs</a> no admite archivos de intercambio. Si no se toma en cuenta esta advertencia, se puede dañar el sistema de archivos. Si bien se puede usar un archivo de intercambio en <a href="../en/Btrfs.html#Swap_file" title="Btrfs">Btrfs</a> cuando se monta a través de un dispositivo loop, esto dará como resultado un rendimiento de intercambio muy degradado.</div>
+<p>Para crearlo, primero elija una partición mapeada (por ejemplo,  <code>/dev/mapper/rootDevice</code>) cuyo sistema de archivos montado (por ejemplo, en <code>/</code>) contenga suficiente espacio libre como para crear un archivo de intercambio con el tamaño deseado.
+</p>
+<p>Ahora <a href="../es/Swap.html#Creaci%C3%B3n_de_un_archivo_swap" title="Swap (Español)">cree el archivo de intercambio</a> (por ejemplo, <code>/swapfile</code>) dentro del sistema de archivos montado de la partición mapeada elegida. Asegúrese de activarlo con <code>swapon</code> y también agrege su archivo a <code>/etc/fstab</code> más adelante. Tenga en cuenta que el contenido anterior del archivo de intercambio permanece transparente durante los reinicios.
+</p>
+<p>Configure su sistema para reanudar desde la partición mapeada elegida. Por ejemplo, si utiliza <a href="../es/GRUB.html" title="GRUB (Español)">GRUB (Español)</a> con soporte para hibernación del kernel, agregue <code>resume=</code><i>su partición mapeada elegida</i> y <code>resume_offset=</code><i>vea el cálculo de la orden siguiente</i> a la línea del kernel en la configuración de GRUB (generalmente en <code>/etc/default/grub</code>). Una línea con una partición raíz encriptada puede verse así:
+</p>
+<pre>kernel /vmlinuz-linux cryptdevice=/dev/sda2:rootDevice root=/dev/mapper/rootDevice resume=/dev/mapper/rootDevice resume_offset=123456789 ro
+</pre>
+<p>El <code>resume_offset</code> del archivo de intercambio apunta al inicio (extensión cero) del archivo y puede identificarse así:
+</p>
+<pre># filefrag -v /swapfile | awk '{if($1=="0:"){print $4}}'
+</pre>
+<p>Agregue el hook <code>resume</code> al archivo <code>etc/mkinitcpio.conf</code> y <a href="../es/Mkinitcpio.html#Creaci%C3%B3n_de_la_imagen_y_activaci%C3%B3n" title="Mkinitcpio (Español)">regenere initramfs</a> después:
+</p>
+<pre>HOOKS=(... encrypt <b>resume</b> ... filesystems ...)
+</pre>
+<p>Si usa un teclado USB para introducir su contraseña de descifrado, entonces el módulo <code>keyboard</code> <b>debe</b> colocarse delante del hook <code>encrypt</code>, como se muestra a continuación. De lo contrario, no podrá iniciar su sistema porque no podrá ingresar la contraseña de descifrado para desbloquear la partición raíz de Linux. (Si aún tiene este problema después de agregar <code>keyboard</code>, intente con <code>usbinput</code>, aunque este está en desuso).
+</p>
+<pre>HOOKS=(... <b>keyboard</b> encrypt ...)
+</pre>
+<h2><span class="mw-headline" id="Problemas_conocidos">Problemas conocidos</span></h2>
+<ul><li>
+<code>Stopped (with error) /dev/dm-1</code> en los registros. Consulte <a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/1620">systemd issue 1620</a>.</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption (Español)">Data-at-rest encryption (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt_(Espa%C3%B1ol)/Swap_encryption_(Espa%C3%B1ol)&amp;oldid=615521">https://wiki.archlinux.org/index.php?title=Dm-crypt_(Español)/Swap_encryption_(Español)&amp;oldid=615521</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 24 May 2020, at 15:11.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

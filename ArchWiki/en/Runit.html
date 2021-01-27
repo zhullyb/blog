@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Runit - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Runit rootpage-Runit skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Runit</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Init.html" title="Init">init</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Instructions related to runit usage has information only useful when using runit as the init system (and with files dependant on outdated AUR packages), and this page does not explain how to do so. All those instructions should probably be moved to a separate section or be removed altogether in order to not confuse users that just want to use runit for simple process supervision, while keeping <a href="../en/Systemd.html" title="Systemd">systemd</a> as the unit system. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Runit">Talk:Runit#</a>)</div>
+</div>
+<p>Runit is a process supervisor.  It includes <code>runit-init</code>, which can replace sysv's init as pid1, or can be run from inittab or your init system of choice.  
+Runit's simple collection of tools can be used to build flexible dependency structures and distributed systems, or blazing fast parallel runlevel changes (including the initial boot). 
+</p>
+<p>See <a rel="nofollow" class="external text" href="http://smarden.org/runit/">G. Pape's Runit Page</a> for a complete description, but follow the installation instructions below for your Arch system.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#Using_runit_alongside_systemd"><span class="tocnumber">1.1</span> <span class="toctext">Using runit alongside systemd</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#Using_BusyBox's_implementation"><span class="tocnumber">1.1.1</span> <span class="toctext">Using BusyBox's implementation</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#Using_standard_runit"><span class="tocnumber">1.1.2</span> <span class="toctext">Using standard runit</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Using_runit"><span class="tocnumber">2</span> <span class="toctext">Using runit</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#The_tools"><span class="tocnumber">2.1</span> <span class="toctext">The tools</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#The_extras"><span class="tocnumber">2.2</span> <span class="toctext">The extras</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Run_levels_and_service_directories"><span class="tocnumber">2.3</span> <span class="toctext">Run levels and service directories</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#General_use"><span class="tocnumber">2.4</span> <span class="toctext">General use</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10">
+<a href="#User_Level_Services"><span class="tocnumber">3</span> <span class="toctext">User Level Services</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#Add_a_user_level_service_tree"><span class="tocnumber">3.1</span> <span class="toctext">Add a user level service tree</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Create_an_X_session_service_for_a_user"><span class="tocnumber">3.2</span> <span class="toctext">Create an X session service for a user</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13">
+<a href="#Advanced_Recipes"><span class="tocnumber">4</span> <span class="toctext">Advanced Recipes</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14">
+<a href="#Running_a_read-only_Postgresql_Slave_database_in-memory"><span class="tocnumber">4.1</span> <span class="toctext">Running a read-only Postgresql Slave database in-memory</span></a>
+<ul>
+<li class="toclevel-3 tocsection-15"><a href="#Requirements"><span class="tocnumber">4.1.1</span> <span class="toctext">Requirements</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Instructions"><span class="tocnumber">4.1.2</span> <span class="toctext">Instructions</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<h3><span class="mw-headline" id="Using_runit_alongside_systemd">Using runit alongside systemd</span></h3>
+<h4>
+<span id="Using_BusyBox.27s_implementation"></span><span class="mw-headline" id="Using_BusyBox's_implementation">Using BusyBox's implementation</span>
+</h4>
+<p><a href="../en/BusyBox.html" title="BusyBox">BusyBox</a> provides a minimal implementation of runit that can be used for simple processing supervision needs. First, create symbolic links to the BusyBox binary for the necessary tools that are going to be needed:
+</p>
+<pre># busybox --list | awk '/runsv|chpst|svlog|^sv$/' | xargs -I{} ln -sv /usr/bin/busybox /usr/local/bin/{}
+</pre>
+<p>Afterwards, a <a href="../en/Systemd.html" title="Systemd">systemd</a> unit file can be created in order to run BusyBox's runit when needed:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/busybox-runit.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Runit service supervision - BusyBox implementation
+Documentation=<a rel="nofollow" class="external free" href="http://smarden.org/runit/">http://smarden.org/runit/</a> <a rel="nofollow" class="external free" href="https://busybox.net/downloads/BusyBox.html">https://busybox.net/downloads/BusyBox.html</a>
+
+[Service]
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/bin"
+ExecStart=/usr/local/bin/runsvdir -P /var/service
+KillSignal=SIGHUP
+KillMode=process
+Restart=always
+SuccessExitStatus=111
+
+[Install]
+WantedBy=multi-user.target</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>This example unit file presupposes that the directory which is going to contain the enabled services is <code>/var/service</code>. This path can be changed according to each specific use case.</li>
+<li>The <code>SIGHUP</code> kill signal is used instead of the default <code>SIGTERM</code>, and only on the main <i>runsvdir</i> process (thanks to <code>KillMode=process</code>) so that processes being controlled by BusyBox's runit implementation are controllably stopped by <i>runsvdir</i> before terminating the supervisor. When <i>runsvdir</i> ends the processes that are being supervised after receiving a <code>SIGHUP</code> signal, it exits with an status code of 111, which needs to be interpreted as a success.</li>
+</ul>
+</div>
+<p>Be sure to create the directory which is going to be supervised by <i>runsvdir</i> according to the systemd unit file created. It is also recommended to create a directory in which runit services can be stored (usually <code>/etc/sv</code>), and only enabled when needed by creating a symbolic link directed to them from the directory being supervised. See <a href="#General_use">#General use</a> for more details.
+</p>
+<p>When everything is correctly configured, <code>busybox-runit.service</code> can be <a href="../en/Systemd.html#Using_units" title="Systemd">enabled and started</a>.
+</p>
+<h4><span class="mw-headline" id="Using_standard_runit">Using standard runit</span></h4>
+<p>It is possible to use runit as a simple process supervisor alongside the default Arch Linux's init system (<a href="../en/Systemd.html" title="Systemd">systemd</a>). For this purpose, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/runit-systemd/">runit-systemd</a></span><sup><small>AUR</small></sup>, which provides a barebones runit installation without any stage scripts (<code>/etc/runit/{1..3}</code>) or runlevels (<code>/etc/runit/runsvdir/*</code>), which are generally only useful when using runit as the init system. The package provides a directory (<code>/var/service</code>) in which the desired runit services can be put and a systemd unit which starts runit monitoring that directory. Only the services configured in <code>/var/service</code> will be supervised by runit. Just <a href="../en/Systemd.html#Using_units" title="Systemd">enable and start</a> <code>runit.service</code>.
+</p>
+<p>The package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/arch-runit-services/">arch-runit-services</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup> provides some example services that can be used. This package puts the services in <code>/etc/sv</code>. The services inside can be symlinked to <code>/var/service</code> for them to be used.
+</p>
+<h2><span class="mw-headline" id="Using_runit">Using runit</span></h2>
+<h3><span class="mw-headline" id="The_tools">The tools</span></h3>
+<ul>
+<li>
+<code>sv</code> - used for controlling services, getting status of services, and dependency checking.</li>
+<li>
+<code>chpst</code> - control of a process environment, including memory caps, limits on cores, data segments, environments, user/group privileges, and more.</li>
+<li>
+<code>runsv</code> - supervises a process, and optionally a log service for that process.</li>
+<li>
+<code>svlogd</code> - a simple but powerful logger, includes auto-rotation based on different methods (time, size, etc), post-processing, pattern matching, and socket (remote logging) options. Say goodbye to logrotate and the need to stop your services to rotate logs.</li>
+<li>
+<code>runsvchdir</code> - changes service levels (runlevels, see below).</li>
+<li>
+<code>runsvdir</code> - starts a supervision tree</li>
+<li>
+<code>runit-init</code> - PID 1, tiny, does almost nothing, dietlibc staticly compiled.  Just what you want your PID 1 to be.</li>
+</ul>
+<p>See the manpages for usage details not covered below.
+</p>
+<h3><span class="mw-headline" id="The_extras">The extras</span></h3>
+<p>Added by runit-dietlibc and runit-run
+</p>
+<ul>
+<li>/etc/runit/1 - bootstraps the system using arch rc scripts</li>
+<li>/etc/runit/2 - starts single or multi-user runlevels using arch's rc.single or rc.multi</li>
+<li>/etc/runit/3 - brings the system down using arch's rc scripts</li>
+<li>/etc/runit/runsvdir/* - various runlevels</li>
+<li>/usr/bin/rsvlog - a wrapper to svlogd meant to be symlinked as 'run' in a log service</li>
+<li>/etc/sv/* - the service directories available (more available here when you install runit-services-git)</li>
+</ul>
+<p>Added by runit-scripts
+</p>
+<ul>
+<li>/etc/runit/1_new - meant to be an alternate way to bootstrap, does not necessarily use arch boot scripts</li>
+<li>/etc/runit/2_new - single/multi user runlevels (not based on arch scripts)</li>
+<li>/etc/runit/3_new - take the system down</li>
+<li>/etc/runit/runsvdir/all - every service directory available</li>
+<li>/etc/runit/runsvdir/* - various runlevels</li>
+<li>/usr/bin/nsvlog - wrapper meant to be symlinked as 'run' in a log service</li>
+</ul>
+<h3><span class="mw-headline" id="Run_levels_and_service_directories">Run levels and service directories</span></h3>
+<p>Runit uses directories of symlinks to specify runlevels, other than the 3 main ones, which are defined in /etc/runit/1, 2, and 3.  
+</p>
+<p>1 bootstraps the system, 2 starts runsvdir on /service, and 3 stops the system.
+</p>
+<p>While in run level 2, you are not constrained to any amount of service levels (equivalent to runlevels in sysvinit).  You can runschdir to any directory (full of service directory symlinks) you've made in /etc/runit/runsvdir/.  
+This becomes very handy in cases where you have an HA (Failover) setup, and you have one machine that can take over services for many other machines, simply by runsvchdir &lt;theservicedir&gt;.
+</p>
+<p>You can also run trees of dependent service levels by having user-level supervision directories.  See User Level Services below.  
+</p>
+<p>By default, the runit-run package uses a very minimal service set, defined in /etc/runit/runsvdir/archlinux-default and symlinked to /etc/runit/runsvdir/default.  
+</p>
+<p>It only gives gettys on tty2 and tty3, so you will boot to just console scroll and a tidy 'runsvchdir: default: current'.  This means when you start X it will be on tty4.  
+</p>
+<p>To go back to the standard arch consoles, remove the link /service/ngetty and link as many /etc/sv/*getty* services you like in /service, or edit the /etc/sv/ngetty/run file to get more getties.  Better yet, create your own directory in /etc/runit/runsvdir and add the symlinks you want for just the services you desire.  Remember to take any services you start with runit out of DAEMONS in /etc/rc.conf or systemctl disable them, they do not need to be started there, and runit will allow parallel startup without backgrounding them.
+</p>
+<h3><span class="mw-headline" id="General_use">General use</span></h3>
+<p>In this explanation, <code>/var/service</code> is the chosen service directory being supervised by <i>runsvdir</i> and <code>/etc/sv</code> is the chosen directory for containing the services that can be enabled.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Specifying the whole path to the service directory can be avoided by setting the <a href="../en/Environment_variables.html" class="mw-redirect" title="Environment variable">environment variable</a> <code>SVDIR</code> to indicate the path of the service directory. For example, with <code>SVDIR=/var/service</code>, <code>sv status /var/service/<i>servicename</i></code> becomes <code>sv status <i>servicename</i></code>.</div>
+<ul><li>Listing running services:</li></ul>
+<pre># sv status /var/service/*</pre>
+<pre>   run: /var/service/agetty-2: (pid 4120) 7998s
+   run: /var/service/agetty-3: (pid 4119) 7998s
+   run: /var/service/bougyman: (pid 4465) 7972s
+   run: /var/service/bougyx: (pid 4135) 7998s; run: log: (pid 4127) 7998s
+   run: /var/service/cron: (pid 4137) 7998s; run: log: (pid 4122) 7998s
+   run: /var/service/dialer: (pid 4121) 7998s
+   run: /var/service/qmail: (pid 4138) 7998s; run: log: (pid 4126) 7998s
+   run: /var/service/smtpd: (pid 4136) 7998s; run: log: (pid 4125) 7998s
+   run: /var/service/socklog-klog: (pid 4139) 7998s; run: log: (pid 4132) 7998s
+   run: /var/service/socklog-unix: (pid 4133) 7998s; run: log: (pid 4124) 7998s
+   run: /var/service/ssh: (pid 4134) 7998s; run: log: (pid 4123) 7998s
+</pre>
+<ul><li>Create and start a service:</li></ul>
+<pre># ln -s /etc/sv/ssh /var/service/ssh</pre>
+<ul><li>Stops a service immediately (would still start on next boot):</li></ul>
+<pre># sv down /var/service/ssh</pre>
+<ul><li>Starts a service which has been previously stopped, or which is configured to not start automatically:</li></ul>
+<pre># sv up /var/service/ssh</pre>
+<ul><li>Restarts a service:</li></ul>
+<pre># sv restart /var/service/ssh</pre>
+<ul><li>Reloads a service:</li></ul>
+<pre># sv reload /var/service/ssh</pre>
+<ul><li>Shows status of a service and it's log service:</li></ul>
+<pre># sv status /var/service/ssh</pre>
+<ul><li>Stops a service, and disables it (won't start next boot):</li></ul>
+<pre># rm /var/service/ssh</pre>
+<p>Refer to <span class="plainlinks archwiki-template-man" title="$ man 8 sv"><a rel="nofollow" class="external text" href="http://smarden.org/runit/sv.8.html">sv(8)</a></span> for more details. 
+</p>
+<p>The information that follows is only applicable when using runit as the init system.
+</p>
+<ul><li>Shut down the system:</li></ul>
+<pre># runit-init 0</pre>
+<ul><li>Reboot the system:</li></ul>
+<pre># runit-init 6</pre>
+<h2><span class="mw-headline" id="User_Level_Services">User Level Services</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> It is recommended to use the integrated <code>chpst</code> for this purpose, rather than using <code>sudo</code>. See the <a rel="nofollow" class="external text" href="http://smarden.org/runit/faq.html#userservices">Runit FAQ</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Runit">Talk:Runit#</a>)</div>
+</div>
+<p>You can extend the supervision tree by starting a runsvdir as a specific user, giving that user control of their own supervise tree.
+</p>
+<h3><span class="mw-headline" id="Add_a_user_level_service_tree">Add a user level service tree</span></h3>
+<pre># mkdir -p /etc/sv/homes/joeuser</pre>
+<p>Create /etc/sv/homes/joeuser/run with the following:
+</p>
+<pre>   #!/bin/sh
+   export PATH=/home/joeuser/bin:$PATH # optional, if your services rely on binaries in ~/bin
+   exec 2&gt;&amp;1 \
+     sudo -H -u joeuser runsvdir -P /home/joeuser/service 'log:...................................................................................................................................' # Requires sudo, of course
+     
+</pre>
+<pre># chmod 700 /etc/sv/homes/joeuser/run</pre>
+<p>Then symlink /etc/sv/homes/joeuser to /service and any service joe puts in ~/service will start, as him, with his environment.
+</p>
+<p>(the .......... represent placeholders, the proceess will print stdout/err every 5 seconds for each placeholder . you use in this case)
+</p>
+<h3><span class="mw-headline" id="Create_an_X_session_service_for_a_user">Create an X session service for a user</span></h3>
+<pre># mkdir -p /etc/sv/joeuserX</pre>
+<p>Create the /etc/sv/joeuserX/run script with the following
+</p>
+<pre>   #!/bin/sh
+   exec 2&gt;&amp;1 \
+     su -c xinit - joeuser
+</pre>
+<pre># chmod 700 /etc/sv/joeuserX/run</pre>
+<p>Then symlink /etc/sv/joeuserX to /service.  joe's X session will now always run (in this runlevel).  
+To protect it using joe's ssh passphrase, use the following in your .xinitrc:
+</p>
+<pre>   #!/bin/sh
+   ...
+   SNIP
+   ...
+   xscreensaver&amp;
+   eval $(keychain --eval)
+   exec sh -c \
+     'SSH_ASKPASS=/usr/lib/openssh/ssh-askpass-fullscreen ssh-add &lt; /dev/null \
+      &amp;&amp; exec stumpwm'
+</pre>
+<p>Replace the 'stumpwm' with the command to launch your window manager or desktop environment.
+</p>
+<p>Requires the 'keychain' and 'ssh-askpass-fullscreen' packages, or you could replace 'eval $(keychain)' with 'eval $(ssh-agent) and replace ssh-askpass-fullscreen with any ssh passphrase asker.  
+The fullscreen version guarantees protection of your desktop, so we prefer that.  This also exports your key to all your x apps, 
+so you do not need another keychain manager for ssh.  In addition, 'keychain' (as opposed to just ssh-agent) supports gpg passphrase caching, as well, not
+just the ssh keys.
+</p>
+<h2><span class="mw-headline" id="Advanced_Recipes">Advanced Recipes</span></h2>
+<h3><span class="mw-headline" id="Running_a_read-only_Postgresql_Slave_database_in-memory">Running a read-only Postgresql Slave database in-memory</span></h3>
+<p>This recipe was created for a small but vital database which required very high read throughput.  To sort it out we use Postgresql's Streaming Replication and Hot Standby mode.
+</p>
+<h4><span class="mw-headline" id="Requirements">Requirements</span></h4>
+<ul>
+<li>Postgresql 9.0 or above</li>
+<li>runit-services (includes /etc/sv/postgresql)</li>
+<li>Rsync (for initial replication)</li>
+</ul>
+<h4><span class="mw-headline" id="Instructions">Instructions</span></h4>
+<p>1. Create /etc/sv/pg_mem/log directory
+</p>
+<pre># mkdir -p /etc/sv/pg_mem/log</pre>
+<p>2. Create three new files
+</p>
+<p>/etc/sv/pg_shm/run:
+</p>
+<pre>   #!/bin/sh -e
+   sleep 3 # Give postgresql a chance to start and replay any transactions
+   
+   . /etc/conf.d/pg_shm # Read any conf vars
+   PG_DISK_ROOT=/var/lib/postgres # Where the 'master' data directory lives
+   
+   [ -d "$PGROOT" ] || mkdir -p "$PGROOT" # Create the new $PGROOT if it does not exist
+   
+   sv -w7 c postgresql 2&gt;&amp;1
+   
+   # Stop the main postgres from making changes by enttering backup mode
+   psql -U postgres -c "SELECT pg_start_backup('seed',true)" 2&gt;&amp;1
+   # Sync the main postgres data dir to our new $PGROOT
+   rsync --progress --delete -a "$PG_DISK_ROOT/data" "$PGROOT/" --exclude=postmaster.pid 2&gt;&amp;1
+   # Allow changes on the primary server again
+   psql -U postgres -c "SELECT pg_stop_backup()" 2&gt;&amp;1
+   
+   # Set up the hot standby mode on the slave server
+   echo "hot_standby = 'on'" &gt;&gt; "$PGROOT/data/postgresql.conf"
+   echo "port = $PGPORT" &gt;&gt; "$PGROOT/data/postgresql.conf"
+   echo "standby_mode = 'on'" &gt;&gt; "$PGROOT/data/recovery.conf"
+   echo "primary_conninfo = 'host=localhost port=5432 user=postgres'" &gt;&gt; "$PGROOT/data/recovery.conf"
+   echo "trigger_file = '/tmp/stop_replication'" &gt;&gt; "$PGROOT/data/recovery.conf"
+   echo "restore_command = 'cp /var/lib/postgres/archive/%f \"%p\"'" &gt;&gt; "$PGROOT/data/recovery.conf"
+   
+   exec chpst -u postgres /usr/bin/postgres -D "$PGROOT/data" -c config_file="$PGROOT/data/postgresql.conf" 2&gt;&amp;1
+</pre>
+<p>Which requires /etc/conf.d/pg_shm:
+</p>
+<pre>PGROOT=/dev/shm/pg_mem
+PGPORT=5434
+PGLOG="/var/log/pg_mem.log"
+</pre>
+<p>as well as a file in /etc/sv/postgresql (or wherever your postgresql service directory lives) named 'finish':
+</p>
+<pre>#/bin/sh
+sv -v i pg_shm
+</pre>
+<p>3. Make run and finish executable
+</p>
+<pre># chmod 700 /etc/sv/pg_mem/run</pre>
+<pre># chmod 700 /etc/sv/postgresql/finish</pre>
+<p>4. Create a log service
+</p>
+<pre># ln -s /usr/bin/rsvlog /etc/sv/pg_shm/log/run</pre>
+<p>5. Edit /var/lib/postgres/data/postmaster.conf, to enable wal archiving. See this <a rel="nofollow" class="external text" href="http://wiki.postgresql.org/wiki/Streaming_Replication#How_to_Use">The PostgreSQL</a> page, steps 3 and 4, for detailed instructions on this.
+</p>
+<p>6. Restart postgresql
+</p>
+<pre># sv i postgresql</pre>
+<p>7. Start pg_shm (replace /service with your service directory, if it differs)
+</p>
+<pre># ln -s /etc/sv/pg_shm /service</pre>
+<p>8. Make sure everything is running
+</p>
+<pre># sv s postgresql pg_mem</pre>
+<p>That's it, you'll have a replica of your postgresql on-disk database published on port 5434, in read-only mode from the memory space utilized from /dev/shm.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li>
+<a rel="nofollow" class="external text" href="https://evasive.ru/50a3904206c52447aa1fa5d90a8382a3.html">Running runit on Amazon Linux AMI</a>. Contains instructions related to setting up BusyBox's implementation of runit.</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Init.html" title="Category:Init">Init</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Runit&amp;oldid=622551">https://wiki.archlinux.org/index.php?title=Runit&amp;oldid=622551</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 28 June 2020, at 08:15.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>fscrypt - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Fscrypt rootpage-Fscrypt skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">fscrypt</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Data-at-rest_encryption.html" title="Data-at-rest encryption">Data-at-rest encryption</a></li>
+<li><a href="../en/Ext4.html" title="Ext4">Ext4</a></li>
+<li><a href="../en/F2FS.html" title="F2FS">F2FS</a></li>
+</ul>
+</div>
+<p>The <a href="../en/Ext4.html" title="Ext4">ext4</a>, <a href="../en/F2FS.html" title="F2FS">F2FS</a>, and <a href="https://en.wikipedia.org/wiki/UBIFS" class="extiw" title="wikipedia:UBIFS">UBIFS</a> <a href="../en/File_systems.html" title="File systems">file systems</a> natively support file encryption via a common API called <b>fscrypt</b> (originally called "ext4 encryption").  With fscrypt, encryption is applied at the directory level.  Different directories can use different encryption keys.  In an encrypted directory, all file contents, filenames, and symlinks are encrypted.  All subdirectories are encrypted too.  Non-filename metadata, such as timestamps, the sizes and number of files, and extended attributes, is not encrypted.
+</p>
+<p><b>fscrypt</b> is also the name of a userspace tool to use the kernel feature of the same name.  This article shows how to use the <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt">fscrypt tool</a> to encrypt directories, including how to encrypt a home directory.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Alternatives_to_consider"><span class="tocnumber">1</span> <span class="toctext">Alternatives to consider</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Preparations"><span class="tocnumber">2</span> <span class="toctext">Preparations</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Kernel"><span class="tocnumber">2.1</span> <span class="toctext">Kernel</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#File_system"><span class="tocnumber">2.2</span> <span class="toctext">File system</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#ext4"><span class="tocnumber">2.2.1</span> <span class="toctext">ext4</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#F2FS"><span class="tocnumber">2.2.2</span> <span class="toctext">F2FS</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#Userspace_tool"><span class="tocnumber">2.3</span> <span class="toctext">Userspace tool</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#PAM_module"><span class="tocnumber">2.4</span> <span class="toctext">PAM module</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Encrypt_a_directory"><span class="tocnumber">3</span> <span class="toctext">Encrypt a directory</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#Manually_unlock_a_directory"><span class="tocnumber">4</span> <span class="toctext">Manually unlock a directory</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Encrypt_a_home_directory"><span class="tocnumber">5</span> <span class="toctext">Encrypt a home directory</span></a></li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Encryption_within_Linux_Containers_(lxc)"><span class="tocnumber">6</span> <span class="toctext">Encryption within Linux Containers (lxc)</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#Lock_directory_when_container_is_stopped"><span class="tocnumber">6.1</span> <span class="toctext">Lock directory when container is stopped</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#Troubleshooting"><span class="tocnumber">7</span> <span class="toctext">Troubleshooting</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Alternatives_to_consider">Alternatives to consider</span></h2>
+<p>To protect an entire file system with one password, block device encryption with <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a> (LUKS) is generally a better option, as it ensures that <b>all</b> files on the filesystem are encrypted, and also that all file system metadata is encrypted.  fscrypt is most useful to encrypt specific directories, or to enable different encrypted directories to be unlockable independently—for example, per-user encrypted home directories.
+</p>
+<p>Unlike <a href="../en/ECryptfs.html" title="ECryptfs">eCryptfs</a>, fscrypt is not a stacked file system, i.e. it is supported by file systems natively.  This makes fscrypt more memory-efficient.  fscrypt also uses more up-to-date cryptography than eCryptfs, and it does not require setuid binaries.  Also, eCryptfs is no longer being actively developed, and its largest users have migrated to dm-crypt (Ubuntu) or to fscrypt (Chrome OS).
+</p>
+<p>See <a href="../en/Data-at-rest_encryption.html" title="Data-at-rest encryption">data-at-rest encryption</a> for more information about other encryption solutions, and about what encryption does and does not do.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>It is possible to use fscrypt in combination with <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a>, with each encryption layer serving a different purpose.  For example, the file system itself could be protected by dm-crypt using a less secure method, like a TPM tied into "secure boot" or a password known to all the system's users, while each user's home directory could also be protected by fscrypt using a password known only to that user.</li>
+<li>The <code>e4crypt</code> tool from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=e2fsprogs">e2fsprogs</a></span> can be used as an alternative to the <code>fscrypt</code> tool.  However, this is not recommended since <code>e4crypt</code> is missing many basic features and is no longer being actively developed.</li>
+</ul>
+</div>
+<h2><span class="mw-headline" id="Preparations">Preparations</span></h2>
+<h3><span class="mw-headline" id="Kernel">Kernel</span></h3>
+<p>All <a href="../en/Kernel.html#Officially_supported_kernels" title="Kernel">officially supported kernels</a> support fscrypt on ext4, F2FS, and UBIFS.
+</p>
+<p>Users of custom kernels version 5.1 or later, make sure <code>CONFIG_FS_ENCRYPTION=y</code> is set.  For older kernels, see <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt#runtime-dependencies">the documentation</a>.
+</p>
+<p>It is also helpful for the kernel version to be 5.4 or later, as this allows the use of v2 encryption policies.  There are several <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/filesystems/fscrypt.html#limitations-of-v1-policies">security</a> and <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt#cant-log-in-with-ssh-even-when-users-encrypted-home-directory-is-unlocked">usability</a> issues with v1 encryption policies.
+</p>
+<h3><span class="mw-headline" id="File_system">File system</span></h3>
+<h4><span class="mw-headline" id="ext4">ext4</span></h4>
+<p>For <a href="../en/Ext4.html" title="Ext4">ext4</a>, the file system on which encryption is to be used must have the <code>encrypt</code> feature flag enabled.  To do this, check that file system uses page-sized blocks:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># tune2fs -l <i>/dev/device</i> | grep 'Block size'</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Block size:               4096
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getconf PAGE_SIZE</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">4096
+</pre>
+<p>If these values differ, the file system will not support encryption, so do not proceed further.
+</p>
+<p>To enable the <code>encrypt</code> feature on the file system, run:
+</p>
+<pre># tune2fs -O encrypt <i>/dev/device</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Once the <code>encrypt</code> feature is enabled, Linux versions older than 4.1 will be unable to mount the file system.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 
+<ul>
+<li>The operation can be undone with <code>debugfs -w -R "feature -encrypt" <i>/dev/device</i></code>.  Run <a href="../en/Fsck.html" title="Fsck">fsck</a> before and after to ensure the integrity of the file system.</li>
+<li>When creating a new file system, one can enable the <code>encrypt</code> feature immediately with <code>mkfs.ext4 -O encrypt -b 4096</code>.</li>
+</ul>
+</div>
+<h4><span class="mw-headline" id="F2FS">F2FS</span></h4>
+<p>For <a href="../en/F2FS.html" title="F2FS">F2FS</a>, use <code>mkfs.f2fs -O encrypt</code> when creating the file system or <code>fsck.f2fs -O encrypt</code> at a later time.
+</p>
+<h3><span class="mw-headline" id="Userspace_tool">Userspace tool</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fscrypt">fscrypt</a></span> package. Then run:
+</p>
+<pre># fscrypt setup
+</pre>
+<p>This creates the file <code>/etc/fscrypt.conf</code> and the directory <code>/.fscrypt</code>.
+</p>
+<p>Then, if the file system on which encryption is to be used is not the root file system, also run:
+</p>
+<pre># fscrypt setup <i>mountpoint</i>
+</pre>
+<p>where <code><i>mountpoint</i></code> is where the file system is mounted, e.g. <code>/home</code>.
+</p>
+<p>This creates the directory <code><i>mountpoint</i>/.fscrypt</code> to store fscrypt policies and protectors.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Never delete the <code>.fscrypt</code> directory; otherwise ALL access to encrypted files will be lost!</div>
+<h3><span class="mw-headline" id="PAM_module">PAM module</span></h3>
+<p>To unlock login passphrase-protected directories automatically at login, and to keep login passphrase-protected directories in sync with changes to the login passphrase, edit the system's <a href="../en/PAM.html" title="PAM">PAM</a> configuration to enable <code>pam_fscrypt</code>:
+</p>
+<p>In <code>/etc/pam.d/system-login</code>, append the following line to the "auth" section:
+</p>
+<pre>auth            optional   pam_fscrypt.so
+</pre>
+<p>Also in <code>/etc/pam.d/system-login</code>, append the following line to the "session" section:
+</p>
+<pre>session         optional   pam_fscrypt.so       drop_caches lock_policies
+</pre>
+<p>Finally, append the following line to <code>/etc/pam.d/passwd</code>:
+</p>
+<pre>password        optional   pam_fscrypt.so
+</pre>
+<h2><span class="mw-headline" id="Encrypt_a_directory">Encrypt a directory</span></h2>
+<p>To encrypt an empty directory, run:
+</p>
+<pre>$ fscrypt encrypt <i>dir</i>
+</pre>
+<p>Follow the prompts to create or choose a "protector".  A protector is the secret or information that protects the directory's encryption key.  The types of protectors include:
+</p>
+<ul>
+<li>"custom_passphrase".  This is exactly what it sounds like, a user defined passphrase.</li>
+<li>"pam_passphrase".  This is the login passphrase for a particular user.  Directories using this type of protector will be automatically unlocked by <code>pam_fscrypt</code> (if enabled) when that user logs in.  Be sure to follow the <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt#securing-your-login-passphrase">security recommendations</a> before using this type of protector.</li>
+</ul>
+<p>In both cases, the passphrase can be changed later, or the directory can be re-protected with another method.
+</p>
+<p>Example for custom passphrase:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ fscrypt encrypt private/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Should we create a new protector? [y/N] y
+Your data can be protected with one of the following sources:
+1 - Your login passphrase (pam_passphrase)
+2 - A custom passphrase (custom_passphrase)
+3 - A raw 256-bit key (raw_key)
+Enter the source number for the new protector [2 - custom_passphrase]: 2
+Enter a name for the new protector: Super Secret
+Enter custom passphrase for protector "Super Secret":
+Confirm passphrase:
+"private/" is now encrypted, unlocked, and ready for use.
+</pre>
+<p>Example for PAM passphrase:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ fscrypt encrypt private/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Should we create a new protector? [y/N] y
+Your data can be protected with one of the following sources:
+1 - Your login passphrase (pam_passphrase)
+2 - A custom passphrase (custom_passphrase)
+3 - A raw 256-bit key (raw_key)
+Enter the source number for the new protector [2 - custom_passphrase]: 1
+Enter login passphrase for testuser:
+"private/" is now encrypted, unlocked, and ready for use.
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Encryption can only be enabled on an empty directory.  To encrypt an existing directory, first copy the contents elsewhere and then delete the original files, e.g.:
+<pre>$ mkdir <i>new_dir</i>
+$ fscrypt encrypt <i>new_dir</i>
+$ cp -a -T <i>old_dir</i> <i>new_dir</i>
+$ find <i>old_dir</i> -type f -print0 | xargs -0 shred -n1 --remove=unlink
+$ rm -rf <i>old_dir</i>
+</pre>
+Beware that the original unencrypted files may still be forensically recoverable from disk even after being shredded and deleted, especially if using an SSD.  It is better to encrypt data from the start.</div>
+<h2><span class="mw-headline" id="Manually_unlock_a_directory">Manually unlock a directory</span></h2>
+<p>To manually unlock an encrypted directory, run:
+</p>
+<pre>$ fscrypt unlock <i>dir</i>
+</pre>
+<p><code>fscrypt</code> will prompt for the passphrase.
+</p>
+<h2><span class="mw-headline" id="Encrypt_a_home_directory">Encrypt a home directory</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Login protectors are only as secure as the system's passphrase hashing in <code>/etc/shadow</code>.  Before using a login protector, be sure to follow the <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt#securing-your-login-passphrase">security recommendations</a>.</li>
+<li>If a user's home directory is encrypted, ssh'ing to that user will not work until their home directory has been unlocked.</li>
+</ul>
+</div>
+<p>To encrypt a user's home directory, first ensure that all <a href="#Preparations">preparations</a> have been completed, including enabling <code>pam_fscrypt</code>.
+</p>
+<p>Then, create a new encrypted directory for the user:
+</p>
+<pre># mkdir /home/newhome
+# chown <i>user</i>:<i>user</i> /home/newhome 
+# fscrypt encrypt /home/newhome --user=<i>user</i>
+</pre>
+<p>Select the option to protect the directory with the user's login passphrase.
+</p>
+<p>Then copy the contents of the user's old home directory into the encrypted directory:
+</p>
+<pre># cp -a -T /home/<i>user</i> /home/newhome
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If there is not enough disk space for a second copy of the home directory, consider using <code>mv -T /home/<i>user</i> /home/newhome</code> instead.  However, this is unsafe.  Making a backup first is strongly recommended.</div>
+<p>If the <code>cp</code> method was used, check whether the directory is being automatically unlocked on login before actually switching to using it.  The simplest way to do this is to reboot and log in as that user.  Afterwards, run:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ fscrypt status /home/newhome</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">"/home/newhome" is encrypted with fscrypt.
+
+Policy:   d80f252996aae181204403043b0ada25
+Options:  padding:32 contents:AES_256_XTS filenames:AES_256_CTS policy_version:2
+Unlocked: Yes
+
+Protected with 1 protector:
+PROTECTOR         LINKED  DESCRIPTION
+5952c84ebaf0f98d  No      login protector for testuser</pre>
+<p>If it says <code>Unlocked: No</code> instead, then something is wrong with the PAM configuration, or the incorrect type of protector was selected.
+</p>
+<p>Otherwise, replace the home directory:
+</p>
+<pre># mv /home/<i>user</i> /home/oldhome
+# mv /home/newhome /home/<i>user</i>
+# reboot
+</pre>
+<p>If everything is working as expected, delete the old home directory:
+</p>
+<pre># find /home/oldhome -type f -print0 | xargs -0 shred -n1 --remove=unlink
+# rm -rf /home/oldhome
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Running <a href="../en/Securely_wipe_disk.html#shred" class="mw-redirect" title="Shred">shred</a> is optional, but strongly recommended.</div>
+<h2>
+<span id="Encryption_within_Linux_Containers_.28lxc.29"></span><span class="mw-headline" id="Encryption_within_Linux_Containers_(lxc)">Encryption within Linux Containers (lxc)</span>
+</h2>
+<p>Support to use fscrypt inside <a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a> (lxc), or more generally in <span class="plainlinks archwiki-template-man" title="$ man 7 mount_namespaces"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mount_namespaces.7">mount_namespaces(7)</a></span> where the file system's root directory is not visible has been added in v0.2.8.
+</p>
+<h3><span class="mw-headline" id="Lock_directory_when_container_is_stopped">Lock directory when container is stopped</span></h3>
+<p>A <a href="../en/Systemd/User.html" title="Systemd/User">systemd/User</a> unit within the container can lock an encrypted directory when the container is stopped:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/lock-directory.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=lock encrypted directory on shutdown
+DefaultDependencies=no
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "/usr/bin/fscrypt lock /home/facade/target"
+TimeoutStartSec=0
+
+[Install]
+WantedBy=shutdown.target</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>See <a rel="nofollow" class="external free" href="https://github.com/google/fscrypt/blob/master/README.md#troubleshooting">https://github.com/google/fscrypt/blob/master/README.md#troubleshooting</a> for solutions to some common problems and also the <a rel="nofollow" class="external text" href="https://github.com/google/fscrypt/issues">open issues on Github</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://github.com/google/fscrypt/blob/master/README.md">fscrypt tool documentation</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/filesystems/fscrypt.html">fscrypt kernel documentation</a></li>
+<li><a rel="nofollow" class="external text" href="https://goo.gl/55cCrI">The design document for the fscrypt tool</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption">Data-at-rest encryption</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Fscrypt&amp;oldid=634808">https://wiki.archlinux.org/index.php?title=Fscrypt&amp;oldid=634808</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 9 September 2020, at 15:15.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>GpsDrive - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-GpsDrive rootpage-GpsDrive skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">GpsDrive</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><br>
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> <a href="../en/Help:Style.html#Command_line_text" title="Help:Style">Help:Style#Command_line_text</a>, <a href="../en/Help:Style.html#Code_formatting" title="Help:Style">Help:Style#Code_formatting</a>, and more (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:GpsDrive">Talk:GpsDrive#</a>)</div>
+</div>
+<p><i>GpsDrive is a vehicular (car, bike, plane, etc.) navigation system. GpsDrive displays your position provided from your GPS receiver on a zoomable map. The maps are auto-selected for best resolution depending on your position and can be downloaded from the Internet. Speech output is supported via the "speech dispatcher" software. All GPS receivers supported by gpsd should be usable.</i>
+</p>
+<p><i>GpsDrive is written in C with use of the GTK toolkit under the GPL license, and runs with Linux, Mac OSX, and FreeBSD.</i>
+</p>
+<p>GpsDrive 2.11 features OpenStreetMap/Mapnik vector/offline rendering support, which is time-consuming to setup. This article describes step-by-step how to setup PostgreSQL with PostGIS support, import an OpenStreetMap database, and configure the GpsDrive&lt;-&gt;Mapnik&lt;-&gt;PostgreSQL connection.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installing_Packages"><span class="tocnumber">1</span> <span class="toctext">Installing Packages</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Installing_PostgreSQL"><span class="tocnumber">2</span> <span class="toctext">Installing PostgreSQL</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Starting_from_Scratch"><span class="tocnumber">2.1</span> <span class="toctext">Starting from Scratch</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Hardening_PostgreSQL"><span class="tocnumber">3</span> <span class="toctext">Hardening PostgreSQL</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Creating_the_PostgreSQL_GIS_user"><span class="tocnumber">4</span> <span class="toctext">Creating the PostgreSQL GIS user</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Creating_a_PostGIS_template_database"><span class="tocnumber">5</span> <span class="toctext">Creating a PostGIS template database</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Wrapping_Up_the_PostgreSQL_setup"><span class="tocnumber">6</span> <span class="toctext">Wrapping Up the PostgreSQL setup</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Importing_an_OSM_File_into_the_PostgreSQL_database"><span class="tocnumber">7</span> <span class="toctext">Importing an OSM File into the PostgreSQL database</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Testing_the_PostgreSQL_connection_with_QuantumGIS"><span class="tocnumber">8</span> <span class="toctext">Testing the PostgreSQL connection with QuantumGIS</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#World_Boundaries"><span class="tocnumber">9</span> <span class="toctext">World Boundaries</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Creating_a_customized_osm.xml"><span class="tocnumber">10</span> <span class="toctext">Creating a customized osm.xml</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Using_GpsdDrive"><span class="tocnumber">11</span> <span class="toctext">Using GpsdDrive</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#Displaying_OpenStreetMap_POIs"><span class="tocnumber">12</span> <span class="toctext">Displaying OpenStreetMap POIs</span></a></li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Troubleshooting"><span class="tocnumber">13</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#GpsDrive_cannot_find_world_boundaries"><span class="tocnumber">13.1</span> <span class="toctext">GpsDrive cannot find world boundaries</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Paths"><span class="tocnumber">13.2</span> <span class="toctext">Paths</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17">
+<a href="#Other_Information"><span class="tocnumber">14</span> <span class="toctext">Other Information</span></a>
+<ul>
+<li class="toclevel-2 tocsection-18"><a href="#Managing_windows_in_XMonad"><span class="tocnumber">14.1</span> <span class="toctext">Managing windows in XMonad</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Kismet_Integration"><span class="tocnumber">14.2</span> <span class="toctext">Kismet Integration</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#Optimizing_PostgreSQL_for_OSM_data"><span class="tocnumber">14.3</span> <span class="toctext">Optimizing PostgreSQL for OSM data</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Merging_SQLite_databases_of_waypoints_schema"><span class="tocnumber">14.4</span> <span class="toctext">Merging SQLite databases of waypoints schema</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#Scripts_packaged_with_GpsDrive"><span class="tocnumber">14.5</span> <span class="toctext">Scripts packaged with GpsDrive</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23"><a href="#Links/References"><span class="tocnumber">15</span> <span class="toctext">Links/References</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installing_Packages">Installing Packages</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gpsdrive/">gpsdrive</a></span><sup><small>AUR</small></sup> package.
+</p>
+<p>The PostgreSQL installation/setup is described below.
+</p>
+<h2><span class="mw-headline" id="Installing_PostgreSQL">Installing PostgreSQL</span></h2>
+<p>First, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=postgresql">postgresql</a></span>.
+</p>
+<p>Upon startup, the <code>/etc/rc.d/postgresql</code> script will check for and create the <code>postgres</code> user and group, and call the postgresql <code>initdb</code> process if the <code>"/var/lib/postgres/"</code> directory does not exist. The <code>initdb</code> process, among other things, checks the permissions on <code>"/var/lib/postgres/"</code>, initializes the template database encoding according to the current user's locale, and sets a default authentication method.
+</p>
+<p>Note: If the default database encoding was not set to UTF8 or needs to be in a specific unicode encoding, see: <a href="../en/PostgreSQL.html#Change_default_encoding_of_new_databases_to_UTF-8" title="PostgreSQL">PostgreSQL#Change default encoding of new databases to UTF-8</a>
+</p>
+<pre>   sudo /etc/rc.d/postgresql start
+</pre>
+<p>To verify that the postgres user and group have been created and linked, run:
+</p>
+<pre>   egrep -i postgres /etc/{passwd,group}
+   groups postgres
+</pre>
+<p>(Optional) Add postgresql to the list of startup daemons in <code>/etc/rc.conf</code>. Just keep in mind that postgresql locks a fixed amount of memory.
+</p>
+<h3><span class="mw-headline" id="Starting_from_Scratch">Starting from Scratch</span></h3>
+<p>If you want to remove the current database and start from scratch, stop postgresql and archive <code>"/var/lib/postgres/"</code>, perhaps as <code>"/var/lib/postgres-archive/"</code>. Calling <code>"/etc/rc.d/postgresql start"</code> will create a pristine database. When you are confident that the new database is up to par, <code>"/var/lib/postgres-archive"</code> can be deleted.
+</p>
+<h2><span class="mw-headline" id="Hardening_PostgreSQL">Hardening PostgreSQL</span></h2>
+<p>For ease of installation postgresql uses the trust authentication method, which will allow any user to connect without a password. Before changing the default however, the postgres user (initial superuser) must set a password to avoid becoming locked out.
+</p>
+<pre>   psql -U postgres
+   ALTER USER postgres WITH ENCRYPTED PASSWORD '...';
+</pre>
+<p>This should create an md5-hashed password, prefixed with 'md5...'. To verify:
+</p>
+<pre>   select * from pg_shadow;
+</pre>
+<p>Now the host-based authentication methods can be modified from <code>"/var/lib/postgres/data/pg_hba.conf"</code>. I recommend changing all the <code>"trust"</code> entries to <code>"md5"</code>. Alternatively the ident authentication method can be used for local access. While the ident authentication method over TCP/IP is only as trustworth as the local ident server (also, making a local ident server publicly available is a security risk), using ident with unix-domain sockets incurs no additional security risk, and obviates the need to provide passwords. If using ident, change the method of local access to <code>"ident"</code> and provide a unixuser -&gt; postgres user mapping in <code>"/var/lib/postgres/data/pg_ident.conf"</code>. The only drawback is lack of syntax to map a specific linux user to all postgres databases.
+</p>
+<p>After modifying any of the configuration files, postgresql needs to be reloaded or restarted, either of:
+</p>
+<pre>   sudo su - postgres -c 'pg_ctl reload -D "/var/lib/postgres/data"'
+   sudo /etc/rc.d/postgresql restart
+</pre>
+<p>When an object is created, it is assigned an owner; normally the role (user) that created the object. Since by default only the owner (or a superuser) can modify an object, there should be no need to modify database roles and privileges in this article.
+</p>
+<h2><span class="mw-headline" id="Creating_the_PostgreSQL_GIS_user">Creating the PostgreSQL GIS user</span></h2>
+<p>It is now time to create the postgresql user that will access all the GIS databases. A good default is:
+</p>
+<pre>   -S  The new user will not be a superuser
+   -d  The new user will be allowed to create databases
+       You'll most likely want to create other GIS databases
+       This option is also necessary for the next several steps
+   -R  The new user will not be allowed to create new roles
+   -P  issue a prompt for the password of the new user
+</pre>
+<p>The password will be encrypted corresponding to <code>"/var/lib/postgres/data/pg_hba.conf"</code>. So (in the following example the username is "gis"):
+</p>
+<pre>   createuser -S -d -R -P -U postgres gis
+</pre>
+<h2><span class="mw-headline" id="Creating_a_PostGIS_template_database">Creating a PostGIS template database</span></h2>
+<p>GpsDrive and OpenStreetMap/Mapnik require postGIS-enabled postgres database. Creating a PostGIS template avoids the need to PostGIS-enable each and every OpenStreetMap database, and some ownership issues.
+</p>
+<pre>   createdb -E UTF8 template_postgis -U gis
+   createlang -d template_postgis -U gis plpgsql
+   psql -d postgres -c "UPDATE pg_database SET datistemplate='true' WHERE datname='template_postgis';" -U postgres
+   psql -d template_postgis -f "/usr/share/postgresql/contrib/postgis-2.1/postgis.sql" -U postgres
+   psql -d template_postgis -f "/usr/share/postgresql/contrib/postgis-2.1/spatial_ref_sys.sql" -U postgres
+   psql -d template_postgis -c "ALTER TABLE spatial_ref_sys OWNER TO gis;" -U postgres
+   psql -d template_postgis -c "ALTER TABLE geometry_columns OWNER TO gis;" -U postgres
+   psql -d template_postgis -c "ALTER VIEW geography_columns OWNER TO gis;" -U postgres
+   psql -d template_postgis -c "VACUUM FREEZE" -U postgres
+</pre>
+<h2><span class="mw-headline" id="Wrapping_Up_the_PostgreSQL_setup">Wrapping Up the PostgreSQL setup</span></h2>
+<p>Next instantiate the GIS database. Since GpsDrive and OpenStreetMap/Mapnik can access different databases, it makes sense to name the database after the region to be imported. For example, "New_Mexico" or "Vienna" "Great_Britain"
+</p>
+<pre>   createdb -E UTF8 -T template_postgis -U gis "location"
+</pre>
+<h2><span class="mw-headline" id="Importing_an_OSM_File_into_the_PostgreSQL_database">Importing an OSM File into the PostgreSQL database</span></h2>
+<p>To download a snapshot of the entire OpenStreetMap database (planet.osm), visit <a rel="nofollow" class="external text" href="http://wiki.openstreetmap.org/wiki/Planet.osm">OpenStreetMap Planet.osm</a>. The webpage also offers extracts of the database mainly from Europe. For greater variety, <a rel="nofollow" class="external text" href="http://downloads.cloudmade.com">CloudMade Maps</a> offers extracts from regions all around the globe. Once the <code>*.osm</code> file has been downloaded, it needs to be imported into PostgreSQL in order to be queried by Mapnik. The tool <code>osm2pgsql</code> (currently from AUR) accomplishes this. First though, the working directory needs to be setup:
+</p>
+<pre>   mkdir -p ~/gis/osm/
+   cd ~/gis/osm
+   wget ...
+   osm2pgsql --database "location" --username "gis" --password --multi-geometry "file.osm"
+</pre>
+<p>Two important notes. First, <code>osm2pgsql</code> has two operating modes, full and slim. Full uses RAM for intermediate storage, and therefore operates relatively fast. Slim-mode, on the other hand, uses the PostgreSQL database for storage of intermediate information. While this is slower, often the *.osm databases contain too many nodes to be cached in RAM. If this happens, <code>osm2pgsql</code> will abort with an error. 32-bit systems do not address enough ram for a planet.osm import, much less a full Europe import, and while 64-bit systems theoretically could have enough RAM, as of 2010 32GB is not enough for Europe.osm. In any case, since slim-mode offers additional features including incremental updates and proper evaluation of mutipolygons, the osm2pgsql wiki recommends always operating in slim-mode, even with small files.
+</p>
+<p>Secondly, the information that <code>osm2pgsql</code> imports into the PostgreSQL database is selected by the <code>default.style</code> file, usually located at <code>"/usr/share/osm2pgsql/default.style"</code>. Mapnik uses the <code>osm.xml</code> file to extract information from the same database. If either of the two files are out of sync, it is possible that mapnik will fail to fetch some columns from the database, and thus fail to draw some layers. Since <code>osm2pgsql</code> from AUR is currently packaged from SVN, and the following steps build a customized <code>osm.xml</code> file also from SVN, this should not be a problem.
+On the upside, to add more geographical features to the database, simple edit the default.style file. For a full overview see the <a rel="nofollow" class="external text" href="http://wiki.openstreetmap.org/wiki/Osm2pgsql">OpenStreetMap osm2pgsql Wiki</a>.
+</p>
+<h2><span class="mw-headline" id="Testing_the_PostgreSQL_connection_with_QuantumGIS">Testing the PostgreSQL connection with QuantumGIS</span></h2>
+<ul>
+<li>Fire up <code>"/usr/bin/qgis"</code>.</li>
+<li>Menu -&gt; Layer -&gt; Add PostGIS Layer...
+<ul>
+<li>Create a LocalHost connection:
+<ul>
+<li>Host: 127.0.0.1</li>
+<li>Database: "location"</li>
+<li>Port: 5432</li>
+<li>Username: gis</li>
+</ul>
+</li>
+<li>Connect</li>
+<li>Select all four layers and add:
+<ul>
+<li>planet_osm_line</li>
+<li>planet_osm_point</li>
+<li>planet_osm_polygon</li>
+<li>planet_osm_roads</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Depending on the size of the database, the map could take a while to draw. If the map has been satisfactorily drawn, then most likely the <code>osm2pgsql</code> import was successful.
+</p>
+<h2><span class="mw-headline" id="World_Boundaries">World Boundaries</span></h2>
+<p>The world boundaries from OpenStreetMap are not currently (2010) in the database, but provided as external shapefiles. As of 2010 these files consume ~1.2GB of disk-space post-extraction. After setting up the working directory, these files need to be acquired:
+</p>
+<pre>   mkdir -p ~/"gis/osm/world_boundaries [$(date '+%Y-%m-%d')]"
+   cd ~/"gis/osm/world_boundaries [$(date '+%Y-%m-%d')]"
+   wget <a rel="nofollow" class="external free" href="http://tile.openstreetmap.org/world_boundaries-spherical.tgz">http://tile.openstreetmap.org/world_boundaries-spherical.tgz</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-26 ⓘ]</sup>
+   wget <a rel="nofollow" class="external free" href="http://tile.openstreetmap.org/processed_p.tar.bz2">http://tile.openstreetmap.org/processed_p.tar.bz2</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-26 ⓘ]</sup>
+   wget <a rel="nofollow" class="external free" href="http://tile.openstreetmap.org/shoreline_300.tar.bz2">http://tile.openstreetmap.org/shoreline_300.tar.bz2</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-26 ⓘ]</sup>
+   wget <a rel="nofollow" class="external free" href="http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_populated_places.zip">http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_populated_places.zip</a>
+   wget <a rel="nofollow" class="external free" href="http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip">http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip</a>
+   tar xvzf world_boundaries-spherical.tgz
+   tar xvjf processed_p.tar.bz2 -C world_boundaries
+   tar xvjf shoreline_300.tar.bz2 -C world_boundaries
+   unzip ne_10m-populated-places.zip -d world_boundaries
+   unzip ne_110m-admin-0-boundary-lines.zip -d world_boundaries
+   cd world_boundaries
+   ln -s ne_110m_admin_0_boundary_lines_land.shp 110m_admin_0_boundary_lines_land.shp
+   ln -s ne_110m_admin_0_boundary_lines_land.dbf 110m_admin_0_boundary_lines_land.dbf
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> See <a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Mapnik#Download_required_data">http://wiki.openstreetmap.org/wiki/Mapnik#Download_required_data</a> for more information</div>
+<h2><span class="mw-headline" id="Creating_a_customized_osm.xml">Creating a customized osm.xml</span></h2>
+<p>The final step is to create the <code>osm.xml</code> file GpsDrive/Mapnik needs to extract information from the PostgreSQL database. The latest Mapnik XML scripts can be exported from SVN.
+</p>
+<pre>   cd ~/gis/osm/
+   svn checkout <a rel="nofollow" class="external free" href="http://svn.openstreetmap.org/applications/rendering/mapnik">http://svn.openstreetmap.org/applications/rendering/mapnik</a>
+   cd mapnik
+   #./generate_xml.py -h
+   # in the following, replace "$(date '+%Y-%m-%d')" with the correct date
+   # also replace "location" in location_osm.xml with the correct location
+   python2 generate_xml.py osm.xml location_osm.xml --symbols ./symbols/ --world_boundaries ~/"gis/osm/world_boundaries [$(date '+%Y-%m-%d')]/world_boundaries/" --host localhost --user "gis" --dbname "location" --port 5432 --password "..."
+</pre>
+<p>The <code>generate_xml.py</code> script combines the xml templates from <code>"./inc/"</code> and <code>"./osm.xml"</code> with the symbols (images) from <code>"./symbols/"</code> to create a customized non-template xml file. To update the template files and scripts, simply run:
+</p>
+<pre>   cd ~/gis/osm/mapnik/
+   svn update
+</pre>
+<p>The customized <code>location_osm.xml</code> file will not be modified during the update process.
+</p>
+<h2><span class="mw-headline" id="Using_GpsdDrive">Using GpsdDrive</span></h2>
+<p>Gpsdrive requires an <code>osm.xml</code> file in <code>~/.gpsdrive/</code> in order to correctly initialize mapnik. Simple copy over the <code>location_osm.xml</code> file generated in the previous step:
+</p>
+<pre>   cp ~/gis/osm/mapnik/location_osm.xml ~/.gpsdrive/osm.xml
+</pre>
+<p>Afterwards start GpsDrive. Assuming everything went correctly, there should be a "Mapnik Mode" checkbox in the "_Map Control" options box (vertical menu, left hand side). Checking it enables OpenStreetMap support with the Mapnik renderer. To speed up the display, GpsDrive caches the the rendered Mapnik PNG images in <code>"~/.gpsdrive/map/mapnik_cache/"</code>.
+</p>
+<p>To switch PostgreSQL PostGIS/OSM databases, simply generate new <code>osm.xml</code> files and swap them out with <code>"~/.gpsdrive/osm.xml"</code>.
+</p>
+<h2><span class="mw-headline" id="Displaying_OpenStreetMap_POIs">Displaying OpenStreetMap POIs</span></h2>
+<p>GpsDrive does not read POI (Point of Interest) information from the PostGIS Mapnik database. Instead it uses a custom SQLite database derived by cross-referencing the <code>geoinfo.db</code> file from the OSM map-icons set with an OSM xml map file. By default GpsDrive expects to find this SQLite database at <code>/usr/share/gpsdrive/osm.db</code>, but this can be easily changed in <code>~/.gpsdrive/gpsdriverc</code>. Edit away:
+</p>
+<pre>   osmdbfile = /full/path/to/~/.gpsdrive/osm.db
+</pre>
+<p>To create <code>~/.gpsdrive/osm.db</code> from an *.osm xml map file, use <code>osm2poidb</code>. One limitation is that <code>osm2poidb</code> is unable to update existing SQLite databases for additional *.osm xml map files:
+</p>
+<pre>   cd ~/.gpsdrive/
+   osm2poidb --db-file /usr/share/icons/map-icons/geoinfo.db --osm-file location_osm.db ~/gis/osm/location.osm
+   ln -s location_osm.db osm.db
+</pre>
+<p>GpsDrive should now report <code>"DB: Using waypoints from OpenStreetMap database."</code> and display an extra "OSM DB" checkbox under the "Points" information box (vertical menu, left hand side). The "Find" capability of GpsDrive should also now be operational.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="GpsDrive_cannot_find_world_boundaries">GpsDrive cannot find world boundaries</span></h3>
+<pre>   Missing '/usr/share/mapnik/world_boundaries' please install mapnik world boundaries, if error occurs!
+</pre>
+<p>For some strange reason, GpsDrive does not send mapnik the <code>world_boundaries</code> directory specified in <code>~/.gpsdrive/osm.xml</code>, but a standardized directory of <code>"/usr/share/mapnik/world_boundaries/"</code>. Until this is fixed, a quick workaround using symlinks:
+</p>
+<pre>   # in the following, replace "$(date '+%Y-%m-%d')" with the correct date
+   sudo ln -s ~/"gis/osm/world_boundaries [$(date '+%Y-%m-%d')]/world_boundaries/" /usr/lib/mapnik/world_boundaries
+   sudo ln -s /usr/lib/mapnik/ /usr/share/mapnik
+</pre>
+<h3><span class="mw-headline" id="Paths">Paths</span></h3>
+<p>You may want to add
+</p>
+<pre> geoinfofile = /usr/share/icons/map-icons/geoinfo.db
+ mapnik_font_path = /usr/share/fonts/TTF
+</pre>
+<p>into ~/.gpsdrive/gpsdriverc
+</p>
+<h2><span class="mw-headline" id="Other_Information">Other Information</span></h2>
+<h3><span class="mw-headline" id="Managing_windows_in_XMonad">Managing windows in XMonad</span></h3>
+<p>The following ManageHook setup requires the <code>XMonad.Hooks.ManageHelpers</code> module in addition to <code>XMonad.ManageHook</code>
+</p>
+<pre>   , className =? "Gpsdrive"       &lt;&amp;&amp;&gt;
+       fmap (not . isInfixOf "GpsDrive") title             -?&gt; doFloat
+</pre>
+<h3><span class="mw-headline" id="Kismet_Integration">Kismet Integration</span></h3>
+<p><code>src/gpskismet.c</code> was just ported (July 2010) to the newcore kismet protocol, see the GpsDrive mailing list, subject "Kismet Integration".
+</p>
+<h3><span class="mw-headline" id="Optimizing_PostgreSQL_for_OSM_data">Optimizing PostgreSQL for OSM data</span></h3>
+<h3><span class="mw-headline" id="Merging_SQLite_databases_of_waypoints_schema">Merging SQLite databases of waypoints schema</span></h3>
+<h3><span class="mw-headline" id="Scripts_packaged_with_GpsDrive">Scripts packaged with GpsDrive</span></h3>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Script</th>
+<th>Details</th>
+<th>Status
+</th>
+</tr>
+<tr>
+<td>geoinfo.pl
+</td>
+<td>Retrieves POI data from different sources and imports them into a mySQL database.
+</td>
+<td>
+<b>(Deprecated)</b> GpsDrive now uses an SQLite database located at <code>~/.gpsdrive/waypoints.db</code> instead of MySQL to manage user points.
+</td>
+</tr>
+<tr>
+<td>gpsdrive-update-mapnik-poitypes.pl
+</td>
+<td>Stores GpsDrive-compatible POI information inside the 'poi' column of the PostGIS/Mapnik database.
+</td>
+<td>
+<b>(Deprecated)</b> GpsDrive now uses an SQLite database located at <code>/usr/share/gpsdrive/osm.db</code> to store OpenStreetMap POI data.
+</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<span id="Links.2FReferences"></span><span class="mw-headline" id="Links/References">Links/References</span>
+</h2>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<td><a rel="nofollow" class="external free" href="https://sourceforge.net/apps/mediawiki/gpsdrive/index.php">https://sourceforge.net/apps/mediawiki/gpsdrive/index.php</a></td>
+<td>GpsDrive Wiki
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://downloads.cloudmade.com">http://downloads.cloudmade.com</a></td>
+<td>OSM Extraction Service
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Planet.osm">http://wiki.openstreetmap.org/wiki/Planet.osm</a></td>
+<td>Planet.osm
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Mapnik">http://wiki.openstreetmap.org/wiki/Mapnik</a></td>
+<td>OSM Mapnik Directions
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Mapnik/PostGIS">http://wiki.openstreetmap.org/wiki/Mapnik/PostGIS</a></td>
+<td>OSM Mapnik/PostGIS Directions
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Map_Icons">http://wiki.openstreetmap.org/wiki/Map_Icons</a></td>
+<td>OSM Map Icon Information
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://wiki.openstreetmap.org/wiki/Osm2pgsql">http://wiki.openstreetmap.org/wiki/Osm2pgsql</a></td>
+<td>OSM osm2pgsql Page
+</td>
+</tr>
+<tr>
+<td><a href="../en/PostgreSQL.html" title="PostgreSQL">PostgreSQL</a></td>
+<td>Archwiki PostgreSQL Page
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://www.postgresql.org/docs/current/static/auth-methods.html">http://www.postgresql.org/docs/current/static/auth-methods.html</a></td>
+<td>PostgreSQL Auth Methods
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external free" href="http://www.davidpashley.com/articles/postgresql-user-administration.html">http://www.davidpashley.com/articles/postgresql-user-administration.html</a></td>
+<td>PostgreSQL User Administration
+</td>
+</tr>
+<tr>
+<td>file:///usr/share/doc/postgresql/html/xplang-install.html</td>
+<td>PostgreSQL Installing Languages
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Hardware.html" title="Category:Hardware">Hardware</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=GpsDrive&amp;oldid=647229">https://wiki.archlinux.org/index.php?title=GpsDrive&amp;oldid=647229</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 22:13.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

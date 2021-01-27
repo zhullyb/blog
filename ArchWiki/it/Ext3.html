@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Ext3 (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Ext3_Italiano rootpage-Ext3_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Ext3 (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Vi è un gran numero di fan del Third Extended Filesystem ("ext3"). A livello kernel e codice userspace è stato provato, testato, corretto, e migliorato più di quasi tutti gli altri filesystem compatibili con Linux. È semplice, robusto, ed estensibile. In questo articolo si illustreranno alcuni suggerimenti che possono migliorare sia le prestazioni che l'affidabilità del filesystem.
+</p>
+<p>Nel corso di questo articolo, /dev/hdXY sarà utilizzato come una partizione generica. È necessario sostituirla con il nodo del dispositivo effettivo per la partizione, come /dev/hdb1 per la prima partizione del disco slave primario o /dev/sda2 per la seconda partizione del primo disco SCSI o Serial ATA.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Usare_le_utilit%C3%A0_tune2fs_e_e2fsck"><span class="tocnumber">1</span> <span class="toctext">Usare le utilità tune2fs e e2fsck</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Utilizzo_di_indicizzazione_Directory"><span class="tocnumber">2</span> <span class="toctext">Utilizzo di indicizzazione Directory</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Abilitare_journaling_completo"><span class="tocnumber">3</span> <span class="toctext">Abilitare journaling completo</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Disattivare_verifiche_lunghe_al_boot"><span class="tocnumber">4</span> <span class="toctext">Disattivare verifiche lunghe al boot</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Recuperare_lo_spazio_riservato_del_filesystem"><span class="tocnumber">5</span> <span class="toctext">Recuperare lo spazio riservato del filesystem</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Assegnazione_di_un_etichetta"><span class="tocnumber">6</span> <span class="toctext">Assegnazione di un etichetta</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Esperienze_utenti"><span class="tocnumber">7</span> <span class="toctext">Esperienze utenti</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Usare_le_utilit.C3.A0_tune2fs_e_e2fsck"></span><span class="mw-headline" id="Usare_le_utilità_tune2fs_e_e2fsck">Usare le utilità tune2fs e e2fsck</span>
+</h2>
+<p>Prima di iniziare, assicurarsi di avere dimestichezza con lo strumento tune2fs per modificare le opzioni dei filesystem di una partizione ext2 o ext3 (o <a href="../en/Ext4.html#Migrating_from_ext2/ext3_to_ext4" class="mw-redirect" title="Convert ext2 to ext3">convertire da ext2 a ext3</a>). Leggere attentamente la pagina man tune2fs:
+</p>
+<pre>$ man tune2fs
+</pre>
+<p>È generalmente una buona idea eseguire un controllo del filesystem utilizzando l'utilità e2fsck dopo aver completato le modifiche desiderate in un filesystem. In questo modo si verifica che il filesystem sia pulito ed eventualmente corretto, se necessario. Si dovrebbe anche leggere la pagina del manuale per l'utilità e2fsck, se non lo si è ancora fatto:
+</p>
+<pre>$ man e2fsck
+</pre>
+<p><b>WARNING: SOLO DISPOSITIVI SMONTATI:</b> Assicurarsi che tutti i filesystem siano smontati prima di modificarli con le utilità tune2fs o e2fsck! Avviare da LiveCD come <b>Archie</b> o Knoppix se non si può fare diversamente. L'alterazione o la messa a punto di un filesystem mentre è montato può causare gravi danneggiamenti! Siete stati avvertiti!
+</p>
+<h2><span class="mw-headline" id="Utilizzo_di_indicizzazione_Directory">Utilizzo di indicizzazione Directory</span></h2>
+<p>Questa funzione migliora l'accesso ai file nelle directory di grandi dimensioni o directory contenenti molti file utilizzando un sistema di hash binari per memorizzare le informazioni della directory. È perfettamente sicuro da usare e fornisce un miglioramento sostanziale nella maggior parte dei casi, quindi è una buona idea abilitarlo:
+</p>
+<pre># tune2fs -O dir_index /dev/hdXY
+</pre>
+<p>Questo avrà effetto solo con le directory create su quel filesystem dopo aver eseguito tune2fs. Per applicare questa funzionalità alle directory esistenti, si deve eseguire l'utilità e2fsck per ottimizzare e reindicizzare le directory sul filesystem:
+</p>
+<dl><dd></dd></dl>
+<pre># e2fsck -D -f /dev/hdXY
+</pre>
+<p><b>Note:</b> Questo dovrebbe funzionare sia con filesystem ext2 che ext3. A seconda delle dimensioni del file system, l'operazione potrebbe richiedere molto tempo. 
+</p>
+<p><b>Note:</b> L'indicizzazione della directory è attivata per impostazione predefinita in Arch Linux per mezzo di /etc/mke2fs.conf
+</p>
+<h2><span class="mw-headline" id="Abilitare_journaling_completo">Abilitare journaling completo</span></h2>
+<p>Per impostazione predefinita, le partizioni ext3 vengono montate con la modalità dati "ordinata". In questa modalità, tutti i dati vengono scritti nel file system principale, mentre i relativi metadati vengono passati al journal, i cui blocchi sono raggruppati logicamente in transazioni per diminuire gli I/O sul disco. Questo tende a essere un buon valore predefinito per la maggior parte delle persone. Tuttavia, c'è un metodo che aumenta sia l'affidabilità che le prestazioni (in alcune situazioni): passare tutto al journaling, compresi i dati del file stesso (conosciuto come modalità dati "journal"). Normalmente, si potrebbe pensare che passando tutti i dati al journal si diminuiscano le prestazioni, poiché i dati vengono scritti sul disco due volte: una al journal e una al filesystem principale, ma questo non sembra essere il caso. Abilitato su tutte e nove le partizioni nel computer in prova, è stata rilevata solamente una perdita di prestazioni durante la cancellazione di file di grandi dimensioni. In realtà, questo modo può effettivamente migliorare le prestazioni su un filesystem in cui la maggior parte della lettura e scrittura vengono effettuate simultaneamente
+. Vedere <a rel="nofollow" class="external text" href="http://www-106.ibm.com/developerworks/linux/library/l-fs8.html#4">questo articolo</a> scritto da Daniel Robbins sul sito IBM per maggiori informazioni.
+</p>
+<p><br>
+Ci sono due modi per attivare la modalità dati journaling. Il primo è con l'aggiunta di "data=journal" come opzione di mount in /etc/fstab. Se lo si fa in questo modo e si desidera che anche il filesystem root lo usi, si dovrebbe anche aggiungere "rootflags=data=journal" come parametro del kernel nella configurazione del bootloader. Nel secondo metodo, si utilizzerà tune2fs per modificare le opzioni di montaggio predefinite nel superblocco del file system:
+</p>
+<pre># tune2fs -O has_journal -o journal_data /dev/hdXY
+</pre>
+<p>Si prega di notare che il secondo metodo può non funzionare per i kernel più datati. In particolare per Linux 2.4.20 e inferiori, è probabile che le opzioni di mount predefinite sul superblocco vengano ignorate. Chi si sente avventuroso può anche voler ottimizzare le dimensioni del journaling. (Qui si è lasciato il journaling in formato predefinito). Un journaling di dimensioni più grandi può dare prestazioni migliori (al costo di più spazio su disco e un più lungo tempo di recupero). Si raccomanda di leggere la sezione pertinente del manuale tune2fs prima di procedere:
+</p>
+<pre># tune2fs -J size=$SIZE /dev/hdXY
+</pre>
+<h2><span class="mw-headline" id="Disattivare_verifiche_lunghe_al_boot">Disattivare verifiche lunghe al boot</span></h2>
+<p><b>WARNING:</b> Eseguire questa operazione solo su filesystem con journaling come ext3. Potrebbe funzionare anche su altri filesystem con journaling come ReiserFS o XFS, ma non è stato collaudato a sufficienza. Si potrebbe quindi danneggiare o comunque manomettere altri filesystem.  Queste operazioni sono fatte a PROPRIO RISCHIO.
+</p>
+<p>Sembra che filesystem ext3 venga controllato ogni 30 mount, o simili. Questo è un buon valore predefinito per la maggior parte dell'utenza, perché aiuta a prevenire la corruzione del filesystem, soprattutto quando si hanno problemi hardware, come cattivi cablaggi IDE/SATA/SCSI, problemi con l'alimentazione, ecc. Una delle forze trainanti per la creazione dei filesystem journaling è che il filesystem potrebbe essere facilmente ripristinato ad uno stato coerente con il recupero e la riproduzione delle operazioni di journaling necessarie. Quindi, possiamo tranquillamente disattivare questi "conteggi di mount" e "controlli a tempo", se siamo certi che il filesystem sarà rapidamente controllato per recuperare il journal, e se necessario, per ripristinare il file system e la coerenza dei dati. Prima di passare all'esecuzione, assicurarsi che la voce relativa al filesystem in /etc/fstab, abbia un numero intero positivo nel 6º campo (pass), in modo che sia verificata automaticamente al momento del boot. Si può farlo utilizzando il seguente comando:
+</p>
+<pre># tune2fs -c 0 -i 0 /dev/hdXY
+</pre>
+<p>Se si desidera limitare la frequenza dei controlli, senza disabilitarli completamente (per la pace della mente), un ottimo metodo è quello di passare da un certo numero di check ad un controllo fissato per un lasso di tempo.  Consultare le pagine di manuale.  Nel seguente esempio è impostato una volta al mese.
+</p>
+<pre># tune2fs -c 0 -i 1m /dev/hdXY
+</pre>
+<h2><span class="mw-headline" id="Recuperare_lo_spazio_riservato_del_filesystem">Recuperare lo spazio riservato del filesystem</span></h2>
+<p>Le partizioni ext3 contengono uno spazio speciale, utilizzato al 5% in maniera predefinita. Il motivo principale di tale spazio, è che così root può accedervi anche quando il filesystem viene utilizzato al 100%.  Senza questa opzione, l'utente root potrebbe non essere in grado di accedere per "ripulire", dato che il sistema potrebbe diventare instabile, cercando di scrivere i log su un sistema pieno al 100%, per esempio. L'altro motivo è quello di aiutare l'ottimizzazione generale con una minore frammentazione del filesystem.
+</p>
+<p>Il problema è che, con gli hard disk odierni sempre più grandi, il 5% può diventare una grande quantità di spazio sprecato. (Es. 100 GB = 5 GB riservati). Ora, se il filesystem è separato da /home per esempio, potrebbe essere una buona idea fare un po' di aggiustamenti e recuperare quello spazio sprecato.  Sarebbe una scommessa sicura lasciare il filesystem / con uno spazio del 5% riservato per ogni evenienza.  Lasciare lo spazio riservato per i filesystem che contengono /var e /tmp, altrimenti ci si ritroverà con qualche problema.
+</p>
+<p>Ora per cambiare lo spazio riservato all '1% del disco, che è accettabile per i filesystems non-root:
+</p>
+<pre># tune2fs -m 1 /dev/sdXY
+</pre>
+<h2><span class="mw-headline" id="Assegnazione_di_un_etichetta">Assegnazione di un etichetta</span></h2>
+<p>Dopo aver creato e formattato una partizione, è possibile assegnare un'etichetta utilizzando il comando e2label. Questo permette di aggiungere la partizione a /etc/fstab usando un'etichetta invece di utilizzare il percorso del dispositivo (utile per un drive USB). Per aggiungere un'etichetta a una partizione, digitare il seguente comando come root: 
+</p>
+<pre>   e2label /dev/sdXY <i>new-label</i>
+</pre>
+<p>Se l'argomento opzionale <i>new-label</i> non è presente, e2label visualizzerà semplicemente l'etichetta del filesystem corrente. Se invece <i>new-label</i> è presente, e2label imposterà l'etichetta del filesystem a <i>new-label</i>q. Le etichette per filesystem ext2 e ext3 possono essere al massimo 16 caratteri, in caso la nuova etichetta sia più lunga, e2label la troncherà e stamperà un messaggio di avviso.
+</p>
+<h2><span class="mw-headline" id="Esperienze_utenti">Esperienze utenti</span></h2>
+<p>Non ho mai avuto problemi con questi suggerimenti su filesystem di grandi dimensioni (&gt; 750). Disabilitare i controlli programmati all'avvio funziona altrettanto bene.
+</p>
+<p><br>
+Il filesystem ha prodotto alcuni errori seguendo questi suggerimenti. Non disabilitare il lengthy boot-time.
+</p>
+<p>Se si dispone di partizioni grandi, non attivare il journaling completo su di esse. Ho avuto esperienze di freeze (circa 30 secondi) sulla mia partizione home da 250GB.
+</p>
+<dl><dd>Hai provato ad ottimizzare con bdflush, come descritto <a rel="nofollow" class="external text" href="http://www.ibm.com/developerworks/linux/library/l-fs8.html">da Daniel Robbins</a>?</dd></dl>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../it/Category:File_systems.html" title="Category:File systems (Italiano)">File systems (Italiano)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Ext3_(Italiano)&amp;oldid=585169">https://wiki.archlinux.org/index.php?title=Ext3_(Italiano)&amp;oldid=585169</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 10 October 2019, at 20:29.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

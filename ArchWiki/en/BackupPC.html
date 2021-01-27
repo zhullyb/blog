@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>BackupPC - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-BackupPC rootpage-BackupPC skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">BackupPC</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://backuppc.github.io/backuppc/">BackupPC</a> is a high-performance, enterprise-grade system for backing up Unix, Linux, WinXX, and MacOSX PCs, desktops and laptops to a server's disk. BackupPC is highly configurable and easy to install and maintain.
+</p>
+<p>Given the ever decreasing cost of disks and raid systems, it is now practical and cost effective to backup a large number of machines onto a server's local disk or network storage. For some sites this might be the complete backup solution. For other sites additional permanent archives could be created by periodically backing up the server to tape.
+</p>
+<p>Note that BackupPC only provides file-based backups and restores. In particular, it is not suitable out-of-the-box for "hot" database backups (although pre-backup hooks can be used to dump databases and do "cold" backups); you will need tools like <a href="../en/Xtrabackup.html" title="Xtrabackup">xtrabackup</a> for that purpose. Also, BackupPC only offers limited handling of opened files.  Make sure to read about the <a rel="nofollow" class="external text" href="http://backuppc.sourceforge.net/faq/limitations.html">limitations of BackupPC</a> and test a backup-and-restore cycle before you actually need to resort to it for real.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Placing_data_directories_on_a_separate_partition"><span class="tocnumber">1.1</span> <span class="toctext">Placing data directories on a separate partition</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Apache_configuration"><span class="tocnumber">2</span> <span class="toctext">Apache configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#Edit_Apache_configuration"><span class="tocnumber">2.1</span> <span class="toctext">Edit Apache configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#General_settings"><span class="tocnumber">2.1.1</span> <span class="toctext">General settings</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Single-purpose_Apache_settings"><span class="tocnumber">2.1.2</span> <span class="toctext">Single-purpose Apache settings</span></a></li>
+<li class="toclevel-3 tocsection-7">
+<a href="#Multi-purpose_Apache_settings"><span class="tocnumber">2.1.3</span> <span class="toctext">Multi-purpose Apache settings</span></a>
+<ul>
+<li class="toclevel-4 tocsection-8"><a href="#The_webserver_user_and_the_suid_problem"><span class="tocnumber">2.1.3.1</span> <span class="toctext">The webserver user and the suid problem</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Alternative_nginx_configuration"><span class="tocnumber">3</span> <span class="toctext">Alternative nginx configuration</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#Alternative_lighttpd_configuration"><span class="tocnumber">4</span> <span class="toctext">Alternative lighttpd configuration</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Accessing_the_admin_page"><span class="tocnumber">5</span> <span class="toctext">Accessing the admin page</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Website_view_problem"><span class="tocnumber">6</span> <span class="toctext">Website view problem</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=backuppc">backuppc</a></span> from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.
+Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rsync">rsync</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-file-rsyncp">perl-file-rsyncp</a></span> if you want to use <a href="../en/Rsync.html" title="Rsync">rsync</a> as a transport, and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rrdtool">rrdtool</a></span> to display usage data in the CGI interface.
+</p>
+<p>Start the <b>backuppc</b> <a href="../en/Systemd.html" title="Systemd">systemd</a> <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a> and, if you wish to have it running at boot time, enable it.
+</p>
+<h3><span class="mw-headline" id="Placing_data_directories_on_a_separate_partition">Placing data directories on a separate partition</span></h3>
+<p>The BackupPC pool is stored by default under <code>/var/lib/backuppc</code>, which also serves as the home directory for the backuppc user.
+This path can be changed via the <code>$Conf{TopDir}</code> entry in <code>/etc/backuppc/config.pl</code>.
+Typical reasons are that you keep your system on a fast, but expensive and small, <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a> and need to store the backups on a traditional hard disk, or that you want to keep the backup pool on a partition managed by an <a href="../en/LVM.html" title="LVM">LVM</a> to be able to resize to partition according to changing demands.
+</p>
+<p>The documentation suggests to not change the <code>$Conf{TopDir}</code> entry, but instead use symlinks.  However, be careful when doing so because package upgrades for backuppc will replace symlinks for both <code>/var/lib/backuppc</code> or any of the default subdirectories <code>cpool</code>, <code>pc</code> or <code>pool</code> by empty directories <b>without any warning</b>.
+</p>
+<p>Thus, it is recommended to either use bind mounts in <a href="../en/Fstab.html" title="Fstab">fstab</a> instead of symlinks, or to deliberately ignore the recommendation in <code>/etc/backuppc/config.pl</code> and change <code>$Conf{TopDir}</code> nevertheless. Alternatively, use <a href="../en/Pacman.html" title="Pacman">pacman</a>'s pre- and post-<a href="../en/Pacman.html#Hooks" title="Pacman">transaction hooks</a> such as the following (remember to make the shell scripts executable by <code>chmod a+x /etc/pacman.d/hooks/backuppc-restore-symlinks-*.sh</code>):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.d/hooks/backuppc-restore-symlinks-post.hook</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Trigger]
+Operation = Upgrade
+Type = Package
+Target = backuppc
+
+[Action]
+Description = Restore symlinks for BackupPC pool directories
+When = PostTransaction
+Exec = /etc/pacman.d/hooks/backuppc-restore-symlinks-post.sh</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.d/hooks/backuppc-restore-symlinks-post.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/bash
+
+if [ ! -d /tmp/backuppc-symlinks-cache ]; then
+    exit 0
+fi
+
+if [ -L /tmp/backuppc-symlinks-cache/backuppc ]; then
+    rmdir /var/lib/backuppc/{cpool,pc,pool,}
+    mv /tmp/backuppc-symlinks-cache/backuppc /var/lib/
+    echo "==&gt; Restored /var/lib/backuppc =&gt; $(readlink /var/lib/backuppc)"
+fi
+
+for dir in cpool pc pool; do
+    if [ -L /tmp/backuppc-symlinks-cache/$dir ]; then
+        rmdir /var/lib/backuppc/$dir
+        mv /tmp/backuppc-symlinks-cache/$dir /var/lib/backuppc/
+        echo "==&gt; Restored /var/lib/backuppc/${dir} =&gt; $(readlink /var/lib/backuppc/$dir)"
+    fi
+done
+
+if [ -f /tmp/backuppc-symlinks-cache/was-running ]; then
+    echo '==&gt; BackupPC service was stopped for upgrade.'
+    echo '==&gt; Check the configuration and run `systemctl start backuppc.service` to restart the service.'
+    rm -f /tmp/backuppc-symlinks-cache/was-running
+fi
+
+rmdir --ignore-fail-on-non-empty /tmp/backuppc-symlinks-cache &amp;&gt;/dev/null</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.d/hooks/backuppc-restore-symlinks-pre.hook</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Trigger]
+Operation = Upgrade
+Type = Package
+Target = backuppc
+
+[Action]
+Description = Stash symlinks for BackupPC pool directories
+When = PreTransaction
+Exec = /etc/pacman.d/hooks/backuppc-restore-symlinks-pre.sh</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.d/hooks/backuppc-restore-symlinks-pre.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/bash
+
+if systemctl is-active backuppc.service &amp;&gt;/dev/null; then
+    systemctl stop backuppc.service
+    mkdir -p /tmp/backuppc-symlinks-cache
+    touch /tmp/backuppc-symlinks-cache/was-running
+fi
+
+for dir in /var/lib/backuppc/{cpool,pc,pool,}; do
+    if [ -L $dir ]; then
+        mkdir -p /tmp/backuppc-symlinks-cache
+        mv $dir /tmp/backuppc-symlinks-cache
+    fi
+done</pre>
+<h2><span class="mw-headline" id="Apache_configuration">Apache configuration</span></h2>
+<p>BackupPC has a web interface that allows you to easily control it. You can access it using Apache and mod_perl or a C wrapper but other webservers like <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lighttpd">lighttpd</a></span> works too. 
+Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=apache">apache</a></span> from the official repositories.
+</p>
+<h3><span class="mw-headline" id="Edit_Apache_configuration">Edit Apache configuration</span></h3>
+<p>BackupPC's web UI needs to run as the user backuppc, but Apache normally runs under the user http. There are several ways to fix this. The two demonstrated here are common for single-purpose servers (Apache is only used to serve the BackupPC UI) or for multi-purpose servers (Apache may also server other websites under the regular http user).
+</p>
+<p>Setting up Apache for single-purpose use is a bit easier but not as flexible.
+</p>
+<h4><span class="mw-headline" id="General_settings">General settings</span></h4>
+<p>Edit <code>/etc/backuppc/config.pl</code>. Set administrator name:
+</p>
+<pre>$Conf{CgiAdminUsers} = 'admin'; 
+</pre>
+<p>Next, we need to add a users file and set the admin password:
+</p>
+<pre># htpasswd -c /etc/backuppc/backuppc.users admin
+</pre>
+<p>The BackupPC-Webfrontend is initially configured so that you can only access it from the localhost. If you want to access it from all machines in your network, you have to edit <code>/etc/httpd/conf/extra/backuppc.conf</code>. Edit the line:
+</p>
+<pre>Require ip 127.0.0.1
+</pre>
+<p>to:
+</p>
+<pre>Require ip 127.0.0.1 192.168.0
+</pre>
+<p>where you have to replace 192.168.0 to your corresponding IP-Adresses you want to gain access from.
+After one of the configuration steps below has also been performed, [re]start the Apache service.
+</p>
+<h4><span class="mw-headline" id="Single-purpose_Apache_settings">Single-purpose Apache settings</span></h4>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mod_perl/">mod_perl</a></span><sup><small>AUR</small></sup> from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.
+</p>
+<p>Edit the Apache configuration file to load mod_perl, tell Apache to run as user backuppc and to include <code>/etc/httpd/conf/extra/backuppc.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/httpd/conf/httpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> LoadModule perl_module modules/mod_perl.so
+ User backuppc
+ Group backuppc
+ Include conf/extra/backuppc.conf
+</pre>
+<h4><span class="mw-headline" id="Multi-purpose_Apache_settings">Multi-purpose Apache settings</span></h4>
+<p>Instead of globally changing the Apache user and group like in the example above, we will instead make Apache run just the BackupPC CGI script as the backuppc user and leave the default user alone. This method uses mod_cgi to call a wrapper written in C instead of using the extra mod_perl dependency. You still need to have <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl">perl</a></span> itself installed so the wrapper can run the BackupPC scripts.
+</p>
+<p>Make sure Apache can run CGI programs (the line loading mod_cgi is not commented) and that it reads the BackupPC configuration by including it in <code>/etc/httpd/conf/extra/backuppc.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/httpd/conf/httpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> LoadModule cgi_module modules/mod_cgi.so
+ ...
+ Include conf/extra/backuppc.conf
+</pre>
+<h5><span class="mw-headline" id="The_webserver_user_and_the_suid_problem">The webserver user and the suid problem</span></h5>
+<p>The current setup of BackupPC, the webserver needs to run as backuppc user and this can be a problem on many setups where the webserver is used for other sites. In the past one could suid a Perl script, but it was blocked globally due security problems several years ago. To workaround that, perl-suid was used, but again blocked due the same problem  more recently, scripts cannot be run securely with suid bit. Still there is another way, this time using a simple binary program that is suid as a launcher, that will run the backuppc Perl scripts already with the correct user. This isolates the Perl script from the environment and it is considered safe.
+</p>
+<p>You need to replace the original backuppc CGI  with the below C code compiled program and move the backuppc CGI to another place.
+</p>
+<p>Move the real CGI <code>/usr/share/backuppc/cgi-bin/BackupPC_Admin</code> to the lib directory <code>/usr/share/backuppc/lib/real-BackupPC_Admin.cgi</code>.
+</p>
+<p>Save the C code below to a file named <i>wrapper.c</i> (please update the CGI path if needed) and compile it with:
+</p>
+<pre>$ gcc -o BackupPC_Admin wrapper.c
+</pre>
+<p>The wrapper C code:
+</p>
+<pre>#include &lt;unistd.h&gt;
+#define REAL_PATH "/usr/share/backuppc/lib/real-BackupPC_Admin.cgi"
+int main(ac, av)
+char **av;
+{
+   execv(REAL_PATH, av);
+   return 0;
+}
+</pre>
+<p>Place the new binary <code>BackupPC_Admin</code> in the cgi-bin directory and chown the binary CGI to <code>backuppc:http</code> and set the suid bit:
+</p>
+<pre># chown backuppc:http /usr/share/backuppc/cgi-bin/BackupPC_Admin
+# chmod 4750 /usr/share/backuppc/cgi-bin/BackupPC_Admin
+</pre>
+<p>Do not forget to clear the suid bit on the original Perl script if it was set (or the CGI page will not load):
+</p>
+<pre># chmod 0755 /usr/share/backuppc/lib/real-BackupPC_Admin.cgi
+</pre>
+<p>Keep your web server with its usual user and backup should now be able to run correctly.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Keep in mind that the fix described in this section will be overwritten at every package upgrade, resulting in the BackupPC_Admin page displaying a message similar to <i>Error: Wrong user: my userid is 33, instead of 126(backuppc)</i>. You will have to reapply the whole modification  manually again to fix it.</div>
+<h2><span class="mw-headline" id="Alternative_nginx_configuration">Alternative nginx configuration</span></h2>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx-mainline">nginx-mainline</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fcgiwrap">fcgiwrap</a></span>.
+</p>
+<p>Create those two directories :
+</p>
+<pre># mkdir /etc/nginx/sites-available
+# mkdir /etc/nginx/sites-enabled
+</pre>
+<p>Edit nginx configuration file to include the configuration files from <code>sites-enabled</code>, by adding this at the end of the http block :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http {
+    ...
+    include sites-enabled/*;
+}
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/sites-available/backuppc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server {
+    listen &lt;your_server_port&gt;;
+    server_name &lt;your_server_name&gt;;
+
+    root  /usr/share/backuppc/html;
+    index /index.cgi;
+
+    access_log  /var/log/nginx/backuppc.access.log;
+    error_log   /var/log/nginx/backuppc.error.log;
+
+    location / {
+        allow 127.0.0.1/32;
+        # allow 192.168.0.0/24;
+        deny all;
+
+        # auth_basic "Backup";
+        # auth_basic_user_file conf/backuppc.users;
+
+        location /backuppc {
+            alias /usr/share/backuppc/html;
+        }
+
+        location ~ \.cgi$ {
+            include fastcgi_params;
+            fastcgi_pass unix:/run/fcgiwrap.sock;
+
+            fastcgi_param REMOTE_ADDR     $remote_addr;
+            fastcgi_param REMOTE_USER     $remote_user;
+            fastcgi_param SCRIPT_FILENAME /usr/share/backuppc/cgi-bin/BackupPC_Admin;
+        }
+    }
+}
+</pre>
+<p>And symlink to sites-enabled:
+</p>
+<pre># ln -s /etc/nginx/sites-available/backuppc /etc/nginx/sites-enabled
+</pre>
+<p>Change fcgiwrap executing user in systemd <code>/usr/lib/systemd/system/fcgiwrap.service</code> file to user: backuppc
+</p>
+<p>Enable and start <code>nginx.service</code>, enable and start <code>fcgiwrap.socket</code>.
+</p>
+<p>If you want to use basic authentication, uncomment the corresponding lines above and create the file <code>/etc/nginx/conf/backuppc.users</code> containing all allowed users :
+</p>
+<pre># echo -n 'myuser:' &gt;&gt; /etc/nginx/conf/backuppc.users
+# openssl passwd -apr1 &gt;&gt; /etc/nginx/conf/backuppc.users
+</pre>
+<p>Follow <a href="../en/Certbot.html#Nginx" title="Certbot">Certbot#Nginx</a> to create a Let's Encrypt certificate and configure a TLS certificate.
+</p>
+<h2><span class="mw-headline" id="Alternative_lighttpd_configuration">Alternative lighttpd configuration</span></h2>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lighttpd/lighttpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> server.port             = 81
+ server.username         = "backuppc"
+ server.groupname        = "backuppc"
+ server.document-root    = "/srv/http"
+ server.errorlog         = "/var/log/lighttpd/error.log"
+ dir-listing.activate    = "enable"
+ index-file.names        = ( "index.html", "index.php", "index.cgi" )
+ mimetype.assign         = ( ".html" =&gt; "text/html", ".txt" =&gt; "text/plain", ".jpg" =&gt; "image/jpeg", ".png" =&gt; "image/png", "" =&gt; "application/octet-stream" )
+ 
+ server.modules = ("mod_alias", "mod_cgi", "mod_auth", "mod_access" )
+ 
+ alias.url               = ( "/BackupPC_Admin" =&gt; "/usr/share/backuppc/cgi-bin/BackupPC_Admin" )
+ alias.url               += ( "/backuppc" =&gt; "/usr/share/backuppc/html" )
+ 
+ cgi.assign              += ( ".cgi" =&gt; "/usr/bin/perl" )
+ cgi.assign              += ( "BackupPC_Admin" =&gt; "/usr/bin/perl" )
+ 
+ auth.backend = "plain"
+ auth.backend.plain.userfile = "/etc/lighttpd/passwd"
+ auth.require = ( "/BackupPC_Admin" =&gt; ( "method" =&gt; "basic", "realm" =&gt; "BackupPC", "require" =&gt; "user=admin" ) )
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lighttpd/passwd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> admin:<i>yourpassword</i>
+</pre>
+<p>And create log file:
+</p>
+<pre># touch /var/log/lighttpd/error.log
+# chown backuppc:backuppc /var/log/lighttpd/error.log
+</pre>
+<h2><span class="mw-headline" id="Accessing_the_admin_page">Accessing the admin page</span></h2>
+<p>Before accesing de admin page you have to specify which users/groups will be able to edit BackupPC's configuration.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/backuppc/config.pl</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">$Conf{CgiAdminUserGroup} = '&lt;authorized groups&gt;';
+$Conf{CgiAdminUsers}     = '&lt;authorized users&gt;';  # &lt;-- set to '*' if the webserver is not autenticating users
+</pre>
+<p>Browse to <a rel="nofollow" class="external free" href="http://localhost/BackupPC_Admin">http://localhost/BackupPC_Admin</a> respectively http://<i>your_backuppc_server_ip</i>/BackupPC_Admin.
+</p>
+<h2><span class="mw-headline" id="Website_view_problem">Website view problem</span></h2>
+<p>Due an Apache directive, the web interface may not shown properly. If that is your case, just modify the line in your <code>/etc/httpd/conf/httpd.conf</code> that avoids .htaccess and .htpasswd from viewed for clients or change directory name /usr/share/backuppc/html for /usr/share/backuppc/files and update <code>/etc/httpd/conf/extra/backuppc.conf</code> with the new path, as it follows:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/httpd/conf/extra/backuppc.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Alias           /BackupPC/images        /usr/share/BackupPC/files/
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://backuppc.sourceforge.net/index.html">BackupPC Home page</a></li>
+<li><a rel="nofollow" class="external text" href="http://backuppc.sourceforge.net/faq/BackupPC.html">BackupPC documentation</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Backup.html" title="Category:Backup">Backup</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=BackupPC&amp;oldid=602451">https://wiki.archlinux.org/index.php?title=BackupPC&amp;oldid=602451</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 24 March 2020, at 11:30.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

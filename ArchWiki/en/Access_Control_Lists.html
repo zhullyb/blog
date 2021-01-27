@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Access Control Lists - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Access_Control_Lists rootpage-Access_Control_Lists skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Access Control Lists</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a href="https://en.wikipedia.org/wiki/Access_Control_List" class="extiw" title="wikipedia:Access Control List">Access control list</a> (ACL) provides an additional, more flexible permission mechanism for <a href="../en/File_systems.html" title="File systems">file systems</a>. It is designed to assist with UNIX file permissions. ACL allows you to give permissions for any user or group to any disk resource.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Enable_ACL"><span class="tocnumber">2</span> <span class="toctext">Enable ACL</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Usage"><span class="tocnumber">3</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Set_ACL"><span class="tocnumber">3.1</span> <span class="toctext">Set ACL</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Show_ACL"><span class="tocnumber">3.2</span> <span class="toctext">Show ACL</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Examples"><span class="tocnumber">4</span> <span class="toctext">Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Output_of_ls_command"><span class="tocnumber">4.1</span> <span class="toctext">Output of ls command</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Granting_execution_permissions_for_private_files_to_a_web_server"><span class="tocnumber">4.2</span> <span class="toctext">Granting execution permissions for private files to a web server</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acl">acl</a></span> package is a dependency of <a href="../en/Systemd.html" title="Systemd">systemd</a>, it should already be installed.
+</p>
+<h2><span class="mw-headline" id="Enable_ACL">Enable ACL</span></h2>
+<p>To enable ACL, the filesystem must be mounted with the <code>acl</code> option. You can use <a href="../en/Fstab.html" title="Fstab">fstab</a> to make it permanent on your system.
+</p>
+<p>There is a possibility that the <code>acl</code> option is already active as default mount option on the filesystem. <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> does and Ext2/<a href="../en/Ext3.html" title="Ext3">3</a>/<a href="../en/Ext4.html" title="Ext4">4</a> filesystems do too. Use the following command to check ext* formatted partitions for the option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># tune2fs -l /dev/sd<i>XY</i> | grep "Default mount options:"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Default mount options:    user_xattr acl
+</pre>
+<p>Also check that the default mount option is not overridden, in such case you will see <code>noacl</code> in <code>/proc/mounts</code> in the relevant line.
+</p>
+<p>You can set the default mount options of a filesystem using the <code>tune2fs -o <i>option</i> <i>partition</i></code> command, for example:
+</p>
+<pre># tune2fs -o acl /dev/sd<i>XY</i>
+</pre>
+<p>Using the default mount options instead of an entry in <code>/etc/fstab</code> is very useful for external drives, such partition will be mounted with <code>acl</code> option also on other Linux machines. There is no need to edit <code>/etc/fstab</code> on every machine.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>
+<code>acl</code> is specified as default mount option when creating an ext2/3/4 filesystem. This is configured in <code>/etc/mke2fs.conf</code>.</li>
+<li>The default mount options are not listed in <code>/proc/mounts</code>.</li>
+</ul>
+</div>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<h3><span class="mw-headline" id="Set_ACL">Set ACL</span></h3>
+<p>The ACL can be modified using the <i>setfacl</i> command.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You can list file/directory permission changes without modifying the permissions (i.e. dry-run) by appending the <code>--test</code> flag.</div>
+<p>To set permissions for a user (<code><i>user</i></code> is either the user name or ID):
+</p>
+<pre># setfacl -m "u:<i>user:permissions</i>" &lt;file/dir&gt;
+</pre>
+<p>To set permissions for a group (<code><i>group</i></code> is either the group name or ID):
+</p>
+<pre># setfacl -m "g:<i>group:permissions</i>" &lt;file/dir&gt;
+</pre>
+<p>To set permissions for others:
+</p>
+<pre># setfacl -m "other:<i>permissions</i>" &lt;file/dir&gt;
+</pre>
+<p>To allow all <i>newly created</i> files or directories to inherit entries from the parent directory (this will not affect files which will be <i>copied</i> into the directory):
+</p>
+<pre># setfacl -dm "<i>entry</i>" &lt;dir&gt;
+</pre>
+<p>To remove a specific entry:
+</p>
+<pre># setfacl -x "<i>entry</i>" &lt;file/dir&gt;
+</pre>
+<p>To remove the default entries:
+</p>
+<pre># setfacl -k &lt;file/dir&gt;
+</pre>
+<p>To remove all entries (entries of the owner, group and others are retained):
+</p>
+<pre># setfacl -b &lt;file/dir&gt;
+</pre>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> The original note about the <code>--mask</code> option (which was taken from <span class="plainlinks archwiki-template-man" title="$ man 1 setfacl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/setfacl.1">setfacl(1)</a></span>) was determined as inaccurate, but the new note does not seem correct either. See the talk page for details. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Access_Control_Lists#ACL_mask_entry">Talk:Access Control Lists#ACL mask entry</a>)</div>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The default behavior of <i>setfacl</i> is to recalculate the ACL mask entry, unless a <code>--mask</code> entry was explicitly given. The mask entry indicates the maximum permissions allowed for users (other than the owner) and for groups. Unless explicitly set, this will match the permissions of the default group. To clarify what this means, suppose the group owning a directory has r-x permissions. If you add an ACL user or group with rwx permissions, the <i>effective</i> permissions of this user or group will be r-x. The reason for this is so that there are no surprises when a file from a system which doesn't support ACLs is made available on a system which does..</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> To apply operations to all files and directories recursively, append the <code>-R</code> argument.</div>
+<h3><span class="mw-headline" id="Show_ACL">Show ACL</span></h3>
+<p>To show permissions, use:
+</p>
+<pre># getfacl &lt;file/dir&gt;
+</pre>
+<h2><span class="mw-headline" id="Examples">Examples</span></h2>
+<p>Set all permissions for user <code>johnny</code> to file named <code>abc</code>:
+</p>
+<pre># setfacl -m "u:johnny:rwx" abc
+</pre>
+<p>Check permissions:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getfacl abc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># file: abc
+# owner: someone
+# group: someone
+user::rw-
+user:johnny:rwx
+group::r--
+mask::rwx
+other::r--
+</pre>
+<p>Change permissions for user <code>johnny</code>:
+</p>
+<pre># setfacl -m "u:johnny:r-x" abc
+</pre>
+<p>Check permissions:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getfacl abc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># file: abc
+# owner: someone
+# group: someone
+user::rw-
+user:johnny:r-x
+group::r--
+mask::r-x
+other::r--
+</pre>
+<p>Remove all ACL entries:
+</p>
+<pre># setfacl -b abc
+</pre>
+<p>Check permissions:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getfacl abc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># file: abc
+# owner: someone
+# group: someone
+user::rw-
+group::r--
+other::r--
+</pre>
+<h3><span class="mw-headline" id="Output_of_ls_command">Output of ls command</span></h3>
+<p>You will notice that there is an ACL for a given file because it will exhibit a <code><b>+</b></code> (plus sign) after its Unix permissions in the output of <code>ls -l</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/audio</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">crw-rw----+ 1 root audio 14, 4 nov.   9 12:49 /dev/audio
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ getfacl /dev/audio</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">getfacl: Removing leading '/' from absolute path names
+# file: dev/audio
+# owner: root
+# group: audio
+user::rw-
+user:solstice:rw-
+group::rw-
+mask::rw-
+other::---
+</pre>
+<h3><span class="mw-headline" id="Granting_execution_permissions_for_private_files_to_a_web_server">Granting execution permissions for private files to a web server</span></h3>
+<p>The following technique describes how a process like a <a href="../en/List_of_applications/Internet.html#Web_servers" class="mw-redirect" title="Web server">web server</a> can be granted access to files that reside in a user's home directory, without compromising security by giving the whole world access.
+</p>
+<p>In the following we assume that the web server runs as the user <code>http</code> and grant it access to <code>geoffrey</code>'s home directory <code>/home/geoffrey</code>.
+</p>
+<p>The first step is granting execution permissions for the user <code>http</code>:
+</p>
+<pre># setfacl -m "u:http:--x" /home/geoffrey
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Execution permissions to a directory are necessary for a process to list the directory's content.</div>
+<p>Since the user <code>http</code> is now able to access files in <code>/home/geoffrey</code>, others no longer need access:
+</p>
+<pre># chmod o-rx /home/geoffrey
+</pre>
+<p>Use <code>getfacl</code> to verify the changes:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ getfacl /home/geoffrey</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">getfacl: Removing leading '/' from absolute path names
+# file: home/geoffrey
+# owner: geoffrey
+# group: geoffrey
+user::rwx
+user:http:--x
+group::r-x
+mask::r-x
+other::---
+</pre>
+<p>As the above output shows, <code>other</code>'s no longer have any permissions, but the user <code>http</code> is still able to access the files, thus security might be considered increased.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> One may need to give write access for the user <code>http</code> on specific directories and/or files:
+<pre># setfacl -dm "u:http:rwx" /home/geoffrey/project1/cache
+</pre>
+</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><span class="plainlinks archwiki-template-man" title="$ man 1 getfacl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/getfacl.1">getfacl(1)</a></span></li>
+<li><span class="plainlinks archwiki-template-man" title="$ man 1 setfacl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/setfacl.1">setfacl(1)</a></span></li>
+<li><a rel="nofollow" class="external text" href="https://www.usenix.org/legacy/publications/library/proceedings/usenix03/tech/freenix03/full_papers/gruenbacher/gruenbacher_html/main.html">POSIX Access Control Lists on Linux</a></li>
+<li><a rel="nofollow" class="external text" href="https://unix.stackexchange.com/questions/1314/how-to-set-default-file-permissions-for-all-folders-files-in-a-directory">How to set default file permissions for all folders/files in a directory?</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Access_control.html" title="Category:Access control">Access control</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Access_Control_Lists&amp;oldid=634095">https://wiki.archlinux.org/index.php?title=Access_Control_Lists&amp;oldid=634095</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 September 2020, at 09:24.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

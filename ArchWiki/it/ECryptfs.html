@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>ECryptfs (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-ECryptfs_Italiano rootpage-ECryptfs_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">ECryptfs (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Introduzione"><span class="tocnumber">1</span> <span class="toctext">Introduzione</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Nozioni_di_base"><span class="tocnumber">2</span> <span class="toctext">Nozioni di base</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Setup"><span class="tocnumber">2.1</span> <span class="toctext">Setup</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Montare_la_cartella"><span class="tocnumber">2.2</span> <span class="toctext">Montare la cartella</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Rimozione_dei_file_e_della_cartella"><span class="tocnumber">2.3</span> <span class="toctext">Rimozione dei file e della cartella</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Auto-mount_al_login"><span class="tocnumber">3</span> <span class="toctext">Auto-mount al login</span></a></li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Nozioni_avanzate"><span class="tocnumber">4</span> <span class="toctext">Nozioni avanzate</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#PAM_Mount"><span class="tocnumber">4.1</span> <span class="toctext">PAM_Mount</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h1><span class="mw-headline" id="Introduzione">Introduzione</span></h1>
+<p>Questo articolo descrive l'utilizzo di base di <a rel="nofollow" class="external text" href="https://launchpad.net/ecryptfs">eCryptfs</a> e guiderà attraverso il processo di creazione di una cartella privata, cifrata e sicura, in <i>$HOME</i>, dove sarà possibile salvare tutti i dati sensibili. Se la domanda è "<i>Perché dovrei usare la crittografia?</i>" allora è bene iniziare leggendo l'articolo su <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a> che risponde alle domande di base sulla sicurezza.
+</p>
+<p>A livello di implementazione eCryptfs differisce da dm-crypt: questo fornisce un layer virtuale cifrato su un dispositivo a blocchi, mentre eCryptfs è un filesystem a tutti gli effetti, per l'esattezza un filesystem con <a href="https://en.wikipedia.org/wiki/Cryptographic_filesystems" class="extiw" title="wikipedia:Cryptographic filesystems">cifratura a livello di filesystem stesso</a>. Questa <a rel="nofollow" class="external text" href="http://ecryptfs.sourceforge.net/ecryptfs-faq.html#compare">tabella</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-02]</sup> compara i due sistemi.
+</p>
+<p>In sintesi eCryptfs permette di non doversi preoccupare di pre-allocare spazio su disco per memorizzare i propri file, come ad esempio il dover creare partizioni separate: è possibile montare eCryptfs sopra a qualunque cartella per proteggerla. Sono incluse, ad esempio, l'intera $HOME di un utente oppure filesystem di rete (avendo condivisioni NFS cifrati). Tutti i metadata crittografici sono memorizzati negli header dei file così che i dati cifrati possono essere spostati o salvati per backup e poi recuperati senza problemi. Ci sono altri vantaggi, ma anche degli inconvenienti: eCryptfs non può cifrare intere partizioni per cui non può essere utilizzato per proteggere lo spazio di swap (per far ciò può essere però utilizzato congiuntamente con dm-crypt).
+</p>
+<h1><span class="mw-headline" id="Nozioni_di_base">Nozioni di base</span></h1>
+<p>eCryptfs fa parte di Linux fin dalla versione 2.6.19, ma per poterlo utilizzare sono richiesti gli strumenti per gestire lo spazio utente: va perciò installato il pacchetto <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ecryptfs-utils">ecryptfs-utils</a></span> che a sua volta richiede il pacchetto <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=keyutils">keyutils</a></span> (che contiene gli strumenti per gestire le chiavi di cifratura del portachiavi del kernel).
+</p>
+<p>Dopo l'installazione di questi pacchetti, potete caricare il modulo ecryptfs e continuare con il setup:
+</p>
+<pre># modprobe ecryptfs
+</pre>
+<p>Il pacchetto ecryptfs-utils è distribuito con alcuni script che aiutano con la gestione della chiave ed altri compiti simili. Alcuni sono stati scritti per automatizzare l'intero processo di setup delle cartelle cifrate (<i>ecryptfs-setup-private</i>) o per aiutare a combinare ecryptfs con dm-crypt per proteggere lo spazio di swap (<i>ecryptfs-setup-swap</i>). Questa guida però non li utilizzerà descrivendo invece come procedere a livello manuale così da capire per bene come le cose vengono gestite.
+</p>
+<p>Prima di procedere è bene consultare la documentazione di eCryptfs: questo tool è distribuito infatti con un completo e ben fatto insieme di pagine esplicative.
+</p>
+<h2><span class="mw-headline" id="Setup">Setup</span></h2>
+<p>La prima cosa da fare è creare la cartella privata. Nell'esempio che segue è stata chiamata per comodità <i>Private</i>:
+</p>
+<pre>$ mkdir ~/Private
+$ chmod 700 ~/Private
+</pre>
+<p>(chmod 700 serve ad assegnare i permessi di accesso al solo proprietario).
+Adesso eCryptfs può essere montato sopra ad essa con
+</p>
+<pre>$ sudo mount -t ecryptfs ~/Private ~/Private
+</pre>
+<p>eCryptfs chiederà di rispondere ad alcune domande e di fornire una <i>passphrase</i>, cioè una frase di cifratura che sarà utilizzata per montare la cartella in futuro. E' comunque possibile avere differenti chiavi di cifratura per crittare differenti dati (per ulteriori informazioni si legga più sotto): per comodità questa guida si limiterà ad esaminare il caso di una unica chiave e di una unica <i>passphrase</i>. Ecco un esempio di primo montaggio con ecryptfs:
+</p>
+<pre>Key type: passphrase
+Passphrase: FraseDiCifraturaCortaEMoltoDebole
+Cypher: aes
+Key byte: 16
+Plaintext passtrough: no
+Filename encryption: no
+Add signature to cache: yes 
+</pre>
+<p>Analizziamo le varie voci:
+</p>
+<ul>
+<li>La <i>passphrase</i> è la <b>passphrase di montaggio</b> che sarà combinata con un <i>salt</i> (un valore, il più delle volte casuale, che in crittografia viene aggiunto alla chiave per aumentare la robustezza della stessa): del risultato ottenuto verrà calcolato l'hash e quest'ultimo sarà poi inserito nel portachiavi del kernel.
+<ul><li>In ambito eCryptfs, il risultato del precedente passaggio è definito come "chiave di cifratura", o <b>fekek</b>.</li></ul>
+</li>
+<li>eCryptfs supporta alcuni cifrari: AES, Blowfish, Twofish... E' possibile informarsi su di essi sulla Wikipedia.</li>
+<li>"<i>Plaintext passtrough</i>" permette di salvare nella cartella cifrata file <i>non cifrati</i>.</li>
+<li>La cifratura dei nomi dei file ("<i>Filename encryption</i>") è disponibile dal kernel Linux 2.6.29 e permette di rendere illeggibili anche i nomi dei file, non solo il loro contenuto.
+<ul><li>In ambito eCryptfs, la chiave utilizzata per proteggere i nomi dei file è nota come "chiave di cifratura dei nomi dei file" ("<i>Filename encryption key</i>"), o <b>fnek</b>.</li></ul>
+</li>
+<li>La firma digitale della chiave (o delle chiavi) sarà salvata in /root/.ecryptfs/sig-cache.txt</li>
+</ul>
+<p>Il setup è adesso completato e la cartella risulterà montata. E' ora possibile salvare qualunque dato nella cartella ~/Private, che sarà subito crittografato. Prima di proseguire è bene ispezionare il file <b>/etc/mtab</b>, in particolare la voce relativa ad ecryptfs (l'importanza di ciò sarà trattata a breve).
+</p>
+<p>Per verificare se il setup è stato correttamente eseguito, basta copiare alcuni file nella cartella privata e poi smontarla: dovrebbero apparire illeggibili, cioè cifrati. Per riportarli alla normalità dobbiamo rieseguire il montaggio della cartella:
+</p>
+<h2><span class="mw-headline" id="Montare_la_cartella">Montare la cartella</span></h2>
+<p>Quando si rende necessario accedere ai file protetti basta ripetere la precedente operazione di montaggio utilizzando la stessa <i>passphrase</i> e le stesse opzioni se si vuole accedere ai file precedentemente cifrati oppure utilizzare una <i>passphrase</i> differente (e volendo anche opzioni diverse) se per qualche ragione si vuole avere differenti chiavi a protezione di differenti dati (un possibile scenario è quello in cui un'unica cartella è condivisa da più utenti, i quali salvano i propri file utilizzando ognuno la propria chiave).
+</p>
+<p>In ogni caso il dover ogni volta ripetere questa procedura può risultare alla fine un po' noioso. La prima soluzione è quella di fornire tutte le opzioni al comando <i>mount</i> (a questo punto entra in gioco il file <b>mtab</b> che è stato esaminato in precedenza), eccezion fatta per la <i>passphrase</i>, che sarà inserita su richiesta:
+</p>
+<pre>$ sudo mount -t ecryptfs -o ecryptfs_cipher=aes,ecryptfs_key_bytes=16,key=passphrase,ecryptfs_unlink_sigs,ecryptfs_passthrough=no,ecryptfs_enable_filename_crypto=no
+</pre>
+<p>La seconda soluzione è quella di inserire nel file <b>/etc/fstab</b> il punto di montaggio della cartella privata:
+</p>
+<pre># eCryptfs mount points
+/home/<i>username</i>/Private /home/<i>username</i>/Private ecryptfs rw,user,noauto,ecryptfs_sig=XXXXXXXXXX,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_unlink_sigs 0 0
+</pre>
+<p>Alcune precisazioni:
+</p>
+<ul>
+<li>l'opzione <i>user</i> è stata inserita per permettere all'utente di poter montare la cartella privata;</li>
+<li>nell'opzione <b>ecryptfs_sig</b> va sostituito il valore "XXXXXXXXXX" con la firma digitale della propria chiave, ricavabile dal file <b>mtab</b> (come detto precedentemente) oppure dal file <b>sig-cache.txt</b>.</li>
+</ul>
+<p>C'è un solo "problema" riguardo a questa soluzione: la <i>passphrase</i>. Quando la cartella privata viene smontata, la chiave viene cancellata dal portachiavi del kernel, per cui per poter eseguire un successivo montaggio bisogna inserirla in detto portachiavi un'altra volta. Per far ciò si può utilizzare una fra le utility <b>ecryptfs-add-passphrase</b> e <b>ecryptfs-manager</b> (contenute nel pacchetto ecryptfs-utils), che si appoggiano a loro volta all'utility <b>keyctl</b> contenuta nel pacchetto <i>keyutils</i>, installato come dipendenza.
+</p>
+<p>Una volta che la chiave è stata inserita nel portachiavi, si può effettuare il montaggio della cartella:
+</p>
+<pre>$ ecryptfs-add-passphrase
+  Passphrase: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+$ mount -i /home/<i>username</i>/Private
+</pre>
+<p>Da notare che questa volta è stata utilizzata l'opzione "<b>-i</b>", che disattiva il richiamo dell'helper del comando mount. L'uso dell'opzione -i monta la cartella con le seguenti opzioni predefinite: <b>nosuid, noexec</b> e <b>nodev</b>. Per avere i file eseguibili all'interno della cartella privata occorre aggiungere l'opzione <b>exec</b> al punto di montaggio relativo alla cartella privata nel file /etc/fstab.
+</p>
+<h2><span class="mw-headline" id="Rimozione_dei_file_e_della_cartella">Rimozione dei file e della cartella</span></h2>
+<p>Se si vuole spostare un file dalla cartella privata ad un'altra cartella, basta muoverlo nella sua nuova destinazione mentre ~/Private risulta montata. 
+</p>
+<p>Per rimuovere la cartella privata, basta accertarsi che risulti smontata e cancellarla, compresi tutti i file in essa contenuti.
+</p>
+<h1><span class="mw-headline" id="Auto-mount_al_login">Auto-mount al login</span></h1>
+<p>eCryptfs ha una interessante caratteristica, sfruttata in alcune distribuzioni: quella di poter effettuare in automatico il montaggio della cartella privata al login dell'utente. Questa funzionalità non è molto documentata perché potrebbe esporre i propri dati personali a potenziali vulnerabilità: l'auto-mount decifra i file al login dell'utente ed essi rimangono accessibili ("in chiaro") fino al successivo logout dell'utente stesso. E' bene quindi utilizzare questa caratteristica solo in determinati casi, ad esempio quando si è certi che il proprio computer non sia accessibile da altri durante l'utilizzo. Risulta però comoda perché non obbliga tutte le volte ad inserire una lunga e complessa <i>passphrase</i>: basta la propria password di login. eCryptfs si interfaccia infatti con PAM ed usa la password di login dell'utente per decifrare la <i>passphrase</i> che viene utilizzata poi per sbloccare la cartella privata. In questo modo la <i>passphrase</i> "emerge" solo dopo che l'utente ha eseguito con successo il login. 
+</p>
+<p>Installato ecryptfs-utils, va caricato il modulo ecryptfs nel kernel con
+</p>
+<pre># modprobe ecryptfs
+</pre>
+<p>Il resto del processo sarà eseguito direttamente dallo script <b>ecryptfs-setup-private</b> (contenuto sempre in ecryptfs-utils), lanciato come utente normale. Questo script esegue diverse operazioni in automatico, tra cui creare le 2 cartelle <i>~/Private</i> (che conterrà il mount "in chiaro" dei dati cifrati) e <i>~/<b>.</b>Private</i> (la cartella nascosta che conterrà i dati cifrati), dopodiché provvederà a richiedere la password di login e la <i>passphrase</i> utilizzata per la cifratura vera e propria, che sarà cifrata con la prima. Ai fini della sicurezza, è bene che la <i>passphrase</i> sia lunga e composta da lettere minuscole, maniuscole, numeri, segni di punteggiatura e quant'altro. E' anche possibile lasciare allo script il compito di crearne una semplicemente premendo "invio" alla richiesta di inserimento.
+</p>
+<p>Infine inserirà la <i>passphrase</i> nel portachiavi del kernel, in modo che al successivo login essa possa essere recuperata dal portachiavi e decifrata con la chiave di login dell'utente.
+</p>
+<p>E' doveroso segnalare che ecryptfs-setup-private tenta, alla fine del processo, di eseguire alcune operazioni di test sulla nuova cartella cifrata ma su Arch questa operazione terminerà con un errore, anche se il processo è stato completato correttamente: si tratta solo di un problema nel tentativo di montaggio/smontaggio della cartella cifrata per cui non date peso al messaggio di errore e proseguite tranquillamente.
+</p>
+<p>A questo punto bisogna editare il seguente file: <b>/etc/pam.d/system-auth</b>.
+</p>
+<p>Come prima cosa, <i>dopo</i> la linea che contiene <code>auth required pam_unix.so</code> aggiungi:
+</p>
+<pre>auth    required    pam_ecryptfs.so unwrap
+</pre>
+<p>Successivamente, <i>prima</i> della riga che contiene <code>password required pam_unix.so</code> inserisci:
+</p>
+<pre>password    optional    pam_ecryptfs.so
+</pre>
+<p>Infine, <i>dopo</i> la riga <code>session required pam_unix.so</code> aggiungi:
+</p>
+<pre>session    optional    pam_ecryptfs.so unwrap
+</pre>
+<p><b>Attenzione</b>: è importante inserirle esattamente nei punti indicati altrimenti il processo di recupero della password non funzionerà in automatico.
+</p>
+<p><br>
+Fatto questo, basta chiudere la propria sessione ed eseguire nuovamente il login. Se tutto è stato eseguito correttamente, la cartella ~/Private risulterà accessibile in chiaro come qualunque altra cartella del sistema mentre la cartella ~/.Private, che è il luogo dove materialmente saranno salvati, conterrà gli stessi file ma in forma cifrata.
+</p>
+<h1><span class="mw-headline" id="Nozioni_avanzate">Nozioni avanzate</span></h1>
+<p>Questo articolo ha analizzato le nozioni di base necessarie a creare una cartella cifrata personale. C'è anche un altro articolo sull'uso di eCryptfs con Arch Linux, articolo che tratta della <i>cifratura dell'intera cartella $HOME</i> e della <i>cifratura dello spazio di swap senza compromettere l'ibernazione (sospensione su disco)</i>. Esso analizza molti altri punti (ad esempio l'utilizzo dei moduli PAM ed il montaggio automatico) e l'autore ha deciso di non replicarlo qui perché non c'è solo un solo modo "giusto" di fare le cose. L'autore propone molte soluzioni e discute delle implicazioni che esse hanno sulla sicurezza, ma esse sono le sue soluzioni e potrebbero non essere le migliori né sono approvate dal progetto eCryptfs in alcun modo.
+</p>
+<p>E' possibile leggere l'articolo qui: <a rel="nofollow" class="external text" href="http://sysphere.org/~anrxc/j/articles/ecryptfs/index.html">eCryptfs and $HOME</a>
+</p>
+<h2><span class="mw-headline" id="PAM_Mount">PAM_Mount</span></h2>
+<p>L'articolo citato nel precedente paragrafo utilizza un profilo per montare la cartella $HOME. Lo stesso può essere fatto utilizzando <b>pam_mount</b>, con il beneficio che la cartella $HOME viene smontata quando tutte le sessioni vengono chiuse. Dato che eCryptfs necessita dell'opzione -i, le impostazioni di lclmount devono essere modificate aggiungendo al file <b>pam_mount.conf.xml</b> quanto segue:
+</p>
+<pre>&lt;lclmount&gt;mount -i %(VOLUME) "%(before=\"-o\" OPTIONS)"&lt;/lclmount&gt;
+</pre>
+<p>Per evitare di sprecare tempo inutilmente ad effettuare l'operazione di recupero della chiave è possibile creare uno script che controlla pmvarrun per vedere il numero di sessioni aperte:
+</p>
+<pre>#!/bin/sh
+#/usr/bin/doecryptfs
+exit $(/usr/sbin/pmvarrun -u$PAM_USER -o0)
+</pre>
+<p>Va anche aggiunta la seguente linea prima del modulo <i>unwrap</i> nel file <b>/etc/pam.d/login</b>:
+</p>
+<pre>auth    [success=ignore default=1]    pam_exec.so     quiet /usr/bin/doecryptfs
+auth    required                      pam_ecryptfs.so unwrap
+</pre>
+<p>Questa modifica deve però essere aggiunta ad ogni file di login contenuto in /etc/pam.d che viene usato (ad esempio /etc/pam.d/kde o /etc.pam.d/gdm).
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../it/Category:Security.html" title="Category:Security (Italiano)">Security (Italiano)</a></li>
+<li><a href="../it/Category:File_systems.html" title="Category:File systems (Italiano)">File systems (Italiano)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=ECryptfs_(Italiano)&amp;oldid=628495">https://wiki.archlinux.org/index.php?title=ECryptfs_(Italiano)&amp;oldid=628495</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 August 2020, at 17:52.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

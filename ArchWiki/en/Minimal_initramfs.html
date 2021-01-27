@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Minimal initramfs - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Minimal_initramfs rootpage-Minimal_initramfs skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Minimal initramfs</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a></li>
+</ul>
+</div>
+<p>This article shows how to create a slim, minimal initramfs for a system with a specific, known and static hardware configuration. The procedure is expounded from <a rel="nofollow" class="external text" href="http://blog.falconindy.com/articles/optmizing-bootup-with-mkinitcpio.html">Optimizing Bootup With mkinitcpio</a> by Falconindy (Dave Reisner).
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Udev_requirement"><span class="tocnumber">1</span> <span class="toctext">Udev requirement</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Editing_.preset_files"><span class="tocnumber">2</span> <span class="toctext">Editing .preset files</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Finding_needed_modules"><span class="tocnumber">3</span> <span class="toctext">Finding needed modules</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Initial_edit_of_mkinitcpio.conf"><span class="tocnumber">4</span> <span class="toctext">Initial edit of mkinitcpio.conf</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Initial_test"><span class="tocnumber">5</span> <span class="toctext">Initial test</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Sorting_out_modules"><span class="tocnumber">6</span> <span class="toctext">Sorting out modules</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Filesystem_modules"><span class="tocnumber">6.1</span> <span class="toctext">Filesystem modules</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Storage_device_modules"><span class="tocnumber">6.2</span> <span class="toctext">Storage device modules</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Keyboard_modules"><span class="tocnumber">6.3</span> <span class="toctext">Keyboard modules</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Finishing_up"><span class="tocnumber">7</span> <span class="toctext">Finishing up</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Udev_requirement">Udev requirement</span></h2>
+<p>The big advantage of creating your own initramfs images is that you can eliminate <code>udev</code>. This hook alone is responsible for quite a bit of size (~700-800 KiB with LZ4 and LZOP, less with other algorithms) in the initramfs image. Not only will the bigger size lead to longer boots (more data to decompress) but initializing <code>udev</code> itself will also take some extra time. <b>However, some things require <code>udev</code>.</b> This includes resolving UUID, LABEL, PARTUUID and PARTLABEL identifiers (<a rel="nofollow" class="external text" href="https://unix.stackexchange.com/questions/352381/how-to-boot-into-root-btrfs-file-system-with-minimal-initramfs-without-udev-hook/352932#answer-352932">workaround hook without-udev</a>) and the assembly of LVM and mdadm devices that contain the <code>root</code> partition. If you are unsure if you need <code>udev</code>, continue with the directions on this page up until the <a href="#Initial_test">#Initial test</a>. If not everything works without <code>udev</code>, re-enable the hook and try again.
+</p>
+<p>Also, while most keyboards (AT, PS/2, USB) don't require the use of the <code>udev</code> hook, Logitech USB devices using the Logitech Unified Receiver do. At this point you could either include <code>udev</code> in all images or rely on a <code>fallback</code> image that does.
+</p>
+<p>If you need <code>udev</code>, your minimization efforts will most likely be in vain. You may still be able to shrink the image size by ~600 KiB, but boot times will not be significantly improved. Continuing on in this scenario can still be a worthwhile learning experience.
+</p>
+<h2><span class="mw-headline" id="Editing_.preset_files">Editing .preset files</span></h2>
+<p>In Falconidy's tutorial, he edits <code>/etc/mkinitcpio.conf</code> and runs <code>mkinitcpio -g</code> to create the test initramfs image, leaving the known-good initramfs images on the system untouched.  However, if you blindly run <code>mkinitcpio -P</code> afterwards, even the <code>fallback</code> image will be stripped down.
+</p>
+<p>A safer way to prepare for taking the creation of the initramfs files into your own hands is to modify the <code>.preset</code> files in <code>/etc/mkinitcpio.d</code>.  The following example configuration will supplant <code>default</code> with the minimal initramfs image and create a new <code>normal</code> image that is built The Arch Way.  If things go wrong, you can rely on the <code>normal</code> or <code>fallback</code> images.  When you are finished, you can drop the <code>normal_*</code> lines from the config and remove the <code>initramfs-linux*-normal.img</code> files.
+</p>
+<pre>...
+
+PRESETS=('default' 'normal' 'fallback')
+...
+
+default_options="-S udev,block,mdadm_udev,filesystems,keyboard,fsck,consolefont"
+...
+
+#normal_config="/etc/mkinitcpio.conf"
+normal_image="/boot/initramfs-linux-normal.img"
+#normal_options=""
+...
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>mdadm_udev</code> and <code>consolefont</code> hooks are not present in the default Arch configuration.  Having extraneous hooks in the <code>-S</code> parameter in the <code>*_options</code> line will not result in an error.</div>
+<h2><span class="mw-headline" id="Finding_needed_modules">Finding needed modules</span></h2>
+<p>The quickest way to find out what modules you need is to reboot your system with the <code>fallback</code> initramfs image and add <code>break=postmount</code> to the kernel parameters in your boot loader so you get dropped to the command line once the root filesystem is mounted.
+</p>
+<p>Once your system reboots, run the following command to see what modules you need:
+</p>
+<pre>lsmod | awk 'NF==3{print $1}'
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>awk</code> command returns only the first field, using <code>{print $1} </code>, of every line with exactly 3 fields, enforced by <code>NF==3</code>. Module dependencies include the 4th field to show which module pulled in the dependency, thus being filtered out due to that fourth field.  Arch's <code>mkinitcpio</code> takes care of dependencies for legitimate values included in the arrays <code>MODULES=()</code>, <code>FILES=()</code>, and <code>BINARIES=()</code>.</div>
+<p>Write down the modules that were loaded and type <code>exit</code> to continue booting.
+</p>
+<p>Alternatively, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=hwdetect">hwdetect</a></span> to help determine necessary modules. Though unmaintained, it can provide valuable information. Also, see <a href="../en/Kernel_module.html" class="mw-redirect" title="Kernel modules">Kernel modules</a> to get started with the native tools.
+</p>
+<h2><span class="mw-headline" id="Initial_edit_of_mkinitcpio.conf">Initial edit of mkinitcpio.conf</span></h2>
+<p>Edit <code>/etc/mkinitcpio.conf</code> and modify the <code>MODULES=</code> line.  A worthwhile note is that <code>/etc/mkinitcpio.conf</code> is sourced, so you can build the MODULES line like a variable in a bash script.
+</p>
+<pre>MODULES=""   # filesystems
+MODULES+=""  # storage
+MODULES+=""  # keyboard
+MODULES+=""  # miscellaneous
+</pre>
+<p>Add all your modules to the last <code>miscellaneous</code> line.  As you sort through your modules, you can place them in the appropriate line.
+</p>
+<p>You will also need the binaries to do filesystem checks on the <code>root</code> device <b>and any other mount points</b> in <code>/etc/fstab</code> that have been set to do so.
+</p>
+<ul><li>For ext[2|3|4] devices:</li></ul>
+<pre>BINARIES="fsck fsck.ext[2|3|4] e2fsck"
+</pre>
+<ul><li>For vfat (UEFI boot) partitions:</li></ul>
+<pre>BINARIES="fsck fsck.vfat dosfsck"
+</pre>
+<ul><li>For btrfs single disk device:</li></ul>
+<pre>BINARIES="fsck fsck.btrfs btrfsck"
+</pre>
+<ul><li>For btrfs multi disk device:</li></ul>
+<pre>BINARIES="fsck fsck.btrfs btrfs btrfsck"
+</pre>
+<ul><li>For xfs devices</li></ul>
+<pre>BINARIES="fsck fsck.xfs xfs_repair"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The third option in each of these example are optional, but their exclusion will prevent you from repairing a damaged filesystem, necessitating a boot from another initramfs.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Users are encouraged to add entries pertaining to other filesystems.</div>
+<h2><span class="mw-headline" id="Initial_test">Initial test</span></h2>
+<p>Edit <code>/etc/mkinitcpio.conf</code> and run <code>mkinitcpio -P</code> to rebuild all of your initramfs images.  Then reboot.
+</p>
+<p>Your first boot should be successful <b>if you don't need <code>udev</code></b>.  If something doesn't work (eg, Arch can't find your root partition or your keyboard doesn't work) then you will need to go back and remove <code>udev</code> from the <code>-S</code> parameter in the <code>default_options</code> line and try again.  If you need <code>udev</code>, keep in mind that you won't see a significant improvement in boot time and continuing on is only good for a learning experience.
+</p>
+<h2><span class="mw-headline" id="Sorting_out_modules">Sorting out modules</span></h2>
+<p>Now that you have a known-good bootable initramfs, it's time to slim down the initramfs even further.  The normal method is to remove a few modules at a time, rebuild the initramfs images, and reboot to see if everything is still OK.  If you find out that everything is not OK, reboot with the <code>fallback</code> initramfs image and re-add the deleted modules until everything is OK again.  Rinse and repeat until you have only the modules you need.  As this can be a tedious experience, the following lists are provided to give people a head-start in the elimination process.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following are examples and are not meant to be definitive.</div>
+<h3><span class="mw-headline" id="Filesystem_modules">Filesystem modules</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You will need the filesystem modules for the <code>root</code> device and any other device in <code>/etc/fstab</code> that will have its filesystem checked on boot.</div>
+<ul>
+<li><code>ext[2,3,4]</code></li>
+<li><code>xfs</code></li>
+<li><code>jfs</code></li>
+<li><code>reiserfs</code></li>
+</ul>
+<h3><span class="mw-headline" id="Storage_device_modules">Storage device modules</span></h3>
+<ul>
+<li>
+<code>sd_mod</code> for all SCSI, SATA, and PATA (IDE) devices</li>
+<li>
+<code>ahci</code> for SATA devices on modern AHCI controllers</li>
+<li>
+<code>sata_*</code> for SATA devices on IDE-mode controllers</li>
+<li>
+<code>pata_*</code> for PATA (IDE) devices</li>
+<li>
+<code>ehci_pci</code> and <code>usb_storage</code> for USB storage devices</li>
+<li>
+<code>virtio_blk</code> and <code>virtio_pci</code> for QEMU/KVM VMs using VirtIO for storage</li>
+</ul>
+<h3><span class="mw-headline" id="Keyboard_modules">Keyboard modules</span></h3>
+<ul>
+<li>
+<code>atkbd</code> for AT and PS/2 keyboards, and the emulated keyboard in QEMU/KVM.</li>
+<li>
+<code>hid_generic</code>, <code>ohci_pci</code>, and <code>usbhid</code> for normal USB keyboards.</li>
+<li>
+<code>hid_logitech_dj</code>, <code>uhci_hcd</code>, and <code>usbhid</code> for Logitech USB keyboards using the Logitech Unified Receiver.  <b>(Requires the <code>udev</code> hook).</b>
+</li>
+</ul>
+<h2><span class="mw-headline" id="Finishing_up">Finishing up</span></h2>
+<p>Once you've slimmed your initramfs as far as it will go, remove (or comment-out) the <code>normal_*</code> lines from your <code>.preset</code> files and remove the <code>initramfs-linux*-normal.img</code> files from <code>/boot</code>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Minimal_initramfs&amp;oldid=631384">https://wiki.archlinux.org/index.php?title=Minimal_initramfs&amp;oldid=631384</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2020, at 08:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

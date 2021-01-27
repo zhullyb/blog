@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Advanced Linux Sound Architecture (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Advanced_Linux_Sound_Architecture_简体中文 rootpage-Advanced_Linux_Sound_Architecture_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Advanced Linux Sound Architecture (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../en/Sound_system.html" title="Sound system">Sound system</a></li>
+<li><a href="../zh-CN/PC_speaker.html" class="mw-redirect" title="Disable PC speaker beep (简体中文)">Disable PC speaker beep (简体中文)</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Advanced_Linux_Sound_Architecture.html" title="Advanced Linux Sound Architecture">Advanced_Linux_Sound_Architecture</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-08-28。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Advanced_Linux_Sound_Architecture&amp;diff=0&amp;oldid=484694">更改</a>，则您可以帮助同步翻译。</div>
+<p><a href="https://en.wikipedia.org/wiki/zh:ALSA" class="extiw" title="wikipedia:zh:ALSA">高级 Linux 声音体系</a>（Advanced Linux Sound Architecture，<b>ALSA</b>）是Linux中提供声音设备驱动的内核组件，用来代替原来的开放声音系统（Open Sound System，OSSv3）。除了声音设备驱动，<b>ALSA</b>还包含一个用户空间的函数库，开发者可以通过这些高级 API 使用驱动，不必直接与内核驱动进行交互。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 关于另一种声音体系，请阅读<a href="../zh-CN/Open_Sound_System.html" title="Open Sound System (简体中文)">开放声音系统（OSS）</a>的页面。</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%E7%94%A8%E6%88%B7%E6%9D%83%E9%99%90"><span class="tocnumber">1.1</span> <span class="toctext">用户权限</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#ALSA_%E5%B7%A5%E5%85%B7"><span class="tocnumber">1.2</span> <span class="toctext">ALSA 工具</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#OSS_%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="tocnumber">1.3</span> <span class="toctext">OSS 兼容性</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#PulseAudio_compatibility"><span class="tocnumber">1.4</span> <span class="toctext">PulseAudio compatibility</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#ALSA_%E5%92%8C_Systemd"><span class="tocnumber">1.5</span> <span class="toctext">ALSA 和 Systemd</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#ALSA_Firmware"><span class="tocnumber">1.6</span> <span class="toctext">ALSA Firmware</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#%E8%A7%A3%E9%99%A4%E5%90%84%E5%A3%B0%E9%81%93%E7%9A%84%E9%9D%99%E9%9F%B3"><span class="tocnumber">2</span> <span class="toctext">解除各声道的静音</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#%E6%B5%8B%E8%AF%95%E4%BD%A0%E6%94%B9%E5%8F%98%E7%9A%84%E8%AE%BE%E7%BD%AE"><span class="tocnumber">2.1</span> <span class="toctext">测试你改变的设置</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#%E9%99%84%E5%8A%A0%E6%B3%A8%E9%87%8A"><span class="tocnumber">2.2</span> <span class="toctext">附加注释</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">3</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12">
+<a href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95"><span class="tocnumber">3.1</span> <span class="toctext">基本语法</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#%E8%B5%8B%E5%80%BC%E4%B8%8E%E5%88%86%E9%9A%94%E7%AC%A6"><span class="tocnumber">3.1.1</span> <span class="toctext">赋值与分隔符</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="tocnumber">3.1.2</span> <span class="toctext">数据类型</span></a></li>
+<li class="toclevel-3 tocsection-15">
+<a href="#%E6%93%8D%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="tocnumber">3.1.3</span> <span class="toctext">操作模式</span></a>
+<ul>
+<li class="toclevel-4 tocsection-16"><a href="#%E4%BD%BF%E7%94%A8%E2%80%9C%E9%BB%98%E8%AE%A4%E2%80%9D%E8%8A%82%E7%82%B9%E7%9A%84%E9%BB%98%E8%AE%A4%E8%AE%BE%E5%A4%87%E8%AE%BE%E5%AE%9A%E7%A4%BA%E4%BE%8B"><span class="tocnumber">3.1.3.1</span> <span class="toctext">使用“默认”节点的默认设备设定示例</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-17"><a href="#%E5%B5%8C%E5%A5%97"><span class="tocnumber">3.1.4</span> <span class="toctext">嵌套</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#%E5%BC%95%E7%94%A8%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="tocnumber">3.1.5</span> <span class="toctext">引用配置文件</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-19">
+<a href="#%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4%E5%A3%B0%E5%8D%A1"><span class="tocnumber">3.2</span> <span class="toctext">设置默认声卡</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%80%89%E6%8B%A9%E9%BB%98%E8%AE%A4PCM%E8%AE%BE%E5%A4%87"><span class="tocnumber">3.2.1</span> <span class="toctext">使用环境变量选择默认PCM设备</span></a></li>
+<li class="toclevel-3 tocsection-21"><a href="#%E5%8F%A6%E5%A4%96%E4%B8%80%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="tocnumber">3.2.2</span> <span class="toctext">另外一种方式</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-22"><a href="#%E7%A1%AE%E8%AE%A4%E6%89%80%E6%9C%89%E5%A3%B0%E9%9F%B3%E6%A8%A1%E5%9D%97%E9%83%BD%E5%B7%B2%E7%BB%8F%E5%8A%A0%E8%BD%BD"><span class="tocnumber">3.3</span> <span class="toctext">确认所有声音模块都已经加载</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#%E5%90%AF%E7%94%A8_SPDIF_%E8%BE%93%E5%87%BA"><span class="tocnumber">3.4</span> <span class="toctext">启用 SPDIF 输出</span></a></li>
+<li class="toclevel-2 tocsection-24">
+<a href="#%E7%B3%BB%E7%BB%9F%E7%BA%A7%E5%9D%87%E8%A1%A1%E5%99%A8"><span class="tocnumber">3.5</span> <span class="toctext">系统级均衡器</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25">
+<a href="#%E4%BD%BF%E7%94%A8_AlsaEqual%EF%BC%88%E5%8C%85%E5%90%AB%E7%95%8C%E9%9D%A2%EF%BC%89"><span class="tocnumber">3.5.1</span> <span class="toctext">使用 AlsaEqual（包含界面）</span></a>
+<ul>
+<li class="toclevel-4 tocsection-26"><a href="#%E7%AE%A1%E7%90%86_AlsaEqual_%E9%85%8D%E7%BD%AE"><span class="tocnumber">3.5.1.1</span> <span class="toctext">管理 AlsaEqual 配置</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-27"><a href="#%E4%BD%BF%E7%94%A8_mbeq"><span class="tocnumber">3.5.2</span> <span class="toctext">使用 mbeq</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-28"><a href="#%E9%AB%98%E8%B4%A8%E9%87%8F%E9%87%8D%E9%87%87%E6%A0%B7"><span class="tocnumber">4</span> <span class="toctext">高质量重采样</span></a></li>
+<li class="toclevel-1 tocsection-29">
+<a href="#%E4%B8%8A%E6%B7%B7%E5%92%8C%E7%BC%A9%E6%B7%B7"><span class="tocnumber">5</span> <span class="toctext">上混和缩混</span></a>
+<ul>
+<li class="toclevel-2 tocsection-30"><a href="#%E4%B8%8A%E6%B7%B7%EF%BC%88upmixing%EF%BC%89"><span class="tocnumber">5.1</span> <span class="toctext">上混（upmixing）</span></a></li>
+<li class="toclevel-2 tocsection-31"><a href="#%E7%BC%A9%E6%B7%B7%EF%BC%88downmixing%EF%BC%89"><span class="tocnumber">5.2</span> <span class="toctext">缩混（downmixing）</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-32">
+<a href="#%E6%B7%B7%E9%9F%B3"><span class="tocnumber">6</span> <span class="toctext">混音</span></a>
+<ul>
+<li class="toclevel-2 tocsection-33"><a href="#%E6%89%8B%E5%8A%A8%E5%90%AF%E7%94%A8_dmix"><span class="tocnumber">6.1</span> <span class="toctext">手动启用 dmix</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-34">
+<a href="#%E6%8F%90%E7%A4%BA%E5%92%8C%E6%8A%80%E5%B7%A7"><span class="tocnumber">7</span> <span class="toctext">提示和技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-35"><a href="#USB%E5%A3%B0%E5%8D%A1%E7%83%AD%E6%8F%92%E6%8B%94"><span class="tocnumber">7.1</span> <span class="toctext">USB声卡热插拔</span></a></li>
+<li class="toclevel-2 tocsection-36"><a href="#%E5%90%8C%E6%97%B6%E8%BE%93%E5%87%BA"><span class="tocnumber">7.2</span> <span class="toctext">同时输出</span></a></li>
+<li class="toclevel-2 tocsection-37"><a href="#%E9%94%AE%E7%9B%98%E6%8E%A7%E5%88%B6%E5%A3%B0%E9%9F%B3"><span class="tocnumber">7.3</span> <span class="toctext">键盘控制声音</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-38">
+<a href="#%E7%96%91%E9%9A%BE%E8%A7%A3%E7%AD%94"><span class="tocnumber">8</span> <span class="toctext">疑难解答</span></a>
+<ul>
+<li class="toclevel-2 tocsection-39"><a href="#Audigy_2_ZS_%E4%B8%8D%E5%8F%91%E5%87%BA%E5%A3%B0%E9%9F%B3"><span class="tocnumber">8.1</span> <span class="toctext">Audigy 2 ZS 不发出声音</span></a></li>
+<li class="toclevel-2 tocsection-40"><a href="#VirtualBox%E4%B8%AD%E6%97%A0%E5%A3%B0%E9%9F%B3"><span class="tocnumber">8.2</span> <span class="toctext">VirtualBox中无声音</span></a></li>
+<li class="toclevel-2 tocsection-41"><a href="#%E4%BD%BF%E7%94%A8CPU%E9%A2%91%E7%8E%87%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E6%97%B6%EF%BC%8C%E9%9F%B3%E9%A2%91%E5%8F%91%E7%94%9F%E8%B7%B3%E8%B7%83"><span class="tocnumber">8.3</span> <span class="toctext">使用CPU频率动态调整时，音频发生跳跃</span></a></li>
+<li class="toclevel-2 tocsection-42"><a href="#%E5%90%8C%E6%97%B6%E5%8F%AA%E8%83%BD%E6%9C%89%E4%B8%80%E4%B8%AA%E7%94%A8%E6%88%B7%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91"><span class="tocnumber">8.4</span> <span class="toctext">同时只能有一个用户播放音频</span></a></li>
+<li class="toclevel-2 tocsection-43"><a href="#%E6%97%A0%E6%B3%95%E5%90%8C%E6%97%B6%E6%92%AD%E6%94%BE%E5%A4%9A%E4%B8%AA%E9%9F%B3%E9%A2%91"><span class="tocnumber">8.5</span> <span class="toctext">无法同时播放多个音频</span></a></li>
+<li class="toclevel-2 tocsection-44"><a href="#%E6%9C%89%E6%97%B6%E5%80%99%E5%BC%80%E6%9C%BA%E6%97%A0%E5%A3%B0"><span class="tocnumber">8.6</span> <span class="toctext">有时候开机无声</span></a></li>
+<li class="toclevel-2 tocsection-45"><a href="#%E7%89%B9%E5%AE%9A%E7%A8%8B%E5%BA%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="tocnumber">8.7</span> <span class="toctext">特定程序的问题</span></a></li>
+<li class="toclevel-2 tocsection-46"><a href="#%E7%89%B9%E5%AE%9A%E5%9E%8B%E5%8F%B7%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="tocnumber">8.8</span> <span class="toctext">特定型号的配置</span></a></li>
+<li class="toclevel-2 tocsection-47"><a href="#%E4%B8%8E%E8%9C%82%E9%B8%A3%E5%99%A8%E5%86%B2%E7%AA%81"><span class="tocnumber">8.9</span> <span class="toctext">与蜂鸣器冲突</span></a></li>
+<li class="toclevel-2 tocsection-48"><a href="#%E9%BA%A6%E5%85%8B%E9%A3%8E%E8%BE%93%E5%85%A5%E6%97%A0%E5%A3%B0%E9%9F%B3"><span class="tocnumber">8.10</span> <span class="toctext">麦克风输入无声音</span></a></li>
+<li class="toclevel-2 tocsection-49"><a href="#%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4%E7%9A%84%E9%BA%A6%E5%85%8B%E9%A3%8E/%E5%BD%95%E9%9F%B3%E8%AE%BE%E5%A4%87"><span class="tocnumber">8.11</span> <span class="toctext">设置默认的麦克风/录音设备</span></a></li>
+<li class="toclevel-2 tocsection-50"><a href="#%E5%86%85%E7%BD%AE%E9%BA%A6%E5%85%8B%E9%A3%8E%E6%97%A0%E6%95%88"><span class="tocnumber">8.12</span> <span class="toctext">内置麦克风无效</span></a></li>
+<li class="toclevel-2 tocsection-51"><a href="#Intel_%E6%9D%BF%E8%BD%BD%E5%A3%B0%E5%8D%A1%E6%97%A0%E5%A3%B0"><span class="tocnumber">8.13</span> <span class="toctext">Intel 板载声卡无声</span></a></li>
+<li class="toclevel-2 tocsection-52"><a href="#Intel_%E6%9D%BF%E8%BD%BD%E5%A3%B0%E5%8D%A1%E8%80%B3%E6%9C%BA%E6%97%A0%E5%A3%B0"><span class="tocnumber">8.14</span> <span class="toctext">Intel 板载声卡耳机无声</span></a></li>
+<li class="toclevel-2 tocsection-53"><a href="#%E6%B6%88%E9%99%A4%E8%80%B3%E6%9C%BA%E7%94%B5%E6%B5%81%E5%A3%B0%E7%9A%84%E6%96%B9%E6%B3%95"><span class="tocnumber">8.15</span> <span class="toctext">消除耳机电流声的方法</span></a></li>
+<li class="toclevel-2 tocsection-54"><a href="#%E5%AE%89%E8%A3%85%E6%94%AF%E6%8C%81_S/PDIF_%E8%BE%93%E5%87%BA%E7%9A%84%E6%98%BE%E5%8D%A1%E5%90%8E%E6%97%A0%E5%A3%B0"><span class="tocnumber">8.16</span> <span class="toctext">安装支持 S/PDIF 输出的显卡后无声</span></a></li>
+<li class="toclevel-2 tocsection-55"><a href="#%E9%9F%B3%E6%95%88%E5%B7%AE%E6%88%96%E5%8D%A1%E9%A1%BF"><span class="tocnumber">8.17</span> <span class="toctext">音效差或卡顿</span></a></li>
+<li class="toclevel-2 tocsection-56"><a href="#%E5%BC%80%E5%A7%8B%E6%88%96%E5%81%9C%E6%AD%A2%E9%9F%B3%E9%A2%91%E6%92%AD%E6%94%BE%E6%97%B6%E5%87%BA%E7%8E%B0%E5%99%AA%E9%9F%B3"><span class="tocnumber">8.18</span> <span class="toctext">开始或停止音频播放时出现噪音</span></a></li>
+<li class="toclevel-2 tocsection-57"><a href="#S/PDIF_%E8%BE%93%E5%87%BA%E6%97%A0%E6%95%88"><span class="tocnumber">8.19</span> <span class="toctext">S/PDIF 输出无效</span></a></li>
+<li class="toclevel-2 tocsection-58"><a href="#HDMI_%E8%BE%93%E5%87%BA%E6%97%A0%E6%95%88"><span class="tocnumber">8.20</span> <span class="toctext">HDMI 输出无效</span></a></li>
+<li class="toclevel-2 tocsection-59"><a href="#HDMI%E5%A4%9A%E9%80%9A%E9%81%93PCM%E8%BE%93%E5%87%BA%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C(Intel)"><span class="tocnumber">8.21</span> <span class="toctext">HDMI多通道PCM输出无法工作(Intel)</span></a></li>
+<li class="toclevel-2 tocsection-60"><a href="#HP_TX2500"><span class="tocnumber">8.22</span> <span class="toctext">HP TX2500</span></a></li>
+<li class="toclevel-2 tocsection-61"><a href="#%E6%92%AD%E6%94%BE_MP3_%E6%97%B6%E6%9C%89%E5%A3%B0%E9%9F%B3%E8%B7%B3%E8%B7%83"><span class="tocnumber">8.23</span> <span class="toctext">播放 MP3 时有声音跳跃</span></a></li>
+<li class="toclevel-2 tocsection-62">
+<a href="#%E4%BD%BF%E7%94%A8USB%E5%A4%B4%E6%88%B4%E8%AE%BE%E5%A4%87%E5%92%8C%E5%A4%96%E6%8E%A5USB%E5%A3%B0%E5%8D%A1"><span class="tocnumber">8.24</span> <span class="toctext">使用USB头戴设备和外接USB声卡</span></a>
+<ul>
+<li class="toclevel-3 tocsection-63"><a href="#USB%E8%AE%BE%E5%A4%87%E8%BE%93%E5%87%BA%E5%8A%88%E5%95%AA%E5%A3%B0"><span class="tocnumber">8.24.1</span> <span class="toctext">USB设备输出劈啪声</span></a></li>
+<li class="toclevel-3 tocsection-64"><a href="#%E7%83%AD%E6%8F%92%E6%8B%94USB%E8%AE%BE%E5%A4%87"><span class="tocnumber">8.24.2</span> <span class="toctext">热插拔USB设备</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-65"><a href="#%E5%86%85%E6%A0%B8%E5%8D%87%E7%BA%A7%E5%90%8E%E5%87%BA%E7%8E%B0'Unknown_hardware'%E9%94%99%E8%AF%AF"><span class="tocnumber">8.25</span> <span class="toctext">内核升级后出现'Unknown hardware'错误</span></a></li>
+<li class="toclevel-2 tocsection-66"><a href="#HDA%E5%88%86%E6%9E%90%E4%BB%AA"><span class="tocnumber">8.26</span> <span class="toctext">HDA分析仪</span></a></li>
+<li class="toclevel-2 tocsection-67"><a href="#ALSA_%E4%B8%8E_SDL_%E5%8D%8F%E5%90%8C%E5%B7%A5%E4%BD%9C%E7%9A%84%E9%97%AE%E9%A2%98"><span class="tocnumber">8.27</span> <span class="toctext">ALSA 与 SDL 协同工作的问题</span></a></li>
+<li class="toclevel-2 tocsection-68"><a href="#Low_Sound_Workaround"><span class="tocnumber">8.28</span> <span class="toctext">Low Sound Workaround</span></a></li>
+<li class="toclevel-2 tocsection-69"><a href="#%E6%9A%82%E5%81%9C%E5%90%8E%E7%BB%A7%E7%BB%AD%E6%92%AD%E6%94%BE%E5%8F%91%E5%87%BA%E5%99%BC%E5%8F%AD%E5%A3%B0"><span class="tocnumber">8.29</span> <span class="toctext">暂停后继续播放发出噼叭声</span></a></li>
+<li class="toclevel-2 tocsection-70"><a href="#Virtual_sound_device_using_snd-aloop"><span class="tocnumber">8.30</span> <span class="toctext">Virtual sound device using snd-aloop</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-71"><a href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%8C%83%E4%BE%8B"><span class="tocnumber">9</span> <span class="toctext">配置文件范例</span></a></li>
+<li class="toclevel-1 tocsection-72"><a href="#%E7%9B%B8%E5%85%B3%E9%98%85%E8%AF%BB"><span class="tocnumber">10</span> <span class="toctext">相关阅读</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p>Arch 默认的内核已经通过一套模块提供了 ALSA，不必特别安装。
+</p>
+<p><a href="../zh-CN/Udev.html" title="Udev (简体中文)">udev</a>会在系统启动时自动检测硬件，并加载相应的声音设备驱动模块。这时，你的声卡已经可以工作了，只是所有声道默认都被设置成静音了。
+</p>
+<h3>
+<span id=".E7.94.A8.E6.88.B7.E6.9D.83.E9.99.90"></span><span class="mw-headline" id="用户权限">用户权限</span>
+</h3>
+<p>一般情况下，本地用户（通过虚拟终端或登录管理器）有权限播放音频和改变音频的音质。
+</p>
+<p>要让远程登录的用户拥有这些权限，必须把用户<a href="../zh-CN/Users_and_groups.html#%E7%94%A8%E6%88%B7%E7%BB%84%E7%AE%A1%E7%90%86" title="Users and groups (简体中文)">加入</a> <code>audio</code> 用户组。 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 该组的成员可以直接访问声音设备，会导致某些程序独占音频输出。这会让软件混音或快速用户切换无法工作。因此，除非真的有某些<a rel="nofollow" class="external text" href="https://wiki.ubuntu.com/Audio/TheAudioGroup">特殊需求</a>，<b>不建议</b>把用户加入 <code>audio</code> 用户组。</div>
+<h3>
+<span id="ALSA_.E5.B7.A5.E5.85.B7"></span><span class="mw-headline" id="ALSA_工具">ALSA 工具</span>
+</h3>
+<p><a href="../en/Pacman.html" title="Pacman">安装</a> 软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-utils">alsa-utils</a></span>，其中包含的 <code>alsamixer</code> 工具允许用户在控制台或终端中配置声音设备。
+如果你需要 <a href="#%E9%AB%98%E8%B4%A8%E9%87%8F%E9%87%8D%E9%87%87%E6%A0%B7">高质量重采样</a> 、 <a href="#%E4%B8%8A%E6%B7%B7%E5%92%8C%E7%BC%A9%E6%B7%B7">#上混和缩混</a>和其他高级特性的话 ，请另外安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-plugins">alsa-plugins</a></span> 软件包。
+</p>
+<h3>
+<span id="OSS_.E5.85.BC.E5.AE.B9.E6.80.A7"></span><span class="mw-headline" id="OSS_兼容性">OSS 兼容性</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果你的应用抱怨说缺少<code>/dev/dsp</code>或者<code>/dev/snd/seq</code>，这一部分很重要</div>
+<p>ALSA能够截获<a href="../en/Open_Sound_System.html" class="mw-redirect" title="OSS">OSS</a>调用，然后转而在ALSA中重新发送他们。例如，对于试图打开<code>/dev/dsp</code>并向里面写入声音数据的传统应用，这个模仿层很有用。没有OSS或者这个模仿库的话，会缺少<code>/dev/dsp</code>，应用程序从而不会产生任何声音。
+</p>
+<p>如果你希望<a href="../en/Open_Sound_System.html" class="mw-redirect" title="OSS">OSS</a>应用和<a href="#%E7%BC%A9%E6%B7%B7%EF%BC%88downmixing%EF%BC%89">dmix</a>一起工作，也安装<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-oss">alsa-oss</a></span>。然后载入<code>snd-seq-oss</code>， <code>snd-pcm-oss</code> 和 <code>snd-mixer-oss</code> <a href="../zh-CN/Kernel_module.html" class="mw-redirect" title="Kernel modules (简体中文)">核心模块</a> 来激活OSS模仿。
+</p>
+<h3><span class="mw-headline" id="PulseAudio_compatibility">PulseAudio compatibility</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/apulse/">apulse</a></span><sup><small>AUR</small></sup> lets you use ALSA for applications that support only <a href="../en/PulseAudio.html" title="PulseAudio">PulseAudio</a> for sound. Usage is simply <code>$ apulse <i>yourapplication</i></code>.
+</p>
+<h3>
+<span id="ALSA_.E5.92.8C_Systemd"></span><span class="mw-headline" id="ALSA_和_Systemd">ALSA 和 Systemd</span>
+</h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-utils">alsa-utils</a></span> 软件包提供了 <a href="../en/Systemd.html" title="Systemd">systemd</a> unit 配置文件 <code>alsa-restore.service</code> 和 <code>alsa-state.service</code>。
+</p>
+<p>这两个服务会在安装系统时自动安装，<a href="/index.php?title=%E4%BD%86%E6%98%AF%E5%B9%B6%E4%B8%8D%E4%BC%9A%E5%BC%80%E6%9C%BA%E8%87%AA%E5%90%AF&amp;action=edit&amp;redlink=1" class="new" title="但是并不会开机自启 (page does not exist)">但是并不会开机自启</a>,（这可能是安装完系统没有声音的一个原因）。具体运行那个服务由用户自己决定。
+</p>
+<ul>
+<li>要想启动<code>alsa-restore.service</code>，只需要root权限运行 <code>alsactl store</code>，这会自动生成配置文件<code>/var/lib/alsa/asound.state</code>;</li>
+<li>要想运行<code>alsa-state.service</code>，至少启动<code>alsactl daemon</code>一次。</li>
+</ul>
+<p>两个服务互相排斥，只可以选择其中一种，可以通过 <code>systemctl</code> 检查服务的状态。更多信息请查看 <span class="plainlinks archwiki-template-man" title="$ man 1 alsactl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/alsactl.1">alsactl(1)</a></span>
+</p>
+<h3><span class="mw-headline" id="ALSA_Firmware">ALSA Firmware</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-firmware">alsa-firmware</a></span> 软件包提供了一些声卡需要的固件，比如 Creative SB0400 Audigy2 就需要此软件包。
+</p>
+<h2>
+<span id=".E8.A7.A3.E9.99.A4.E5.90.84.E5.A3.B0.E9.81.93.E7.9A.84.E9.9D.99.E9.9F.B3"></span><span class="mw-headline" id="解除各声道的静音">解除各声道的静音</span>
+</h2>
+<p>目前版本的 ALSA 安装后，所有声道<b>默认是静音的</b>，必须手动解除。
+</p>
+<p>使用 <code>alsamixer</code> 的 ncurses 界面，配置十分简单：
+</p>
+<pre>$ alsamixer
+</pre>
+<p>此外，还可以在命令行下使用 <code>amixer</code>：
+</p>
+<pre>$ amixer sset Master unmute
+</pre>
+<p>在 <code>alsamixer</code> 中，下方标有 <code>MM</code> 的声道是静音的，而标有 <code>00</code> 的通道已经启用。
+</p>
+<p>使用 <code>←</code> 和 <code>→</code> 方向键，选中 <code>Master</code> 和 <code>PCM</code> 声道。按下 <code>m</code> 键解除静音。使用 <code>↑</code> 方向键增加音量，直到增益值为<code>0</code>。该值显示在左上方 <code>Item:</code> 字段后。过高的增益值会导致声音失真。
+</p>
+<p>要想得到完整的 5.1 或 7.1 环绕立体声，还得解除 Front、Surround、Center、LFE (subwoofer) 和 Side 这些声道的静音（上述名称是 Intel HD Audio 声卡使用的声道名，可能因设备不同而有所差异）。注意，仅有这些设置，系统不会自动将立体声源（多数音乐）提升（upmix）成环绕立体声。如果需要这些功能，请阅读<a href="#%E4%B8%8A%E6%B7%B7%E5%92%8C%E7%BC%A9%E6%B7%B7">#上混和缩混</a>。
+</p>
+<p>要启用麦克风，切换至 Capture 选项卡，按下 <code>F4</code>，按下 <code>空格</code> 启用其中一个声道即可。
+</p>
+<p>按下 <code>Esc</code> 键退出 alsamixer。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>有一些声卡，需要关闭数字输出或将其调成静音，才能输出模拟音频信号。对于  Soundblaster Audigy LS 声卡，需要把 IEC958 通道设成静音。</li>
+<li>有些机器（如 Thinkpad T61），有一个 Speaker 通道，必须按照上述方法打开调整。</li>
+<li>有些机器（如 Dell E6400），可能还需要把 <code>Front</code> 和 <code>Headphone</code> 声道打开调整。</li>
+<li>华硕Asus上网本在xfce4等桌面环境设置请参考<a href="../en/ASUS_Eee_PC.html" title="ASUS Eee PC">ASUS Eee PC</a>
+</li>
+</ul>
+</div>
+<h3>
+<span id=".E6.B5.8B.E8.AF.95.E4.BD.A0.E6.94.B9.E5.8F.98.E7.9A.84.E8.AE.BE.E7.BD.AE"></span><span class="mw-headline" id="测试你改变的设置">测试你改变的设置</span>
+</h3>
+<p>接下来，测试声卡是否工作：
+</p>
+<pre>$ speaker-test -c 2
+</pre>
+<p>根据扬声器的实际情况，调整 <code>-c</code> 后的数值。对于 7.1 声道，这个数字是 <code>8</code>：
+</p>
+<pre>$ speaker-test -c 8
+</pre>
+<p>如果声音输出到了错误的设备，可以试试用 <code>-D</code> 参数手动指定。
+</p>
+<pre>$ speaker-test -D default:PCH -c 8
+</pre>
+<p><code>-D</code> 的值应该是 PCM 通道的名字，可以通过下面命令获得：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ aplay -L | grep :CARD</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">default:CARD=PCH  # 'default:PCH' is the PCM channel name for -D
+sysdefault:CARD=PCH
+front:CARD=PCH,DEV=0
+surround21:CARD=PCH,DEV=0
+surround40:CARD=PCH,DEV=0
+surround41:CARD=PCH,DEV=0
+surround50:CARD=PCH,DEV=0
+surround51:CARD=PCH,DEV=0
+surround71:CARD=PCH,DEV=0</pre>
+<p>如果没有正常工作，请继续阅读 <a href="#%E9%85%8D%E7%BD%AE">#配置</a> 以及 <a href="#%E7%96%91%E9%9A%BE%E8%A7%A3%E7%AD%94">#疑难解答</a> 部分。和 <a href="../en/Advanced_Linux_Sound_Architecture/Troubleshooting.html" title="Advanced Linux Sound Architecture/Troubleshooting">Advanced Linux Sound Architecture/Troubleshooting</a> 页面。
+</p>
+<h3>
+<span id=".E9.99.84.E5.8A.A0.E6.B3.A8.E9.87.8A"></span><span class="mw-headline" id="附加注释">附加注释</span>
+</h3>
+<ul><li>如果你的系统有多个声卡， 那么你可以按<code>F6</code>在它们中切换。</li></ul>
+<ul><li>Some cards need to have digital output muted or disabled in order to hear analog sound. For the Soundblaster Audigy LS mute the channel labeled <code>IEC958</code>.</li></ul>
+<ul><li>有些机器，（像Thinkpad T61），有<code>Speaker</code>通道，此通道必须被解除静音然后调整。</li></ul>
+<ul><li>有些机器，(像Dell E6400) 可能需要解除<code>Front</code> 和 <code>Headphone</code> 通道的静音并调整它们。</li></ul>
+<ul><li>如果重起以后，你的声音调整似乎丢失了，尝试以root运行alsamixer。</li></ul>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>系统配置文件是 <code>/etc/asound.conf</code>, 每个用户的配置文件是 <code>~/.asoundrc</code>.
+</p>
+<h3>
+<span id=".E5.9F.BA.E6.9C.AC.E8.AF.AD.E6.B3.95"></span><span class="mw-headline" id="基本语法">基本语法</span>
+</h3>
+<p>Alsa 设置文件遵循一个由分级值到参数（键值）的分配的简单语法。下面（修改过的）摘录来自 asoundrc.txt，asoundrc.txt 一般可以在 <code>alsa-lib</code> 软件包中或是在<a rel="nofollow" class="external text" href="http://www.alsa-project.org/alsa-doc/alsa-lib/conf.html">这里</a> 取得。
+</p>
+<h4>
+<span id=".E8.B5.8B.E5.80.BC.E4.B8.8E.E5.88.86.E9.9A.94.E7.AC.A6"></span><span class="mw-headline" id="赋值与分隔符">赋值与分隔符</span>
+</h4>
+<p>赋值能够定义一个键值的具体值，其中有不同的赋值类型和方式可供使用。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">简单赋值</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#  使用 # 符号来注释文字，该符号后所有到行尾的符号能够被注释掉。 
+key = value  # 句中等号通常可以省略，因为空格也能够被用作分隔符。
+
+key value  # 此句意义与上句 key = value 等同
+</pre>
+<p>分隔符被用作指示赋值的开始和结束。使用半角符号来当作赋值分隔符是很普遍的现象，不过逗号或是空白字符也是可以使用的。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">分隔符</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">key value0; key valueN;
+key value0, key valueN, # 所有赋值操作都是等同意义的
+key value0 key valueN
+
+key	
+value0
+	key		
+valueN
+</pre>
+<p>复合赋值使用分号来当作分隔符。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">复合赋值</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">key {	subkey0 value0;
+	subkeyN valueN;	} 
+
+key.subkey0 value0; # 与上述语句意义相同
+key.subkeyN valueN;
+</pre>
+<p>出于便于阅读的考虑，我们推荐使用第一种方式来定义三种以上的参数。
+</p>
+<p>序列定义使用中括号当作分隔符。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">单列</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">key [	"value0";
+	"valueN";	]
+
+key.0 "value0"; # 与上述语句意义相同
+key.N "valueN";
+</pre>
+<p>不同风格的设置都取决于使用者的偏好，但是为了统一经验规则，我们必须避免的是在一个配置文件中混合多种不同的赋值风格。更多的基础设置能够在 <a rel="nofollow" class="external text" href="http://www.volkerschatz.com/noise/alsa.html#basicconf">这里</a> 找到。
+</p>
+<h4>
+<span id=".E6.95.B0.E6.8D.AE.E7.B1.BB.E5.9E.8B"></span><span class="mw-headline" id="数据类型">数据类型</span>
+</h4>
+<p>对于不同参数值 Alsa 使用的不同的数据类型, 这些肯定会在设置文件中见到。 一些键值接受多种数据类型。 一个包含所有选项可用数据类型的PCM插件设置文件能够在<a rel="nofollow" class="external text" href="http://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html">这里</a> 找到。
+</p>
+<h4>
+<span id=".E6.93.8D.E4.BD.9C.E6.A8.A1.E5.BC.8F"></span><span class="mw-headline" id="操作模式">操作模式</span>
+</h4>
+<p>对parsing nodes有许多操作模式, 其默认模式为 merge 和 create。如果操作模式为merge/create或是merge类型的话，那么检查就完成了。只有同样的类型的变量能够被合并，举例来说，一个字符串不能与整形数合并。在默认操作模式中尝试定义一个简单变量到一个复杂变量是没有作用的，反之亦然。
+</p>
+<p>操作模式前缀符号:
+</p>
+<ul>
+<li>"+" -- merge and create</li>
+<li>"-" -- merge</li>
+<li>"?" -- 不要覆盖</li>
+<li>"!" -- 覆盖</li>
+</ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">操作模式</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Merge/create - 如果不存在node,它将被创建. 如果其存在并且类型符合,
+# subkeyN is merged into key.
+key.subkeyN valueN;
+
+# Merge/create - 与上面相同
+key.+subkeyN valueN;
+
+# Merge - 节点 key.subkeyN 必须已经存在同时拥有相同类型
+key.-subkeyN valueN;
+
+# 不要覆盖 - 如果 key.subkeyN 节点已经存在，便忽略新设定
+key.?subkeyN valueN;
+
+# 覆盖 - 移除 subkeyN 及其以下所有值, 然后创建节点 key.subkeyN
+key.!subkeyN valueN;
+</pre>
+<p>使用覆盖操作模式, 如果被正确执行的话,通常来说是安全的, 但是每个人都应记在心中的是, 在一个节点中也许会有正确执行的必须值。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong>  覆盖 pcm 节点通常来说会使 alsa 无法使用, 因为所有插件定义都会被删除。 因此 <b>不要使用 !pcm.key</b> ，除非你在scratch中设定设置。</div>
+<h5>
+<span id=".E4.BD.BF.E7.94.A8.E2.80.9C.E9.BB.98.E8.AE.A4.E2.80.9D.E8.8A.82.E7.82.B9.E7.9A.84.E9.BB.98.E8.AE.A4.E8.AE.BE.E5.A4.87.E8.AE.BE.E5.AE.9A.E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="使用“默认”节点的默认设备设定示例">使用“默认”节点的默认设备设定示例</span>
+</h5>
+<p>假设 "默认" 节点设定在 /usr/share/alsa/alsa.conf, where defaults.pcm.card and its ctl counterpart have assignment values "0" (type integer), user wants to set default pcm and control device to (third) sound card "2" or "SB" for an Azalia sound card.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">Defaults node</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">defaults.ctl.card 2; # Sets default device and control to third card (counting begins with 0).
+defaults.pcm.card 2; # This does not change addressing type.
+
+defaults.ctl.+card 2; # Equivalent to above.
+defaults.pcm.+card 2;
+
+defaults.ctl.-card 2; # Same effect on a default setup, however if defaults node was removed or
+defaults.pcm.-card 2; # type has been changed merge operation mode will result in no changes.
+
+defaults.pcm.?card 2; # This does nothing, since this assignment already exists.
+defaults.ctl.?card 2;
+
+defaults.pcm.!card "SB"; # The override operation mode is necessary here, because of
+defaults.ctl.!card "SB"; # different value types.
+</pre>
+<p>Using double quotes here automatically sets values data type to string, so in the above example setting defaults.pcm.!card "2" would result in retaining last default device, in this case card 0. Using double quotes for strings is not mandatory as long as no special characters are used, which ideally should never be the case. This may be irrelevant in other assignments.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  From a configuration point of view those are not equivalent to setting a compound "default" pcm device, since most users specify addressing type in there also, which actually may be the same, but the assignment itself still differs. Also defaults.pcm.card is referred to multiple times in alsa configuration files, usually as a fallback assignment, where different environment variables take precedence.</div>
+<h4>
+<span id=".E5.B5.8C.E5.A5.97"></span><span class="mw-headline" id="嵌套">嵌套</span>
+</h4>
+<p>嵌套在配置中是一件很有效的方式。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">嵌套 pcm 插件</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">pcm.azalia {	type hw; card 0	}
+pcm.!default {	type plug; slave.pcm "azalia"	}
+
+# 等于
+
+pcm.!default {	type plug; slave.pcm {	type hw; card 0;	}	}
+
+# 也等于
+
+pcm.!default.type plug;
+pcm.default.slave.pcm.type hw;            
+pcm.default.slave.pcm.card 0;
+</pre>
+<h4>
+<span id=".E5.BC.95.E7.94.A8.E9.85.8D.E7.BD.AE.E6.96.87.E4.BB.B6"></span><span class="mw-headline" id="引用配置文件">引用配置文件</span>
+</h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">引用其他的外部配置文件</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;/path/to/configuration-file&gt; # 引用一个配置文件
+&lt;confdir:/path/to/configuration-file&gt; # 全局配置目录的引用
+</pre>
+<h3>
+<span id=".E8.AE.BE.E7.BD.AE.E9.BB.98.E8.AE.A4.E5.A3.B0.E5.8D.A1"></span><span class="mw-headline" id="设置默认声卡">设置默认声卡</span>
+</h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Explain the difference between a "card" and a "device." <code>amixer --help</code> suggests the two are not synonymous (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Advanced_Linux_Sound_Architecture_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Advanced Linux Sound Architecture (简体中文)#</a>)</div>
+</div>
+<p>如果发现开机时声卡次序会发生变化，可以在通过 <code>/etc/modprobe.d</code> 中的 <code>.conf</code> 文件（比如 <code>/etc/modprobe.d/alsa-base.conf</code>）手动设置次序。
+比如，要让 mia 声卡成为 #0、Intel HDA 声卡成为 #1：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/alsa-base.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">options snd slots=snd_mia,snd_hda_intel
+options snd_mia index=0
+options snd_hda_intel index=1</pre>
+<p>使用命令<code>$ cat /proc/asound/modules</code> 来获得当前已经载入的声音模块及其参数。这个列表通常对于载入序列来说就是全部所需的了。使用 <code>$ lsmod | grep snd</code>来获得设备和模块的列表。这个设置假设你有一个使用着 <code>snd_mia</code> 的mia声卡 和 一个使用着 <code>snd_hda_intel</code> 的声卡。
+</p>
+<p>如果使用 -2 的 index 值，ALSA 就不会将对应的设备作为主声卡使用。Linux Mint 和 Ubuntu 等发行版使用了以下配置，避免 USB 声卡和其他“非主流”设备变成 index 为 0 的主声卡：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/alsa-base.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">options bt87x index=-2
+options cx88_alsa index=-2
+options saa7134-alsa index=-2
+options snd-atiixp-modem index=-2
+options snd-intel8x0m index=-2
+options snd-via82xx-modem index=-2
+options snd-usb-audio index=-2
+options snd-usb-caiaq index=-2
+options snd-usb-ua101 index=-2
+options snd-usb-us122l index=-2
+options snd-usb-usx2y index=-2
+# Keep snd-pcsp from being loaded as first soundcard
+options snd-pcsp index=-2
+# Keep snd-usb-audio from beeing loaded as first soundcard
+options snd-usb-audio index=-2</pre>
+<p>以上配置会在系统重启后生效。
+</p>
+<p>当载入被多个卡（比如，snd-hda-intel）使用的模块时，推荐您加入供应商和设备认证信息到选项中。为了获得 <code>vid</code> 和 <code>pid</code> 信息，使用以下命令：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lspci -nn | grep -i audio</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">00:14.2 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 Azalia (Intel HDA) [1002:4383] (rev 40)
+01:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI] RV770 HDMI Audio [Radeon HD 4850/4870] [1002:aa30]
+07:05.0 Multimedia audio controller [0401]: VIA Technologies Inc. VT1720/24 [Envy24PT/HT] PCI Multi-Channel Audio Controller [1412:1724] (rev 01)
+</pre>
+<p>Last numbers in square brackets are <code>[vid:pid]</code>, so for the above example, for setting Azalia as default card following is correct:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/alsa-base.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># SB [HDA ATI SB]
+options snd-hda-intel index=0 model=auto vid=1002 pid=4383
+# HDMI [HDA ATI HDMI]
+options snd-hda-intel index=1 model=auto vid=1002 pid=aa30
+# HiFi [Audiotrak Prodigy 7.1 HiFi]
+options snd-ice1724 index=2 model=prodigy71hifi vid=1412 pid=1724
+</pre>
+<h4>
+<span id=".E4.BD.BF.E7.94.A8.E7.8E.AF.E5.A2.83.E5.8F.98.E9.87.8F.E9.80.89.E6.8B.A9.E9.BB.98.E8.AE.A4PCM.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="使用环境变量选择默认PCM设备">使用环境变量选择默认PCM设备</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> An explanation of the terminology of a "card", "device", "subdevice" (a "card" is not a "device") and "PCM" can be found on <a href="https://en.wikipedia.org/wiki/Advanced_Linux_Sound_Architecture#Concepts" class="extiw" title="wikipedia:Advanced Linux Sound Architecture">wikipedia:Advanced Linux Sound Architecture#Concepts</a>.</div>
+<p>在你的设置文件中，最好是以全局方式加入以下命令:
+</p>
+<pre> pcm.!default {
+   type plug
+   slave.pcm {
+     @func getenv
+     vars [ ALSAPCM ]
+     default "hw:Audigy2"
+   }
+ }
+</pre>
+<p>你需要将 default 替换成你自己的声卡名，(本例中是<code>Audigy2</code>）。你可以使用<code>aplay -l</code>或是像<b>surround51</b>一样的PCM通用设定。不过，如果你需要使用麦克风的话，选择全双工PCM声卡为默认设备是个不错的选择。
+</p>
+<p>选择你能够启动选择声卡的软件，通过其改变环境变量 <code>ALSAPCM</code>。对于那些不允许选择声卡的程序，这样的机制运行得很好，而对于其他的程序你需要确保你选择的是默认声卡。
+举例来说，假设你给一个缩混PCM命名为 <b>mix51to20</b>，那么你就能够在<code>mplayer</code>中使用命令行<code>ALSAPCM=mix51to20 mplayer example_6_channel.wav</code>来调用它。
+</p>
+<p>为了替代使用新的变量，你能够在全局默认设定中使用选择以下的变量名：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/share/alsa/alsa.conf:</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">变量名 # 定义
+ALSA_CARD # pcm.default pcm.hw pcm.plughw ctl.sysdefault ctl.hw rawmidi.default rawmidi.hw hwdep.hw
+ALSA_CTL_CARD # ctl.sysdefault ctl.hw
+ALSA_HWDEP_CARD # hwdep.default hwdep.hw
+ALSA_HWDEP_DEVICE # hwdep.default hwdep.hw
+ALSA_PCM_CARD # pcm.default pcm.hw pcm.plughw
+ALSA_PCM_DEVICE # pcm.hw pcm.plughw
+ALSA_RAWMIDI_CARD # rawmidi.default rawmidi.hw
+ALSA_RAWMIDI_DEVICE # rawmidi.default rawmidi.hw</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 请注意默认地址类型。</div>
+<h4>
+<span id=".E5.8F.A6.E5.A4.96.E4.B8.80.E7.A7.8D.E6.96.B9.E5.BC.8F"></span><span class="mw-headline" id="另外一种方式">另外一种方式</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> This process can be partly automated using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asoundconf">asoundconf</a></span> from the <a href="../en/Arch_User_Repository.html" title="Arch User Repository">Arch User Repository</a>.</div>
+<p>首先，运行 <code>aplay -l</code>，获取声卡的声卡ID和设备ID：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ aplay -l</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">**** List of PLAYBACK Hardware Devices ****
+card 0: Intel [HDA Intel], device 0: CONEXANT Analog [CONEXANT Analog]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 0: Intel [HDA Intel], device 1: Conexant Digital [Conexant Digital]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: JamLab [JamLab], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 2: Audio [Altec Lansing XT1 - USB Audio], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> Simply setting a <code>type hw</code> as default card is equivalent to addressing hardware directly, which leaves the device unavailable to other applications. This method is only recommended if it is a part of a more sophisticated setup <code>~/.asoundrc</code> or if user deliberately wants to address sound card directly (digital output through <code>eic958</code> or dedicated music server for example).</div>
+<p>拿输出中的最后一项来说，这个声卡的声卡ID为2，设备ID为0。若要把这块声卡作为默认声卡，可以把下列配置添加到系统级别的 <code>/etc/asound.conf</code> 或用户级别的 <code>~/.asoundrc</code> 文件。如果文件不存在，可以手动创建。其中的各个ID，请根据实际情况调整：
+</p>
+<pre>pcm.!default {
+	type hw
+	card 2
+}
+
+ctl.!default {
+	type hw           
+	card 2
+}
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For the Asus U32U serie it seems that card should be set to 1 for both pcm and ctl.</div>
+<p>在大部分情况下，推荐您使用声卡名来代替数字形式的参考名，同时这也能够解决启动顺序的问题。因此下面所示配置对上面所示的示例通常是正确的。
+</p>
+<pre>pcm.!default {
+	type hw
+	card Audio
+}
+
+ctl.!default {
+	type hw           
+	card Audio
+}
+</pre>
+<p>为了获得卡的名称，任选一个下面的命令：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ aplay -l | awk -F \: '/,/{print $2}' | awk '{print $1}' | uniq
+$ cat /proc/asound/card*/id</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Intel
+JamLab
+Audio</pre>
+<p>Alternatively use <i>cat</i>, which might return unused devices:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/asound/card*/id</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">PCH
+ThinkPadEC
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 这种方法在有多个相同(alsa)名字的声卡的时候很可能会出现问题。</div>
+<p>The 'pcm' options affect which card and device will be used for audio playback while the 'ctl' option affects which card is used by control utilities like alsamixer .
+</p>
+<p>The changes should take effect as soon as you (re-)start an application (MPlayer etc.). You can also test with a command like <i>aplay</i>.
+</p>
+<pre>$ aplay -D default:PCH <i>your_favourite_sound.wav</i>
+</pre>
+<p>If you receive an error regarding your asound configuration, check the <a rel="nofollow" class="external text" href="http://www.alsa-project.org/main/index.php/Asoundrc#The_default_plugin">upstream documentation</a> for possible changes to the config file format.
+</p>
+<p>Simply setting a <code>type hw</code> as default card is equivalent to addressing hardware directly, which leaves the device unavailable to other applications. This method is only recommended if it is a part of a more sophisticated setup <code>~/.asoundrc</code> or if user deliberately wants to address sound card directly (digital output through <code>eic958</code> or dedicated music server for example).
+</p>
+<h3>
+<span id=".E7.A1.AE.E8.AE.A4.E6.89.80.E6.9C.89.E5.A3.B0.E9.9F.B3.E6.A8.A1.E5.9D.97.E9.83.BD.E5.B7.B2.E7.BB.8F.E5.8A.A0.E8.BD.BD"></span><span class="mw-headline" id="确认所有声音模块都已经加载">确认所有声音模块都已经加载</span>
+</h3>
+<p>一般 udev 都会自动识别出声卡。使用以下命令确认：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsmod | grep '^snd' | column -t</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">snd_hda_codec_hdmi     22378   4
+snd_hda_codec_realtek  294191  1
+snd_hda_intel          21738   1
+snd_hda_codec          73739   3  snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_intel
+snd_hwdep              6134    1  snd_hda_codec
+snd_pcm                71032   3  snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec
+snd_timer              18992   1  snd_pcm
+snd                    55132   9  snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_intel,snd_hda_codec,snd_hwdep,snd_pcm,snd_timer
+snd_page_alloc         7017    2  snd_hda_intel,snd_pcm
+</pre>
+<p>如果你的输出和上面类似，那就说明声卡已经被正确识别。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 从<a href="../zh-CN/Udev.html" title="Udev (简体中文)">udev</a>的171版本开始，默认情况下 OSS 仿真模块（<code>snd_seq_oss</code>、<code>snd_pcm_oss</code>、<code>snd_mixer_oss</code>）不再自动加载。如有需要，请<a href="../zh-CN/Kernel_module.html" class="mw-redirect" title="Kernel modules (简体中文)">手动加载</a>。</div>
+<p>还可以检查一下 <code>/dev/snd/</code> 目录，看看是否有这些设备文件：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/snd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+crw-rw----  1 root audio 116,  0 Apr  8 14:17 controlC0
+crw-rw----  1 root audio 116, 32 Apr  8 14:17 controlC1
+crw-rw----  1 root audio 116, 24 Apr  8 14:17 pcmC0D0c
+crw-rw----  1 root audio 116, 16 Apr  8 14:17 pcmC0D0p
+crw-rw----  1 root audio 116, 25 Apr  8 14:17 pcmC0D1c
+crw-rw----  1 root audio 116, 56 Apr  8 14:17 pcmC1D0c
+crw-rw----  1 root audio 116, 48 Apr  8 14:17 pcmC1D0p
+crw-rw----  1 root audio 116,  1 Apr  8 14:17 seq
+crw-rw----  1 root audio 116, 33 Apr  8 14:17 timer
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 在 IRC 或论坛寻求这方面帮助时，别忘了贴出上面几个命令的输出。</div>
+<p>如果你的输出跟上面类似，或至少有 <b>controlC0</b> 和 <b>pcmC0D0p</b>，那么声卡就已经正常加载了。
+</p>
+<p>如果出现问题，声卡模块没有正确加载，那么请尝试手动加载模块：
+</p>
+<ul>
+<li>确定声卡对应的驱动模块：<a rel="nofollow" class="external text" href="http://www.alsa-project.org/main/index.php/Matrix:Main">ALSA Soundcard Matrix</a>。这些模块都会有一个”snd-“前缀（例如：<code>snd-via82xx</code>）。</li>
+<li>
+<a href="../zh-CN/Kernel_module.html" class="mw-redirect" title="Kernel modules (简体中文)">加载模块</a>。</li>
+<li>检查 <code>/dev/snd</code> 目录中的设备文件（参见上文）；或者，检查 <code>alsamixer</code> 或 <code>amixer</code> 的输出是否正确。</li>
+<li>修改配置，使 <code>snd-&lt;模块名&gt;</code> 和 <code>snd-pcm-oss</code> 模块<a href="../zh-CN/Kernel_module.html" class="mw-redirect" title="Kernel modules (简体中文)">开机自动加载</a>。</li>
+</ul>
+<h3>
+<span id=".E5.90.AF.E7.94.A8_SPDIF_.E8.BE.93.E5.87.BA"></span><span class="mw-headline" id="启用_SPDIF_输出">启用 SPDIF 输出</span>
+</h3>
+<p><a href="https://en.wikipedia.org/wiki/S/PDIF" class="extiw" title="wikipedia:S/PDIF">S/PDIF</a> is a digital audio interface often used to connect a computer to a digital amplifier (such as a home theatre with 5.1/7.1 surround sound). 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> With some soundcards this disables analog sound output  (eg. Audigy2).</div>
+<ul><li>在 <code>~/.xinitrc</code> 中加入下面一行:</li></ul>
+<pre>amixer -c 0 cset name='IEC958 Playback Switch' on
+</pre>
+<p>使用以下命令，获取你的声卡的数字输出的名称：
+</p>
+<pre> $ amixer scontrols
+</pre>
+<h3>
+<span id=".E7.B3.BB.E7.BB.9F.E7.BA.A7.E5.9D.87.E8.A1.A1.E5.99.A8"></span><span class="mw-headline" id="系统级均衡器">系统级均衡器</span>
+</h3>
+<h4>
+<span id=".E4.BD.BF.E7.94.A8_AlsaEqual.EF.BC.88.E5.8C.85.E5.90.AB.E7.95.8C.E9.9D.A2.EF.BC.89"></span><span class="mw-headline" id="使用_AlsaEqual（包含界面）">使用 AlsaEqual（包含界面）</span>
+</h4>
+<p>从 <a href="../zh-CN/Arch_User_Repository.html" class="mw-redirect" title="AUR (简体中文)">AUR</a> 安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/alsaequal/">alsaequal</a></span><sup><small>AUR</small></sup>。
+</p>
+<p>安装后，把下列内容添加到 ALSA 配置文件（<code>~/.asoundrc</code> 或 <code>/etc/asound.conf</code>）：
+</p>
+<pre>ctl.equal {
+ type equal;
+}
+
+pcm.plugequal {
+  type equal;
+  # Modify the line below if you do not
+  #slave.pcm "plughw:0,0";
+  #by default we want to play from more sources at time:
+  slave.pcm "plug:dmix";
+}
+#pcm.equal {
+  # If you do not want the equalizer to be your
+  # default soundcard comment the following
+  # line and uncomment the above line. (You can
+  # choose it as the output device by addressing
+  # it with specific apps,eg mpg123 -a equal 06.Back_In_Black.mp3)
+pcm.!default {
+  type plug;
+  slave.pcm plugequal;
+}
+</pre>
+<p>如果使用的是64位系统，而又安装了32位的 Flash 插件，这里的设置会导致 Flash 无声。you have to specify the sound card manually in the line <code>pcm "hw:0,0"</code> (use <code>aplay -l</code> to list the available sound card and relative card and device number):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/asound.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">pcm.dmixer {
+    type dmix
+    ipc_key 2048
+    slave {
+        pcm "hw:0,0"
+        buffer_size 16384
+    }
+}
+
+ctl.equal {
+    type equal;
+}
+
+pcm.equalizer {
+    type equal
+    slave.pcm "plug:dmixer"
+}
+
+pcm.!default {
+    type plug
+    slave.pcm equalizer
+}</pre>
+<p>设置好后，切换均衡器：
+</p>
+<pre>$ alsamixer -D equal
+</pre>
+<p>需要注意，每个用户的 alsaequal 配置文件都是独立的，位于 <code>~/.alsaequal.bin</code>。因此，如果想在 <a href="../en/Music_Player_Daemon.html" class="mw-redirect" title="Mpd">mpd</a> 之类的以独立用户身份运行的程序中使用 AlsaEqual，就得像下面这样：
+</p>
+<pre># su mpd -c 'alsamixer -D equal'
+</pre>
+<p>或者，在其他用户的主目录下创建符号链接，指向你的 <code>.alsaequal.bin</code>……
+</p>
+<h5>
+<span id=".E7.AE.A1.E7.90.86_AlsaEqual_.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="管理_AlsaEqual_配置">管理 AlsaEqual 配置</span>
+</h5>
+<p>从 <a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/repos/">Xyne 的软件仓库</a> 或 <a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages.php?ID=62420">AUR</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup> 安装 <a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/projects/alsaequal-mgr/">alsaequal-mgr</a>。
+</p>
+<p>同上，配置均衡器： 
+</p>
+<pre>$alsamixer -D equal
+</pre>
+<p>如果对效果感到满意，将其命名（如“foo”）并保存该配置：
+</p>
+<pre>$alsaequal-mgr save foo
+</pre>
+<p>重新加载“foo”中的配置：
+</p>
+<pre>$alsaequal-mgr load foo
+</pre>
+<p>这样，就可以为游戏、电影、不同音乐流派、网络电话等等创建不同的均衡器配置，以便随时切换。
+</p>
+<p>参见<a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/projects/alsaequal-mgr/">项目主页</a>和程序的帮助信息，了解更多设置。
+</p>
+<h4>
+<span id=".E4.BD.BF.E7.94.A8_mbeq"></span><span class="mw-headline" id="使用_mbeq">使用 mbeq</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 该软件用到了一个 ladspa 插件，可能导致播放音频时 CPU 占用率偏高。In addition, this was made with stereophonic sound (e.g. headphones) in mind.</div>
+<p>安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-plugins">alsa-plugins</a></span>、<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ladspa">ladspa</a></span> 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=swh-plugins">swh-plugins</a></span> 软件包。
+</p>
+<ul><li>在 <code>~/.asoundrc</code> 或 <code>/etc/asound.conf</code> 中添加如下内容：</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/asound.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">pcm.eq {
+  type ladspa
+
+  # The output from the EQ can either go direct to a hardware device
+  # (if you have a hardware mixer, e.g. SBLive/Audigy) or it can go
+  # to the software mixer shown here.
+  #slave.pcm "plughw:0,0"
+  slave.pcm "plug:dmix"
+
+  # Sometimes you may need to specify the path to the plugins,
+  # especially if you have just installed them.  Once you have logged
+  # out/restarted this should not be necessary, but if you get errors
+  # about being unable to find plugins, try uncommenting this.
+  #path "/usr/lib/ladspa"
+
+  plugins [
+    {
+      label mbeq
+      id 1197
+      input {
+        #this setting is here by example, edit to your own taste
+        #bands: 50hz, 100hz, 156hz, 220hz, 311hz, 440hz, 622hz, 880hz, 1250hz, 1750hz, 25000hz,
+        #50000hz, 10000hz, 20000hz
+        controls [ -5 -5 -5 -5 -5 -10 -20 -15 -10 -10 -10 -10 -10 -3 -2 ]
+      }
+    }
+  ]
+ }
+
+ # Redirect the default device to go via the EQ - you may want to do
+ # this last, once you are sure everything is working.  Otherwise all
+ # your audio programs will break/crash if something has gone wrong.
+
+ pcm.!default {
+  type plug
+  slave.pcm "eq"
+ }
+
+ # Redirect the OSS emulation through the EQ too (when programs are running through "aoss")
+
+ pcm.dsp0 {
+  type plug
+  slave.pcm "eq"
+ }
+</pre>
+<ul><li>完成。若有问题，欢迎前往论坛咨询。</li></ul>
+<h2>
+<span id=".E9.AB.98.E8.B4.A8.E9.87.8F.E9.87.8D.E9.87.87.E6.A0.B7"></span><span class="mw-headline" id="高质量重采样">高质量重采样</span>
+</h2>
+<p>启用软件混音时，ALSA 会强制把所有音频重采样到相同的频率（如果系统支持，默认是 48000）。dmix 的重采样算法很糟糕，会导致显著的质量损失。
+</p>
+<p>安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-plugins">alsa-plugins</a></span> 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=libsamplerate">libsamplerate</a></span>。
+</p>
+<p>将默认的采样率转换器更改为 libsamplerate：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/asound.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">defaults.pcm.rate_converter "samplerate_best"</pre>
+<p>或：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.asoundrc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">defaults.pcm.rate_converter "samplerate_best"</pre>
+<p><b>samplerate_best</b> 输出的声音质量最佳，但需要耗费大量CPU资源进行实时重采样。还有其他的算法可供选择（如 <b>samplerate</b> 等），但比起默认的算法，这些算法的改进并不明显。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 某些系统中，启用 samplerate_best 可能导致 Flash 播放器无声音。</div>
+<h2>
+<span id=".E4.B8.8A.E6.B7.B7.E5.92.8C.E7.BC.A9.E6.B7.B7"></span><span class="mw-headline" id="上混和缩混">上混和缩混</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 由于未找到 upmix 和 downmix 的常用翻译，译者暂时采用字面翻译（上混、缩混）。所谓“上混”，即将声道较少的立体声（如常见的双声道立体声）信号，通过软件或硬件处理，模拟为声道较多的立体声（如5.1环绕立体声）信号。反之即为“缩混”。</div>
+<h3>
+<span id=".E4.B8.8A.E6.B7.B7.EF.BC.88upmixing.EF.BC.89"></span><span class="mw-headline" id="上混（upmixing）">上混（upmixing）</span>
+</h3>
+<p>播放双声道立体声音源（如音乐）时，利用上混，即可充分利用 5.1 或 7.1 环绕立体声的所有声道。以前，上混很麻烦，还经常出错。但如今就方便多了，只需要安装一些插件即可。这些插件由 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-plugins">alsa-plugins</a></span> 软件包提供。
+</p>
+<p>安装后，在配置文件（<code>/etc/asound.conf</code> 或 <code>~/.asoundrc</code>）中添加如下内容：
+</p>
+<pre>pcm.upmix71 {
+    type upmix
+    slave.pcm "surround71"
+    delay 15
+    channels 8
+}
+</pre>
+<p>该范例适用于7.1声道上混。类比该范例，同样能设置5.1或4.0声道上混。
+</p>
+<p>该设置添加了一个新的用于上混的 pcm。如果希望所有音频源都通过该 pcm 输出，在上述设置后添加如下配置即可：
+</p>
+<pre>pcm.!default "plug:upmix71"
+
+</pre>
+<p>插件默认配置就允许多个音频源同时通过它输出，一般无需额外配置。如果不行，就得向下面这样为上混配置 dmixer：
+</p>
+<pre>pcm.dmix6 {
+    type asym
+    playback.pcm {
+        type dmix
+        ipc_key 567829
+        slave {
+            pcm "hw:0,0"
+            channels 6
+        }
+    }
+}
+</pre>
+<p>注意要用 dmix6 而非 surround71。
+</p>
+<p>如果遇到声音卡顿或混乱，可能需要增加 buffer_size（比如增加到 32768），或使用<a href="#%E9%AB%98%E8%B4%A8%E9%87%8F%E9%87%8D%E9%87%87%E6%A0%B7">高质量重采样</a>。
+</p>
+<h3>
+<span id=".E7.BC.A9.E6.B7.B7.EF.BC.88downmixing.EF.BC.89"></span><span class="mw-headline" id="缩混（downmixing）">缩混（downmixing）</span>
+</h3>
+<p>有时也会用到缩混，比如在只支持双声道立体声的电脑上观看5.1声道的电影时。这一功能由 ALSA 插件 vdownmix 实现（同样在 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-plugins">alsa-plugins</a></span> 软件包里）。
+</p>
+<p>在配置文件中添加如下内容：
+</p>
+<pre>pcm.!surround51 {
+    type vdownmix
+    slave.pcm "default"
+}
+pcm.!surround40 {
+    type vdownmix
+    slave.pcm "default"
+}
+</pre>
+<p><br>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果这不能让 缩混 工作，请参见 <a rel="nofollow" class="external autonumber" href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=541786">[1]</a> 。所以，你也许需要添加 <code>pcm.!default "plug:surround51"</code> 或是 <code>pcm.!default "plug:surround40"</code>。只有一个 <code>vdownmix</code> 插件能够使用；如果你有7.1声道音响，你需要使用 <code>surround71</code> 来代替上面所述的配置文件。一个让 <code>vdownmix</code> 和 <code>dmix</code> 同时工作的配置文件的示例可以在 <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=167275">这里</a> 找到。</div>
+<h2>
+<span id=".E6.B7.B7.E9.9F.B3"></span><span class="mw-headline" id="混音">混音</span>
+</h2>
+<p>Mixing enables multiple applications to output sound at the same time. Most discrete sound cards support hardware mixing, which is enabled by default if available. Integrated motherboard sound cards (such as Intel HD Audio), usually do not support hardware mixing. On such cards, software mixing is done by an ALSA plugin called dmix. This feature is enabled automatically if hardware mixing is unavailable.
+</p>
+<h3>
+<span id=".E6.89.8B.E5.8A.A8.E5.90.AF.E7.94.A8_dmix"></span><span class="mw-headline" id="手动启用_dmix">手动启用 dmix</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 在 ALSA 1.0.9rc2 及以上版本中，如果声卡不支持硬件混音，模拟输出将默认使用 dmix 混音，无需额外设置。</div>
+<p>要手动启用，那么可以创建 <code>~/.asoundrc</code>，加入以下内容：
+</p>
+<pre>pcm.dsp {
+    type plug
+    slave.pcm "dmix"
+}
+</pre>
+<p>这样就启用了软件混音，多个程序能够同时使用声卡。如果不能，尝试用上述内容来替换 /etc/asound.conf 中的所有内容.
+</p>
+<p>至于 S/PDIF 之类的数字音频输出，目前的 ALSA 还不会默认启用 dmix。因此，必须像上面这样手动启用。
+</p>
+<p>常见问题的解答，参见<a href="#%E7%96%91%E9%9A%BE%E8%A7%A3%E7%AD%94">#疑难解答</a>部分。
+</p>
+<p><br>
+</p>
+<h2>
+<span id=".E6.8F.90.E7.A4.BA.E5.92.8C.E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="提示和技巧">提示和技巧</span>
+</h2>
+<h3>
+<span id="USB.E5.A3.B0.E5.8D.A1.E7.83.AD.E6.8F.92.E6.8B.94"></span><span class="mw-headline" id="USB声卡热插拔">USB声卡热插拔</span>
+</h3>
+<p>参见 <a rel="nofollow" class="external text" href="http://alsa.opensrc.org/Udev">Writing Udev rules for ALSA</a>.
+</p>
+<h3>
+<span id=".E5.90.8C.E6.97.B6.E8.BE.93.E5.87.BA"></span><span class="mw-headline" id="同时输出">同时输出</span>
+</h3>
+<p>你可能会希望同时使用一个用mini jack连接的外置扬声器和内置扬声器同时播放一个音乐。这个可以同时使用<code>alsamixer</code> 或 <code>amixer</code>解静音<b>Auto-Mute</b>来实现：
+</p>
+<pre>$ amixer sset "Auto-Mute" unmute
+</pre>
+<p>然后解静音其他需要的项目, 比如 <b>Headphones</b>, <b>Speaker</b>, <b>Bass Speaker</b>...
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果之后你在耳机连接器(mini-jack)中听到劈里啪啦的声音，参见 <a href="../en/Advanced_Linux_Sound_Architecture/Troubleshooting.html#Crackling_sound_through_mini-jack_.28headphones_connector.29" title="Advanced Linux Sound Architecture/Troubleshooting">这里</a>.</div>
+<h3>
+<span id=".E9.94.AE.E7.9B.98.E6.8E.A7.E5.88.B6.E5.A3.B0.E9.9F.B3"></span><span class="mw-headline" id="键盘控制声音">键盘控制声音</span>
+</h3>
+<p>将下列命令映射倒你的声音键: <code>XF86AudioRaiseVolume</code>, <code>XF86AudioLowerVolume</code>, <code>XF86AudioMute</code>
+</p>
+<p>增加音量:
+</p>
+<pre>amixer set Master 5%+
+</pre>
+<p>减小音量:
+</p>
+<pre>amixer set Master 5%-
+</pre>
+<p>静音/解静音:
+</p>
+<pre>amixer set Master toggle
+</pre>
+<h2>
+<span id=".E7.96.91.E9.9A.BE.E8.A7.A3.E7.AD.94"></span><span class="mw-headline" id="疑难解答">疑难解答</span>
+</h2>
+<h3>
+<span id="Audigy_2_ZS_.E4.B8.8D.E5.8F.91.E5.87.BA.E5.A3.B0.E9.9F.B3"></span><span class="mw-headline" id="Audigy_2_ZS_不发出声音">Audigy 2 ZS 不发出声音</span>
+</h3>
+<p>如果你在使用 Audigy 2 ZS 声卡不出声并且尝试alsamixer不成功的时候，推荐你安装 <code>gnome-alsamixer</code> 并且取消 "<b>Audigy Analog/Digital Output Jack</b>" 选项的勾选状态。
+</p>
+<h3>
+<span id="VirtualBox.E4.B8.AD.E6.97.A0.E5.A3.B0.E9.9F.B3"></span><span class="mw-headline" id="VirtualBox中无声音">VirtualBox中无声音</span>
+</h3>
+<p>如果你在使用VirtualBox的时候出现了无声的问题，尝试以下命令：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ alsactl init</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">
+
+Found hardware: "ICH" "SigmaTel STAC9700,83,84" "AC97a:83847600" "0x8086" "0x0000"
+Hardware is initialized using a generic method
+</pre>
+<p>同时你需要在你的音频软件中激活ALSA输出。
+</p>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8CPU.E9.A2.91.E7.8E.87.E5.8A.A8.E6.80.81.E8.B0.83.E6.95.B4.E6.97.B6.EF.BC.8C.E9.9F.B3.E9.A2.91.E5.8F.91.E7.94.9F.E8.B7.B3.E8.B7.83"></span><span class="mw-headline" id="使用CPU频率动态调整时，音频发生跳跃">使用CPU频率动态调整时，音频发生跳跃</span>
+</h3>
+<p>使用 <code>ondemand</code> 或 <code>conservative</code> 频率策略、启用CPU频率动态调整时，某些声卡和某些 ALSA 驱动会出现声音跳跃的情况。目前，唯一的解决方案是使用固定的频率，如 <code>performance</code> 性能策略。
+</p>
+<p>详情参见 <a href="../zh-CN/CPU_frequency_scaling.html" title="CPU frequency scaling (简体中文)">CPU frequency scaling (简体中文)</a>。
+</p>
+<h3>
+<span id=".E5.90.8C.E6.97.B6.E5.8F.AA.E8.83.BD.E6.9C.89.E4.B8.80.E4.B8.AA.E7.94.A8.E6.88.B7.E6.92.AD.E6.94.BE.E9.9F.B3.E9.A2.91"></span><span class="mw-headline" id="同时只能有一个用户播放音频">同时只能有一个用户播放音频</span>
+</h3>
+<p>有时会出现一个用户独占软件混音器的情况。多数情况下这没什么影响，但在使用 <a href="../en/Music_Player_Daemon.html" class="mw-redirect" title="Mpd">mpd</a> 这样以独立用户身份运行的程序时，就会出现问题。当 mpd 运行时，用户自己就无法播放其他音频了。一种解决方法是，以正在使用的用户身份运行 mpd。另一种方法是，在 ALSA 配置文件的 <code>pcm.dmixer</code> 部分添加 <code>ipc_key_add_uid 0</code> 禁止独占。以下是 <code>asound.conf</code> 示例的片段，省略的部分无需修改：
+</p>
+<pre>...
+pcm.dmixer {
+ type dmix
+ ipc_key 1024
+ ipc_key_add_uid 0
+ ipc_perm 0660
+slave {
+...
+</pre>
+<h3>
+<span id=".E6.97.A0.E6.B3.95.E5.90.8C.E6.97.B6.E6.92.AD.E6.94.BE.E5.A4.9A.E4.B8.AA.E9.9F.B3.E9.A2.91"></span><span class="mw-headline" id="无法同时播放多个音频">无法同时播放多个音频</span>
+</h3>
+<p>如果安装了 <a href="../zh-CN/PulseAudio.html" title="PulseAudio (简体中文)">PulseAudio</a>（可能作为 <a href="../zh-CN/GNOME.html" title="GNOME (简体中文)">GNOME</a> 的依赖被安装），可能出现无法同步播放的问题，因为 PulseAudio 的默认配置是“独占”声卡。ALSA 的用户可能对自己的配置已经很满意、不希望使用 <a href="../zh-CN/PulseAudio.html" title="PulseAudio (简体中文)">PulseAudio</a>。解决方案是编辑 <code>/etc/asound.conf</code> 并注释掉以下内容：
+</p>
+<pre># Use PulseAudio by default
+#pcm.!default {
+#  type pulse
+#  fallback "sysdefault"
+#  hint {
+#    show on
+#    description "Default ALSA Output (currently PulseAudio Sound Server)"
+#  }
+#}
+</pre>
+<p>可能还需要注释掉下面的内容：
+</p>
+<pre>#ctl.!default {
+#  type pulse
+#  fallback "sysdefault"
+#}
+</pre>
+<p>比起完全卸载 <a href="../zh-CN/PulseAudio.html" title="PulseAudio (简体中文)">PulseAudio</a>，这大概是个更简单的方法。
+</p>
+<p>以下是 <code>/etc/asound.conf</code> 配置文件的一个示例：
+</p>
+<pre>pcm.dmixer {
+        type dmix
+        ipc_key 1024
+        ipc_key_add_uid 0
+        ipc_perm 0660
+}
+pcm.dsp {
+        type plug
+        slave.pcm "dmix"
+}
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 本 <code>/etc/asound.conf</code> 本来是配合 <a href="../en/Music_Player_Daemon.html" class="mw-redirect" title="MPD">MPD</a> 全局配置使用的。参见<a href="#%E5%90%8C%E6%97%B6%E5%8F%AA%E8%83%BD%E6%9C%89%E4%B8%80%E4%B8%AA%E7%94%A8%E6%88%B7%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91">该节</a>关于多用户的内容。</div>
+<h3>
+<span id=".E6.9C.89.E6.97.B6.E5.80.99.E5.BC.80.E6.9C.BA.E6.97.A0.E5.A3.B0"></span><span class="mw-headline" id="有时候开机无声">有时候开机无声</span>
+</h3>
+<p>如果会随机地出现开机无声的问题，原因可能是多声卡的顺序发生了变化。如果是这种情况，请参照<a href="#%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4%E5%A3%B0%E5%8D%A1">#设置默认声卡</a>进行设置。
+</p>
+<p>对于 mpd 用户，上述配置无效，请参考<a rel="nofollow" class="external text" href="http://mpd.wikia.com/wiki/Configuration#ALSA_MPD_software_volume_control">该文</a>设置。
+</p>
+<h3>
+<span id=".E7.89.B9.E5.AE.9A.E7.A8.8B.E5.BA.8F.E7.9A.84.E9.97.AE.E9.A2.98"></span><span class="mw-headline" id="特定程序的问题">特定程序的问题</span>
+</h3>
+<p>对于不使用系统声音配置的程序，如 XMMS 和 Mplayer，必须特别设置以应用 ALSA 配置。
+</p>
+<p>对于 mplayer，将以下内容添加到 <code>~/.mplayer/config</code> （或系统全局配置文件 <code>/etc/mplayer/mplayer.conf</code>）：
+</p>
+<pre>ao=alsa
+</pre>
+<p>对于 XMMS 和 Beep Media Player，打开选项窗口，要把声音驱动设置为 ALSA 而不是 OSS。
+</p>
+<p>XMMS 的设置方法：
+</p>
+<ul><li>启动 XMMS
+<ul>
+<li>选项 -&gt; 首选项</li>
+<li>选择 Alsa 输出插件</li>
+</ul>
+</li></ul>
+<p>对于未提供 ALSA 输出的程序，可以使用 alsa-oss 软件包中的 aoss 工具启动。使用方法是：在要运行的程序的命令行前加上 <code>aoss</code>。例如：
+</p>
+<pre>aoss realplay
+</pre>
+<p>pcm.!default{ ... } 貌似已经不管用了。但下面的设置有效：
+</p>
+<pre> pcm.default pcm.dmixer
+</pre>
+<h3>
+<span id=".E7.89.B9.E5.AE.9A.E5.9E.8B.E5.8F.B7.E7.9A.84.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="特定型号的配置">特定型号的配置</span>
+</h3>
+<p>ALSA 会通过 BIOS 检测<a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/sound/alsa/HD-Audio-Models.txt">声卡型号</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>，少数情况下也可能无法正确识别。声卡芯片类型可以在 <code>alsamixer</code> 界面上找到（如 ALC662），而型号则要设置在 <code>/etc/modprobe.d/modprobe.conf</code> 或 <code>/etc/modprobe.d/sound.conf</code> 文件中：
+</p>
+<pre>options snd-hda-intel model=&lt;型号&gt;
+</pre>
+<p>具体设置因声卡型号而异。多数情况下不需要特地这样做。如果想知道具体声卡型号的设置，请查阅 <a rel="nofollow" class="external text" href="http://bugtrack.alsa-project.org/main/index.php/Matrix:Main">Alsa Soundcard List</a>，找到你的声卡型号，点击“Details”，然后查看“Setting up modprobe...”小节，将其中的内容插入 <code>/etc/modprobe.d/modprobe.conf</code> 文件即可。例如，Intel AC97 的配置如下：
+</p>
+<pre># ALSA portion
+alias char-major-116 snd
+alias snd-card-0 snd-intel8x0
+# module options should go here
+
+# OSS/Free portion
+alias char-major-14 soundcore
+alias sound-slot-0 snd-card-0
+
+# card #1
+alias sound-service-0-0 snd-mixer-oss
+alias sound-service-0-1 snd-seq-oss
+alias sound-service-0-3 snd-pcm-oss
+alias sound-service-0-8 snd-seq-oss
+alias sound-service-0-12 snd-pcm-oss</pre>
+<h3>
+<span id=".E4.B8.8E.E8.9C.82.E9.B8.A3.E5.99.A8.E5.86.B2.E7.AA.81"></span><span class="mw-headline" id="与蜂鸣器冲突">与蜂鸣器冲突</span>
+</h3>
+<p>如果你确认所有声道都已解除静音，声卡驱动配置正确，且音量大小也合适，但还是听不到声音，那么请试试将下面的内容添加到 <code>/etc/modprobe.d/modprobe.conf</code>：
+</p>
+<p>（如果是 <code>via82xx</code> 驱动）
+</p>
+<pre>options snd-&lt;模块名请自行补充&gt; ac97_quirk=0
+</pre>
+<p>（如果是 <code>snd_intel8x0</code> 驱动）
+</p>
+<pre>options snd-NAME-OF-MODULE ac97_quirk=1
+</pre>
+<h3>
+<span id=".E9.BA.A6.E5.85.8B.E9.A3.8E.E8.BE.93.E5.85.A5.E6.97.A0.E5.A3.B0.E9.9F.B3"></span><span class="mw-headline" id="麦克风输入无声音">麦克风输入无声音</span>
+</h3>
+<p>In alsamixer, make sure that all the volume levels are up under recording, and that CAPTURE is toggled active on the microphone (e.g. Mic, Internal Mic) and/or on Capture (in alsamixer, select these items and press space). Try making positive Mic Boost and raising Capture and Digital levels higher; this make make static or distortion, but then you can adjust them back down once you are hearing <i>something</i> when you record
+</p>
+<p>因为在alsaminxer中pulseaudio wapper是默认设置，你也许需要按下F6来选择你的实际使用的声卡。你也许需要在回放环节启用并增大输入的音量。
+</p>
+<p>使用以下命令来测试麦克风 (参考arecord的手册页面获取更多信息):
+</p>
+<pre> arecord -d 5 test-mic.wav
+ aplay test-mic.wav
+</pre>
+<p>If all fails, you may want to eliminate hardware failure by testing the microphone with a different device.
+</p>
+<p>For at least some computers, muting a microphone (MM) simply means its input does not go immediately to the speakers. It still receives input.
+</p>
+<p>Many Dell laptops need "-dmic" to be appended to the model name in <code>/etc/modprobe.d/modprobe.conf</code>:
+</p>
+<pre> options snd-hda-intel model=dell-m6-dmic
+</pre>
+<p>Some programs use try to use OSS as the main input software. Add the following lines to <code>/etc/modprobe.d/modprobe.conf</code> to prevent OSS modules from being loaded:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The OSS modules are no longer autoloaded anyway.</div>
+<pre>blacklist snd_pcm_oss
+blacklist snd_mixer_oss
+blacklist snd_seq_oss
+</pre>
+<p>See also:
+</p>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://www.alsa-project.org/main/index.php/SoundcardTesting">http://www.alsa-project.org/main/index.php/SoundcardTesting</a></li>
+<li><a rel="nofollow" class="external free" href="http://alsa.opensrc.org/Record_from_mic">http://alsa.opensrc.org/Record_from_mic</a></li>
+</ul>
+<h3>
+<span id=".E8.AE.BE.E7.BD.AE.E9.BB.98.E8.AE.A4.E7.9A.84.E9.BA.A6.E5.85.8B.E9.A3.8E.2F.E5.BD.95.E9.9F.B3.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="设置默认的麦克风/录音设备">设置默认的麦克风/录音设备</span>
+</h3>
+<p>某些程序（Pidgin、Adobe Flash）提供了设置录音设备的选项。如果录音设备不是内置的声卡，而是外接的（如USB摄像头、麦克风），就会有些问题。如果只想更改默认的录音设备、不更改回放设备，需要像下面这样设置 <code>~/.asoundrc</code>：
+</p>
+<pre>pcm.usb
+{
+    type hw
+    card U0x46d0x81d
+}
+
+pcm.!default
+{
+    type asym
+    playback.pcm
+    {
+        type plug
+        slave.pcm "dmix"
+    }
+    capture.pcm
+    {
+        type plug
+        slave.pcm "usb"
+    }
+}
+</pre>
+<p>把“U0x46d0x81d”替换为你的录音设备的名称。可以通过 <code>arecord -L</code> 查看所有 ALSA 识别到的录音设备。
+</p>
+<h3>
+<span id=".E5.86.85.E7.BD.AE.E9.BA.A6.E5.85.8B.E9.A3.8E.E6.97.A0.E6.95.88"></span><span class="mw-headline" id="内置麦克风无效">内置麦克风无效</span>
+</h3>
+<p>首先，请检查 alsamixer，确保所有的录音声道的音量都达到可以录制的程度。如果还是不行，试试修改 /etc/sound.conf 并重载 snd-* 模块。这样就会多出来一个名叫 Capture 的音频控制，可以用它调节内置麦克风的音量。例如，对于 snd-hda-intel 模块，配置如下：
+</p>
+<pre> options snd-hda-intel enable_msi=1
+</pre>
+<p>然后，输入下面的命令重载模块，调整音量并测试。
+</p>
+<pre># rmmod snd-hda-intel &amp;&amp; modprobe snd-hda-intel</pre>
+<h3>
+<span id="Intel_.E6.9D.BF.E8.BD.BD.E5.A3.B0.E5.8D.A1.E6.97.A0.E5.A3.B0"></span><span class="mw-headline" id="Intel_板载声卡无声">Intel 板载声卡无声</span>
+</h3>
+<p>可能由两个相互冲突的驱动模块引起，分别是 <code>snd_intel8x0</code> 和 <code>snd_intel8x0m</code>。如果是的话，屏蔽 snd_intel8x0m 即可：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/modprobe.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">blacklist snd_intel8x0m</pre>
+<p>以下方法可能也有效：在 <code>alsamixer</code> 或 <code>amixer</code> 把 “External Amplifier” 设置为静音。参见：<a rel="nofollow" class="external text" href="http://alsa.opensrc.org/Intel8x0#Dell_Inspiron_8600_.28and_probably_others.29">ALSA wiki 相关条目</a>。
+</p>
+<p>也可以试试解除“Mix”的静音。
+</p>
+<h3>
+<span id="Intel_.E6.9D.BF.E8.BD.BD.E5.A3.B0.E5.8D.A1.E8.80.B3.E6.9C.BA.E6.97.A0.E5.A3.B0"></span><span class="mw-headline" id="Intel_板载声卡耳机无声">Intel 板载声卡耳机无声</span>
+</h3>
+<p>对于笔记本电脑上的 <b>Intel Corporation 82801 I (ICH9 Family) HD Audio Controller</b> 声卡，可能需要添加如下内容到 modprobe 配置文件或 sound.conf，以解决耳机无声的问题：
+</p>
+<pre>options snd-hda-intel model=$model
+</pre>
+<p>$model 在下列型号中选择：
+</p>
+<ul>
+<li>dell-vostro</li>
+<li>olpc-xo-1_5</li>
+<li>laptop</li>
+<li>dell-m6</li>
+<li>laptop-hpsense</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 可能需要在配置文件的 "alias" 语句之后添加上述内容。</div>
+<p>可以在内核文档中找到所有支持的型号，如<a rel="nofollow" class="external text" href="https://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.35.y.git;a=blob;f=Documentation/sound/alsa/HD-Audio-Models.txt;h=dc25bb84b83b49665a7ed850e7bf5423d50cd3ba;hb=HEAD">该文</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>。这是 2.6.35 版本内核的文档，你需要自己查找适用于自己内核版本的文档。
+</p>
+<p>也可以从<a rel="nofollow" class="external text" href="http://www.mjmwired.net/kernel/Documentation/sound/alsa/HD-Audio-Models.txt">这里</a>获取型号列表。要查看你的声卡芯片名称，输入下列命令（其中的“*”请根据实际情况替换）。注意，有些芯片名称被更改过，因此实际名称与文件中的可能不匹配。
+</p>
+<pre>cat /proc/asound/card*/codec* | grep Codec
+</pre>
+<p>注意，这么做很可能导致所有输入设备（内置和外置麦克风）无法工作，即要么让麦克风正常、要么让耳机正常。如果遇到这一问题，请向 ALSA 开发者报告。
+</p>
+<p>另外，如果蜂鸣器（pcspkr）出现问题，可以试试使用以下配置修复：
+</p>
+<pre>options snd-hda-intel model=$model enable=1 index=0
+</pre>
+<h3>
+<span id=".E6.B6.88.E9.99.A4.E8.80.B3.E6.9C.BA.E7.94.B5.E6.B5.81.E5.A3.B0.E7.9A.84.E6.96.B9.E6.B3.95"></span><span class="mw-headline" id="消除耳机电流声的方法">消除耳机电流声的方法</span>
+</h3>
+<pre>1.终端输入alsamixer回车-输入密码后进入alsa高级控制面板
+2.按F5,显示所有音轨,左右键移动音轨,上下键调节音量,将其中的Internal选项的音量设置为00
+</pre>
+<h3>
+<span id=".E5.AE.89.E8.A3.85.E6.94.AF.E6.8C.81_S.2FPDIF_.E8.BE.93.E5.87.BA.E7.9A.84.E6.98.BE.E5.8D.A1.E5.90.8E.E6.97.A0.E5.A3.B0"></span><span class="mw-headline" id="安装支持_S/PDIF_输出的显卡后无声">安装支持 S/PDIF 输出的显卡后无声</span>
+</h3>
+<p>检测已加载的相关模块，并记录顺序：
+</p>
+<pre>$ cat /proc/asound/modules
+0 snd_hda_intel
+1 snd_ca0106
+</pre>
+<p>在 <code>/etc/modprobe.d/modprobe.conf</code> 中禁用不希望使用的显卡的音频解码模块：
+</p>
+<pre># /etc/modprobe.d/modprobe.conf
+#
+install snd_hda_intel /bin/false
+</pre>
+<p>如果不同设备使用同一模块，那么只能在 BIOS 中禁用其中之一。
+</p>
+<h3>
+<span id=".E9.9F.B3.E6.95.88.E5.B7.AE.E6.88.96.E5.8D.A1.E9.A1.BF"></span><span class="mw-headline" id="音效差或卡顿">音效差或卡顿</span>
+</h3>
+<p>如果发现音效特别差，试试在 alsamixer 中调节一下 PCM 音量，到增益（gain）为0的水平。
+</p>
+<p>若使用 snd-usb-audio 驱动，可以试试在 <code>/etc/asound.conf</code> 中启用 <code>softvol</code>。下面是针对第一个声音设备的配置范例：
+</p>
+<pre> pcm.!default {
+   type plug
+   slave.pcm "softvol"
+ }
+ pcm.dmixer {
+      type dmix
+      ipc_key 1024
+      slave {
+          pcm "hw:0"
+          period_time 0
+          period_size 4096
+          buffer_size 131072
+          rate 50000
+      }
+      bindings {
+          0 0
+          1 1
+      }
+ }
+ pcm.dsnooper {
+      type dsnoop
+      ipc_key 1024
+      slave {
+          pcm "hw:0"
+          channels 2
+          period_time 0
+          period_size 4096
+          buffer_size 131072
+          rate 50000
+      }
+      bindings {
+          0 0
+          1 1
+      }
+ }
+ pcm.softvol {
+      type softvol
+      slave { pcm "dmixer" }
+      control {
+          name "Master"
+          card 0
+      }
+ }
+ ctl.!default {
+   type hw
+   card 0
+ }
+ ctl.softvol {
+   type hw
+   card 0
+ }
+ ctl.dmixer {
+   type hw
+   card 0
+ }
+</pre>
+<h3>
+<span id=".E5.BC.80.E5.A7.8B.E6.88.96.E5.81.9C.E6.AD.A2.E9.9F.B3.E9.A2.91.E6.92.AD.E6.94.BE.E6.97.B6.E5.87.BA.E7.8E.B0.E5.99.AA.E9.9F.B3"></span><span class="mw-headline" id="开始或停止音频播放时出现噪音">开始或停止音频播放时出现噪音</span>
+</h3>
+<p>某些驱动模块（如 snd_ac97_codec 和 snd_hda_intel）会在声卡闲置时关闭它以节约用电。声卡启动或关闭时，就会发出刺耳的噪音。在调节音量或开关窗口（KDE4）时也可能发生这种情况。要消除这一问题，需要添加特定模块参数（通过 <code>modinfo snd_MY_MODULE</code> 查询）关闭该功能。
+</p>
+<p>例如：对于 snd_hda_intel 模块，要禁用自动节电并解决噪音问题，需在 <code>/etc/modprobe.d/modprobe.conf</code> 中添加如下内容：
+</p>
+<pre>options snd_hda_intel power_save=0
+</pre>
+<p>或：
+</p>
+<pre>options snd_hda_intel power_save=0 power_save_controller=N
+</pre>
+<p>可以先使用 <code>modprobe snd_hda_intel power_save=0</code> 测试一下效果。
+</p>
+<p>对于 VIA VT1708S 板载声卡（使用 snd_hda_intel 模块）等一些声卡，即使把 power_save 参数设置为0可能仍会有噪音。还得在 alsamixer 中把“Line”声道激活才能生效，只要激活并调到一个非0的音量即可（1即可，不要太高）。
+</p>
+<p>内核模块文档：<a rel="nofollow" class="external autonumber" href="https://www.kernel.org/doc/Documentation/sound/alsa/powersave.txt">[2]</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</p>
+<h3>
+<span id="S.2FPDIF_.E8.BE.93.E5.87.BA.E6.97.A0.E6.95.88"></span><span class="mw-headline" id="S/PDIF_输出无效">S/PDIF 输出无效</span>
+</h3>
+<p>如果你已经在 alsamixer 中启用相关声道，但声卡的光学/同轴数字输出还是无效，试试以 root 身份运行：
+</p>
+<pre># iecset audio on
+</pre>
+<p>每次开机都需要重新设置。如果嫌麻烦，可以自己写一个 <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd 服务</a>。
+</p>
+<h3>
+<span id="HDMI_.E8.BE.93.E5.87.BA.E6.97.A0.E6.95.88"></span><span class="mw-headline" id="HDMI_输出无效">HDMI 输出无效</span>
+</h3>
+<p>若遇到声卡或主板的HDMI输出无法工作的问题，请首先确认 alsamixer 中的相关声道已经解除静音。如果还是不行，请进行下列操作：
+</p>
+<p>查询回放设备：
+</p>
+<pre> $ aplay -l
+ **** List of PLAYBACK Hardware Devices ****
+ card 0: NVidia [HDA NVidia], device 0: ALC1200 Analog [ALC1200 Analog]
+   Subdevices: 1/1
+   Subdevice #0: subdevice #0
+ card 0: NVidia [HDA NVidia], device 1: ALC1200 Digital [ALC1200 Digital]
+   Subdevices: 1/1
+   Subdevice #0: subdevice #0
+ card 0: NVidia [HDA NVidia], device 3: NVIDIA HDMI [NVIDIA HDMI]
+   Subdevices: 0/1
+   Subdevice #0: subdevice #0
+</pre>
+<p>我们需要的是 HDMI 设备的信息，下面来做一个测试（在该例中，0是声卡编号，3是设备编号）：
+</p>
+<pre> $ aplay -D plughw:0,3 /usr/share/sounds/alsa/Front_Center.wav
+</pre>
+<p>如果 aplay 没有给出错误信息，但还是听不到声音，请尝试重启通过HDMI链接的播放设备（显示器或电视）。HDMI接口会在链接时执行一次握手，有可能因为当时没有检测到音频流而禁用了音频解码。特别是，如果使用了独立的窗口管理器（不太清楚 Gnome 和 KDE 的情况），可能就必须一边播放音乐、一边链接HDMI线。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果你正在使用AMD显卡和3.0版Linux内核，就需要修改启动引导程序（Grub）的内核参数 <code>radeon.audio=1</code>，或在 modprobe 的配置文件中添加相关参数。进行上述操作前，请阅读 <a rel="nofollow" class="external text" href="http://www.x.org/wiki/RadeonFeature#fndef-72849d6d6eb3927d486f50ece74a739042965a6c-25">Radeon Feature Matrix</a>，看看你的显卡是否已经被支持。<a rel="nofollow" class="external text" href="http://www.x.org/wiki/RadeonFeature#Decoder_ring_for_engineering_vs_marketing_names">S. Islands</a> 中列举的一些显卡（从HD7750到HD7970）尚不支持 HDMI 音频输出。</div>
+<p>若测试成功，接下来编辑或创建 <code>~/.asoundrc</code>，把 HDMI 设置为默认音频设备。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.asoundrc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">pcm.!default {
+  type hw
+  card 0
+  device 3
+}
+</pre>
+<p>如果上述配置无效，试试下面这个：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.asoundrc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">defaults.pcm.card 0
+defaults.pcm.device 3
+defaults.ctl.card 0
+</pre>
+<h3>
+<span id="HDMI.E5.A4.9A.E9.80.9A.E9.81.93PCM.E8.BE.93.E5.87.BA.E6.97.A0.E6.B3.95.E5.B7.A5.E4.BD.9C.28Intel.29"></span><span class="mw-headline" id="HDMI多通道PCM输出无法工作(Intel)">HDMI多通道PCM输出无法工作(Intel)</span>
+</h3>
+<p>As of Linux 3.1 multi-channel PCM output through HDMI with a Intel card (Intel Eaglelake, IbexPeak/Ironlake,SandyBridge/CougarPoint and IvyBridge/PantherPoint) is not yet supported. Support for it has been recently added and expected to be available in Linux 3.2. To make it work in Linux 3.1 you need to apply the following patches:
+</p>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=patch;h=76adaa34db407f174dd06370cb60f6029c33b465">drm: support routines for HDMI/DP ELD</a></li>
+<li><a rel="nofollow" class="external text" href="https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=patch;h=e0dac65ed45e72fe34cc7ccc76de0ba220bd38bb">drm/i915: pass ELD to HDMI/DP audio driver</a></li>
+</ul>
+<h3><span class="mw-headline" id="HP_TX2500">HP TX2500</span></h3>
+<p>Add these 2 lines into <code>/etc/modprobe.d/modprobe.conf</code>:
+</p>
+<pre>options snd-cmipci mpu_port=0x330 fm_port=0x388
+options snd-hda-intel index=0 model=toshiba position_fix=1
+</pre>
+<pre>options snd-hda-intel model=hp (works for tx2000cto)
+</pre>
+<h3>
+<span id=".E6.92.AD.E6.94.BE_MP3_.E6.97.B6.E6.9C.89.E5.A3.B0.E9.9F.B3.E8.B7.B3.E8.B7.83"></span><span class="mw-headline" id="播放_MP3_时有声音跳跃">播放 MP3 时有声音跳跃</span>
+</h3>
+<p>如果你在播放MP3文件的时候有声音跳过的情况，同时有超过2个音箱连接到你的电脑上（比如，声道大于2的多声道系统），运行alsamixer并禁用你<b>没有的</b>音箱所对应的频道（比如，在没有centre音箱的时候不要启用centre音箱的声音）
+</p>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8USB.E5.A4.B4.E6.88.B4.E8.AE.BE.E5.A4.87.E5.92.8C.E5.A4.96.E6.8E.A5USB.E5.A3.B0.E5.8D.A1"></span><span class="mw-headline" id="使用USB头戴设备和外接USB声卡">使用USB头戴设备和外接USB声卡</span>
+</h3>
+<p>如果你在ALSA下使用USB头戴设备，那么你可以试试使用 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asoundconf">asoundconf</a></span> （当前只有在<a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a>内获得）来设置头戴设备为主要声音输出设备。运行前别忘了确认你的USB音频模块已经启用(<code>modprobe snd-usb-audio</code>)。
+</p>
+<pre># asoundconf is-active
+# asoundconf list
+# asoundconf set-default-card &lt;chosen soundcard&gt;
+</pre>
+<h4>
+<span id="USB.E8.AE.BE.E5.A4.87.E8.BE.93.E5.87.BA.E5.8A.88.E5.95.AA.E5.A3.B0"></span><span class="mw-headline" id="USB设备输出劈啪声">USB设备输出劈啪声</span>
+</h4>
+<p>如果你在使用USB设备的时候发出了劈啪声，你可以试试 snd-usb-audio 设置最小时延。
+加入下面这条命令到你的 <code>/etc/modprobe.d/modprobe.conf</code> 文件中:
+</p>
+<pre>options snd-usb-audio nrpacks=1
+</pre>
+<p>source: <a rel="nofollow" class="external free" href="http://alsa.opensrc.org/Usb-audio#Tuning_USB_devices_for_minimal_latencies">http://alsa.opensrc.org/Usb-audio#Tuning_USB_devices_for_minimal_latencies</a>
+</p>
+<h4>
+<span id=".E7.83.AD.E6.8F.92.E6.8B.94USB.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="热插拔USB设备">热插拔USB设备</span>
+</h4>
+<p>为了自动设置USB声卡为主要输出设备，在声卡插入以后，你可以使用下面的udev规则（比方说，将下面的两条命令加入到 <code>/etc/udev/rules.d/00-local.rules</code> 并重启）。
+</p>
+<pre>KERNEL=="pcmC[D0-9cp]*", ACTION=="add", PROGRAM="/bin/sh -c 'K=%k; K=$${K#pcmC}; K=$${K%%D*}; echo defaults.ctl.card $$K &gt; /etc/asound.conf; echo defaults.pcm.card $$K &gt;&gt;/etc/asound.conf'"
+KERNEL=="pcmC[D0-9cp]*", ACTION=="remove", PROGRAM="/bin/sh -c 'echo defaults.ctl.card 0 &gt; /etc/asound.conf; echo defaults.pcm.card 0 &gt;&gt;/etc/asound.conf'"</pre>
+<h3>
+<span id=".E5.86.85.E6.A0.B8.E5.8D.87.E7.BA.A7.E5.90.8E.E5.87.BA.E7.8E.B0.27Unknown_hardware.27.E9.94.99.E8.AF.AF"></span><span class="mw-headline" id="内核升级后出现'Unknown_hardware'错误">内核升级后出现'Unknown hardware'错误</span>
+</h3>
+<p>升级内核后，在启动ALSA的过程中有可能会输出下面的错误信息：
+</p>
+<pre>Unknown hardware "foo" "bar" ...
+Hardware is initialized using a guess method
+/usr/sbin/alsactl: set_control:nnnn:failed to obtain info for control #mm (No such file or directory)
+</pre>
+<p>或是
+</p>
+<pre>Found hardware: "HDA-Intel" "VIA VT1705" "HDA:11064397,18490397,00100000" "0x1849" "0x0397"
+Hardware is initialized using a generic method
+/usr/sbin/alsactl: set_control:1328: failed to obtain info for control #1 (No such file or directory)
+/usr/sbin/alsactl: set_control:1328: failed to obtain info for control #2 (No such file or directory)
+/usr/sbin/alsactl: set_control:1328: failed to obtain info for control #25 (No such file or directory)
+/usr/sbin/alsactl: set_control:1328: failed to obtain info for control #26 (No such file or directory)
+</pre>
+<p>出现这种问题很简单，仅仅需要在 root 账户下再次存储ALSA设定：
+</p>
+<pre># alsactl -f /var/lib/alsa/asound.state store
+</pre>
+<p>有必要使用alsamixer重新设置ALSA
+</p>
+<h3>
+<span id="HDA.E5.88.86.E6.9E.90.E4.BB.AA"></span><span class="mw-headline" id="HDA分析仪">HDA分析仪</span>
+</h3>
+<p>如果映射到您的音频引脚（插头）不对应，但ALSA工作正常，您可以尝试HDA分析器 - pyGTK2图形用户界面的高清音频控制可以再此找到<a rel="nofollow" class="external text" href="http://www.alsa-project.org/main">ALSA wiki上的/index.php/HDA_Analyzer</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>。
+</p>
+<p>尝试调整PIN节点的Widget控制部分，使麦克风IN和耳机插孔OUT。 参考配置默认标题是一个好主意。
+</p>
+<p>注意：脚本是通过与python3（现在与ArchLinux一起提供的）不兼容的方式完成的，但请尽量使用它。
+解决方法是：打开“run.py”，找到所有“python”的出现（2个出现在第一行，第二行在最后一行），全部替换为“python2”。
+</p>
+<p>注2：脚本需要root权限，如果通过su / sudo运行失败。 在终端运行<code> kdesu</code>或<code> gksu</code>。
+</p>
+<h3>
+<span id="ALSA_.E4.B8.8E_SDL_.E5.8D.8F.E5.90.8C.E5.B7.A5.E4.BD.9C.E7.9A.84.E9.97.AE.E9.A2.98"></span><span class="mw-headline" id="ALSA_与_SDL_协同工作的问题">ALSA 与 SDL 协同工作的问题</span>
+</h3>
+<p>如果你使用SDL没有声音同时在应用中无法选择ALSA。试试设定SDL_AUDIODRIVER环境变量到ALSA。
+</p>
+<pre># export SDL_AUDIODRIVER=alsa
+</pre>
+<h3><span class="mw-headline" id="Low_Sound_Workaround">Low Sound Workaround</span></h3>
+<p>If you are facing low sound even after maxing out your speakers/headphones, you can give the softvol plugin a try. Add the following to <code>/etc/asound.conf</code>.
+</p>
+<pre>pcm.!default {
+      type plug
+      slave.pcm "softvol"
+  }
+
+pcm.softvol {
+    type softvol
+    slave {
+        pcm "dmix"
+    }
+    control {
+        name "Pre-Amp"
+        card 0
+    }
+    min_dB -5.0
+    max_dB 20.0
+    resolution 6
+}
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  You will probably have to restart the computer, as restarting the alsa daemon did not load the new configuration for me. Also, if the configuration does not work even after restarting, try changing <code>plug</code> with <code>hw</code> in the above configuration.</div>
+<p>After the changes are loaded successfully, you will see a <code>Pre-Amp</code> section in alsamixer. You can adjust the levels there.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Setting a high value for <code>Pre-Amp</code> can cause sound distortion, so adjust it according to the level that suits you.</div>
+<h3>
+<span id=".E6.9A.82.E5.81.9C.E5.90.8E.E7.BB.A7.E7.BB.AD.E6.92.AD.E6.94.BE.E5.8F.91.E5.87.BA.E5.99.BC.E5.8F.AD.E5.A3.B0"></span><span class="mw-headline" id="暂停后继续播放发出噼叭声">暂停后继续播放发出噼叭声</span>
+</h3>
+<p>如果你在暂停后继续播放听到噼叭声，那么你可以通过修改 <code>/etc/pm/sleep.d/90alsa</code> 中的 <code>aplay -d 1 /dev/zero</code>行来修复错误。
+</p>
+<h3><span class="mw-headline" id="Virtual_sound_device_using_snd-aloop">Virtual sound device using snd-aloop</span></h3>
+<p>You might want a jack alternative to create a virtual recording or play device in order to mix different sources, using the snd-aloop module:
+</p>
+<pre>modprobe snd-aloop
+</pre>
+<p>List your new virtual devices using:
+</p>
+<pre>aplay -l
+</pre>
+<p>now you can for example using ffmpeg:
+</p>
+<pre>ffmpeg -f alsa -i hw:1,1,0 -f alsa -i hw:1,1,1 -filter_complex amerge output.mp3
+</pre>
+<p>In the  hw:R,W,N format R is your virtual card device number, W 1 recording devices 0 for writing, R is your sub device you can use all the virtual devices available and play/stop using applications like mplayer:
+</p>
+<pre>mplayer -ao alsa:device=hw=1,0,0 fileA
+mplayer -ao alsa:device=hw=1,0,1 fileB 
+</pre>
+<p>Another thing you could do with this approach, is using festival to generate a voice into a recording stream using an script like this:
+</p>
+<pre>#!/bin/bash
+echo $1|iconv -f utf-8 -t iso-8859-1| text2wave  &gt; "_tmp_.wav";   
+mplayer -ao alsa:device=hw=2,0,0 "_tmp.wav";
+rm "_tmp.wav";
+</pre>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE.E6.96.87.E4.BB.B6.E8.8C.83.E4.BE.8B"></span><span class="mw-headline" id="配置文件范例">配置文件范例</span>
+</h2>
+<p>参见：<a href="../en/Advanced_Linux_Sound_Architecture/Configuration_examples.html" class="mw-redirect" title="Advanced Linux Sound Architecture/Example Configurations">Advanced Linux Sound Architecture/Example Configurations</a>。
+</p>
+<h2>
+<span id=".E7.9B.B8.E5.85.B3.E9.98.85.E8.AF.BB"></span><span class="mw-headline" id="相关阅读">相关阅读</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.mjmwired.net/kernel/Documentation/sound/alsa/ALSA-Configuration.txt">ALSA 模块高级配置</a></li>
+<li><a rel="nofollow" class="external text" href="http://alsa.opensrc.org/Main_Page">非官方的 ALSA Wiki</a></li>
+<li><a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=36815">如何从 svn 获取驱动代码并编译</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.alsa-project.org/">ALSA wiki</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.alsa-project.org/main/index.php/Asoundrc/">Asoundrc</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://alsa.opensrc.org/">Unofficial ALSA wiki</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.mjmwired.net/kernel/Documentation/sound/alsa/ALSA-Configuration.txt">Advanced ALSA module configuration</a></li>
+<li><a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=36815">HOWTO: compile driver from svn</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.volkerschatz.com/noise/alsa.html">A close look at ALSA: ALSA concept introduction</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.sabi.co.uk/Notes/linuxSoundALSA.html">Linux ALSA sound notes</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Sound.html" title="Category:Sound (简体中文)">Sound (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Advanced_Linux_Sound_Architecture_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=648368">https://wiki.archlinux.org/index.php?title=Advanced_Linux_Sound_Architecture_(简体中文)&amp;oldid=648368</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 January 2021, at 15:09.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

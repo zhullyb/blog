@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>High Performance Firewall - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-High_Performance_Firewall rootpage-High_Performance_Firewall skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">High Performance Firewall</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Bad style (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:High_Performance_Firewall">Talk:High Performance Firewall#</a>)</div>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Router.html" title="Router">Router</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> <span style="color:red;">please use the second argument of the template to provide more detailed indications.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:High_Performance_Firewall">Talk:High Performance Firewall#</a>)</div>
+</div>
+<p>Imagine this, you have more than two networks separated by Virtual Lans protocols (IEEE 802.1q) or VLANs, carried to you by an intelligent/manageable switch on one troncal line 10/100/1000 MB HD/FD (naturally the best is 1000 MB FD).
+</p>
+<p>This page introduce how to create High Performance Firewall / Nat with iptables and VLANs and iproute2. Then you can share internet to a really BIG numbers of hosts, and maintain a good performance. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#VLAN_support"><span class="tocnumber">1</span> <span class="toctext">VLAN support</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#The_round_robin_NAT"><span class="tocnumber">1.1</span> <span class="toctext">The round robin NAT</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#tips"><span class="tocnumber">1.2</span> <span class="toctext">tips</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#The_High_Performance"><span class="tocnumber">2</span> <span class="toctext">The High Performance</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#The_iproute2"><span class="tocnumber">3</span> <span class="toctext">The iproute2</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="VLAN_support">VLAN support</span></h2>
+<p>First, create sub-network as in page <a href="../en/VLAN.html" title="VLAN">VLAN</a>.
+</p>
+<h3><span class="mw-headline" id="The_round_robin_NAT">The round robin NAT</span></h3>
+<p>Let us suppose we have a one ip: 200.aaa.bbb.6 and our gateway is 200.aaa.bbb.1. we can safely put these parameters by default in our configuration. It will not get participation at all in our firewall.
+</p>
+<p>I say I have 3 groups of 10 IPs each to play...... we will define the NEXT in our firewall script:
+</p>
+<pre>Gr1='200.AAA.CCC.10-200.AAA.CCC.20'
+Gr2='200.AAA.DDD.10-200.AAA.DDD.20'
+Gr3='200.AAA.EEE.10-200.AAA.EEE.20'
+</pre>
+<p><b>And the next important line is:</b>
+</p>
+<pre>iptables -t nat -A POSTROUTING -s 192.168.0.0/21  -j SNAT --to $Gr1 #ACCESS VLAN 10
+iptables -t nat -A POSTROUTING -s 192.168.8.0/21  -j SNAT --to $Gr2 #ACCESS VLAN 20
+iptables -t nat -A POSTROUTING -s 192.168.15.0/21  -j SNAT --to $Gr1 #ACCESS VLAN 30
+.... etc
+</pre>
+<p>You can repeat the groups for access, subdivide the networks ETC, iptables make a round robin over the Gr1, Gr2 and Gr3 by default, no modification is needed.
+</p>
+<p>It's not necessary to create a virtual card (alias) to every IP in the group.
+</p>
+<p>It's important that every real router knows every group and publishes its via BGP (or similar) to the neighbours.
+</p>
+<h3><span class="mw-headline" id="tips">tips</span></h3>
+<p>To accelerate some ports you can put this in the top of FORWARD chain
+</p>
+<pre>iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p icmp -o eth0 -j ACCEPT
+iptables -A FORWARD -p tcp -m multiport --dports 80,443,110,53 -j ACCEPT  # FAST FAST FAST 
+iptables -A FORWARD -p udp  --dport 53 -j ACCEPT
+</pre>
+<p>This mean:
+</p>
+<ul>
+<li>the packets incoming will pass only 1 rule if it is an establish connection</li>
+<li>the packet incoming will pass 2 rules if is a ping or similar</li>
+<li>the packet will pass 3 rules if is http, mail or similar</li>
+<li>and the DNS request will pass 3 o 4 rules until go out</li>
+</ul>
+<p>The outgoing virus will KILL our machine, and we not need to share "windows" conversations so, kill them!!!!
+</p>
+<pre> #VIRUS
+iptables -A FORWARD -p tcp --dport 135:139 -j DROP
+iptables -A FORWARD -p tcp --dport 445 -j DROP
+iptables -A FORWARD -p udp --dport 135:139 -j DROP
+iptables -A FORWARD -p udp --dport 445 -j DROP
+</pre>
+<p>If you can, before they reach our machine.
+</p>
+<h2><span class="mw-headline" id="The_High_Performance">The High Performance</span></h2>
+<p>We get to the real important part of this howto.
+</p>
+<p>In our run to get a really big number of hosts running through our machine we miss some things
+</p>
+<ol>
+<li>We forget that is just one NICs to potentially more than 8000 Mac Addresses. The card shared memory is not prepare for this!!!!!</li>
+<li>By default iptables is not prepared to make this number of connections simultaneously !!!!!!</li>
+</ol>
+<p>So...
+</p>
+<p>To the first issue...
+I get some error messages in the logs relative to this, I'm really sorry, I lost these logs and do not remember what they said. But the answer is this, increase the threshold memory to the neighbours.
+Type this and read:
+</p>
+<pre># cat /proc/sys/net/ipv4/neigh/default/gc_thresh1 
+128
+# cat /proc/sys/net/ipv4/neigh/default/gc_thresh2 
+512
+# cat /proc/sys/net/ipv4/neigh/default/gc_thresh3 
+1024
+</pre>
+<p>Next you can put this in the /etc/sysctrl.conf
+</p>
+<pre>net.ipv4.neigh.default.gc_thresh1 = 512
+net.ipv4.neigh.default.gc_thresh2 = 1024
+net.ipv4.neigh.default.gc_thresh3 = 2048
+</pre>
+<p>and make <i>sysctl -p</i> to increase to the double!!! (no reboot needed) with this I get no errors!!!!!
+</p>
+<p>The next part will need some comprehension about buckets and conntracks and hashsize (the way how iptables manage the nat connections).
+There is a very good document about this at <a rel="nofollow" class="external text" href="https://github.com/jeffmurphy/NetPass/blob/master/doc/netfilter_conntrack_perf.txt">here</a>. Read it!!!!
+Some thing are change since IPtables is know as Netfiler.
+</p>
+<p>In resume!!!
+Put this in your modules section:
+</p>
+<pre>MODULES=(8021q 'nf_conntrack hashsize=1048576' nf_conntrack_ftp 
+                               ...and other nf_stuff .......)
+</pre>
+<p>The last ones is just to avoid some problems that we have with ftp connections (I thing this is not necessary anymore).
+The '<b>nf_conntrack hashsize=1048576'</b> increase the numbers of the hashsize (increase the kernel memory designated to NAT connections) (need reboot or <b>reload module</b> :-) see with <i>dmesg | grep conntrack</i>)
+</p>
+<p>And the next is put some similar to the  <code>/etc/sysctl.d/99-sysctl.conf</code>: file
+</p>
+<pre>...
+net.netfilter.nf_conntrack_max = 1048576
+...
+</pre>
+<p>And do the <i>sysctl --system</i> command
+</p>
+<p>In my case is the same number, that means that I have 1 connection for bucket!!!! I do not need more!!!! by default NetFilter put rate of 1:8. I.E. 8 conections per bucket!! (I think, not remember well)..
+</p>
+<p>In our case we get about 600.000 simultaneous connections in 2 1Giga NICs cards, You can see this with the next command
+</p>
+<pre># cat /proc/sys/net/netfilter/nf_conntrack_count
+</pre>
+<p>And put this in a snmpd agent to get and graph it in a MRTG/cacti server   ..... uuuuuuu homework
+</p>
+<h2><span class="mw-headline" id="The_iproute2">The iproute2</span></h2>
+<p>We have 3 big access to Internet!!! This is because we manage 3 class C groups of IPs  (some restrictions of BGP) in this firewall. So, we have 3 incoming traffics that we can manage, but only one outgoing!!! Our default gateway.
+This can easily fill our outgoing quote, so we have to spare it. 
+</p>
+<p>First we have to put some new tables to <i>/etc/iproute2/rt_tables</i> file
+</p>
+<pre># echo 200 PRO_1 &gt;&gt; /etc/iproute2/rt_tables
+# echo 205 PRO_2 &gt;&gt; /etc/iproute2/rt_tables
+# echo 210 PRO_3 &gt;&gt; /etc/iproute2/rt_tables
+</pre>
+<p>Can be more, can be less, depends on traffic
+</p>
+<p>Second we have to give a default gateway to this tables
+</p>
+<pre># ip route add default via 200.aaa.bbb.2 table PRO_1
+# ip route add default via 200.aaa.bbb.3 table PRO_2
+# ip route add default via 200.aaa.bbb.4 table PRO_3
+</pre>
+<p>It's recommended but not necessary put the local interfaces to each table. If you do not put the next few lines you will get not answer of ping in the local network, but you will be able to pass trough.
+</p>
+<pre># ip route add 192.168.0.0/21 via 192.168.0.1 table PRO_1
+# ip route add 192.168.8.0/21 via 192.168.8.1 table PRO_1
+# ip route add 192.168.15.0/21 via 192.168.15.1 table PRO_1
+.....
+same PRO_2, same PRO_3
+</pre>
+<p>The last thing is to give the order to the incoming packages 
+</p>
+<pre># ip rule add from 192.168.0.0/21 table PRO_1
+....
+....
+</pre>
+<p>Again, you can play with the PRO_X and even you can play with the mask and submask
+For example we want to give only a one class C to outgoing to PRO_3
+</p>
+<pre># ip rule add from 192.168.1.0/24 table PRO_3
+</pre>
+<p>Put this before the &lt;NET&gt;/21
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Firewalls.html" title="Category:Firewalls">Firewalls</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=High_Performance_Firewall&amp;oldid=625084">https://wiki.archlinux.org/index.php?title=High_Performance_Firewall&amp;oldid=625084</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 July 2020, at 15:10.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

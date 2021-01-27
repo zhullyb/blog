@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>OpenVPN Bridge - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-OpenVPN_Bridge rootpage-OpenVPN_Bridge skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">OpenVPN Bridge</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This page describes how to create a network bridge on Arch Linux and host an OpenVPN server using a IP layer-2 based Ethernet bridge (TAP) rather than a IP layer-3 based IP tunnel (TUN). The general <a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a> page describes setting up PAM authentication or OpenSSL security certificates in more detail.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Introduction"><span class="tocnumber">1</span> <span class="toctext">Introduction</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Dynamic_Bridge_Installation"><span class="tocnumber">2</span> <span class="toctext">Dynamic Bridge Installation</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Dynamic_Bridge_Configuration"><span class="tocnumber">3</span> <span class="toctext">Dynamic Bridge Configuration</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Using_Systemd"><span class="tocnumber">4</span> <span class="toctext">Using Systemd</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Static_Bridge_Installation"><span class="tocnumber">5</span> <span class="toctext">Static Bridge Installation</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Static_Bridge_Configuration"><span class="tocnumber">6</span> <span class="toctext">Static Bridge Configuration</span></a></li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Static_Bridge_Troubleshooting"><span class="tocnumber">7</span> <span class="toctext">Static Bridge Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Failed_to_start_the_network"><span class="tocnumber">7.1</span> <span class="toctext">Failed to start the network</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#More_Resources"><span class="tocnumber">8</span> <span class="toctext">More Resources</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Introduction">Introduction</span></h2>
+<p>The <a rel="nofollow" class="external text" href="http://openvpn.net/index.php/open-source/documentation.html">OpenVPN documentation</a> page gives a full overview of server-side and client-side options that OpenVPN supports. It is easier to set up OpenVPN in tunneling mode and control routing the traffic and it is generally advised to do so if it serves your purpose. However, some network applications, such as Windows file sharing, rely on network broadcasts at the Ethernet level and benefit from believing they are physically located on the same subnet, and software bridging serves this purpose.
+</p>
+<p>There are multiple ways to set bridging up. The dynamic method is where OpenVPN will be managing its own bridge on the system and will start, stop and configure it itself. This is the quickest way to set bridging up, although it interrupts other network services when OpenVPN starts and stops. If the system is going to manage its own bridge, maybe because other virtual network adapters connect to the bridge besides just that of OpenVPN, then it is preferable to use the static method.
+</p>
+<h2><span class="mw-headline" id="Dynamic_Bridge_Installation">Dynamic Bridge Installation</span></h2>
+<p>You will need to <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> OpenVPN and Linux bridging utilities which are available in the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openvpn">openvpn</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bridge-utils">bridge-utils</a></span> packages.
+</p>
+<h2><span class="mw-headline" id="Dynamic_Bridge_Configuration">Dynamic Bridge Configuration</span></h2>
+<p>OpenVPN will create/destroy the TAP device automatically for the name specified in the config file. OpenVPN settings common to TUN or TAP are not shown in the example config file below, only settings that affect TAP mode. Make sure the <code>up</code> and <code>down</code> scripts are executable with <code>chmod +x</code> after you write them.
+</p>
+<p>(sections common to TUN and TAP omitted)
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/server.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># this uses a dhcp server, server-side
+#  clients must support binding their dhcp client to their tap adapter
+# do not append 'nogw' if using dhcp
+server-bridge
+# can specify interface, like tap0 or tap1
+#  or use up/down routing scripts to handle
+#  more than one, if needed
+dev tap0
+# needed to call scripts like up/down
+#  which call external programs within the scripts
+script-security 2
+# user defined scripts for adding/removing tap to bridge
+#  'dev mtu link_mtu ifconfig_local_ip ifconfig_remote_ip' are appended if set
+# make sure 'user' has permission to run 'down' ('up' will be root)
+up "up br0 eth0"
+down "down br0 eth0"
+# call 'down' before TUN/TAP close
+down-pre
+# drop root priveledges once connected
+#  good idea, for servers running on linux
+# 'up' script not affected, 'down' script is
+;user nobody
+;group nobody
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/up</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+br=$1
+eth=$2
+dev=$3
+mtu=$4
+cd /usr/bin/
+
+# only if you start dhcpcd and leave it
+#  running for eth
+#dhcpcd -k $eth
+
+# needed if script is run independently
+# but when run through openvpn
+# openvpn will do this automatically
+#  could also use 'ip tuntap ..'
+#openvpn --mktun --dev $dev
+
+brctl addbr $br
+# set forwarding delay to 0
+#  otherwise dhcp called below would timeout
+brctl setfd $br 0
+brctl addif $br $eth
+# order matters here.. right now there is only
+#  one mac in the bridge's table
+# if there were two.. there is no guarantee
+#  which would be passed to the dhcp server
+dhcpcd $br
+brctl addif $br $dev
+
+ip link set $eth up promisc on mtu $mtu
+ip link set $dev up promisc on mtu $mtu</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/down</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+br=$1
+eth=$2
+cd /usr/bin/
+
+dhcpcd -k $br
+
+ip link set $br down
+brctl delbr $br
+
+# needed if script is run independently
+# but when run through openvpn
+# openvpn will do this automatically
+#  could also use 'ip tuntap ..'
+#openvpn --rmtun --dev $dev
+
+# only if you start dhcpcd and leave it
+#  running for eth
+#dhcpcd $eth</pre>
+<p>These examples are for using dhcp. If you are going to use static IP addresses, you will need to adjust accordingly.
+</p>
+<h2><span class="mw-headline" id="Using_Systemd">Using Systemd</span></h2>
+<p>The OpenVPN systemd script looks for &lt;name&gt;.conf files in the /etc/openvpn folder by default. So assuming you have a file named server.conf, you can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and start <code>openvpn@server</code>.
+</p>
+<p>Be careful about having dhcpcd enabled separately (ie. dhcpcd@eth0.service) at the same time. It is possible, though unlikely, for it to complete after OpenVPN and ruin your dhcp setup for OpenVPN. You could probably disable dhcpcd@eth0.service since you know openvpn@server.service will be resetting dhcp anyway.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  The Static Bridge section does not describe a method using systemd at all. In addition, it may contain outdated information. It should be revised at some point.</div>
+<h2><span class="mw-headline" id="Static_Bridge_Installation">Static Bridge Installation</span></h2>
+<p>The first thing you want to do is <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> these packages: <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openvpn">openvpn</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bridge-utils">bridge-utils</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=netctl">netctl</a></span>.
+</p>
+<h2><span class="mw-headline" id="Static_Bridge_Configuration">Static Bridge Configuration</span></h2>
+<p>Earlier versions of guides for OpenVPN provided by the OpenVPN team or various Linux packagers give example scripts for constructing a bridge when starting OpenVPN and destroying it when shutting OpenVPN down. 
+</p>
+<p>However, this is a somewhat deprecated approach, since OpenVPN as of 2.1.1 defaults to not allowing itself to call external scripts or programs unless explicitly enabled to, for security reasons.
+</p>
+<p>Also, constructing the bridge is relatively slow compared to all other parts of the network initialization process. (In fact, so slow that dhcpcd will time out before the bridge is ready. See <a href="#Static_Bridge_Troubleshooting">#Static Bridge Troubleshooting</a>.) Also, when restarting OpenVPN after configuration changes, there is no reason to rebuild a working bridge, interrupting all your other network applications. So, setting up a static bridge configuration as follows is the recommended method.
+</p>
+<p>To create an OpenVPN bridge for your server, you are going to have to use <a href="../en/Netctl.html" title="Netctl">netctl</a> and create two network profiles - one for the tap interface and one for the bridge.
+</p>
+<p>Go to <code>/etc/netctl</code> and copy the tuntap example file to the directory:
+</p>
+<pre># cd /etc/netctl/
+# cp examples/tuntap openvpn_tap
+</pre>
+<p>Now edit <code>openvpn_tap</code> to create a tap interface. It may look like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/netctl/openvpn_tap</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Description='tuntap connection'
+Interface=tap0
+Connection=tuntap
+Mode='tap'
+User='nobody'
+Group='nobody'</pre>
+<p>Do not configure the IP address here, this is going to be done for the bridge interface!
+</p>
+<p>To create the <code>bridge</code> profile, copy the example file:
+</p>
+<pre># cp examples/bridge openvpn_bridge
+</pre>
+<p>Now edit <code>openvpn_bridge</code>. It may look like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/netctl/openvpn_bridge</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Description="Bridge connection"
+Interface=br0
+Connection=bridge
+BindsToInterfaces=(eth0 tap0)
+IP=static
+Address=('192.168.11.1/24')
+Gateway='192.168.11.254'
+DNS=('192.168.11.254')</pre>
+<p>For more information, for example how to use DHCP instead, check the <a href="../en/Netctl.html" title="Netctl">netctl</a> article.
+</p>
+<p>Now enable and start both profiles with:
+</p>
+<pre># netctl enable openvpn_tap
+# netctl enable openvpn_bridge
+# netctl start openvpn_tap
+# netctl start openvpn_bridge
+</pre>
+<h2><span class="mw-headline" id="Static_Bridge_Troubleshooting">Static Bridge Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Failed_to_start_the_network">Failed to start the network</span></h3>
+<p>This is probably because you are using DHCP on the bridge and setting up the bridge takes longer than dhcpcd is willing to wait. You can fix this by setting the FWD_DELAY parameter in your bridge network profile (openvpn_bridge). Start with a value of 5 and decrease it until it works.
+</p>
+<h2><span class="mw-headline" id="More_Resources">More Resources</span></h2>
+<ul><li>
+<a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a> - General page on configuring OpenVPN, including setting up authentication methods.</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=OpenVPN_Bridge&amp;oldid=633667">https://wiki.archlinux.org/index.php?title=OpenVPN_Bridge&amp;oldid=633667</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 29 August 2020, at 01:29.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

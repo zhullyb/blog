@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Package Proxy Cache - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Package_Proxy_Cache rootpage-Package_Proxy_Cache skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Package Proxy Cache</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Pacman/Tips_and_tricks.html#Network_shared_pacman_cache" title="Pacman/Tips and tricks">Pacman/Tips_and_tricks#Network_shared_pacman_cache</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> Same topic (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Package_Proxy_Cache">Talk:Package Proxy Cache#</a>)</div>
+</div>
+<p>If you want to install the same Arch packages over and over - like for testing AIF profiles - it could help if you wouldn't have to get the packages every time from the internet. This article shows you how to setup a <a href="../en/Squid.html" title="Squid">Squid</a> proxy that only caches arch packages and can be used with aif/pacman/wget/etc with minimal configuration on the client system.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Install_Squid"><span class="tocnumber">1</span> <span class="toctext">Install Squid</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configure_Squid"><span class="tocnumber">2</span> <span class="toctext">Configure Squid</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Cache_Rules"><span class="tocnumber">2.1</span> <span class="toctext">Cache Rules</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Maximum_Filesize"><span class="tocnumber">2.2</span> <span class="toctext">Maximum Filesize</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Cache_Directory"><span class="tocnumber">2.3</span> <span class="toctext">Cache Directory</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Shutdown_Lifetime"><span class="tocnumber">2.4</span> <span class="toctext">Shutdown Lifetime</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Start_Squid"><span class="tocnumber">3</span> <span class="toctext">Start Squid</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Follow_Squid_access_log"><span class="tocnumber">4</span> <span class="toctext">Follow Squid access log</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Manual_Arch_Install"><span class="tocnumber">5</span> <span class="toctext">Manual Arch Install</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#Intercepting_local_requests"><span class="tocnumber">6</span> <span class="toctext">Intercepting local requests</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Install_Squid">Install Squid</span></h2>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=squid">squid</a></span>.
+</p>
+<h2><span class="mw-headline" id="Configure_Squid">Configure Squid</span></h2>
+<p>This is the minimum configuration to get squid cache arch packages.
+</p>
+<h3><span class="mw-headline" id="Cache_Rules">Cache Rules</span></h3>
+<p>Before defining these rules, remove/comment (if you do not need them) all the default refresh_patterns
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/squid/squid.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">refresh_pattern \.pkg\.tar\.   0       20%     4320      reload-into-ims
+refresh_pattern .              0       0%      0</pre>
+<p>That should define that *.pkg.tar.* gets cached, and anything else should not.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external free" href="http://www.squid-cache.org/Doc/config/refresh_pattern">http://www.squid-cache.org/Doc/config/refresh_pattern</a>
+</div>
+<h3><span class="mw-headline" id="Maximum_Filesize">Maximum Filesize</span></h3>
+<p>Objects larger than this size will NOT be saved on disk:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/squid/squid.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">maximum_object_size 256 MB</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external free" href="http://www.squid-cache.org/Doc/config/maximum_object_size">http://www.squid-cache.org/Doc/config/maximum_object_size</a>
+</div>
+<h3><span class="mw-headline" id="Cache_Directory">Cache Directory</span></h3>
+<p>Set the cache dir and its maximum size and subdirs:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/squid/squid.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">cache_dir aufs /var/cache/squid 10000 16 256</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external free" href="http://www.squid-cache.org/Doc/config/cache_dir">http://www.squid-cache.org/Doc/config/cache_dir</a>
+</div>
+<h3><span class="mw-headline" id="Shutdown_Lifetime">Shutdown Lifetime</span></h3>
+<p>Time to wait until all active client sockets are closed:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/squid/squid.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">shutdown_lifetime 1 seconds </pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external free" href="http://www.squid-cache.org/Doc/config/shutdown_lifetime">http://www.squid-cache.org/Doc/config/shutdown_lifetime</a>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<p>Every time you change the cache_dir path (and after fresh install), you need to (re)create this directory:
+</p>
+<pre># squid -z</pre>
+<p>and it could be helpful to check the config file before running squid:
+</p>
+<pre># squid -k parse</pre>
+</div>
+<h2><span class="mw-headline" id="Start_Squid">Start Squid</span></h2>
+<pre># systemctl start squid.service</pre>
+<p>or if squid is already running:
+</p>
+<pre># systemctl restart squid.service</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<p>It could be helpful to check the config file before running:
+</p>
+<pre># squid -k check</pre>
+</div>
+<h2><span class="mw-headline" id="Follow_Squid_access_log">Follow Squid access log</span></h2>
+<p>To see the access to squid:
+</p>
+<pre># tail -f /var/log/squid/access.log</pre>
+<p>You should see this for packages that are directed to original host:
+</p>
+<pre>...TCP_MISS/200...DIRECT...</pre>
+<p>and for packages that are delivered from the cache:
+</p>
+<pre>...TCP_HIT/200...NONE...</pre>
+<h2><span class="mw-headline" id="Manual_Arch_Install">Manual Arch Install</span></h2>
+<p>Before running /arch/setup, add variables for your proxy. To do so, run on the console:
+</p>
+<pre># export http_proxy='http://<i>your_squid_machine_ip</i>:3128/'
+# export ftp_proxy='ftp://<i>your_squid_machine_ip</i>:3128/'
+</pre>
+<p>Now just use /arch/setup to normally install the system, and it should use your proxy. Watch the squid logs to verify this.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you want to use the proxy settings in the installed system, you need to add the http_proxy and/or ftp_proxy variables in an appropriate place on the installed system. (like /etc/profile.d/proxy.sh)</div>
+<h2><span class="mw-headline" id="Intercepting_local_requests">Intercepting local requests</span></h2>
+<p>If you want all HTTP requests on local machine <i>automagically</i> go through squid, we first need to add an intercepting port for squid:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/squid/squid.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http_port 3127 intercept</pre>
+<p>and iptables rules to redirect all (except the ones from squid) port 80 requests to squid:
+</p>
+<pre># iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --uid-owner proxy -j ACCEPT
+# iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-ports 3127</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external free" href="http://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxLocalhost">http://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxLocalhost</a>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+if you get random slow download speeds in vagrant/packer/virtualbox, try using <code>virtio</code> network device type.</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Package_management.html" title="Category:Package management">Package management</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Package_Proxy_Cache&amp;oldid=607269">https://wiki.archlinux.org/index.php?title=Package_Proxy_Cache&amp;oldid=607269</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 22 April 2020, at 11:40.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

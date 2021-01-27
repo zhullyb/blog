@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>ZTE MF 823 (Megafon M100-3) 4G Modem - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-ZTE_MF_823_Megafon_M100-3_4G_Modem rootpage-ZTE_MF_823_Megafon_M100-3_4G_Modem skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">ZTE MF 823 (Megafon M100-3) 4G Modem</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Preparations"><span class="tocnumber">1</span> <span class="toctext">Preparations</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Device_Identification"><span class="tocnumber">2</span> <span class="toctext">Device Identification</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Ethernet_Connection_Established"><span class="tocnumber">3</span> <span class="toctext">Ethernet Connection Established</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Commands"><span class="tocnumber">4</span> <span class="toctext">Commands</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Telnet_Connection"><span class="tocnumber">5</span> <span class="toctext">Telnet Connection</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Possible_usage_with_product_code_1403"><span class="tocnumber">6</span> <span class="toctext">Possible usage with product code 1403</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Preparations">Preparations</span></h2>
+<p>As described bellow, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=usb_modeswitch">usb_modeswitch</a></span> will likely comes out handy. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> it.
+</p>
+<h2><span class="mw-headline" id="Device_Identification">Device Identification</span></h2>
+<p>Examine the output of <code>lsusb</code>. When the device is switched to an 1405 product code you will get:
+</p>
+<pre>$ Bus 002 Device 018: ID 19d2:1405 ZTE WCDMA Technologies MSM 
+</pre>
+<p>Here are the USB product codes for this device:
+</p>
+<dl>
+<dt>1225</dt>
+<dd>Default mode in which the device looks like a USB Mass Storage Device with CD-ROM inteface, and a card reader. Corresponds to AT+ZCDRUN=9+AT+ZCDRUN=F</dd>
+</dl>
+<dl>
+<dt>1403</dt>
+<dd>A Communication mode in which the device has an <a href="https://en.wikipedia.org/wiki/RNDIS" class="extiw" title="wikipedia:RNDIS">wikipedia:RNDIS</a> like interface in addition to the card reader interface. The <a rel="nofollow" class="external text" href="https://cateee.net/lkddb/web-lkddb/USB_NET_RNDIS_HOST.html">non recommended</a> <a href="../en/Kernel_module.html" title="Kernel module">kernel module</a> rndis_host might handle such an interface. Corresponds to AT+ZCDRUN=8+AT+ZCDRUN=F.</dd>
+</dl>
+<dl>
+<dt>1405</dt>
+<dd>A communication mode in which the device has a <a href="https://en.wikipedia.org/wiki/USB_communications_device_class" class="extiw" title="wikipedia:USB communications device class">wikipedia:USB communications device class</a> interface in addition to the card reader interface. Communications Device Class (CDC) should work in Linux. The cdc_ether kernel module is required. This mode will be the one <code>usb_modeswitch</code> will switch the device into.</dd>
+</dl>
+<dl>
+<dt>0016</dt>
+<dd>Download Mode. Under the name of ZTE., but simply a mode where available diagnostic port and two command (analog modem port and PC UI devices Huawei). Corresponds to AT+ZCDRUN=E</dd>
+</dl>
+<dl>
+<dt>0076</dt>
+<dd>"real" Download Mode. Includes a standard for devices running QC methods.</dd>
+</dl>
+<p>If your modem does not appear as 19d2:1405 (or 1403), check the <a href="../en/USB_3G_Modem.html#Mode_switching" title="USB 3G Modem">USB 3G Modem#Mode switching</a> article.
+</p>
+<h2><span class="mw-headline" id="Ethernet_Connection_Established">Ethernet Connection Established</span></h2>
+<p>When the device has an Ethernet interface the usual <a href="../en/Network_configuration.html" title="Network configuration">Network configuration</a> programs should handle it. When they are, you will see that the LED (Blue - 2G/3G or Green - 4G) on modem is not blinking. To establish a connection, the following link (CGI command) should be entered in a browser:
+</p>
+<p><a rel="nofollow" class="external free" href="http://192.168.0.1/goform/goform_set_cmd_process?goformId=CONNECT_NETWORK">http://192.168.0.1/goform/goform_set_cmd_process?goformId=CONNECT_NETWORK</a>
+</p>
+<p>To avoid entering this link every time, switch the device to auto-connection mode:
+</p>
+<p><a rel="nofollow" class="external free" href="http://192.168.0.1/goform/goform_set_cmd_process?goformId=SET_CONNECTION_MODE&amp;ConnectionMode=auto_dial">http://192.168.0.1/goform/goform_set_cmd_process?goformId=SET_CONNECTION_MODE&amp;ConnectionMode=auto_dial</a>
+</p>
+<p>If you are setting up internet using a <a href="../en/Command-line_shell.html" title="Command-line shell">command-line shell</a> you should make request with referrer, as in:
+</p>
+<pre>curl --header "Referer: <a rel="nofollow" class="external free" href="http://192.168.0.1/index.html">http://192.168.0.1/index.html</a>" <a rel="nofollow" class="external free" href="http://192.168.0.1/goform/goform_set_cmd_process?goformId=CONNECT_NETWORK">http://192.168.0.1/goform/goform_set_cmd_process?goformId=CONNECT_NETWORK</a>
+</pre>
+<p>otherwise you'll get response {"result":"faulure"}
+</p>
+<h2><span class="mw-headline" id="Commands">Commands</span></h2>
+<p>CGI command for 2G/3G/4G mode selection:
+</p>
+<pre>http://192.168.0.1/goform/goform_set_cmd_process?goformId=SET_BEARER_PREFERENCE&amp;BearerPreference=</pre>
+<p>following options available after "=" sign (case-sensetive)
+</p>
+<pre>NETWORK_auto
+WCDMA_preferred
+GSM_preferred
+Only_GSM
+Only_WCDMA
+Only_LTE
+WCDMA_AND_GSM
+WCDMA_AND_LTE
+GSM_AND_LTE
+</pre>
+<p>This should be followed by the <b>NETWORK CONNECT</b> CGI command given before.
+</p>
+<p>To switch the modem to <b>FACTORY mode</b> (<b>WARNING! Unable to recieve further CGI commands, connection will be lost!</b>), issue this link: 
+</p>
+<pre>http://192.168.0.1/goform/goform_process?goformId=MODE_SWITCH&amp;switchCmd=FACTORY
+</pre>
+<p>You may then need to run the following command (as root) in order to access the AT command serial port:
+</p>
+<pre># echo 0x19d2 0x16 &gt; /sys/module/usbserial/drivers/usb-serial:generic/new_id
+</pre>
+<p>The port should appear as <code>/dev/ttyUSB<var>n</var></code>, e.g. <code>/dev/ttyUSB1</code>. When you discover the command port, you can use your favourite serial terminal emulation program to control the device. The commands below may be especially useful (here shown with <a rel="nofollow" class="external text" href="//github.com/imZack/modem-cmd">modem-cmd</a>):
+</p>
+<pre># modem-cmd /dev/ttyUSB1 AT+ZCDRUN=8     # switch to 1403 mode (RNDIS)
+# modem-cmd /dev/ttyUSB1 AT+ZCDRUN=9     # switch to 1225 mode (default)
+# modem-cmd /dev/ttyUSB1 AT+ZCDRUN=F     # exit DOWNLOAD mode and switch to selected mode (RNDIS or default)
+</pre>
+<h2><span class="mw-headline" id="Telnet_Connection">Telnet Connection</span></h2>
+<p>The modem is available for <a href="../en/Telnet.html" title="Telnet">telnet</a> connection:
+</p>
+<pre>telnet 192.168.0.1
+login: root
+password: zte9x15
+</pre>
+<p>As you can see, the modem has an embeded Linux system inside. You can even install some ARM-base packages (mc, nano...) or change something in Web-menu. Explore it carefully!
+</p>
+<h2><span class="mw-headline" id="Possible_usage_with_product_code_1403">Possible usage with product code 1403</span></h2>
+<p>For some reason this device can get stuck in mode 0016 and fails to switch to any other mode. I was unsuccessful in trying to switch modes using <code>usb_modeswitch</code> or sending AT commands to /dev/ttyUSB0 on various Linux systems. I successfully managed to change modes from 0016 to 1403 using Mac OSX. I was then able to use the dongle on Linux.
+</p>
+<p>In mode 0016 on OSX you will see the follow interfaces:
+</p>
+<pre>/dev/tty.ZTEUSBATPort_
+/dev/tty.ZTEUSBModem_
+/dev/tty.ZTEUSBDIAGPort_
+</pre>
+<p>You can switch modes to 1403 by sending AT commands to the USBModem_ port by doing:
+</p>
+<pre>screen /dev/tty.ZTEUSBModem_ 9600
+
+&gt;&gt;ATI
+Manufacturer: ZTE CORPORATION
+Model: MF823
+Revision: MF823_T03
+IMEI: 866948013728723
++GCAP: +CGSM
+
+&gt;&gt;AT+CREG?
++CREG: 0,1
+OK
+
+&gt;&gt;AT+COPS?
++COPS: 0,0,"Telstra Mobile",7
+OK
+
+&gt;&gt;AT+ZCDRUN=8+AT+ZCDRUN=F
+exit download mode result(0:FAIL 1:SUCCESS):1
+OK
+</pre>
+<p>Now the device should act as a ethernet interface no matter which system you plug it into.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<p><a rel="nofollow" class="external text" href="http://forums.whirlpool.net.au/archive/2212748">whirlpool.net.au</a> - Linux &amp; Serial Diags
+</p>
+<p><a rel="nofollow" class="external text" href="http://www.gsmforum.ru/threads/188925-ZTE-MF823-%D0%B8-%D0%B2%D1%81%D1%91-%D1%87%D1%82%D0%BE-%D1%81-%D0%BD%D0%B8%D0%BC-%D1%81%D0%B2%D1%8F%D0%B7%D0%B0%D0%BD%D0%BE?p=934477&amp;viewfull=1#post934477">gsmforum.ru</a> - ZTE MF823 thread (in Russian)
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Modems.html" title="Category:Modems">Modems</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=ZTE_MF_823_(Megafon_M100-3)_4G_Modem&amp;oldid=601216">https://wiki.archlinux.org/index.php?title=ZTE_MF_823_(Megafon_M100-3)_4G_Modem&amp;oldid=601216</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 March 2020, at 07:39.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

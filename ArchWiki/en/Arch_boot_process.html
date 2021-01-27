@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch boot process - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_boot_process rootpage-Arch_boot_process skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch boot process</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a></li>
+<li><a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table</a></li>
+<li><a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">Unified Extensible Firmware Interface</a></li>
+<li><a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a></li>
+<li><a href="../en/Init.html" title="Init">init</a></li>
+<li><a href="../en/Systemd.html" title="Systemd">systemd</a></li>
+<li><a href="../en/Fstab.html" title="Fstab">fstab</a></li>
+<li><a href="../en/Autostarting.html" title="Autostarting">Autostarting</a></li>
+</ul>
+</div>
+<p>In order to boot Arch Linux, a Linux-capable <a href="#Boot_loader">boot loader</a> must be set up. The boot loader is responsible for loading the kernel and <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initial ramdisk">initial ramdisk</a> before initiating the boot process. The procedure is quite different for <a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a> and <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> systems, the detailed description is given on this or linked pages.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Firmware_types"><span class="tocnumber">1</span> <span class="toctext">Firmware types</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#BIOS"><span class="tocnumber">1.1</span> <span class="toctext">BIOS</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#UEFI"><span class="tocnumber">1.2</span> <span class="toctext">UEFI</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#System_initialization"><span class="tocnumber">2</span> <span class="toctext">System initialization</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Under_BIOS"><span class="tocnumber">2.1</span> <span class="toctext">Under BIOS</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Under_UEFI"><span class="tocnumber">2.2</span> <span class="toctext">Under UEFI</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Multibooting_in_UEFI"><span class="tocnumber">2.3</span> <span class="toctext">Multibooting in UEFI</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Boot_loader"><span class="tocnumber">3</span> <span class="toctext">Boot loader</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Feature_comparison"><span class="tocnumber">3.1</span> <span class="toctext">Feature comparison</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Kernel"><span class="tocnumber">4</span> <span class="toctext">Kernel</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#initramfs"><span class="tocnumber">5</span> <span class="toctext">initramfs</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#init_process"><span class="tocnumber">6</span> <span class="toctext">init process</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#getty"><span class="tocnumber">7</span> <span class="toctext">getty</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#Display_manager"><span class="tocnumber">8</span> <span class="toctext">Display manager</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#Login"><span class="tocnumber">9</span> <span class="toctext">Login</span></a></li>
+<li class="toclevel-1 tocsection-16"><a href="#Shell"><span class="tocnumber">10</span> <span class="toctext">Shell</span></a></li>
+<li class="toclevel-1 tocsection-17"><a href="#GUI,_xinit_or_wayland"><span class="tocnumber">11</span> <span class="toctext">GUI, xinit or wayland</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#See_also"><span class="tocnumber">12</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Firmware_types">Firmware types</span></h2>
+<h3><span class="mw-headline" id="BIOS">BIOS</span></h3>
+<p>A <a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a> or Basic Input-Output System is the very first program (firmware) that is executed once the system is switched on. In most cases it is stored in a flash memory in the motherboard itself and independent of the system storage.
+</p>
+<h3><span class="mw-headline" id="UEFI">UEFI</span></h3>
+<p><a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">Unified Extensible Firmware Interface</a> has support for reading both the partition table as well as file systems. UEFI does not launch any <a href="../en/Partitioning.html#Master_Boot_Record_(bootstrap_code)" title="Partitioning">boot code from the Master Boot Record (MBR)</a> whether it exists or not, instead booting relies on boot entries in the <a href="https://en.wikipedia.org/wiki/Non-volatile_random-access_memory" class="extiw" title="wikipedia:Non-volatile random-access memory">NVRAM</a>.
+</p>
+<p>The UEFI specification mandates support for the <a href="../en/FAT.html" title="FAT">FAT12, FAT16, and FAT32</a> file systems (see <a rel="nofollow" class="external text" href="https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf#G17.1019485">UEFI specification version 2.8, section 13.3.1.1</a>), but any conformant vendor can optionally add support for additional filesystems; for example, Apple <a href="../en/Mac.html" title="Mac">Macs</a> support (and by default use) their own HFS+ filesystem drivers. UEFI implementations also support ISO-9660 for optical discs.
+</p>
+<p>UEFI launches EFI applications, e.g. <a href="#Boot_loader">boot loaders</a>, boot managers, <a href="../en/Unified_Extensible_Firmware_Interface.html#UEFI_Shell" class="mw-redirect" title="UEFI shell">UEFI shell</a>, etc. These applications are usually stored as files in the <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a>. Each vendor can store its files in the EFI system partition under the <code>/EFI/<i>vendor_name</i></code> folder. The applications can be launched by adding a boot entry to the NVRAM or from the UEFI shell.
+</p>
+<p>The UEFI specification has support for legacy BIOS booting with its <a href="https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface#CSM_booting" class="extiw" title="wikipedia:Unified Extensible Firmware Interface">Compatibility Support Module (CSM)</a>. If CSM is enabled in the UEFI, the UEFI will generate CSM boot entries for all drives. If a CSM boot entry is chosen to be booted from, the UEFI's CSM will attempt to boot from the drive's MBR bootstrap code.
+</p>
+<h2><span class="mw-headline" id="System_initialization">System initialization</span></h2>
+<h3><span class="mw-headline" id="Under_BIOS">Under BIOS</span></h3>
+<ol>
+<li>System switched on, the <a href="https://en.wikipedia.org/wiki/Power-on_self-test" class="extiw" title="wikipedia:Power-on self-test">power-on self-test (POST)</a> is executed.</li>
+<li>After POST, BIOS initializes the hardware required for booting (disk, keyboard controllers etc.).</li>
+<li>BIOS launches the first 440 bytes (<a href="../en/Partitioning.html#Master_Boot_Record_(bootstrap_code)" title="Partitioning">the Master Boot Record bootstrap code area</a>) of the first disk in the BIOS disk order.</li>
+<li>The boot loader's first stage in the MBR boot code then launches its second stage code (if any) from either:
+<ul>
+<li>next disk sectors after the MBR, i.e. the so called post-MBR gap (only on a MBR partition table).</li>
+<li>a partition's or a partitionless disk's <a href="https://en.wikipedia.org/wiki/Volume_boot_record" class="extiw" title="wikipedia:Volume boot record">volume boot record (VBR)</a>.</li>
+<li>the <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="BIOS boot partition">BIOS boot partition</a> (<a href="../en/GRUB.html" title="GRUB">GRUB</a> on BIOS/GPT only).</li>
+</ul>
+</li>
+<li>The actual <a href="#Boot_loader">boot loader</a> is launched.</li>
+<li>The boot loader then loads an operating system by either chain-loading or directly loading the operating system kernel.</li>
+</ol>
+<h3><span class="mw-headline" id="Under_UEFI">Under UEFI</span></h3>
+<ol>
+<li>System switched on, the <a href="https://en.wikipedia.org/wiki/Power-on_self-test" class="extiw" title="wikipedia:Power-on self-test">power-on self-test (POST)</a> is executed.</li>
+<li>After POST, UEFI initializes the hardware required for booting (disk, keyboard controllers etc.).</li>
+<li>Firmware reads the boot entries in the NVRAM to determine which EFI application to launch and from where (e.g. from which disk and partition).
+<ul><li>A boot entry could simply be a disk. In this case the firmware looks for an <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a> on that disk and tries to find an EFI application in the fallback boot path <code>\EFI\BOOT\BOOTX64.EFI</code> (<code>BOOTIA32.EFI</code> on <a href="../en/Unified_Extensible_Firmware_Interface.html#UEFI_firmware_bitness" title="Unified Extensible Firmware Interface">systems with a IA32 (32-bit) UEFI</a>). This is how UEFI bootable removable media work.</li></ul>
+</li>
+<li>Firmware launches the EFI application.
+<ul>
+<li>This could be a <a href="#Boot_loader">boot loader</a> or the Arch <a href="../en/Kernel.html" title="Kernel">kernel</a> itself using <a href="../en/EFISTUB.html" title="EFISTUB">EFISTUB</a>.</li>
+<li>It could be some other EFI application such as a UEFI shell or a <a href="#Boot_loader">boot manager</a> like <a href="../en/Systemd-boot.html" title="Systemd-boot">systemd-boot</a> or <a href="../en/REFInd.html" title="REFInd">rEFInd</a>.</li>
+</ul>
+</li>
+</ol>
+<p>If <a href="../en/Unified_Extensible_Firmware_Interface/Secure_Boot.html" class="mw-redirect" title="Secure Boot">Secure Boot</a> is enabled, the boot process will verify authenticity of the EFI binary by signature.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Some UEFI systems can only boot from the fallback boot path.</div>
+<h3><span class="mw-headline" id="Multibooting_in_UEFI">Multibooting in UEFI</span></h3>
+<p>Since each OS or vendor can maintain its own files within the <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a> without affecting the other, multi-booting using UEFI is just a matter of launching a different EFI application corresponding to the particular operating system's boot loader. This removes the need for relying on <a href="https://en.wikipedia.org/wiki/Chain_loading" class="extiw" title="wikipedia:Chain loading">chain loading</a> mechanisms of one <a href="#Boot_loader">boot loader</a> to load another OS.
+</p>
+<p>See also <a href="../en/Dual_boot_with_Windows.html" title="Dual boot with Windows">Dual boot with Windows</a>.
+</p>
+<h2><span class="mw-headline" id="Boot_loader">Boot loader</span></h2>
+<p>A boot loader is a piece of software started by the firmware (<a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a> or <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>). It is responsible for loading the kernel with the wanted <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>, and <a href="../en/Mkinitcpio.html" title="Mkinitcpio">initial RAM disk</a> based on configuration files. In the case of UEFI, the kernel itself can be directly launched by the UEFI using the EFI boot stub. A separate boot loader or boot manager can still be used for the purpose of editing kernel parameters before booting.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> A boot loader must be able to access the kernel and initramfs image(s), otherwise the system will not boot. Thus, in a typical setup, it must support accessing <code>/boot</code>. That means it must have support for everything starting from the block devices, stacked block devices (LVM, RAID, dm-crypt, LUKS, etc) and ending with the file system on which the kernel(s) and initramfs image(s) reside.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Loading <a href="../en/Microcode.html" title="Microcode">Microcode</a> updates requires adjustments in boot loader configuration. <a rel="nofollow" class="external autonumber" href="https://archlinux.org/news/changes-to-intel-microcodeupdates/">[1]</a>
+</div>
+<h3><span class="mw-headline" id="Feature_comparison">Feature comparison</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>As GPT is part of the UEFI specification, all UEFI boot loaders support GPT disks. GPT on BIOS systems is possible, using either "hybrid booting" with <a rel="nofollow" class="external text" href="https://www.rodsbooks.com/gdisk/hybrid.html">Hybrid MBR</a>, or the new <a rel="nofollow" class="external text" href="http://repo.or.cz/syslinux.git/blob/HEAD:/doc/gpt.txt">GPT-only</a> protocol. This protocol may however cause issues with certain BIOS implementations; see <a rel="nofollow" class="external text" href="http://www.rodsbooks.com/gdisk/bios.html#bios">rodsbooks</a> for details.</li>
+<li>Encryption mentioned in file system support is <a href="https://en.wikipedia.org/wiki/Filesystem-level_encryption" class="extiw" title="wikipedia:Filesystem-level encryption">filesystem-level encryption</a>, it has no bearing on <a href="../en/Dm-crypt.html" title="Dm-crypt">block-level encryption</a>.</li>
+</ul>
+</div>
+<table class="wikitable sortable">
+<tbody>
+<tr>
+<th rowspan="2">Name
+</th>
+<th colspan="2">Firmware
+</th>
+<th colspan="2">
+<a href="../en/Partitioning.html#Partition_table" class="mw-redirect" title="Partition table">Partition table</a>
+</th>
+<th rowspan="2">Multi-boot
+</th>
+<th colspan="5">
+<a href="../en/File_systems.html" title="File systems">File systems</a>
+</th>
+<th rowspan="2">Notes
+</th>
+</tr>
+<tr>
+<th>BIOS</th>
+<th>
+<a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>
+</th>
+<th><a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="MBR">MBR</a></th>
+<th>
+<a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a>
+</th>
+<th><a href="../en/Btrfs.html" title="Btrfs">Btrfs</a></th>
+<th><a href="../en/Ext4.html" title="Ext4">ext4</a></th>
+<th>ReiserFS</th>
+<th><a href="../en/FAT.html" class="mw-redirect" title="VFAT">VFAT</a></th>
+<th>
+<a href="../en/XFS.html" title="XFS">XFS</a>
+</th>
+</tr>
+<tr>
+<th>
+<a href="../en/EFISTUB.html" title="EFISTUB">EFISTUB</a>
+</th>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Inherited from firmware<sup>1</sup>
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+<td>Kernel turned into EFI executable to be loaded directly from <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> firmware or another boot loader.
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/Clover.html" title="Clover">Clover</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Emulates UEFI</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes<sup>2</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without encryption</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Inherited from firmware<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td>Fork of rEFIt modified to run <a href="https://en.wikipedia.org/wiki/Hackintosh" class="extiw" title="wikipedia:Hackintosh">macOS on non-Apple hardware</a>.
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/GRUB.html" title="GRUB">GRUB</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td>On BIOS/GPT configuration requires a <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="BIOS boot partition">BIOS boot partition</a>. <br>Supports RAID, LUKS1 and LVM (but not thin provisioned volumes).
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/REFInd.html" title="REFInd">rEFInd</a>
+</th>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes<sup>2</sup>
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without encryption</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without encryption</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without tail-packing feature</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Inherited from firmware<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td>Supports auto-detecting kernels and parameters without explicit configuration, and supports fastboot <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=258805">[2]</a>.
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/Syslinux.html" title="Syslinux">Syslinux</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/Syslinux.html#Limitations_of_UEFI_Syslinux" title="Syslinux">Partial</a>
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/Syslinux.html#Chainloading" title="Syslinux">Partial</a>
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without: multi-device volumes, compression, encryption</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without encryption</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">MBR only; without sparse inodes
+</td>
+<td>No support for certain <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a> features.<a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php?title=Filesystem">[3]</a> <br>Does not have file system drivers<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=33">[4]</a>, can only access the file system it was installed to.
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/Systemd-boot.html" title="Systemd-boot">systemd-boot</a>
+</th>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;"><a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/1125">Manual install only</a></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes<sup>2</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Inherited from firmware<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td>Cannot launch binaries from partitions other than the <a href="../en/EFI_system_partition.html" class="mw-redirect" title="ESP">ESP</a> or the Extended Boot Loader Partition (XBOOTLDR partition).
+</td>
+</tr>
+<tr>
+<th style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/GRUB_Legacy.html" title="GRUB Legacy">GRUB Legacy</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">XFS v4 only
+</td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.gnu.org/software/grub/grub-legacy.html">Discontinued</a> in favor of <a href="../en/GRUB.html" title="GRUB">GRUB</a>.
+</td>
+</tr>
+<tr>
+<th style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/LILO.html" title="LILO">LILO</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Without encryption</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">
+<a rel="nofollow" class="external text" href="http://xfs.org/index.php/XFS_FAQ#Q:_Does_LILO_work_with_XFS.3F">Yes</a>
+</td>
+<td>
+<a rel="nofollow" class="external text" href="https://web.archive.org/web/20180323163248/http://lilo.alioth.debian.org/">Discontinued</a> due to limitations (e.g. with Btrfs, GPT, RAID).
+</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>File system support is inherited from the firmware. The UEFI specification mandates support for the FAT12, FAT16 and FAT32 file systems<a rel="nofollow" class="external autonumber" href="https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf#G17.1345080">[5]</a>, but vendors can optionally add support for additional file systems; for example, the firmware in Apple <a href="../en/Mac.html" title="Mac">Macs</a> supports the HFS+ file system. If the firmware provides an interface for loading <a href="../en/Unified_Extensible_Firmware_Interface.html#UEFI_drivers" title="Unified Extensible Firmware Interface">UEFI drivers</a> on startup, then support for additional file systems can be added by loading (independently acquired) file system drivers.</li>
+<li>A <a rel="nofollow" class="external text" href="https://www.rodsbooks.com/efi-bootloaders/principles.html">boot manager</a>. It can only launch other EFI applications, for example, Linux kernel images built with <code>CONFIG_EFI_STUB=y</code> and Windows <code>bootmgfw.efi</code>.</li>
+</ol>
+<p>See also <a href="https://en.wikipedia.org/wiki/Comparison_of_boot_loaders" class="extiw" title="wikipedia:Comparison of boot loaders">Wikipedia:Comparison of boot loaders</a>.
+</p>
+<h2><span class="mw-headline" id="Kernel">Kernel</span></h2>
+<p>The <a href="../en/Kernel.html" title="Kernel">kernel</a> is the core of an operating system. It functions on a low level (<i>kernelspace</i>) interacting between the hardware of the machine and the programs which use the hardware to run. The kernel temporarily stops programs to run other programs in the meantime, which is known as <a href="https://en.wikipedia.org/wiki/Preemption_(computing)" class="extiw" title="wikipedia:Preemption (computing)">preemption</a>. This creates the illusion of many tasks being executed simultaneously, even on single-core CPUs. The kernel uses the CPU scheduler to decide which program takes priority at any given moment.
+</p>
+<h2><span class="mw-headline" id="initramfs">initramfs</span></h2>
+<p>After the <a href="#Boot_loader">boot loader</a> loads the <a href="../en/Kernel.html" title="Kernel">kernel</a> and possible initramfs files and executes the kernel, the kernel unpacks the initramfs (initial RAM filesystem) archives into the (then empty) rootfs (initial root filesystem, specifically a ramfs or tmpfs). The first extracted initramfs is the one embedded in the kernel binary during the kernel build, then possible external initramfs files are extracted. Thus files in the external initramfs overwrite files with the same name in the embedded initramfs. The kernel then executes <code>/init</code> (in the rootfs) as the first process. The <i>early userspace</i> starts.
+</p>
+<p>Arch Linux uses an empty archive for the builtin initramfs (which is the default when building Linux). See <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> for more and Arch-specific info about the external initramfs.
+</p>
+<p>The purpose of the initramfs is to bootstrap the system to the point where it can access the root filesystem (see <a href="../en/Frequently_asked_questions.html#Does_Arch_follow_the_Linux_Foundation's_Filesystem_Hierarchy_Standard_(FHS)?" class="mw-redirect" title="FHS">FHS</a> for details). This means that any modules that are required for devices like IDE, SCSI, SATA, USB/FW (if booting from an external drive) must be loadable from the initramfs if not built into the kernel; once the proper modules are loaded (either explicitly via a program or script, or implicitly via <a href="../en/Udev.html" title="Udev">udev</a>), the boot process continues. For this reason, the initramfs only needs to contain the modules necessary to access the root filesystem; it does not need to contain every module one would ever want to use. The majority of modules will be loaded later on by udev, during the init process.
+</p>
+<h2><span class="mw-headline" id="init_process">init process</span></h2>
+<p>At the final stage of early userspace, the real root is mounted, and then replaces the initial root filesystem. <code>/sbin/init</code> is executed, replacing the <code>/init</code> process. Arch uses <a href="../en/Systemd.html" title="Systemd">systemd</a> as the default <a href="../en/Init.html" title="Init">init</a>.
+</p>
+<h2><span class="mw-headline" id="getty">getty</span></h2>
+<p><a href="../en/Init.html" title="Init">init</a> calls <a href="../en/Getty.html" title="Getty">getty</a> once for each <a href="https://en.wikipedia.org/wiki/Virtual_console" class="extiw" title="wikipedia:Virtual console">virtual terminal</a> (typically six of them), which initializes each tty and asks for a username and password. Once the username and password are provided, getty checks them against <code>/etc/passwd</code> and <code>/etc/shadow</code>, then calls <a href="#Login">login</a>. Alternatively, getty may start a display manager if one is present on the system.
+</p>
+<h2><span class="mw-headline" id="Display_manager">Display manager</span></h2>
+<p>A <a href="../en/Display_manager.html" title="Display manager">display manager</a> can be configured to replace the getty login prompt on a tty.
+</p>
+<p>In order to automatically initialize a display manager after booting, it is necessary to manually enable the service unit through <a href="../en/Systemd.html" title="Systemd">systemd</a>. For more information on enabling and starting service units, see <a href="../en/Systemd.html#Using_units" title="Systemd">systemd#Using units</a>. 
+</p>
+<h2><span class="mw-headline" id="Login">Login</span></h2>
+<p>The <i>login</i> program begins a session for the user by setting environment variables and starting the user's shell, based on <code>/etc/passwd</code>.
+</p>
+<p>The <i>login</i> program displays the contents of <a href="https://en.wikipedia.org/wiki/motd_(Unix)" class="extiw" title="wikipedia:motd (Unix)">/etc/motd</a> (<i>m</i>essage <i>o</i>f <i>t</i>he <i>d</i>ay) after a successful login, just before it executes the login shell. It is a good place to display your Terms of Service to remind users of your local policies or anything you wish to tell them.
+</p>
+<h2><span class="mw-headline" id="Shell">Shell</span></h2>
+<p>Once the user's <a href="../en/Command-line_shell.html" class="mw-redirect" title="Shell">shell</a> is started, it will typically run a runtime configuration file, such as <a href="../en/Bash.html#Configuration_files" class="mw-redirect" title="Bashrc">bashrc</a>, before presenting a prompt to the user. If the account is configured to <a href="../en/Xinit.html#Autostart_X_at_login" class="mw-redirect" title="Start X at login">Start X at login</a>, the runtime configuration file will call <a href="../en/Xinit.html" class="mw-redirect" title="Startx">startx</a> or <a href="../en/Xinit.html" title="Xinit">xinit</a>.
+</p>
+<h2>
+<span id="GUI.2C_xinit_or_wayland"></span><span class="mw-headline" id="GUI,_xinit_or_wayland">GUI, xinit or wayland</span>
+</h2>
+<p><a href="../en/Xinit.html" title="Xinit">xinit</a> runs the user's <a href="../en/Xinit.html#xinitrc" class="mw-redirect" title="Xinitrc">xinitrc</a> runtime configuration file, which normally starts a <a href="../en/Window_manager.html" title="Window manager">window manager</a>. When the user is finished and exits the window manager, <i>xinit</i>, <i>startx</i>, the shell, and login will terminate in that order, returning to <a href="#getty">getty</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://web.archive.org/web/20150430223035/http://archlinux.me/brain0/2010/02/13/early-userspace-in-arch-linux/">Early Userspace in Arch Linux</a></li>
+<li><a rel="nofollow" class="external text" href="https://developer.ibm.com/articles/l-linuxboot/">Inside the Linux boot process</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linux_startup_process" class="extiw" title="wikipedia:Linux startup process">Wikipedia:Linux startup process</a></li>
+<li><a href="https://en.wikipedia.org/wiki/initrd" class="extiw" title="wikipedia:initrd">Wikipedia:initrd</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.cyberciti.biz/faq/grub-boot-into-single-user-mode/">Boot Linux Grub Into Single User Mode</a></li>
+<li><a rel="nofollow" class="external text" href="https://neosmart.net/wiki/mbr-boot-process/">NeoSmart: The BIOS/MBR Boot Process</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.linux.com/learn/kernel-newbie-corner-initrd-and-initramfs-whats">Kernel Newbie Corner: initrd and initramfs</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.rodsbooks.com/efi-bootloaders/">Rod Smith - Managing EFI Boot Loaders for Linux</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+<li><a href="../en/Category:About_Arch.html" title="Category:About Arch">About Arch</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_boot_process&amp;oldid=646687">https://wiki.archlinux.org/index.php?title=Arch_boot_process&amp;oldid=646687</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 11:48.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

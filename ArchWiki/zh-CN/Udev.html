@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>udev (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Udev_简体中文 rootpage-Udev_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">udev (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Udev.html" title="Udev">Udev</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-10-19。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Udev&amp;diff=0&amp;oldid=493547">更改</a>，则您可以帮助同步翻译。</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>本文或本节需要<a href="../zh-CN/ArchWiki:Contributing.html#%E7%BF%BB%E8%AF%91" title="ArchWiki:Contributing (简体中文)">翻译</a>。要贡献翻译，请访问<a href="../zh-CN/ArchWiki:Translation_Team.html" class="mw-redirect" title="ArchWiki Translation Team (简体中文)">简体中文翻译团队</a>。</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>附注：</b> （在 <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Udev_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Udev (简体中文)#</a> 中讨论）</div>
+</div>
+<p>摘自<a href="https://en.wikipedia.org/wiki/Udev" class="extiw" title="wikipedia:Udev">维基百科：Udev</a>：
+</p>
+<dl><dd>udev 是 Linux 内核的设备管理器。总的来说，它取代了 devfs 和 hotplug，负责管理 <code>/dev</code> 中的设备节点。同时，udev 也处理所有用户空间发生的硬件添加、删除事件，以及某些特定设备所需的固件加载。</dd></dl>
+<p><code>udev</code> 取代了<code>hotplug</code> 和 <code>hwdetect</code>两个工具。
+</p>
+<p>与传统的顺序加载相比，udev 通过并行加载内核模块提供了潜在的性能优势。异步加载模块的方式也有一个天生的缺点：无法保证每次加载模块的顺序，如果机器具有多个块设备，那么它们的设备节点可能随机变化。例如如果有两个硬盘，<code>/dev/sda</code> 可能会随机变成<code>/dev/sdb</code>。<a href="#%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81%E8%AE%BE%E5%A4%87%E5%90%8D">本文后面</a>有更详细的信息。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#udev_%E8%A7%84%E5%88%99"><span class="tocnumber">2</span> <span class="toctext">udev 规则</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%E7%BC%96%E5%86%99_udev_%E8%A7%84%E5%88%99"><span class="tocnumber">2.1</span> <span class="toctext">编写 udev 规则</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#%E5%88%97%E5%87%BA%E8%AE%BE%E5%A4%87%E5%B1%9E%E6%80%A7"><span class="tocnumber">2.2</span> <span class="toctext">列出设备属性</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#%E5%8A%A0%E8%BD%BD%E5%89%8D%E6%B5%8B%E8%AF%95%E8%A7%84%E5%88%99"><span class="tocnumber">2.3</span> <span class="toctext">加载前测试规则</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#%E5%8A%A0%E8%BD%BD%E6%96%B0%E8%A7%84%E5%88%99"><span class="tocnumber">2.4</span> <span class="toctext">加载新规则</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Udisks"><span class="tocnumber">3</span> <span class="toctext">Udisks</span></a></li>
+<li class="toclevel-1 tocsection-8">
+<a href="#%E6%8F%90%E7%A4%BA%E4%B8%8E%E6%8A%80%E5%B7%A7"><span class="tocnumber">4</span> <span class="toctext">提示与技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#%E8%AE%BF%E9%97%AE%E5%9B%BA%E4%BB%B6%E7%BC%96%E7%A8%8B%E5%99%A8%EF%BC%88%E7%83%A7%E5%BD%95%E5%99%A8%EF%BC%89%E5%92%8C_USB_%E8%99%9A%E6%8B%9F%E4%B8%B2%E8%A1%8C%E8%AE%BE%E5%A4%87"><span class="tocnumber">4.1</span> <span class="toctext">访问固件编程器（烧录器）和 USB 虚拟串行设备</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#VGA_%E7%BA%BF%E7%BC%86%E6%8E%A5%E5%85%A5%E6%97%B6%E6%89%A7%E8%A1%8C%E8%A7%84%E5%88%99"><span class="tocnumber">4.2</span> <span class="toctext">VGA 线缆接入时执行规则</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#%E4%BE%A6%E6%B5%8B%E6%96%B0%E7%9A%84_eSATA_%E8%AE%BE%E5%A4%87"><span class="tocnumber">4.3</span> <span class="toctext">侦测新的 eSATA 设备</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#%E5%B0%86%E5%86%85%E7%BD%AE_SATA_%E6%8E%A5%E5%8F%A3%E6%A0%87%E8%AE%B0%E4%B8%BA_eSATA"><span class="tocnumber">4.4</span> <span class="toctext">将内置 SATA 接口标记为 eSATA</span></a></li>
+<li class="toclevel-2 tocsection-13">
+<a href="#%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81%E8%AE%BE%E5%A4%87%E5%90%8D"><span class="tocnumber">4.5</span> <span class="toctext">设置静态设备名</span></a>
+<ul>
+<li class="toclevel-3 tocsection-14"><a href="#%E8%A7%86%E9%A2%91%E8%AE%BE%E5%A4%87"><span class="tocnumber">4.5.1</span> <span class="toctext">视频设备</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#%E6%89%93%E5%8D%B0%E6%9C%BA"><span class="tocnumber">4.5.2</span> <span class="toctext">打印机</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16"><a href="#%E5%94%A4%E9%86%92%E6%8C%82%E8%B5%B7%E7%9A%84_USB_%E8%AE%BE%E5%A4%87"><span class="tocnumber">4.6</span> <span class="toctext">唤醒挂起的 USB 设备</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#%E8%A7%A6%E5%8F%91%E4%BA%8B%E4%BB%B6"><span class="tocnumber">4.7</span> <span class="toctext">触发事件</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#%E8%A7%A6%E5%8F%91_udev_%E8%A7%84%E5%88%99%E4%BA%8B%E4%BB%B6%E7%9A%84%E6%A1%8C%E9%9D%A2%E6%8F%90%E7%A4%BA"><span class="tocnumber">4.8</span> <span class="toctext">触发 udev 规则事件的桌面提示</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#%E6%8E%92%E9%94%99"><span class="tocnumber">5</span> <span class="toctext">排错</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#%E5%B1%8F%E8%94%BD%E6%A8%A1%E5%9D%97"><span class="tocnumber">5.1</span> <span class="toctext">屏蔽模块</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Debug_output"><span class="tocnumber">5.2</span> <span class="toctext">Debug output</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#udevd_%E5%BC%95%E5%AF%BC%E6%97%B6%E6%8C%82%E8%B5%B7"><span class="tocnumber">5.3</span> <span class="toctext">udevd 引导时挂起</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#BusLogic"><span class="tocnumber">5.4</span> <span class="toctext">BusLogic</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#%E4%B8%80%E4%BA%9B%E7%A7%BB%E5%8A%A8%E8%AE%BE%E5%A4%87%E4%B8%8D%E5%8F%AF%E7%A7%BB%E9%99%A4"><span class="tocnumber">5.5</span> <span class="toctext">一些移动设备不可移除</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#%E5%A3%B0%E9%9F%B3%E9%97%AE%E9%A2%98%E5%92%8C%E4%B8%80%E4%BA%9B%E4%B8%8D%E8%83%BD%E8%87%AA%E5%8A%A8%E5%8A%A0%E8%BD%BD%E7%9A%84%E6%A8%A1%E5%9D%97"><span class="tocnumber">5.6</span> <span class="toctext">声音问题和一些不能自动加载的模块</span></a></li>
+<li class="toclevel-2 tocsection-26"><a href="#IDE_CD/DVD_%E9%A9%B1%E5%8A%A8%E5%99%A8%E7%9A%84%E6%94%AF%E6%8C%81"><span class="tocnumber">5.7</span> <span class="toctext">IDE CD/DVD 驱动器的支持</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#%E5%85%89%E9%A9%B1%E8%A2%AB%E6%A0%87%E8%AF%86%E4%B8%BA%E7%A3%81%E7%9B%98"><span class="tocnumber">5.8</span> <span class="toctext">光驱被标识为磁盘</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-28"><a href="#%E5%8F%82%E9%98%85"><span class="tocnumber">6</span> <span class="toctext">参阅</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p>Udev 现在是 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> 的组成部分，默认已安装。有关信息请查阅 <code>systemd-udevd.service(8)</code> 的<a href="../en/Man_page.html" title="Man page">手册页</a>。
+</p>
+<p>AUR 里有一个独立的 Udev 派生版：<a href="../en/Init.html" class="mw-redirect" title="Eudev">eudev</a>。
+</p>
+<h2>
+<span id="udev_.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="udev_规则">udev 规则</span>
+</h2>
+<p>udev 规则以管理员身份编写并保存在 <code>/etc/udev/rules.d/</code> 目录，其文件名必须以 <code>.rules</code> 结尾。各种软件包提供的规则文件位于 <code>/lib/udev/rules.d/</code>。如果 <code>/usr/lib</code> 和 <code>/etc</code> 这两个目录中有同名文件，则 <code>/etc</code> 中的文件优先。 
+</p>
+<h3>
+<span id=".E7.BC.96.E5.86.99_udev_.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="编写_udev_规则">编写 udev 规则</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 要挂载可移动设备，请<b>不要</b>通过在 udev 规则中调用 <code>mount</code> 命令的方法。对 FUSE 文件系统将会导致 <code>Transport endpoint not connected</code> 错误。应代之以 <a href="../zh-CN/Udisks.html" title="Udisks (简体中文)">udisks</a> 以正确处理自动挂载。或者把挂载动作放在 udev 规则内部：
+<p>将 <code>/usr/lib/systemd/system/systemd-udevd.service</code> 复制到 <code>/etc/systemd/system/systemd-udevd.service</code>，将 <code>MountFlags=slave</code> 替换为 <code>MountFlags=shared</code>。<a rel="nofollow" class="external text" href="https://unix.stackexchange.com/a/154318">（来源）</a> 
+</p>
+Keep in mind though that udev is not intended to invoke long-running processes.</div>
+<ul>
+<li>要想学习写udev规则，请访问<a rel="nofollow" class="external text" href="http://www.reactivated.net/writing_udev_rules.html">编写 udev 规则</a>。（译注：<a rel="nofollow" class="external text" href="http://www.cnitblog.com/luofuchong/archive/2007/12/18/37831.html">这里</a>有一篇转载的该文简体中文译本）</li>
+<li>要想查看 udev 规则的例子，请查阅上述文章的 <a rel="nofollow" class="external text" href="http://www.reactivated.net/writing_udev_rules.html#example-printer">范例</a> 章节。</li>
+</ul>
+<p>下面是一个规则的实例，给出的是当接入一个摄像头时创建一个符号链接 <code>/dev/video-cam1</code> 。首先，我们发现摄像头被接入并且被挂载为 <code>/dev/video2</code> 设备。写下这条规则的原因是由于下一次引导时这个设备可能会有个不同的名字，比如 <code>/dev/video0</code>。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># udevadm info -a -p $(udevadm info -q path -n /dev/video2)</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Udevadm info starts with the device specified by the devpath and then walks up the chain of parent devices. It prints for every device found, all possible attributes in the udev rules key format. A rule to match, can be composed by the attributes of the device and the attributes from one single parent device.
+
+  looking at device '/devices/pci0000:00/0000:00:04.1/usb3/3-2/3-2:1.0/video4linux/video2':
+    KERNEL=="video2"
+    SUBSYSTEM=="video4linux"
+    ...
+  looking at parent device '/devices/pci0000:00/0000:00:04.1/usb3/3-2/3-2:1.0':
+    KERNELS=="3-2:1.0"
+    SUBSYSTEMS=="usb"
+    ...
+  looking at parent device '/devices/pci0000:00/0000:00:04.1/usb3/3-2':
+    KERNELS=="3-2"
+    SUBSYSTEMS=="usb"
+    ...
+    ATTRS{idVendor}=="05a9"
+    ...
+    ATTRS{manufacturer}=="OmniVision Technologies, Inc."
+    ATTRS{removable}=="unknown"
+    ATTRS{idProduct}=="4519"
+    ATTRS{bDeviceClass}=="00"
+    ATTRS{product}=="USB Camera"
+    ...
+</pre>
+<p>From the video4linux device we use <code>KERNEL=="video2"</code> and <code>SUBSYSTEM=="video4linux"</code>, then we match the webcam using vendor and product ID's from the usb parent <code>SUBSYSTEMS=="usb"</code>, <code>ATTRS{idVendor}=="05a9"</code> and <code>ATTRS{idProduct}=="4519"</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="05a9", ATTRS{idProduct}=="4519", SYMLINK+="video-cam1"
+</pre>
+<p>In the example above we create a symlink using <code>SYMLINK+="video-cam1"</code> but we could easily set user <code>OWNER="john"</code> or group using <code>GROUP="video"</code> or set the permissions using <code>MODE="0660"</code>. However, if you intend to write a rule to do something when a device is being removed, be aware that device attributes may not be accessible. In this case, you will have to work with preset device <a href="../en/Environment_variables.html" title="Environment variables">environment variables</a>. To monitor those environment variables, execute the following command while unplugging your device:
+</p>
+<pre># udevadm monitor --environment --udev
+</pre>
+<p>In this command's output, you will see value pairs such as ID_VENDOR_ID and ID_MODEL_ID, which match your previously used attributes "idVendor" and "idProduct". A rule that uses device environment variables may look like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam-removed.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="remove", SUBSYSTEM=="usb", ENV{ID_VENDOR_ID}=="05a9", ENV{ID_MODEL_ID}=="4519", RUN+="/path/to/your/script"
+</pre>
+<h3>
+<span id=".E5.88.97.E5.87.BA.E8.AE.BE.E5.A4.87.E5.B1.9E.E6.80.A7"></span><span class="mw-headline" id="列出设备属性">列出设备属性</span>
+</h3>
+<p>要列出所有设备的属性以用来编写规则的话，运行下面的命令：
+</p>
+<pre># udevadm info -a -n [device name]
+</pre>
+<p>将 <code>[device name]</code> 替换为系统中存在的设备，比如 <code>/dev/sda</code> 或 <code>/dev/ttyUSB0</code>。
+</p>
+<p>如果你不知道设备名，你也可以列出某个系统路径的属性：
+</p>
+<pre># udevadm info -a -p /sys/class/backlight/acpi_video0
+</pre>
+<h3>
+<span id=".E5.8A.A0.E8.BD.BD.E5.89.8D.E6.B5.8B.E8.AF.95.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="加载前测试规则">加载前测试规则</span>
+</h3>
+<pre># udevadm test $(udevadm info -q path -n [device name]) 2&gt;&amp;1
+</pre>
+<p>这不会运行你的规则中的所有命令，但会处理已有设备的符号连接，如果你不能加载它们这也许会变得方便。也可以直接输入你测试的设备路径：
+</p>
+<pre># udevadm test /sys/class/backlight/acpi_video0/
+</pre>
+<h3>
+<span id=".E5.8A.A0.E8.BD.BD.E6.96.B0.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="加载新规则">加载新规则</span>
+</h3>
+<p>Udev 自动侦测规则文件的变化，所以修改会立即生效，无需重启 udev。但已接入设备的规则不会自动触发。像 USB 这类热插拔设备也许需要重新插拔才能使新规则生效，也可能需要卸载并重载内核的 ohci-hcd 和 ehci-hcd 模块以重新挂载所有 USB 设备。
+</p>
+<p>如果规则自动重载失败
+</p>
+<pre># udevadm control --reload
+</pre>
+<p>可以手工强制触发规则
+</p>
+<pre># udevadm trigger
+</pre>
+<h2><span class="mw-headline" id="Udisks">Udisks</span></h2>
+<p>参阅 <a href="../zh-CN/Udisks.html" title="Udisks (简体中文)">Udisks</a>.
+</p>
+<h2>
+<span id=".E6.8F.90.E7.A4.BA.E4.B8.8E.E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="提示与技巧">提示与技巧</span>
+</h2>
+<h3>
+<span id=".E8.AE.BF.E9.97.AE.E5.9B.BA.E4.BB.B6.E7.BC.96.E7.A8.8B.E5.99.A8.EF.BC.88.E7.83.A7.E5.BD.95.E5.99.A8.EF.BC.89.E5.92.8C_USB_.E8.99.9A.E6.8B.9F.E4.B8.B2.E8.A1.8C.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="访问固件编程器（烧录器）和_USB_虚拟串行设备">访问固件编程器（烧录器）和 USB 虚拟串行设备</span>
+</h3>
+<p>下列规则允许 group 组用户访问 <a rel="nofollow" class="external text" href="http://www.ladyada.net/make/usbtinyisp/">USBtinyISP</a>（用于 AVR 微控制器的 USB 接口编程器）：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-usbtinyisp.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SUBSYSTEMS=="usb", ATTRS{idVendor}=="1781", ATTRS{idProduct}=="0c9f", GROUP="users", MODE="0660"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0479", GROUP="users", MODE="0660"</pre>
+<p>用 <i>lsusb</i> 命令可获取其他种类设备的厂商 ID 和产品 ID。
+</p>
+<h3>
+<span id="VGA_.E7.BA.BF.E7.BC.86.E6.8E.A5.E5.85.A5.E6.97.B6.E6.89.A7.E8.A1.8C.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="VGA_线缆接入时执行规则">VGA 线缆接入时执行规则</span>
+</h3>
+<p>创建包含下列内容的规则文件 <code>/etc/udev/rules.d/95-monitor-hotplug.rules</code> ，可以在 VGA 线缆插入时执行 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arandr">arandr</a></span>：
+</p>
+<pre>KERNEL=="card0", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/<i>username</i>/.Xauthority", RUN+="/usr/bin/arandr"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 某些显示管理器把 .Xauthority 文件保存在用户家目录以外的位置，需要修改 ENV{XAUTHORITY} 的内容。例如，<a href="../zh-CN/GDM.html" title="GDM (简体中文)">GNOME 显示管理器</a> 里的.Xauthority 文件路径如下所示：
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ printenv XAUTHORITY</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/run/user/1000/gdm/Xauthority</pre>
+</div>
+<h3>
+<span id=".E4.BE.A6.E6.B5.8B.E6.96.B0.E7.9A.84_eSATA_.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="侦测新的_eSATA_设备">侦测新的 eSATA 设备</span>
+</h3>
+<p>If your eSATA drive is not detected when you plug it in, there are a few things you can try. You can reboot with the eSATA plugged in. Or you could try
+</p>
+<pre># echo 0 0 0 | tee /sys/class/scsi_host/host*/scan
+</pre>
+<p>Or you could install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/scsiadd/">scsiadd</a></span><sup><small>AUR</small></sup> (from the AUR) and try
+</p>
+<pre># scsiadd -s
+</pre>
+<p>Hopefully, your drive is now in <code>/dev</code>. If it is not, you could try the above commands while running
+</p>
+<pre># udevadm monitor
+</pre>
+<p>to see if anything is actually happening.
+</p>
+<h3>
+<span id=".E5.B0.86.E5.86.85.E7.BD.AE_SATA_.E6.8E.A5.E5.8F.A3.E6.A0.87.E8.AE.B0.E4.B8.BA_eSATA"></span><span class="mw-headline" id="将内置_SATA_接口标记为_eSATA">将内置 SATA 接口标记为 eSATA</span>
+</h3>
+<p>If you connected a eSATA bay or an other eSATA adapter the system will still recognize this disk as an internal SATA drive. <a href="../en/GNOME.html" title="GNOME">GNOME</a> and <a href="../en/KDE.html" title="KDE">KDE</a> will ask you for your root password all the time. The following rule will mark the specified SATA-Port as an external eSATA-Port. With that, a normal GNOME user can connect their eSATA drives to that port like a USB drive, without any root password and so on.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/10-esata.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">DEVPATH=="/devices/pci0000:00/0000:00:1f.2/host4/*", ENV{UDISKS_SYSTEM}="0"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>DEVPATH</code> can be found after connection the eSATA drive with the following commands (replace <code>sdb</code> accordingly):
+<pre># udevadm info -q path -n /dev/sdb
+/devices/pci0000:00/0000:00:1f.2/host4/target4:0:0/4:0:0:0/block/sdb
+</pre>
+<pre># find /sys/devices/ -name sdb
+/sys/devices/pci0000:00/0000:00:1f.2/host4/target4:0:0/4:0:0:0/block/sdb
+</pre>
+</div>
+<h3>
+<span id=".E8.AE.BE.E7.BD.AE.E9.9D.99.E6.80.81.E8.AE.BE.E5.A4.87.E5.90.8D"></span><span class="mw-headline" id="设置静态设备名">设置静态设备名</span>
+</h3>
+<p>由于 udev 异步加载所有模块，使得它们被初始化的次序不同。这将导致设备会随机改变名称。可以添加一条 udev 规则使得设备使用静态名称。
+</p>
+<p>对于块设备和网络设备的规则配置，请分别参阅 <a href="../zh-CN/Persistent_block_device_naming.html" title="Persistent block device naming (简体中文)">块设备持久化命名 </a>和<a href="../zh-CN/Network_configuration.html#%E8%AE%BE%E5%A4%87%E5%91%BD%E5%90%8D" title="Network configuration (简体中文)">网络配置-设备命名</a>。
+</p>
+<h4>
+<span id=".E8.A7.86.E9.A2.91.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="视频设备">视频设备</span>
+</h4>
+<p>For setting up the webcam in the first place, refer to <a href="../en/Webcam_setup.html#Webcam_configuration" title="Webcam setup">Webcam configuration</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+<p>Using multiple webcams, useful for example with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=motion">motion</a></span> (software motion detector which grabs images from video4linux devices and/or from webcams), will assign video devices as /dev/video0..n randomly on boot. The recommended solution is to create symlinks using an <i>udev</i> rule (as in the example in <a href="#%E7%BC%96%E5%86%99_udev_%E8%A7%84%E5%88%99">#编写 udev 规则</a>：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="05a9", ATTRS{idProduct}=="4519", SYMLINK+="video-cam1"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="08f6", SYMLINK+="video-cam2"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0840", SYMLINK+="video-cam3"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Using names other than <code>/dev/video*</code> will break preloading of <code>v4l1compat.so</code> and perhaps <code>v4l2convert.so</code>
+</div>
+<h4>
+<span id=".E6.89.93.E5.8D.B0.E6.9C.BA"></span><span class="mw-headline" id="打印机">打印机</span>
+</h4>
+<p>If you use multiple printers, <code>/dev/lp[0-9]</code> devices will be assigned randomly on boot, which will break e.g. <a href="../en/CUPS.html" title="CUPS">CUPS</a> configuration. 
+</p>
+<p>You can create following rule, which will create symlinks under <code>/dev/lp/by-id</code> and <code>/dev/lp/by-path</code>, similar to <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">Persistent block device naming</a> scheme:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/60-persistent-printer.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="remove", GOTO="persistent_printer_end"
+
+# This should not be necessary
+#KERNEL!="lp*", GOTO="persistent_printer_end"
+
+SUBSYSTEMS=="usb", IMPORT{builtin}="usb_id"
+ENV{ID_TYPE}!="printer", GOTO="persistent_printer_end"
+
+ENV{ID_SERIAL}=="?*", SYMLINK+="lp/by-id/$env{ID_BUS}-$env{ID_SERIAL}"
+
+IMPORT{builtin}="path_id"
+ENV{ID_PATH}=="?*", SYMLINK+="lp/by-path/$env{ID_PATH}"
+
+LABEL="persistent_printer_end"
+</pre>
+<p><br>
+</p>
+<h3>
+<span id=".E5.94.A4.E9.86.92.E6.8C.82.E8.B5.B7.E7.9A.84_USB_.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="唤醒挂起的_USB_设备">唤醒挂起的 USB 设备</span>
+</h3>
+<p>First, find vendor and product ID of your device, for example
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lsusb | grep Logitech</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Bus 007 Device 002: ID 046d:c52b Logitech, Inc. Unifying Receiver</pre>
+<p>Now change the <code>power/wakeup</code> attribute of the device and the USB controller it is connected to, which is in this case <code>driver/usb7/power/wakeup</code>. Use the following rule:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-wake-on-device.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c52b", ATTR{power/wakeup}="enabled", ATTR{driver/usb7/power/wakeup}="enabled"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Also make sure the USB controller is enabled in <code>/proc/acpi/wakeup</code>.</div>
+<h3>
+<span id=".E8.A7.A6.E5.8F.91.E4.BA.8B.E4.BB.B6"></span><span class="mw-headline" id="触发事件">触发事件</span>
+</h3>
+<p>It can be useful to trigger various udev events. For example, you might want to simulate a USB device disconnect on a remote machine. In such cases, use <code>udevadm trigger</code>:
+</p>
+<pre># udevadm trigger -v -t subsystems -c remove -s usb -a "idVendor=abcd"
+</pre>
+<p>This command will trigger a USB remove event on all USB devices with vendor ID <code>abcd</code>.
+</p>
+<h3>
+<span id=".E8.A7.A6.E5.8F.91_udev_.E8.A7.84.E5.88.99.E4.BA.8B.E4.BB.B6.E7.9A.84.E6.A1.8C.E9.9D.A2.E6.8F.90.E7.A4.BA"></span><span class="mw-headline" id="触发_udev_规则事件的桌面提示">触发 udev 规则事件的桌面提示</span>
+</h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> This is a lenghty monologue on how to hardcode variables (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Udev_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Udev (简体中文)#</a>)</div>
+</div>
+<p>Invoking an external script containing calls to <code>notify-send</code> via <i>udev</i> <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=212364">can sometimes be challenging</a> since the notification(s) never display on the Desktop. Here is an example of what commands and environmental variables need to be included in which files for <code>notify-send</code> to successfully be executed from a <i>udev</i> rule. NOTE: a number of variables are hardcoded in this example, thus consider making them portable (i.e., $USER rather than user's shortname) once you understand the example. 
+</p>
+<p>1) The following <i>udev</i> rule executes a script that plays a notification sound and sends a desktop notification when screen brightness is changed according to power state on a laptop. Create the file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/99-backlight_notification.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Play a notification sound and send a desktop notification when screen brightness is changed according to power state on a laptop (a second ''udev'' rule actually changes the screen brightness)
+# Rule for when switching to battery
+ACTION=="change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/USERNAME/.Xauthority" RUN+="/usr/bin/su USERNAME_TO_RUN_SCRIPT_AS -c /usr/local/bin/brightness_notification.sh"
+# Rule for when switching to AC
+ACTION=="change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/USERNAME/.Xauthority" RUN+="/usr/bin/su USERNAME_TO_RUN_SCRIPT_AS -c /usr/local/bin/brightness_notification.sh"
+</pre>
+<p>Note: 1) <code>USERNAME_TO_RUN_SCRIPT_AS</code> and <code>USERNAME</code> need to be changed to that of the shortname for the user of the graphical session where the notification will be displayed and 2) the script needs to be executed with <code>/usr/bin/su</code>, which will place its ownership under the user of the graphical session (rather than root/the system) where the notification will be displayed.
+</p>
+<p>2) Contents of the executable script to be run on trigger of the <i>udev</i> rule:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/brightness_notification.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/env bash
+
+export XAUTHORITY=/home/USERNAME_TO_RUN_SCRIPT_AS/.Xauthority
+export DISPLAY=:0
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/UID_OF_USER_TO_RUN_SCRIPT_AS/bus"
+
+/usr/bin/sudo -u USERNAME_TO_RUN_SCRIPT_AS /usr/bin/paplay --server /run/user/UID_OF_USER_TO_RUN_SCRIPT_AS/pulse/native /home/USERNAME/.i3/sounds/Click1.wav &gt; /dev/null 2&gt;&amp;1
+
+/usr/bin/notify-send -i /usr/share/icons/gnome/256x256/status/battery-full-charging.png 'Changing Power States' --expire-time=4000
+</pre>
+<p>Note: 1) <code>USERNAME_TO_RUN_SCRIPT_AS</code>, <code>UID_OF_USER_TO_RUN_SCRIPT_AS</code> and <code>USERNAME</code> needs to be changed to that of the shortname for the user and user's UID of the graphical session where the notification will be displayed; 2) <code>/usr/bin/sudo</code> is needed when playing audio via pulseaudio; and, 3) three environmental variables (i.e., <code>XAUTHORITY</code>, <code>DISPLAY</code> and <code>DBUS_SESSION_BUS_ADDRESS</code>) for the user of the graphical session where the notification will be displayed need to be defined and exported. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The <code>XAUTHORITY</code>, <code>DISPLAY</code> and <code>DBUS_SESSION_BUS_ADDRESS</code> environment variables must be defined correctly.</div>
+<p>3) Load/reload the new <i>udev</i> rule (see above) and test it by unplugging the power supply to the laptop.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> See also <a rel="nofollow" class="external text" href="https://github.com/Ventto/xpub">xpub</a> as a method for getting the user's display environment variables and exporting the last into <i>udev</i> rules via <code>IMPORT</code> key.</div>
+<h2>
+<span id=".E6.8E.92.E9.94.99"></span><span class="mw-headline" id="排错">排错</span>
+</h2>
+<h3>
+<span id=".E5.B1.8F.E8.94.BD.E6.A8.A1.E5.9D.97"></span><span class="mw-headline" id="屏蔽模块">屏蔽模块</span>
+</h3>
+<p>极个别情况下，udev 也会犯错或加载错误的模块。为了防止错误的发生，你可以使用模块禁用列表。只要模块加入该列表，无论是启动时，或者是运行时（如usb硬盘等）udev都不会加载这些模块。参见<a href="../en/Kernel_module.html#Blacklisting" class="mw-redirect" title="Blacklisting">blacklisting</a>.
+</p>
+<h3><span class="mw-headline" id="Debug_output">Debug output</span></h3>
+<p>To get hardware debug info, use the <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> <code>udev.log-priority=debug</code>. Alternatively you can set
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/udev.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">udev_log="debug"</pre>
+<p>This option can also be compiled into your initramfs by adding the config file to your <code>FILES</code> array
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">FILES="... /etc/udev/udev.conf"</pre>
+<p>and then rebuilding the initramfs with
+</p>
+<pre># mkinitcpio -p linux
+</pre>
+<p><br>
+</p>
+<h3>
+<span id="udevd_.E5.BC.95.E5.AF.BC.E6.97.B6.E6.8C.82.E8.B5.B7"></span><span class="mw-headline" id="udevd_引导时挂起">udevd 引导时挂起</span>
+</h3>
+<p>After migrating to LDAP or updating an LDAP-backed system udevd can hang at boot at the message "Starting UDev Daemon". This is usually caused by udevd trying to look up a name from LDAP but failing, because the network is not up yet. The solution is to ensure that all system group names are present locally.
+</p>
+<p>Extract the group names referenced in udev rules and the group names actually present on the system:
+</p>
+<pre># fgrep -r GROUP /etc/udev/rules.d/ /usr/lib/udev/rules.d | perl -nle '/GROUP\s*=\s*"(.*?)"/ &amp;&amp; print $1;' | sort | uniq &gt; udev_groups
+# cut -f1 -d: /etc/gshadow /etc/group | sort | uniq &gt; present_groups
+</pre>
+<p>To see the differences, do a side-by-side diff:
+</p>
+<pre># diff -y present_groups udev_groups
+...
+network							      &lt;
+nobody							      &lt;
+ntp							      &lt;
+optical								optical
+power							      |	pcscd
+rfkill							      &lt;
+root								root
+scanner								scanner
+smmsp							      &lt;
+storage								storage
+...
+</pre>
+<p>In this case, the <code>pcscd</code> group is for some reason not present in the system. <a href="../en/Users_and_groups.html#Group_management" title="Users and groups">Add the missing groups</a>. Also, make sure that local resources are looked up before resorting to LDAP. <code>/etc/nsswitch.conf</code> should contain the following line:
+</p>
+<pre>group: files ldap
+</pre>
+<h3><span class="mw-headline" id="BusLogic">BusLogic</span></h3>
+<p>BusLogic 设备被损坏而且导致启动时死机。这是一个内核的Bug目前还没有修正。
+</p>
+<h3>
+<span id=".E4.B8.80.E4.BA.9B.E7.A7.BB.E5.8A.A8.E8.AE.BE.E5.A4.87.E4.B8.8D.E5.8F.AF.E7.A7.BB.E9.99.A4"></span><span class="mw-headline" id="一些移动设备不可移除">一些移动设备不可移除</span>
+</h3>
+<p>创建自定义 udev 规则，设置 UDISKS_SYSTEM_INTERNAL=0。参见 udisks 手册。
+</p>
+<p><br>
+</p>
+<h3>
+<span id=".E5.A3.B0.E9.9F.B3.E9.97.AE.E9.A2.98.E5.92.8C.E4.B8.80.E4.BA.9B.E4.B8.8D.E8.83.BD.E8.87.AA.E5.8A.A8.E5.8A.A0.E8.BD.BD.E7.9A.84.E6.A8.A1.E5.9D.97"></span><span class="mw-headline" id="声音问题和一些不能自动加载的模块">声音问题和一些不能自动加载的模块</span>
+</h3>
+<p>一些用户发现 <code>/etc/modprobe.d/sound.conf</code> 中的遗留配置会引起这些问题，请清理配置并重试。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 从 <code>udev&gt;=171</code> 开始 OSS 模拟模块(<code>snd_seq_oss, snd_pcm_oss, snd_mixer_oss</code>) 默认不会自动装载。</div>
+<p><br>
+</p>
+<h3>
+<span id="IDE_CD.2FDVD_.E9.A9.B1.E5.8A.A8.E5.99.A8.E7.9A.84.E6.94.AF.E6.8C.81"></span><span class="mw-headline" id="IDE_CD/DVD_驱动器的支持">IDE CD/DVD 驱动器的支持</span>
+</h3>
+<p>Starting with version 170, udev does not support CD-ROM/DVD-ROM drives that are loaded as traditional IDE drives with the <code>ide_cd_mod</code> module and show up as <code>/dev/hd*</code>. The drive remains usable for tools which access the hardware directly, like <i>cdparanoia</i>, but is invisible for higher userspace programs, like KDE.
+</p>
+<p>A cause for the loading of the ide_cd_mod module prior to others, like sr_mod, could be e.g. that you have for some reason the module piix loaded with your <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a>. In that case you can just replace it with ata_piix in your <code>/etc/mkinitcpio.conf</code>.
+</p>
+<h3>
+<span id=".E5.85.89.E9.A9.B1.E8.A2.AB.E6.A0.87.E8.AF.86.E4.B8.BA.E7.A3.81.E7.9B.98"></span><span class="mw-headline" id="光驱被标识为磁盘">光驱被标识为磁盘</span>
+</h3>
+<p>If the group ID of your optical drive is set to <code>disk</code> and you want to have it set to <code>optical</code>, you have to create a custom udev rule:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># permissions for IDE CD devices
+SUBSYSTEMS=="ide", KERNEL=="hd[a-z]", ATTR{removable}=="1", ATTRS{media}=="cdrom*", GROUP="optical"
+
+# permissions for SCSI CD devices
+SUBSYSTEMS=="scsi", KERNEL=="s[rg][0-9]*", ATTRS{type}=="5", GROUP="optical"</pre>
+<h2>
+<span id=".E5.8F.82.E9.98.85"></span><span class="mw-headline" id="参阅">参阅</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html">udev 主页</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://www.linux.com/news/hardware/peripherals/180950-udev">udev 介绍</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-06 ⓘ]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://vger.kernel.org/vger-lists.html#linux-hotplug">udev 邮件列表</a></li>
+<li><a rel="nofollow" class="external text" href="http://jasonwryan.com/blog/2014/01/20/udev/">Scripting with udev</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.reactivated.net/writing_udev_rules.html">编写 udev 规则</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.linuxfromscratch.org/lfs/view/6.1/chapter07/udev.html">LFS 系统设备与模块处理</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/Ventto/xpub">Running GUI or accessing display variables from udev rules</a></li>
+<li>中文读者可参阅 <a rel="nofollow" class="external text" href="http://www.jinbuguo.com/">金步国</a>先生翻译的 <a rel="nofollow" class="external text" href="http://www.jinbuguo.com/systemd/udev.html">udev 中文手册</a>
+</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting (简体中文)">Hardware detection and troubleshooting (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../zh-CN/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme (简体中文)">Pages or sections flagged with Template:Translateme (简体中文)</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Udev_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=631558">https://wiki.archlinux.org/index.php?title=Udev_(简体中文)&amp;oldid=631558</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2020, at 08:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

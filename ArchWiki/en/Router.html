@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Router - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Router rootpage-Router skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Router</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article is a tutorial for turning a computer into an internet gateway/router. To strengthen its security it should not run <b>any</b> services available to the outside world. Towards the LAN, run only gateway specific services; especially do not run httpd, ftpd, samba, nfsd, etc. as those belong on a server in the LAN since they introduce security risks.
+</p>
+<p>This article does not attempt to show how to set up a shared connection between two machines using cross-over cables. For a simple internet sharing solution, see <a href="../en/Internet_sharing.html" title="Internet sharing">Internet sharing</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Throughout the article, <b>intern0</b> and <b>extern0</b> are used as names for the network interfaces. The reasoning is further explained in <a href="#Persistent_interface_naming">#Persistent interface naming</a>.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Hardware_Requirements"><span class="tocnumber">1</span> <span class="toctext">Hardware Requirements</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Network_interface_configuration"><span class="tocnumber">2</span> <span class="toctext">Network interface configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Persistent_interface_naming"><span class="tocnumber">2.1</span> <span class="toctext">Persistent interface naming</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#IP_configuration"><span class="tocnumber">2.2</span> <span class="toctext">IP configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#With_netctl"><span class="tocnumber">2.2.1</span> <span class="toctext">With netctl</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#With_systemd-networkd"><span class="tocnumber">2.2.2</span> <span class="toctext">With systemd-networkd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7">
+<a href="#ADSL_connection/PPPoE"><span class="tocnumber">2.3</span> <span class="toctext">ADSL connection/PPPoE</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#PPPoE_configuration"><span class="tocnumber">2.3.1</span> <span class="toctext">PPPoE configuration</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#DNS_and_DHCP"><span class="tocnumber">3</span> <span class="toctext">DNS and DHCP</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#DHCP_via_systemd-networkd"><span class="tocnumber">3.1</span> <span class="toctext">DHCP via systemd-networkd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Connection_sharing"><span class="tocnumber">4</span> <span class="toctext">Connection sharing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Manual"><span class="tocnumber">4.1</span> <span class="toctext">Manual</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#With_systemd-networkd_2"><span class="tocnumber">4.2</span> <span class="toctext">With systemd-networkd</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Connection_sharing_with_shorewall"><span class="tocnumber">4.3</span> <span class="toctext">Connection sharing with shorewall</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#IPv6_tips"><span class="tocnumber">5</span> <span class="toctext">IPv6 tips</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#Unique_Local_Addresses"><span class="tocnumber">5.1</span> <span class="toctext">Unique Local Addresses</span></a></li>
+<li class="toclevel-2 tocsection-17">
+<a href="#Global_Unicast_Addresses"><span class="tocnumber">5.2</span> <span class="toctext">Global Unicast Addresses</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#Static_IPv6_prefix"><span class="tocnumber">5.2.1</span> <span class="toctext">Static IPv6 prefix</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#Acquiring_IPv6_prefix_via_DHCPv6-PD"><span class="tocnumber">5.2.2</span> <span class="toctext">Acquiring IPv6 prefix via DHCPv6-PD</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20"><a href="#Router_Advertisement_and_Stateless_Autoconfiguration_(SLAAC)"><span class="tocnumber">5.3</span> <span class="toctext">Router Advertisement and Stateless Autoconfiguration (SLAAC)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Optional_additions"><span class="tocnumber">6</span> <span class="toctext">Optional additions</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#UPnP"><span class="tocnumber">6.1</span> <span class="toctext">UPnP</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#Remote_administration"><span class="tocnumber">6.2</span> <span class="toctext">Remote administration</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Caching_web_proxy"><span class="tocnumber">6.3</span> <span class="toctext">Caching web proxy</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#Time_server"><span class="tocnumber">6.4</span> <span class="toctext">Time server</span></a></li>
+<li class="toclevel-2 tocsection-26"><a href="#Content_filtering"><span class="tocnumber">6.5</span> <span class="toctext">Content filtering</span></a></li>
+<li class="toclevel-2 tocsection-27">
+<a href="#Traffic_shaping"><span class="tocnumber">6.6</span> <span class="toctext">Traffic shaping</span></a>
+<ul>
+<li class="toclevel-3 tocsection-28"><a href="#Traffic_shaping_with_shorewall"><span class="tocnumber">6.6.1</span> <span class="toctext">Traffic shaping with shorewall</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-29"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Hardware_Requirements">Hardware Requirements</span></h2>
+<ul>
+<li>At least 1 GB of hard drive space. The base install will take up around 500MB of space and if you want to use a caching web proxy, you will need to reserve space for the cache as well.</li>
+<li>At least two physical network interfaces: a gateway connects two networks with each other (actually a router can be made using a single physical interface that underlays two <a href="../en/VLAN.html" title="VLAN">VLAN</a> interfaces and is connected to a VLAN-aware switch, so-called router-on-a-stick configuration, but it is not covered in this article). You will need to be able to connect those networks to the same physical computer. One interface must connect to the external network, while the other connects to the internal network.</li>
+<li>A hub, switch or UTP cable: You need a way to connect the other computers to the gateway</li>
+</ul>
+<h2><span class="mw-headline" id="Network_interface_configuration">Network interface configuration</span></h2>
+<h3><span class="mw-headline" id="Persistent_interface_naming">Persistent interface naming</span></h3>
+<p>Systemd automatically chooses unique interface names for all your interfaces. These are persistent and will not change when you reboot.
+However you might want to rename your interfaces e.g. in order to highlight their different networks to which they connect. Throughout the following sections of this guide, the convention stated below is used:
+</p>
+<ul>
+<li>
+<b>intern0</b>: the network card connected to the LAN. On an actual computer it will probably have the name enp2s0, enp1s1, etc.</li>
+<li>
+<b>extern0</b>: the network card connected to the external network (or WAN). It will probably have the name enp2s0, enp1s1, etc.</li>
+</ul>
+<p>You may change the assigned names of your devices via a configuration file using <a href="../en/Systemd-networkd.html" title="Systemd-networkd">Systemd-networkd</a> described in <a href="../en/Systemd-networkd.html#Renaming_an_interface" title="Systemd-networkd">Systemd-networkd#Renaming an interface</a> or by a <a href="../en/Udev.html" title="Udev">udev</a>-rule following <a href="../en/Network_configuration.html#Change_interface_name" title="Network configuration">Network configuration#Change interface name</a>. Due to the example-rich nature of this article, you might want to choose the names above.
+</p>
+<h3><span class="mw-headline" id="IP_configuration">IP configuration</span></h3>
+<h4><span class="mw-headline" id="With_netctl">With netctl</span></h4>
+<p>Now you will need to configure the network interfaces. One way to do so, is using <a href="../en/Netctl.html" title="Netctl">netctl</a> profiles. You will need to create two profiles.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you will be connecting to the Internet only via PPPoE (you have one WAN port) you <b>do not need</b> to setup or enable the extern0-profile. See below for more information on configuring PPPoE.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/netctl/extern0-profile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Description='Public Interface.'
+Interface=extern0
+Connection=ethernet
+IP='dhcp'</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/netctl/intern0-profile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Description='Private Interface'
+Interface=intern0
+Connection=ethernet
+IP='static'
+Address=('10.0.0.1/24')</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The example configuration above assumes a full subnet. If you are building the gateway for a small amount of people, you will want to change the <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing" class="extiw" title="wikipedia:Classless Inter-Domain Routing">CIDR</a> suffix to accommodate a smaller range. For example <code>/27</code> will give you <code>10.0.0.1</code> to <code>10.0.0.30</code>. There are many CIDR calculators, online and offline, for example <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sipcalc">sipcalc</a></span>.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Use <code>SkipNoCarrier=yes</code> in the LAN profile to make sure the connection is enabled even when the guest on LAN is not yet up.</div>
+<p>Next, we set up the interfaces with netctl:
+</p>
+<pre># netctl enable extern0-profile
+# netctl enable intern0-profile
+</pre>
+<h4><span class="mw-headline" id="With_systemd-networkd">With systemd-networkd</span></h4>
+<p>A straight-forward and simple way to configure network interfaces is via <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a>.
+</p>
+<ul>
+<li>Apply a <a href="../en/Systemd-networkd.html#Wired_adapter_using_DHCP" title="Systemd-networkd">DHCP client configuration</a> for the <code>extern0</code> interface.</li>
+<li>Apply a <a href="../en/Systemd-networkd.html#Wired_adapter_using_a_static_IP" title="Systemd-networkd">static IP configuration</a> for the <code>intern0</code> interface.</li>
+</ul>
+<p>See <a href="../en/Systemd-networkd.html#Configuration_files" title="Systemd-networkd">systemd-networkd#Configuration files</a> for configuration details and an overview of the available options. Run <code>networkctl reload</code> to apply the configuration changes.
+</p>
+<h3>
+<span id="ADSL_connection.2FPPPoE"></span><span class="mw-headline" id="ADSL_connection/PPPoE">ADSL connection/PPPoE</span>
+</h3>
+<p>Using rp-pppoe, we can connect an ADSL modem to the <code>extern0</code> interface of the firewall and have Arch manage the connection. Make sure to put the modem in <i>bridged</i> mode though (either half-bridge or RFC1483), otherwise, the modem will act as a router too. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rp-pppoe">rp-pppoe</a></span> package.
+</p>
+<p>It should be noted that if you use only PPPoE to connect to the internet (i.e. you do not have another WAN port, except for the one that connects to your modem) you do not need to set up the <code>extern0-profile</code> as the external pseudo-interface will be ppp0.
+</p>
+<h4><span class="mw-headline" id="PPPoE_configuration">PPPoE configuration</span></h4>
+<p>You can use netctl to setup the PPPoE connection. To get started, do
+</p>
+<pre># cp /etc/netctl/examples/pppoe /etc/netctl/
+</pre>
+<p>and start editing. For the interface configuration, choose the interface that connects to the modem. If you only connect to the internet through PPPoE, this will probably be <code>extern0</code>. Fill in the rest of the fields with your ISP information. See the PPPoE section in the <span class="plainlinks archwiki-template-man" title="$ man 5 netctl.profile"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/netctl.profile.5">netctl.profile(5)</a></span> man page for more information on the fields.
+</p>
+<h2><span class="mw-headline" id="DNS_and_DHCP">DNS and DHCP</span></h2>
+<p>We will use <a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a> as DNS server and optionally as DHCP daemon for the LAN. It was specifically designed for small sites. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> it with the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dnsmasq">dnsmasq</a></span> package.
+</p>
+<p>Dnsmasq can to be configured to be a DHCP server with a configuration similar to the following:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/dnsmasq.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">interface=intern0 # make dnsmasq listen for requests only on intern0 (our LAN)
+#no-dhcp-interface=intern0  # optionally disable the DHCP functionality of dnsmasq and use systemd-networkd instead
+expand-hosts      # add a domain to simple hostnames in /etc/hosts
+domain=foo.bar    # allow fully qualified domain names for DHCP hosts (needed when
+                  # "expand-hosts" is used)
+dhcp-range=10.0.0.2,10.0.0.255,255.255.255.0,1h # defines a DHCP-range for the LAN: 
+                  # from 10.0.0.2 to .255 with a subnet mask of 255.255.255.0 and a
+                  # DHCP lease of 1 hour (change to your own preferences)
+</pre>
+<p>Somewhere below, you will notice you can also add "static" DHCP leases, i.e. assign an IP-address to the MAC-address of a computer on the LAN. This way, whenever the computer requests a new lease, it will get the same IP. That is very useful for network servers with a DNS record. You can also deny certain MACs from obtaining an IP.
+</p>
+<p>Now <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> the <code>dnsmasq.service</code>.
+</p>
+<h3><span class="mw-headline" id="DHCP_via_systemd-networkd">DHCP via systemd-networkd</span></h3>
+<p>To use <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> instead of <a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a> as DHCP server, add a <code>[DHCPServer]</code> section to the configuration file for the <code>intern0</code> interface. See <a href="../en/Systemd-networkd.html#%5BDHCPServer%5D" title="Systemd-networkd">systemd-networkd#[DHCPServer]</a> for the available options.
+</p>
+<h2><span class="mw-headline" id="Connection_sharing">Connection sharing</span></h2>
+<p>Time to tie the two network interfaces together.
+</p>
+<h3><span class="mw-headline" id="Manual">Manual</span></h3>
+<p>First of all, we need to allow packets to hop from one network interface to the other. For this one needs to have packet forwarding enabled in kernel via <span class="plainlinks archwiki-template-man" title="$ man 8 sysctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sysctl.8">sysctl(8)</a></span>. See <a href="../en/Internet_sharing.html#Enable_packet_forwarding" title="Internet sharing">Internet sharing#Enable packet forwarding</a> for details.
+</p>
+<p>Assuming <code>net.**forwarding</code> is set correctly (i.e. is <code>1</code>), packets still need to be properly sent and received. Hence, it is necessary to translate the IP addresses between the outward facing network and the subnet used locally. The technique is called <i>masquerading</i> . We also need two forwarding rules to keep connections going and enable LAN to WAN forwarding. For this task, we are going to use <a href="../en/Iptables.html" title="Iptables">iptables</a>.
+</p>
+<p>Refer to the section <a href="../en/Internet_sharing.html#Enable_NAT" title="Internet sharing">Internet sharing#Enable NAT</a> for how to masquerade the <code>extern0</code> interface and packages from <code>intern0</code> to <code>extern0</code>. Afterwards persist the newly added rules via <code>iptables-save -f /etc/iptables/iptables.rules</code>, see <a href="../en/Iptables.html#Configuration_and_usage" title="Iptables">iptables#Configuration and usage</a> for details.
+</p>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>iptables.service</code>.  The router should now be fully functional and route your traffic. Since it is facing the public Internet, it makes sense to additionally secure it using a <a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a>.
+</p>
+<h3><span class="mw-headline" id="With_systemd-networkd_2">With systemd-networkd</span></h3>
+<p>Amend or create the previously discussed network configuration for <code>intern0</code> to include the <code>IPMasquerade=true</code> option in the <code>[Network]</code> section. This configuration will implicitly enable packet forwarding on all interfaces, see <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.network"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.network.5">systemd.network(5)</a></span>. See <a href="../en/Systemd-networkd.html#%5BDHCPServer%5D" title="Systemd-networkd">systemd-networkd#[DHCPServer]</a> for an example configuration.
+</p>
+<h3><span class="mw-headline" id="Connection_sharing_with_shorewall">Connection sharing with shorewall</span></h3>
+<p>See <a href="../en/Shorewall.html" title="Shorewall">Shorewall</a> for a detailed configuration guide.
+</p>
+<h2><span class="mw-headline" id="IPv6_tips">IPv6 tips</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/IPv6.html" title="IPv6">IPv6</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> Merge into the main article, the topic is not specific to <i>router configuration</i>. The wording should be probably changed along the way. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Router">Talk:Router#</a>)</div>
+</div>
+<p>Useful reading: <a href="../en/IPv6.html" title="IPv6">IPv6</a> and the <a href="https://en.wikipedia.org/wiki/IPv6" class="extiw" title="wikipedia:IPv6">wikipedia:IPv6</a>.
+</p>
+<h3><span class="mw-headline" id="Unique_Local_Addresses">Unique Local Addresses</span></h3>
+<p>You can use your router in IPv6 mode even if you do not have an IPv6 address from your ISP. Unless you disable IPv6, all interfaces should have been assigned a unique <code>fe80::/10</code> address.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Add an offline method to generate an ULA. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Router">Talk:Router#</a>)</div>
+</div>
+<p>For internal networking the block <code>fc00::/7</code> has been reserved. These addresses are guaranteed to be unique and non-routable from the open Internet. Addresses that belong to the <code>fc00::/7</code> block are called <a href="https://en.wikipedia.org/wiki/Unique_local_address" class="extiw" title="wikipedia:Unique local address">Unique Local Addresses</a>. To get started <a rel="nofollow" class="external text" href="http://www.simpledns.com/private-ipv6.aspx">generate a ULA /64 block</a> to use in your network. For this example we will use <code>fd00:aaaa:bbbb:cccc::/64</code>. Firstly, we must assign a static IPv6 on the internal interface. Modify the <code>intern0-profile</code> we created above to include the following line:
+</p>
+<pre> Address6=('fd00:aaaa:bbbb:cccc::1/64')
+</pre>
+<p>This will add the ULA to the internal interface. As far as the router goes, this is all you need to configure.
+</p>
+<h3><span class="mw-headline" id="Global_Unicast_Addresses">Global Unicast Addresses</span></h3>
+<p>If your ISP or WAN network can access the IPv6 Internet, you can additionally assign global link addresses to your router and propagate them through <a href="#Router_Advertisement_and_Stateless_Autoconfiguration_.28SLAAC.29">SLAAC</a> to your internal network. The global unicast prefix is usually either <i>static</i> or provided through <i>prefix delegation</i>.
+</p>
+<h4><span class="mw-headline" id="Static_IPv6_prefix">Static IPv6 prefix</span></h4>
+<p>If your ISP has provided you with a static prefix, then edit <code>/etc/netctl/extern0-profile</code> and simply add the IPv6 and the IPv6 prefix (usually /64) you have been provided
+</p>
+<pre> Address6=('2002:1:2:3:4:5:6:7/64')
+</pre>
+<p>You can use this in addition to the ULA address described above.
+</p>
+<h4><span class="mw-headline" id="Acquiring_IPv6_prefix_via_DHCPv6-PD">Acquiring IPv6 prefix via DHCPv6-PD</span></h4>
+<p>If your ISP handles IPv6 via prefix delegation, then you can follow the instructions in the <a href="../en/IPv6.html#Prefix_delegation_(DHCPv6-PD)" title="IPv6">IPv6#Prefix delegation (DHCPv6-PD)</a> on how to properly configure your router. Following the conventions of this article, the WAN interface is <code>extern0</code> (or <code>ppp0</code> if you are connecting through PPPoE) and the LAN interface is <code>intern0</code>.
+</p>
+<h3>
+<span id="Router_Advertisement_and_Stateless_Autoconfiguration_.28SLAAC.29"></span><span class="mw-headline" id="Router_Advertisement_and_Stateless_Autoconfiguration_(SLAAC)">Router Advertisement and Stateless Autoconfiguration (SLAAC)</span>
+</h3>
+<p>To properly hand out IPv6s to the network clients, we will need to use an advertising daemon. Follow the details of the <a href="../en/IPv6.html#For_gateways" title="IPv6">main IPv6 article</a> on how to set up <code>radvd</code>. According to this guide's convention, the LAN-facing interface is <code>intern0</code>. You can either advertise all prefixes or choose which prefixes will be assigned to the local network.
+</p>
+<h2><span class="mw-headline" id="Optional_additions">Optional additions</span></h2>
+<h3><span class="mw-headline" id="UPnP">UPnP</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Mention the alternative port forwarding protocol <a href="https://en.wikipedia.org/wiki/NAT_Port_Mapping_Protocol" class="extiw" title="wikipedia:NAT Port Mapping Protocol">NAT-PMP</a>, that is supported by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=miniupnpd">miniupnpd</a></span>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Router">Talk:Router#</a>)</div>
+</div>
+<p>The above configuration of shorewall does not include <a href="https://en.wikipedia.org/wiki/UPnP" class="extiw" title="wikipedia:UPnP">UPnP</a> support. Use of UPnP is discouraged as it may make the gateway vulnerable to attacks from within the LAN. However, some applications require this to function correctly.
+</p>
+<p>To enable UPnP on your router, you need to install an UPnP <a href="https://en.wikipedia.org/wiki/Internet_Gateway_Device_Protocol" class="extiw" title="wikipedia:Internet Gateway Device Protocol">Internet Gateway Device (IGD) protocol</a> daemon. To get it, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=miniupnpd">miniupnpd</a></span> package.
+</p>
+<p>Read the <a rel="nofollow" class="external text" href="http://www.shorewall.net/UPnP.html">Shorewall guide on UPnP</a> for more information.
+</p>
+<h3><span class="mw-headline" id="Remote_administration">Remote administration</span></h3>
+<p><a href="../en/OpenSSH.html" title="OpenSSH">OpenSSH</a> can be used to administer your router remotely. This is useful for running it in headless mode (no monitor or input devices).
+</p>
+<h3><span class="mw-headline" id="Caching_web_proxy">Caching web proxy</span></h3>
+<p>See <a href="../en/Squid.html" title="Squid">Squid</a> or <a href="../en/Polipo.html" title="Polipo">Polipo</a> for the setup of a web proxy to speed up browsing and/or adding an extra layer of security.
+</p>
+<h3><span class="mw-headline" id="Time_server">Time server</span></h3>
+<p>To use the router as a time server, see <a href="../en/System_time.html#Time_synchronization" title="System time">System time#Time synchronization</a> for available Network Time Protocol (NTP) server implementations.
+</p>
+<p>Then, configure shorewall or iptables to allow NTP traffic in and out.
+</p>
+<h3><span class="mw-headline" id="Content_filtering">Content filtering</span></h3>
+<p>Install and configure <a href="../en/DansGuardian.html" title="DansGuardian">DansGuardian</a> or <a href="../en/Privoxy.html" title="Privoxy">Privoxy</a> if you need a content filtering solution.
+</p>
+<h3><span class="mw-headline" id="Traffic_shaping">Traffic shaping</span></h3>
+<p>Traffic shaping is very useful, especially when you are not the only one on the LAN. The idea is to assign a priority to different types of traffic. Interactive traffic (ssh, online gaming) probably needs the highest priority, while P2P traffic can do with the lowest. Then there is everything in between.
+</p>
+<h4><span class="mw-headline" id="Traffic_shaping_with_shorewall">Traffic shaping with shorewall</span></h4>
+<p>See <a href="../en/Shorewall.html#Traffic_shaping" title="Shorewall">Shorewall#Traffic shaping</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a></li>
+<li><a href="../en/Internet_sharing.html" title="Internet sharing">Internet sharing</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Network_sharing.html" title="Category:Network sharing">Network sharing</a></li>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+<li><a href="../en/Category:Firewalls.html" title="Category:Firewalls">Firewalls</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Router&amp;oldid=643345">https://wiki.archlinux.org/index.php?title=Router&amp;oldid=643345</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 December 2020, at 20:56.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

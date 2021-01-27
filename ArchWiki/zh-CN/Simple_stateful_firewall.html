@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Simple stateful firewall (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Simple_stateful_firewall_简体中文 rootpage-Simple_stateful_firewall_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Simple stateful firewall (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple_stateful_firewall</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2015-10-18。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall&amp;diff=0&amp;oldid=400995">更改</a>，则您可以帮助同步翻译。</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>本文或本节需要<a href="../zh-CN/ArchWiki:Contributing.html#%E7%BF%BB%E8%AF%91" title="ArchWiki:Contributing (简体中文)">翻译</a>。要贡献翻译，请访问<a href="../zh-CN/ArchWiki:Translation_Team.html" class="mw-redirect" title="ArchWiki Translation Team (简体中文)">简体中文翻译团队</a>。</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>附注：</b> 部分内容未翻译（在 <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Simple_stateful_firewall_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Simple stateful firewall (简体中文)#</a> 中讨论）</div>
+</div>
+<p>这篇文件解释了如何使用 <a href="../zh-CN/Iptables.html" title="Iptables (简体中文)">iptables</a> 建立状态防火墙。也解释了规则的含义以及为何需要这些规则，为简单起见，文章分成两个主要章节，第一章节讲解在单独一台计算机上使用 iptables，第二章节在第一章节基础上建立一个 NAT 网关。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 规则是按照执行的顺序给与的，如果是远程登录计算机，那么在设置规则时可能会被计算机拒之门外，所以只能在本地登录计算机的时候做下面的设置。
+<p><a href="../en/Simple_stateful_firewall.html#Example_iptables.rules_file" title="Simple stateful firewall">example config file</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 可以用来解决这个问题。
+</p>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6"><span class="tocnumber">1</span> <span class="toctext">前提条件</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Firewall_for_a_single_machine"><span class="tocnumber">2</span> <span class="toctext">Firewall for a single machine</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%E5%88%9B%E5%BB%BA%E5%BF%85%E8%A6%81%E7%9A%84%E9%93%BE"><span class="tocnumber">2.1</span> <span class="toctext">创建必要的链</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#FORWARD_%E9%93%BE"><span class="tocnumber">2.2</span> <span class="toctext">FORWARD 链</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#The_OUTPUT_chain"><span class="tocnumber">2.3</span> <span class="toctext">The OUTPUT chain</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#The_INPUT_chain"><span class="tocnumber">2.4</span> <span class="toctext">The INPUT chain</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Example_iptables.rules_file"><span class="tocnumber">2.5</span> <span class="toctext">Example iptables.rules file</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#The_TCP_and_UDP_chains"><span class="tocnumber">2.6</span> <span class="toctext">The TCP and UDP chains</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Opening_ports_to_incoming_connections"><span class="tocnumber">2.6.1</span> <span class="toctext">Opening ports to incoming connections</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Port_knocking"><span class="tocnumber">2.6.2</span> <span class="toctext">Port knocking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#Protection_against_spoofing_attacks"><span class="tocnumber">2.7</span> <span class="toctext">Protection against spoofing attacks</span></a></li>
+<li class="toclevel-2 tocsection-12">
+<a href="#%22Hide%22_your_computer"><span class="tocnumber">2.8</span> <span class="toctext">"Hide" your computer</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#Block_ping_request"><span class="tocnumber">2.8.1</span> <span class="toctext">Block ping request</span></a></li>
+<li class="toclevel-3 tocsection-14">
+<a href="#Tricking_port_scanners"><span class="tocnumber">2.8.2</span> <span class="toctext">Tricking port scanners</span></a>
+<ul>
+<li class="toclevel-4 tocsection-15"><a href="#SYN_scans"><span class="tocnumber">2.8.2.1</span> <span class="toctext">SYN scans</span></a></li>
+<li class="toclevel-4 tocsection-16"><a href="#UDP_scans"><span class="tocnumber">2.8.2.2</span> <span class="toctext">UDP scans</span></a></li>
+<li class="toclevel-4 tocsection-17"><a href="#Restore_the_Final_Rule"><span class="tocnumber">2.8.2.3</span> <span class="toctext">Restore the Final Rule</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18">
+<a href="#Protection_against_other_attacks"><span class="tocnumber">2.9</span> <span class="toctext">Protection against other attacks</span></a>
+<ul>
+<li class="toclevel-3 tocsection-19"><a href="#Bruteforce_attacks"><span class="tocnumber">2.9.1</span> <span class="toctext">Bruteforce attacks</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20"><a href="#Saving_the_rules"><span class="tocnumber">2.10</span> <span class="toctext">Saving the rules</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#IPv6"><span class="tocnumber">2.11</span> <span class="toctext">IPv6</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-22">
+<a href="#Setting_up_a_NAT_gateway"><span class="tocnumber">3</span> <span class="toctext">Setting up a NAT gateway</span></a>
+<ul>
+<li class="toclevel-2 tocsection-23">
+<a href="#Setting_up_the_filter_table"><span class="tocnumber">3.1</span> <span class="toctext">Setting up the filter table</span></a>
+<ul>
+<li class="toclevel-3 tocsection-24"><a href="#Creating_necessary_chains"><span class="tocnumber">3.1.1</span> <span class="toctext">Creating necessary chains</span></a></li>
+<li class="toclevel-3 tocsection-25"><a href="#Setting_up_the_FORWARD_chain"><span class="tocnumber">3.1.2</span> <span class="toctext">Setting up the FORWARD chain</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#Setting_up_the_fw-interfaces_and_fw-open_chains"><span class="tocnumber">3.1.3</span> <span class="toctext">Setting up the fw-interfaces and fw-open chains</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27">
+<a href="#Setting_up_the_nat_table"><span class="tocnumber">3.2</span> <span class="toctext">Setting up the nat table</span></a>
+<ul>
+<li class="toclevel-3 tocsection-28"><a href="#Setting_up_the_POSTROUTING_chain"><span class="tocnumber">3.2.1</span> <span class="toctext">Setting up the POSTROUTING chain</span></a></li>
+<li class="toclevel-3 tocsection-29"><a href="#Setting_up_the_PREROUTING_chain"><span class="tocnumber">3.2.2</span> <span class="toctext">Setting up the PREROUTING chain</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-30"><a href="#Saving_the_rules_2"><span class="tocnumber">3.3</span> <span class="toctext">Saving the rules</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-31"><a href="#See_Also"><span class="tocnumber">4</span> <span class="toctext">See Also</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.89.8D.E6.8F.90.E6.9D.A1.E4.BB.B6"></span><span class="mw-headline" id="前提条件">前提条件</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> Linux内核在编译时需要加入 iptables 支持，所有的常用 Arch Linux 内核都有 iptables 支持。</div>
+<p>首先，安装用户层工具 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables">iptables</a></span> 或者确保其已被安装。
+</p>
+<p>本文章假设现在系统中没有设置 iptable 规则。运行如下命令检测当前规则集并且确保当前没有规则：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># iptables-save</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Generated by iptables-save v1.4.19.1 on Thu Aug  1 19:28:53 2013
+*filter
+:INPUT ACCEPT [50:3763]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [30:3472]
+COMMIT
+# Completed on Thu Aug  1 19:28:53 2013
+</pre>
+<p>或者
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># iptables -nvL --line-numbers</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Chain INPUT (policy ACCEPT 156 packets, 12541 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 82 packets, 8672 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+</pre>
+<p>如果设置了规则，需要将规则重置，并且加载默认规则，运行：
+</p>
+<pre># iptables-restore &lt; /etc/iptables/empty.rules
+</pre>
+<p>否则，参阅 <a href="../zh-CN/Iptables.html#%E9%87%8D%E7%BD%AE%E8%A7%84%E5%88%99" title="Iptables (简体中文)">Iptables (简体中文)#重置规则</a>。
+</p>
+<h2><span class="mw-headline" id="Firewall_for_a_single_machine">Firewall for a single machine</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 因为 iptables 按照线性顺序从上到下处理链的规则，所以建议按照规则执行的逻辑将频繁命中的规则放到靠近链开始的地方。规则有相关的运行成本，所以规则不能仅根据字节/数据包数量的经验观测来重新排列。</div>
+<h3>
+<span id=".E5.88.9B.E5.BB.BA.E5.BF.85.E8.A6.81.E7.9A.84.E9.93.BE"></span><span class="mw-headline" id="创建必要的链">创建必要的链</span>
+</h3>
+<p>对于基本的设置，我们将创建两条用户定义的链 — 用来打开防火墙的端口。
+</p>
+<pre># iptables -N TCP
+# iptables -N UDP
+</pre>
+<p>链可以有任意的名字，我们选择这两个名字只是为了匹配在以后规则中想要处理的协议，其经常使用协议参数指定，例如，使用 <code>-p tcp</code>。
+</p>
+<pre># iptables -N TCP
+# iptables -N UDP
+</pre>
+<h3>
+<span id="FORWARD_.E9.93.BE"></span><span class="mw-headline" id="FORWARD_链">FORWARD 链</span>
+</h3>
+<p>如果想要设置计算机为NAT网关，请参阅 <a href="#Setting_up_a_NAT_gateway">#Setting up a NAT gateway</a>。然而对于单独计算机，只需要简单设置 <b>FORWARD</b> 链规则为 <b>DROP</b>，然后继续。
+</p>
+<pre># iptables -P FORWARD DROP
+</pre>
+<h3><span class="mw-headline" id="The_OUTPUT_chain">The OUTPUT chain</span></h3>
+<p>我们不需要过滤任何输出流，这会使设置十分复杂，并且需要其他额外的思路，因为这个简单的愿意，我们设置 <b>OUTPUT</b> 链规则为 <b>ACCEPT</b>。
+</p>
+<pre># iptables -P OUTPUT ACCEPT
+</pre>
+<h3><span class="mw-headline" id="The_INPUT_chain">The INPUT chain</span></h3>
+<p>和上述的链一样，设置 <b>INPUT</b> 链默认策略为 <b>DROP</b> 已避免某些东西莫名其妙的穿过规则。停止所有的数据交换，然后指定可以被允许的数据是建立一个安全的防火墙的最好方式。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 如果使用 SSH 登陆，之后的操作将导致丢失 SSH 链接。通过下面的步骤避免出现这个问题：（1）将下面的语句添加到第一 INPUT 链规则中（将保持界面开启）。（2）</div>
+<pre># iptables -P INPUT DROP
+</pre>
+<p>Every packet that is received by any network interface will pass the <b>INPUT</b> chain first, if it is destined for this machine. In this chain, we make sure that only the packets that we want are accepted.
+</p>
+<p>The first rule added to the INPUT chain will allow traffic that belongs to established connections, or new valid traffic that is related to these connections such as ICMP errors, or echo replies (the packets a host returns when pinged). <b>ICMP</b> stands for <b>Internet Control Message Protocol</b>. Some ICMP messages are very important and help to manage congestion and MTU, and are accepted by this rule. 
+</p>
+<p>The connection state <code>ESTABLISHED</code> implies that either another rule previously allowed the initial (<code>--ctstate NEW</code>) connection attempt or the connection was already active (for example an active remote SSH connection) when setting the rule: 
+</p>
+<pre># iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</pre>
+<p>The second rule will accept all traffic from the "loopback" (lo) interface, which is necessary for many applications and services.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You can add more trusted interfaces here such as "eth1" if you do not want/need the traffic filtered by the firewall, but be warned that if you have a NAT setup that redirects any kind of traffic to this interface from anywhere else in the network (let's say a router), it will get through, regardless of any other settings you may have.</div>
+<pre># iptables -A INPUT -i lo -j ACCEPT
+</pre>
+<p>The third rule will drop all traffic with an "INVALID" state match. Traffic can fall into four "state" categories: NEW, ESTABLISHED, RELATED or INVALID and this is what makes this a "stateful" firewall rather than a less secure "stateless" one. States are tracked using the "nf_conntrack_*" kernel modules which are loaded automatically by the kernel as you add rules.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>This rule will drop all packets with invalid headers or checksums, invalid TCP flags, invalid ICMP messages (such as a port unreachable when we did not send anything to the host), and out of sequence packets which can be caused by sequence prediction or other similar attacks. The "DROP" target will drop a packet without any response, contrary to REJECT which politely refuses the packet. We use DROP because there is no proper "REJECT" response to packets that are INVALID, and we do not want to acknowledge that we received these packets.</li>
+<li>ICMPv6 Neighbor Discovery packets remain untracked, and will always be classified "INVALID" though they are not corrupted or the like. Keep this in mind, and accept them before this rule! iptables -A INPUT -p 41 -j ACCEPT</li>
+</ul>
+</div>
+<pre># iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+</pre>
+<p>The next rule will accept all new incoming <b>ICMP echo requests</b>, also known as pings. Only the first packet will count as NEW, the rest will be handled by the RELATED,ESTABLISHED rule. Since the computer is not a router, no other ICMP traffic with state NEW needs to be allowed.
+</p>
+<pre># iptables -A INPUT -p icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+</pre>
+<p>Now we attach the TCP and UDP chains to the INPUT chain to handle all new incoming connections. Once a connection is accepted by either TCP or UDP chain, it is handled by the RELATED/ESTABLISHED traffic rule. The TCP and UDP chains will either accept new incoming connections, or politely reject them. New TCP connections must be started with SYN packets.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  NEW but not SYN is the only invalid TCP flag not covered by the INVALID state. The reason is because they are rarely malicious packets, and they should not just be dropped. Instead, we simply do not accept them, so they are rejected with a TCP RST by the next rule.</div>
+<pre># iptables -A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+# iptables -A INPUT -p tcp --syn -m conntrack --ctstate NEW -j TCP
+</pre>
+<p>We reject TCP connections with TCP RST packets and UDP streams with ICMP port unreachable messages if the ports are not opened. This imitates default Linux behavior (RFC compliant), and it allows the sender to quickly close the connection and clean up.
+</p>
+<pre># iptables -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+# iptables -A INPUT -p tcp -j REJECT --reject-with tcp-rst
+</pre>
+<p>For other protocols, we add a final rule to the INPUT chain to reject all remaining incoming traffic with icmp protocol unreachable messages. This imitates Linux's default behavior.
+</p>
+<pre># iptables -A INPUT -j REJECT --reject-with icmp-proto-unreachable
+</pre>
+<h3><span class="mw-headline" id="Example_iptables.rules_file">Example iptables.rules file</span></h3>
+<p>Example of <code>iptables.rules</code> file after running all the commands from above:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/iptables/iptables.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Generated by iptables-save v1.4.18 on Sun Mar 17 14:21:12 2013
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:TCP - [0:0]
+:UDP - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -j REJECT --reject-with icmp-proto-unreachable
+COMMIT
+# Completed on Sun Mar 17 14:21:12 2013
+</pre>
+<p>This file can be generated with:
+</p>
+<pre># iptables-save &gt; /etc/iptables/iptables.rules
+</pre>
+<p>and can be used to continue with the following sections. If you are setting up the firewall remotely via SSH, append the following rule to allow new SSH connections before continuing (adjust port as required):
+</p>
+<pre>-A TCP -p tcp --dport 22 -j ACCEPT
+</pre>
+<h3><span class="mw-headline" id="The_TCP_and_UDP_chains">The TCP and UDP chains</span></h3>
+<p>The TCP and UDP chains contain rules for accepting new incoming TCP connections and UDP streams to specific ports.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This is where you need to add rules to accept incoming connections, such as SSH, HTTP or other services that you want to access remotely.</div>
+<h4><span class="mw-headline" id="Opening_ports_to_incoming_connections">Opening ports to incoming connections</span></h4>
+<p>To accept incoming TCP connections on port 80 for a web server:
+</p>
+<pre># iptables -A TCP -p tcp --dport 80 -j ACCEPT
+</pre>
+<p>To accept incoming TCP connections on port 443 for a web server (HTTPS):
+</p>
+<pre># iptables -A TCP -p tcp --dport 443 -j ACCEPT
+</pre>
+<p>To allow remote SSH connections (on port 22):
+</p>
+<pre># iptables -A TCP -p tcp --dport 22 -j ACCEPT
+</pre>
+<p>To accept incoming UDP streams on port 53 for a DNS server:
+</p>
+<pre># iptables -A UDP -p udp --dport 53 -j ACCEPT
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 8 iptables"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/iptables.8">iptables(8)</a></span> for more advanced rules, like matching multiple ports.
+</p>
+<h4><span class="mw-headline" id="Port_knocking">Port knocking</span></h4>
+<p>Port knocking is a method to externally open ports that, by default, the firewall keeps closed. It works by requiring connection attempts to a series of predefined closed ports. When the correct sequence of port "knocks" (connection attempts) is received, the firewall opens certain port(s) to allow a connection. See <a href="../en/Port_knocking.html" title="Port knocking">Port knocking</a> for more information.
+</p>
+<h3><span class="mw-headline" id="Protection_against_spoofing_attacks">Protection against spoofing attacks</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <code>rp_filter</code> is currently set to <code>1</code> by default in <code>/usr/lib/sysctl.d/50-default.conf</code>, so the following step is not necessary.</div>
+<p>Blocking reserved local addresses incoming from the internet or local network is normally done through setting <code>rp_filter</code> (Reverse Path Filter) in sysctl to 1. To do so, add the following line to your <code>/etc/sysctl.d/90-firewall.conf</code> file (see <a href="../en/Sysctl.html" title="Sysctl">sysctl</a> for details) to enable source address verification which is built into Linux kernel itself. The verification by the kernel will handle spoofing better than individual iptables rules for each case.
+</p>
+<pre>net.ipv4.conf.all.rp_filter=1
+</pre>
+<p>This can be done with netfilter instead if statistics (and better logging) are desired:
+</p>
+<pre># iptables -t raw -I PREROUTING -m rpfilter --invert -j DROP
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> There is no reason to enable this in both places. The netfilter method is the modern choice and works with IPv6 too.</div>
+<p>For niche setups where asynchronous routing is used, the <code>rp_filter=2</code> sysctl option needs to be used instead. Passing the <code>--loose</code> switch to the <code>rpfilter</code> module will accomplish the same thing with netfilter.
+</p>
+<h3>
+<span id=".22Hide.22_your_computer"></span><span class="mw-headline" id='"Hide"_your_computer'>"Hide" your computer</span>
+</h3>
+<p>If you are running a desktop machine, it might be a good idea to block some incoming requests.
+</p>
+<h4><span class="mw-headline" id="Block_ping_request">Block ping request</span></h4>
+<p>A 'Ping' request is an ICMP packet sent to the destination address to ensure connectivity between the devices. If your network works well, you can safely block all ping requests. It is important to note that this <i>does not</i> actually hide your computer — any packet sent to you is rejected, so you will still show up in a simple nmap "ping scan" of an IP range.
+</p>
+<p>This is rudimentary "protection" and makes life difficult when debugging issues in the future. You should only do this for education purposes.
+</p>
+<p>To block echo requests, add the following line to your <code>/etc/sysctl.d/90-firewall.conf</code> file (see <a href="../en/Sysctl.html" title="Sysctl">sysctl</a> for details):
+</p>
+<pre>net.ipv4.icmp_echo_ignore_all = 1
+</pre>
+<p>More information is in the iptables man page, or reading the docs and examples on the webpage <a rel="nofollow" class="external free" href="http://www.snowman.net/projects/ipt_recent/">http://www.snowman.net/projects/ipt_recent/</a>
+</p>
+<h4><span class="mw-headline" id="Tricking_port_scanners">Tricking port scanners</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This opens you up to a form of <a href="https://en.wikipedia.org/wiki/Denial-of-service_attack" class="extiw" title="wikipedia:Denial-of-service attack">DoS</a>. An attack can send packets with spoofed IPs and get them blocked from connecting to your services.</div>
+<p>Port scans are used by attackers to identify open ports on your computer. This allows them to identify and fingerprint your running services and possibly launch exploits against them.
+</p>
+<p>The INVALID state rule will take care of every type of port scan except UDP, ACK and SYN scans (-sU, -sA and -sS in nmap respectively). 
+</p>
+<p><i>ACK scans</i> are not used to identify open ports, but to identify ports filtered by a firewall. Due to the SYN check for all TCP connections with the state NEW, every single packet sent by an ACK scan will be correctly rejected by a TCP RST packet. Some firewalls drop these packets instead, and this allows an attacker to map out the firewall rules.
+</p>
+<p>The recent module can be used to trick the remaining two types of port scans. The recent module is used to add hosts to a "recent" list which can be used to fingerprint and stop certain types of attacks. Current recent lists can be viewed in <code>/proc/net/xt_recent/</code>.
+</p>
+<h5><span class="mw-headline" id="SYN_scans">SYN scans</span></h5>
+<p>In a SYN scan, the port scanner sends SYN packet to every port. Closed ports return a TCP RST packet, or get dropped by a strict firewall. Open ports return a SYN ACK packet regardless of the presence of a firewall.
+</p>
+<p>The recent module can be used to keep track of hosts with rejected connection attempts and return a TCP RST for any SYN packet they send to open ports as if the port was closed. If an open port is the first to be scanned, a SYN ACK will still be returned, so running applications such as ssh on non-standard ports is required for this to work consistently.
+</p>
+<p>First, insert a rule at the top of the TCP chain. This rule responds with a TCP RST to any host that got onto the TCP-PORTSCAN list in the past sixty seconds. The <code>--update</code> switch causes the recent list to be updated, meaning the 60 second counter is reset.
+</p>
+<pre># iptables -I TCP -p tcp -m recent --update --seconds 60 --name TCP-PORTSCAN -j REJECT --reject-with tcp-rst
+</pre>
+<p>Next, the rule for rejecting TCP packets need to be modified to add hosts with rejected packets to the TCP-PORTSCAN list.
+</p>
+<pre># iptables -D INPUT -p tcp -j REJECT --reject-with tcp-rst
+# iptables -A INPUT -p tcp -m recent --set --name TCP-PORTSCAN -j REJECT --reject-with tcp-rst
+</pre>
+<h5><span class="mw-headline" id="UDP_scans">UDP scans</span></h5>
+<p>UDP port scans are similar to TCP SYN scans except that UDP is a "connectionless" protocol. There are no handshakes or acknowledgements. Instead, the scanner sends UDP packets to each UDP port. Closed ports should return ICMP port unreachable messages, and open ports do not return a response. Since UDP is not a "reliable" protocol, the scanner has no way of knowing if packets were lost, and has to do multiple checks for each port that does not return a response.
+</p>
+<p>The Linux kernel sends out ICMP port unreachable messages very slowly, so a full UDP scan against a Linux machine would take over 10 hours. However, common ports could still be identified, so applying the same countermeasures against UDP scans as SYN scans is a good idea.
+</p>
+<p>First, add a rule to reject packets from hosts on the UDP-PORTSCAN list to the top of the UDP chain.
+</p>
+<pre># iptables -I UDP -p udp -m recent --update --seconds 60 --name UDP-PORTSCAN -j REJECT --reject-with icmp-port-unreachable
+</pre>
+<p>Next, modify the reject packets rule for UDP:
+</p>
+<pre># iptables -D INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+# iptables -A INPUT -p udp -m recent --set --name UDP-PORTSCAN -j REJECT --reject-with icmp-port-unreachable
+</pre>
+<h5><span class="mw-headline" id="Restore_the_Final_Rule">Restore the Final Rule</span></h5>
+<p>If either or both of the portscanning tricks above were used the final default rule is no longer the last rule in the INPUT chain. It needs to be the last rule otherwise it will intercept the trick port scanner rules you just added and they will never be used.  Simply delete the rule (-D), then add it once again using append (-A) which will place it at the end of the chain.
+</p>
+<pre># iptables -D INPUT -j REJECT --reject-with icmp-proto-unreachable
+# iptables -A INPUT -j REJECT --reject-with icmp-proto-unreachable
+</pre>
+<h3><span class="mw-headline" id="Protection_against_other_attacks">Protection against other attacks</span></h3>
+<p>See the <a href="../en/Sysctl.html#TCP/IP_stack_hardening" title="Sysctl">sysctl#TCP/IP stack hardening</a> for relevant kernel parameters.
+</p>
+<h4><span class="mw-headline" id="Bruteforce_attacks">Bruteforce attacks</span></h4>
+<p>Unfortunately, bruteforce attacks on services accessible via an external IP address are common. One reason for this is that the attacks are easy to do with the many tools available. Fortunately, there are a number of ways to protect the services against them. One is the use of appropriate <code>iptables</code> rules which activate and blacklist an IP after a set number of packets attempt to initiate a connection. Another is the use of specialised daemons that monitor the logfiles for failed attempts and blacklist accordingly. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  Using an IP blacklist will stop trivial attacks but it relies on an additional daemon and successful logging (the partition containing /var can become full, especially if an attacker is pounding on the server). Additionally, if the attacker knows your IP address, they can send packets with a spoofed source header and get you locked out of the server. <a href="../en/SSH_keys.html" title="SSH keys">SSH keys</a> provide an elegant solution to the problem of brute forcing without these problems.</div>
+<p>Two packages that ban IPs after too many password failures are <a href="../en/Fail2ban.html" title="Fail2ban">Fail2ban</a> or, for <code>sshd</code> in particular, <a href="../en/Sshguard.html" title="Sshguard">Sshguard</a>. These two applications update iptables rules to reject future connections from blacklisted IP addresses.
+</p>
+<p>The following rules give an example configuration to mitigate SSH bruteforce attacks using <code>iptables</code>.
+</p>
+<pre># iptables -N IN_SSH
+# iptables -A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -j IN_SSH
+# iptables -A IN_SSH -m recent --name sshbf --rttl --rcheck --hitcount 3 --seconds 10 -j DROP
+# iptables -A IN_SSH -m recent --name sshbf --rttl --rcheck --hitcount 4 --seconds 1800 -j DROP 
+# iptables -A IN_SSH -m recent --name sshbf --set -j ACCEPT
+</pre>
+<p>Most of the options should be self-explanatory, they allow for three connection packets in ten seconds. Further tries in that time will blacklist the IP. The next rule adds a quirk by allowing a total of four attempts in 30 minutes. This is done because some bruteforce attacks are actually performed slow and not in a burst of attempts. The rules employ a number of additional options. To read more about them, check the original reference for this example: <a rel="nofollow" class="external text" href="https://compilefailure.blogspot.com/2011/04/better-ssh-brute-force-prevention-with.html">compilefailure.blogspot.com</a>
+</p>
+<p>Using the above rules, now ensure that:
+</p>
+<pre># iptables -A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -j IN_SSH
+</pre>
+<p>is in an appropriate position in the iptables.rules file. 
+</p>
+<p>This arrangement works for the IN_SSH rule if you followed this entire wiki so far:
+</p>
+<pre>*
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j IN_SSH
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+*
+</pre>
+<p>The above rules can, of course, be used to protect any service, though protecting the SSH daemon is probably the most often required one.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> For self-testing the rules after setup, the actual blacklist happening can slow the test making it difficult to fine-tune parameters. One can watch the incoming attempts via <code>cat /proc/net/xt_recent/sshbf</code>. To unblock the own IP during testing, root is needed <code># echo / &gt; /proc/net/xt_recent/sshbf</code>
+</div>
+<h3><span class="mw-headline" id="Saving_the_rules">Saving the rules</span></h3>
+<p>The ruleset is now finished and should be saved to your hard drive so that it can be loaded on every boot.
+</p>
+<p>The systemd unit file points to the location where the rule configuration will be saved:
+</p>
+<pre>iptables=/etc/iptables/iptables.rules
+ip6tables=/etc/iptables/ip6tables.rules
+</pre>
+<p>Save the rules with this command:
+</p>
+<pre># iptables-save &gt; /etc/iptables/iptables.rules
+</pre>
+<p>and make sure your rules are loaded on boot enabling the <b>iptables</b> <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a>.
+</p>
+<p>Check that the rules load correctly by <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Starting">starting</a> <code>iptables.service</code> and then checking the status of the service.
+</p>
+<h3><span class="mw-headline" id="IPv6">IPv6</span></h3>
+<p>If you do not use IPv6 (most ISPs do not support it), you should <a href="../en/IPv6.html#Disable_IPv6" class="mw-redirect" title="Disabling IPv6">disable it</a>. 
+</p>
+<p>Otherwise, you should enable the firewall rules for IPv6. After copying the IPv4 rules as a base: 
+</p>
+<pre># cp /etc/iptables/iptables.rules /etc/iptables/ip6tables.rules
+</pre>
+<p>the first step is to change IPs referenced in the rules from IPv4 format to IPv6 format. 
+</p>
+<p>Next, a few of the rules (built as example in this article for IPv4) have to be adapted. IPv6 obtained a new ICMPv6 protocol, replacing ICMP. Hence, the reject error return codes <code>--reject-with icmp-port-unreachable</code> and <code>--reject-with icmp-proto-unreachable</code> have to be converted to ICMPv6 codes. 
+</p>
+<p>The available ICMPv6 error codes are listed in <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc4443#section-3.1">RFC 4443</a>, which specifies connection attempts blocked by a firewall rule should use <code>--reject-with icmp6-adm-prohibited</code>. Doing so will basically inform the remote system that the connection was rejected by a firewall, rather than a listening service. 
+</p>
+<p>If it is preferred not to explicitly inform about the existence of a firewall filter, the packet may also be rejected without the message: 
+</p>
+<pre> -A INPUT -j REJECT
+</pre>
+<p>The above will reject with the default return error of <code>--reject-with icmp6-port-unreachable</code>. You should note though, that identifying a firewall is a basic feature of port scanning applications and most will identify it regardless. 
+</p>
+<p>In the next step make sure the protocol and extension are changed to be IPv6 appropriate for the rule regarding all new incoming ICMP echo requests (pings):
+</p>
+<pre># ip6tables -A INPUT -p icmpv6 --icmpv6-type 128 -m conntrack --ctstate NEW -j ACCEPT
+</pre>
+<p>Netfilter conntrack does not appear to track ICMPv6 Neighbor Discovery Protocol (the IPv6 equivalent of ARP), so we need to allow ICMPv6 traffic regardless of state for all directly attached subnets. The following should be inserted after dropping <code>--ctstate INVALID</code>, but before any other DROP or REJECT targets, along with a corresponding line for each directly attached subnet:
+</p>
+<pre># ip6tables -A INPUT -s fe80::/10 -p icmpv6 -j ACCEPT
+</pre>
+<p>Since there is no kernel reverse path filter for IPv6, you may want to enable one in <i>ip6tables</i> with the following:
+</p>
+<pre># ip6tables -t raw -A PREROUTING -m rpfilter -j ACCEPT
+# ip6tables -t raw -A PREROUTING -j DROP
+</pre>
+<p>After the configuration is done, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> the <b>ip6tables</b> service, it is meant to run in parallel to <i>iptables</i>.
+</p>
+<h2><span class="mw-headline" id="Setting_up_a_NAT_gateway">Setting up a NAT gateway</span></h2>
+<p>This section of the guide deals with NAT gateways. It is assumed that you already read the <a href="#Firewall_for_a_single_machine">first part of the guide</a> and set up the <b>INPUT</b>, <b>OUTPUT</b>, <b>TCP</b> and <b>UDP</b> chains like described above. All rules so far have been created in the <b>filter</b> table. In this section, we will also have to use the <b>nat</b> table.
+</p>
+<h3><span class="mw-headline" id="Setting_up_the_filter_table">Setting up the filter table</span></h3>
+<h4><span class="mw-headline" id="Creating_necessary_chains">Creating necessary chains</span></h4>
+<p>In our setup, we will use another two chains in the filter table, the <b>fw-interfaces</b> and <b>fw-open</b> chains. Create them with the commands
+</p>
+<pre># iptables -N fw-interfaces
+# iptables -N fw-open
+</pre>
+<h4><span class="mw-headline" id="Setting_up_the_FORWARD_chain">Setting up the FORWARD chain</span></h4>
+<p>Setting up the <b>FORWARD</b> chain is similar to the <b>INPUT</b> chain in the first section.
+</p>
+<p>Now we set up a rule with the <b>conntrack</b> match, identical to the one in the <b>INPUT</b> chain:
+</p>
+<pre># iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</pre>
+<p>The next step is to enable forwarding for trusted interfaces and to make all packets pass the <b>fw-open</b> chain.
+</p>
+<pre># iptables -A FORWARD -j fw-interfaces 
+# iptables -A FORWARD -j fw-open 
+</pre>
+<p>The remaining packets are denied with an <b>ICMP</b> message:
+</p>
+<pre># iptables -A FORWARD -j REJECT --reject-with icmp-host-unreachable
+# iptables -P FORWARD DROP
+</pre>
+<h4><span class="mw-headline" id="Setting_up_the_fw-interfaces_and_fw-open_chains">Setting up the fw-interfaces and fw-open chains</span></h4>
+<p>The meaning of the <b>fw-interfaces</b> and <b>fw-open</b> chains is explained later, when we deal with the <b>POSTROUTING</b> and <b>PREROUTING</b> chains in the <b>nat</b> table, respectively.
+</p>
+<h3><span class="mw-headline" id="Setting_up_the_nat_table">Setting up the nat table</span></h3>
+<p>All over this section, we assume that the outgoing interface (the one with the public internet IP) is <b>ppp0</b>. Keep in mind that you have to change the name in all following rules if your outgoing interface has another name.
+</p>
+<h4><span class="mw-headline" id="Setting_up_the_POSTROUTING_chain">Setting up the POSTROUTING chain</span></h4>
+<p>Now, we have to define who is allowed to connect to the internet. Let's assume we have the subnet <b>192.168.0.0/24</b> (which means all addresses that are of the form 192.168.0.*) on <b>eth0</b>. We first need to accept the machines on this interface in the FORWARD table, that is why we created the <b>fw-interfaces</b> chain above:
+</p>
+<pre># iptables -A fw-interfaces -i eth0 -j ACCEPT
+</pre>
+<p>Now, we have to alter all outgoing packets so that they have our public IP address as the source address, instead of the local LAN address. To do this, we use the <b>MASQUERADE</b> target:
+</p>
+<pre># iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -o ppp0 -j MASQUERADE
+</pre>
+<p>Do not forget the <b>-o ppp0</b> parameter above. If you omit it, your network will be screwed up.
+</p>
+<p>Let's assume we have another subnet, <b>10.3.0.0/16</b> (which means all addresses 10.3.*.*), on the interface <b>eth1</b>. We add the same rules as above again:
+</p>
+<pre># iptables -A fw-interfaces -i eth1 -j ACCEPT
+# iptables -t nat -A POSTROUTING -s 10.3.0.0/16 -o ppp0 -j MASQUERADE
+</pre>
+<p>The last step is to enable IP Forwarding (if it is not already enabled):
+</p>
+<pre># echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+</pre>
+<p>Then edit the relevant line in <code>/etc/sysctl.d/90-firewall.conf</code> so it persists through reboot (see <a href="../en/Sysctl.html" title="Sysctl">sysctl</a> for details):
+</p>
+<pre>net.ipv4.ip_forward = 1
+</pre>
+<p>Machines from these subnets can now use your new NAT machine as their gateway. Note that you may want to set up a DNS and DHCP server like <b>dnsmasq</b> or a combination of <b>bind</b> and <b>dhcpd</b> to simplify network settings DNS resolution on the client machines. This is not the topic of this guide.
+</p>
+<h4><span class="mw-headline" id="Setting_up_the_PREROUTING_chain">Setting up the PREROUTING chain</span></h4>
+<p>Sometimes, we want to change the address of an incoming packet from the gateway to a LAN machine. To do this, we use the <b>fw-open</b> chain defined above, as well as the <b>PREROUTING</b> chain in the <b>nat</b> table in the following two simple examples. 
+</p>
+<p>First, we want to change all incoming SSH packets (port 22) to the ssh server of the machine <b>192.168.0.5</b>:
+</p>
+<pre># iptables -t nat -A PREROUTING -i ppp0 -p tcp --dport 22 -j DNAT --to 192.168.0.5
+# iptables -A fw-open -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
+</pre>
+<p>The second example will show you how to change packets to a different port than the incoming port. We want to change any incoming connection on port <b>8000</b> to our web server on <b>192.168.0.6</b>, port <b>80</b>:
+</p>
+<pre># iptables -t nat -A PREROUTING -i ppp0 -p tcp --dport 8000 -j DNAT --to 192.168.0.6:80
+# iptables -A fw-open -d 192.168.0.6 -p tcp --dport 80 -j ACCEPT
+</pre>
+<p>The same setup also works with udp packets.
+</p>
+<h3><span class="mw-headline" id="Saving_the_rules_2">Saving the rules</span></h3>
+<p>Save the rules:
+</p>
+<pre># iptables-save &gt; /etc/iptables/iptables.rules
+</pre>
+<p>and make sure your rules are loaded when you boot enabling the <b>iptables</b> <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a>.
+</p>
+<h2><span class="mw-headline" id="See_Also">See Also</span></h2>
+<ul>
+<li><a href="../en/Internet_sharing.html" title="Internet sharing">Internet sharing</a></li>
+<li><a href="../en/Router.html" title="Router">Router</a></li>
+<li><a href="../en/Category:Firewalls.html" class="mw-redirect" title="Firewalls">Firewalls</a></li>
+<li><a href="../en/Uncomplicated_Firewall.html" title="Uncomplicated Firewall">Uncomplicated Firewall</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.webhostingtalk.com/showthread.php?t=456571">Methods to block SSH attacks</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.ducea.com/2006/06/28/using-iptables-to-block-brute-force-attacks/">Using iptables to block brute force attacks</a></li>
+<li><a rel="nofollow" class="external text" href="http://linuxconfig.org/collection-of-basic-linux-firewall-iptables-rules">20 Iptables Examples For New SysAdmins</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.thegeekstuff.com/2011/06/iptables-rules-examples/">25 Most Frequently Used Linux IPTables Rules Examples</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Firewalls.html" title="Category:Firewalls (简体中文)">Firewalls (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../zh-CN/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme (简体中文)">Pages or sections flagged with Template:Translateme (简体中文)</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=631499">https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall_(简体中文)&amp;oldid=631499</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2020, at 08:36.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

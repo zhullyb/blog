@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Syslinux (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Syslinux_简体中文 rootpage-Syslinux_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Syslinux (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../zh-CN/Arch_boot_process.html" class="mw-redirect" title="Arch Boot Process (简体中文)">Arch Boot Process (简体中文)</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2020-07-22。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Syslinux&amp;diff=0&amp;oldid=626182">更改</a>，则您可以帮助同步翻译。</div>
+<p><a href="https://en.wikipedia.org/wiki/SYSLINUX" class="extiw" title="wikipedia:SYSLINUX">Syslinux</a>是一个启动加载器集合，可以从硬盘、光盘或通过 <a href="../zh-CN/Preboot_Execution_Environment.html" title="Preboot Execution Environment (简体中文)">PXE</a> 的网络引导启动系统。支持的<a href="../zh-CN/File_systems.html" title="File systems (简体中文)">文件系统</a>包括 <a href="https://en.wikipedia.org/wiki/File_Allocation_Table" class="extiw" title="wikipedia:File Allocation Table">FAT</a>，<a href="https://en.wikipedia.org/wiki/ext2" class="extiw" title="wikipedia:ext2">ext2</a>，<a href="../en/Ext3.html" title="Ext3">ext3</a>，<a href="../zh-CN/Ext4.html" title="Ext4 (简体中文)">ext4</a> 和非压缩单设备 <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> 文件系统。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 在 Syslinux 6.03 版本中，启动加载器可能不支持某些文件系统的部分功能。详情请参考 <a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php/Filesystem">[1]</a>。</div>
+<p><br>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> Syslinux 本身只能访问其所在分区上的数据，参阅 <a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD">#链式加载</a> 来了解如何绕过这个限制。</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#BIOS_%E7%B3%BB%E7%BB%9F"><span class="tocnumber">1</span> <span class="toctext">BIOS 系统</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="tocnumber">1.1</span> <span class="toctext">启动流程</span></a></li>
+<li class="toclevel-2 tocsection-3">
+<a href="#%E5%9C%A8_BIOS_%E4%B8%8A%E5%AE%89%E8%A3%85"><span class="tocnumber">1.2</span> <span class="toctext">在 BIOS 上安装</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85"><span class="tocnumber">1.2.1</span> <span class="toctext">自动安装</span></a></li>
+<li class="toclevel-3 tocsection-5">
+<a href="#%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85"><span class="tocnumber">1.2.2</span> <span class="toctext">手动安装</span></a>
+<ul>
+<li class="toclevel-4 tocsection-6"><a href="#MBR_%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="tocnumber">1.2.2.1</span> <span class="toctext">MBR 分区表</span></a></li>
+<li class="toclevel-4 tocsection-7"><a href="#GPT_%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="tocnumber">1.2.2.2</span> <span class="toctext">GPT 分区表</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#UEFI_%E7%B3%BB%E7%BB%9F"><span class="tocnumber">2</span> <span class="toctext">UEFI 系统</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#UEFI_Syslinux_%E7%9A%84%E5%B1%80%E9%99%90%E6%80%A7"><span class="tocnumber">2.1</span> <span class="toctext">UEFI Syslinux 的局限性</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#%E5%9C%A8_UEFI_%E4%B8%8A%E5%AE%89%E8%A3%85"><span class="tocnumber">2.2</span> <span class="toctext">在 UEFI 上安装</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">3</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12">
+<a href="#%E7%A4%BA%E4%BE%8B"><span class="tocnumber">3.1</span> <span class="toctext">示例</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#%E5%90%AF%E5%8A%A8%E6%8F%90%E7%A4%BA%E7%AC%A6"><span class="tocnumber">3.1.1</span> <span class="toctext">启动提示符</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#%E6%96%87%E6%9C%AC%E5%90%AF%E5%8A%A8%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.1.2</span> <span class="toctext">文本启动目录</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#%E5%9B%BE%E5%BD%A2%E5%8C%96%E5%90%AF%E5%8A%A8%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.1.3</span> <span class="toctext">图形化启动目录</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16"><a href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0"><span class="tocnumber">3.2</span> <span class="toctext">内核参数</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#%E8%87%AA%E5%8A%A8%E5%90%AF%E5%8A%A8"><span class="tocnumber">3.3</span> <span class="toctext">自动启动</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#%E5%AE%89%E5%85%A8%E6%8E%AA%E6%96%BD"><span class="tocnumber">3.4</span> <span class="toctext">安全措施</span></a></li>
+<li class="toclevel-2 tocsection-19">
+<a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD"><span class="tocnumber">3.5</span> <span class="toctext">链式加载</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD%E5%8D%B7%E5%90%AF%E5%8A%A8%E8%AE%B0%E5%BD%95%E7%A8%8B%E5%BA%8F"><span class="tocnumber">3.5.1</span> <span class="toctext">链式加载卷启动记录程序</span></a></li>
+<li class="toclevel-3 tocsection-21"><a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD_MBR_%E5%90%AF%E5%8A%A8%E4%BB%A3%E7%A0%81"><span class="tocnumber">3.5.2</span> <span class="toctext">链式加载 MBR 启动代码</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD%E5%8F%A6%E4%B8%80%E4%B8%AA%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8"><span class="tocnumber">3.5.3</span> <span class="toctext">链式加载另一个启动加载器</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-23"><a href="#%E4%BD%BF%E7%94%A8%E5%86%85%E5%AD%98%E6%B5%8B%E8%AF%95_memtest"><span class="tocnumber">3.6</span> <span class="toctext">使用内存测试 memtest</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#%E7%A1%AC%E4%BB%B6%E6%A3%80%E6%B5%8B%E5%B7%A5%E5%85%B7"><span class="tocnumber">3.7</span> <span class="toctext">硬件检测工具</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#%E9%87%8D%E5%90%AF%E5%92%8C%E5%85%B3%E6%9C%BA"><span class="tocnumber">3.8</span> <span class="toctext">重启和关机</span></a></li>
+<li class="toclevel-2 tocsection-26"><a href="#%E6%B8%85%E7%A9%BA%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.9</span> <span class="toctext">清空目录</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#%E9%94%AE%E7%9B%98%E5%B8%83%E5%B1%80"><span class="tocnumber">3.10</span> <span class="toctext">键盘布局</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href="#%E9%9A%90%E8%97%8F%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.11</span> <span class="toctext">隐藏目录</span></a></li>
+<li class="toclevel-2 tocsection-29"><a href="#PXELINUX"><span class="tocnumber">3.12</span> <span class="toctext">PXELINUX</span></a></li>
+<li class="toclevel-2 tocsection-30"><a href="#%E9%80%9A%E8%BF%87_memdisk_%E5%90%AF%E5%8A%A8_ISO9660_%E9%95%9C%E5%83%8F"><span class="tocnumber">3.13</span> <span class="toctext">通过 memdisk 启动 ISO9660 镜像</span></a></li>
+<li class="toclevel-2 tocsection-31"><a href="#%E4%B8%B2%E8%A1%8C%E6%8E%A7%E5%88%B6%E5%8F%B0"><span class="tocnumber">3.14</span> <span class="toctext">串行控制台</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#%E5%8D%95%E6%AC%A1%E5%BC%95%E5%AF%BC%E5%88%B0%E5%8F%A6%E4%B8%80%E4%B8%AA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F"><span class="tocnumber">3.15</span> <span class="toctext">单次引导到另一个操作系统</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-33">
+<a href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="tocnumber">4</span> <span class="toctext">常见问题</span></a>
+<ul>
+<li class="toclevel-2 tocsection-34"><a href="#%E6%97%A0%E6%B3%95%E5%8A%A0%E8%BD%BD_ldlinux"><span class="tocnumber">4.1</span> <span class="toctext">无法加载 ldlinux</span></a></li>
+<li class="toclevel-2 tocsection-35"><a href="#%E4%BD%BF%E7%94%A8_Syslinux_%E5%90%AF%E5%8A%A8%E6%8F%90%E7%A4%BA%E7%AC%A6"><span class="tocnumber">4.2</span> <span class="toctext">使用 Syslinux 启动提示符</span></a></li>
+<li class="toclevel-2 tocsection-36"><a href="#%E6%A0%B9%E5%88%86%E5%8C%BA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A3%80%E6%B5%8B%E5%A4%B1%E8%B4%A5"><span class="tocnumber">4.3</span> <span class="toctext">根分区文件系统检测失败</span></a></li>
+<li class="toclevel-2 tocsection-37"><a href="#%E6%B2%A1%E6%9C%89%E6%89%BE%E5%88%B0%E9%BB%98%E8%AE%A4%E5%9B%9E%E6%BB%9A%E5%92%8C%E7%95%8C%E9%9D%A2%E8%AE%BE%E7%BD%AE"><span class="tocnumber">4.4</span> <span class="toctext">没有找到默认回滚和界面设置</span></a></li>
+<li class="toclevel-2 tocsection-38"><a href="#%E6%89%BE%E4%B8%8D%E5%88%B0%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F"><span class="tocnumber">4.5</span> <span class="toctext">找不到操作系统</span></a></li>
+<li class="toclevel-2 tocsection-39"><a href="#%E5%90%AF%E5%8A%A8%E4%BA%86_Windows%EF%BC%8CSyslinux_%E8%A2%AB%E5%BF%BD%E7%95%A5%E6%8E%89%E4%BA%86"><span class="tocnumber">4.6</span> <span class="toctext">启动了 Windows，Syslinux 被忽略掉了</span></a></li>
+<li class="toclevel-2 tocsection-40"><a href="#%E7%9B%AE%E5%BD%95%E9%A1%B9%E5%A4%B1%E6%95%88"><span class="tocnumber">4.7</span> <span class="toctext">目录项失效</span></a></li>
+<li class="toclevel-2 tocsection-41"><a href="#%E6%97%A0%E6%B3%95%E5%88%A0%E9%99%A4_ldlinux.sys"><span class="tocnumber">4.8</span> <span class="toctext">无法删除 ldlinux.sys</span></a></li>
+<li class="toclevel-2 tocsection-42"><a href="#vesamenu%E7%9A%84%E5%B7%A6%E4%B8%8A%E8%A7%92%E6%9C%89%E7%99%BD%E8%89%B2%E5%9D%97"><span class="tocnumber">4.9</span> <span class="toctext">vesamenu的左上角有白色块</span></a></li>
+<li class="toclevel-2 tocsection-43"><a href="#%E5%BD%93_Windows_%E5%AE%89%E8%A3%85%E5%9C%A8%E5%8F%A6%E4%B8%80%E5%BC%A0%E7%A3%81%E7%9B%98%E4%B8%8A%E6%97%B6%EF%BC%8C%E9%93%BE%E5%BC%8F%E5%90%AF%E5%8A%A8%E5%A4%B1%E6%95%88"><span class="tocnumber">4.10</span> <span class="toctext">当 Windows 安装在另一张磁盘上时，链式启动失效</span></a></li>
+<li class="toclevel-2 tocsection-44"><a href="#%E6%9F%A5%E7%9C%8B%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%97%A5%E5%BF%97"><span class="tocnumber">4.11</span> <span class="toctext">查看启动加载器日志</span></a></li>
+<li class="toclevel-2 tocsection-45"><a href="#Btrfs_%E5%8E%8B%E7%BC%A9"><span class="tocnumber">4.12</span> <span class="toctext">Btrfs 压缩</span></a></li>
+<li class="toclevel-2 tocsection-46"><a href="#%E5%A4%9A%E8%AE%BE%E5%A4%87_Btrfs"><span class="tocnumber">4.13</span> <span class="toctext">多设备 Btrfs</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-47"><a href="#%E6%9B%B4%E5%A4%9A%E4%BF%A1%E6%81%AF"><span class="tocnumber">5</span> <span class="toctext">更多信息</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="BIOS_.E7.B3.BB.E7.BB.9F"></span><span class="mw-headline" id="BIOS_系统">BIOS 系统</span>
+</h2>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E6.B5.81.E7.A8.8B"></span><span class="mw-headline" id="启动流程">启动流程</span>
+</h3>
+<ol>
+<li>
+<b>第一阶段 - 第一部分</b> - <b>加载MBR</b> 电脑启动时，BIOS 会先加载磁盘开始的 440 字节 <a href="../zh-CN/Partitioning.html#Master_Boot_Record" title="Partitioning (简体中文)">MBR</a> 启动代码 (<code>/usr/lib/syslinux/bios/mbr.bin</code> 或 <code>/usr/lib/syslinux/bios/gptmbr.bin</code>)。</li>
+<li>
+<b>第一阶段 - 第二部分</b> - <b>寻找活动分区</b> 第一阶段的MBR启动代码会寻找活动分区（设置了可启动标记的 MBR 分区），此处我们假设是 <code>/boot</code> 分区。</li>
+<li>
+<b>第二阶段 - 第一部分</b> - <b>执行卷启动记录程序</b> MBR 启动代码会执行上面找到的 <code>/boot</code> 分区的卷启动记录程序（VBR，volume boot record）。对于 Syslinux 来说，VBR 就是由 <code>extlinux --install</code> 命令创建的 <code>/boot/syslinux/ldlinux.sys</code> 位于开始扇区的部分。请注意 <code>ldlinux.sys</code> 和 <code>ldlinux.c32</code> 是不同的。</li>
+<li>
+<b>第二阶段 - 第二部分</b> - <b>执行 <code>/boot/syslinux/ldlinux.sys</code></b> VBR 会加载 <code>ldlinux.sys</code> 剩余的部分。<code>ldlinux.sys</code> 所处在的扇区位置不可更改，否则 syslinux 无法启动。<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 对于 Btrfs 来说，因为文件不断移动导致<code>ldlinux.sys</code>扇区的位置不断变化，上述的方法将不会工作。因此在 Btrfs 中整个 <code>ldlinux.sys</code> 文件会直接紧接着嵌入卷启动记录程序，而不是像其他文件系统那样保存在 <code>/boot/syslinux/ldlinux.sys</code> 处。</div>
+</li>
+<li>
+<b>第三阶段</b> - <b>加载 <code>/boot/syslinux/ldlinux.c32</code></b> <code>ldlinux.sys</code> 加载剩下的 syslinux 的核心部分 <code>/boot/syslinux/ldlinux.c32</code>（这部分是因为文件大小限制无法放入 <code>ldlinux.sys</code> 中的核心模块）。<code>ldlinux.c32</code> 文件应该在每一个装有 syslinux 的实例中出现，并且与分区中的 <code>ldlinux.sys</code> 版本相匹配，否则 Syslinux 将无法启动。更多资料请参阅  <a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=7">[2]</a>。</li>
+<li>
+<b>第四阶段</b> - <b>查找并加载配置文件</b> 当 syslinux 完全加载完毕，它将自动查找配置文件 <code>/boot/syslinux/syslinux.cfg</code> (或某些情况下的 <code>/boot/syslinux/extlinux.conf</code>)，如果找到即加载。否则会进入 Syslinux <code>boot:</code> 的命令提示符。这一步和剩下的<b>非核心</b> Syslinux 部分(除 <code>lib*.c32</code> 和 <code>ldlinux.c32</code>的<code>/boot/syslinux/*.c32</code> 模块) 需要提供 <code>/boot/syslinux/lib*.c32</code> (库)模块<a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php/Common_Problems#ELF">[3]</a>。同样，{ic|lib*.c32}} 库模块和非核心的 <code>*.c32</code> 模块需要与分区中的 <code>ldlinux.sys</code> 版本相匹配。</li>
+</ol>
+<h3>
+<span id=".E5.9C.A8_BIOS_.E4.B8.8A.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="在_BIOS_上安装">在 BIOS 上安装</span>
+</h3>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="Install (简体中文)">安装</a>软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>
+<a href="../zh-CN/Partitioning.html#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8" title="Partitioning (简体中文)">GPT</a> 支持需要安装软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>。请参考<a href="#%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85">#自动安装</a>部分。</li>
+<li>
+<a href="../en/FAT.html" title="FAT">FAT</a> 支持需要安装软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mtools">mtools</a></span>。</li>
+</ul>
+</div>
+<p>安装软件包并不是安装启动加载器。在安装完相关的包后，还需要安装启动加载器代码（到适合的位置，一般是 VBR）才能启动系统；接下来的部分对您的特定系统的特性提供了替代的指令。
+</p>
+<h4>
+<span id=".E8.87.AA.E5.8A.A8.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="自动安装">自动安装</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 脚本 <code>syslinux-install_update</code> 是 Arch Linux 特有的，并不被 Syslinux 的上游提供/支持。请不要向上游，而是直接向 <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/">Arch Bug Tracker</a> 提交关于这个特定脚本的 bug 报告。</div>
+<p><br>
+</p>
+<ul><li>执行完 <code>syslinux-install_update</code> 脚本后，请不要忘记按照<a href="#%E9%85%8D%E7%BD%AE">#配置</a>和<a href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0">#内核参数</a>两节编辑 <code>/boot/syslinux/syslinux.cfg</code>。</li></ul>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> <code>syslinux-install_update</code> 脚本很有可能会设置一个与您的特定系统不同的默认根分区。将 <code>/boot/syslinux/syslinux.cfg</code> 文件中的根分区修改正确对于成功启动是至关重要的。参见<a href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0">#内核参数</a>。</div>
+<p>syslinux-install_update脚本将自动安装启动加载器代码（一般到 VBR）、复制 <code>*.c32</code> 模块到<code>/boot/syslinux</code>、设置分区启动标记并将启动代码安装到 MBR。它可以处理软 RAID、<a href="../zh-CN/Partitioning.html#Master_Boot_Record" title="Partitioning (简体中文)">MBR</a> 和 <a href="../zh-CN/Partitioning.html#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8" title="Partitioning (简体中文)">GPT</a> 磁盘。
+</p>
+<p>如果您使用分开的启动分区，请用 <code>lsblk</code> 命令确保它们都已被挂载。如果您没有看到 <code>/boot</code> 挂载点，请在继续之前将其挂载。
+</p>
+<ul><li>
+<code>syslinux-install_update</code> 的参数：<code>-i</code> (安装文件)，<code>-a</code> (将活动分区标上启动标记)，<code>-m</code> (安装 MBR 启动代码): 如果 <pre># syslinux-install_update -i -a -m</pre> 命令失败并报错<i>Syslinux BIOS install failed</i>，问题可能出在 <code>extlinux</code> 可执行文件不能找到包含 <code>/boot</code> 的分区：</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># extlinux --install /boot/syslinux/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">extlinux: cannot find device for path /boot/syslinux
+extlinux: cannot open device (null)
+</pre>
+<p>例如，这可能发生在从 <a href="../en/LILO.html" title="LILO">LILO</a> 升级时，后者在引导当前的自定义内核时，将诸如 <code>root=/dev/sda1</code> 的内核命令行参数转写成了等效的数字参数 <code>root=801</code>。这可以从 <code>/proc/cmdline</code> 和 <code>mount</code> 等命令的输出确认。 可以通过向 <code>extlinux</code> 手动指定 <code>--device=/dev/sda1</code> 来解决下文手动安装时的问题，或者先重启到现有的Arch Linux内核，这样会使用 initramfs 来避免此问题。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>如果您现在重新启动系统，则会出现 Syslinux 的提示符。如果想要实现系统自动引导或显示引导目录，您需要创建（或编辑）配置文件。</li>
+<li>如果您位于另一个根目录（例如，从安装磁盘上），则可以通过 chroot，重定向后安装：</li>
+</ul>
+<pre># syslinux-install_update -i -a -m -c /mnt
+</pre>
+</div>
+<ul><li>现在您需要按照接下来的<a href="#%E9%85%8D%E7%BD%AE">#配置</a>和<a href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0">#内核参数</a>两节编辑 <code>/boot/syslinux/syslinux.cfg</code>文件。</li></ul>
+<h4>
+<span id=".E6.89.8B.E5.8A.A8.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="手动安装">手动安装</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果您尝试使用Live CD拯救已安装的系统，请确保在执行这些命令之前已经 <a href="../en/Chroot.html" title="Chroot">chroot</a> 到目标系统。否则您必须在所有文件（除了<code>/dev/</code>）路径之前添加挂载点。</div>
+<p>您计划安装Syslinux的启动分区必须包含 FAT，ext2，ext3，ext4 或 Btrfs 文件系统。您不必把它安装在文件系统的根目录上，比如把磁盘 <code>/dev/sda1</code> 挂在到 <code>/boot</code>。 例如，可以在<code>syslinux</code>子目录里安装 Syslinux:
+</p>
+<pre> # mkdir /boot/syslinux
+</pre>
+<p>如果您希望使用除基本引导提示之外的任何目录或配置，请把 <code>/usr/lib/syslinux/bios/</code> 里的所有的 <code>.c32</code> 文件复制到 <code>/boot/syslinux/</code> 中。请不要使用符号链接。
+</p>
+<pre> # cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/     
+</pre>
+<p>现在安装启动加载器。对 挂载后的 FAT，ext2/3/4，或 btrfs 启动分区使用 <i>extlinux</i> 安装:
+</p>
+<pre># extlinux --install /boot/syslinux
+</pre>
+<p>替代的，对一个<b>没有被挂载</b>的 FAT 启动分区使用<i>syslinux</i> 安装:
+</p>
+<pre> # syslinux --directory syslinux --install /dev/sda1
+</pre>
+<p>在此之后，继续安装适用于对应分区表的 Syslinux 引导代码：
+</p>
+<ul>
+<li>
+<a href="#MBR_%E5%88%86%E5%8C%BA%E8%A1%A8">#MBR 分区表</a>上会安装 <code>mbr.bin</code>
+</li>
+<li>
+<a href="#GPT_%E5%88%86%E5%8C%BA%E8%A1%A8">#GPT 分区表</a>上会安装 <code>gptmbr.bin</code>
+</li>
+</ul>
+<p>这些会在下面的内容中详细描述。
+</p>
+<p>更多信息，请参考 <a href="../zh-CN/Partitioning.html#Master_Boot_Record" title="Partitioning (简体中文)">MBR 分区表</a>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果您不确定您的分区表类型，可以通过 <code>blkid -s PTTYPE -o value /dev/sda</code> 来检查。</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 对于一个无盘安装实例，不需要向MBR中安装Syslinux 引导代码。您可以跳过这一段，直接跳到<a href="#%E9%85%8D%E7%BD%AE">#配置</a>部分。更多信息请参考<a rel="nofollow" class="external autonumber" href="https://unix.stackexchange.com/questions/103501/boot-partiotionless-disk-with-syslinux">[4]</a>。</div>
+<h5>
+<span id="MBR_.E5.88.86.E5.8C.BA.E8.A1.A8"></span><span class="mw-headline" id="MBR_分区表">MBR 分区表</span>
+</h5>
+<p>对于一个安装在 <a href="../zh-CN/Partitioning.html#Master_Boot_Record" title="Partitioning (简体中文)">MBR 分区表</a>上的实例，请确保您的启动分区已经被标记为活动分区（有启动标志）。您可以用 <a href="../zh-CN/Fdisk.html" title="Fdisk (简体中文)">fdisk</a>、<a href="../zh-CN/Parted.html" title="Parted (简体中文)">parted</a> 等工具确认。它应该看起来像这个样子：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l /dev/sda</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[...]
+  Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      104447       51200   83  Linux
+/dev/sda2          104448   625142447   312519000   83  Linux
+</pre>
+<p>安装 MBR 启动代码：
+</p>
+<pre># dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
+</pre>
+<p>Syslinux 提供一个替代的分区表 <code>altmbr.bin</code>。这个分区表<i>不会</i>扫描可启动分区，而是从 MBR 的最后一个字节中的值读取用于启动的分区。下面的操作会将这个分区表写入。
+</p>
+<pre># printf '\x5' | cat /usr/lib/syslinux/bios/altmbr.bin - | dd bs=440 count=1 iflag=fullblock of=/dev/sda
+</pre>
+<p>在这个例子中，一个数值为5（十六进制的）的单个字节会被添加到 <code>altmbr.bin</code> 的内容后，并向 <code>sda</code> 的 MBR 分区表中写入440字节的内容。Syslinux 会被安装到磁盘的第一个逻辑分区(<code>/dev/sda5</code>)。
+</p>
+<h5>
+<span id="GPT_.E5.88.86.E5.8C.BA.E8.A1.A8"></span><span class="mw-headline" id="GPT_分区表">GPT 分区表</span>
+</h5>
+<p>对于一个安装在 <a href="../zh-CN/Partitioning.html#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8" title="Partitioning (简体中文)">GPT 分区表</a>上的实例, 请确保您的启动分区 <code>/boot</code> 被设置上了 2 号属性"传统BIOS可启动"（legacy BIOS bootable）。<a href="../zh-CN/Parted.html" title="Parted (简体中文)">Parted</a> 可以使用"legacy_boot"参数实现，而 <a href="../zh-CN/GPT_fdisk.html" title="GPT fdisk (简体中文)">sgdisk</a> 则需要输入下面的命令：
+</p>
+<pre># sgdisk /dev/sda --attributes=1:set:2
+</pre>
+<p>这会在 <code>/dev/sda</code> 的第一个分区设置"传统BIOS可启动"属性。检查命令：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># sgdisk /dev/sda --attributes=1:show</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">1:2:1 (legacy BIOS bootable)</pre>
+<p>安装 MBR 启动代码：
+</p>
+<pre># dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/gptmbr.bin of=/dev/sda
+</pre>
+<h2>
+<span id="UEFI_.E7.B3.BB.E7.BB.9F"></span><span class="mw-headline" id="UEFI_系统">UEFI 系统</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>
+<code>efi64</code> 对应 x86_64 UEFI 系统。如果是 IA32（32位） EFI 您需要在下面的命令中将 <code>efi64</code> 替换为 <code>efi32</code>。</li>
+<li>因为 Syslinux（目前）没有办法访问它自己所在以外的分区，因此内核与 initramfs 文件需要位于 Syslinux 同在的 <a href="../zh-CN/EFI_system_partition.html" title="EFI system partition (简体中文)">EFI 系统分区</a>（也叫ESP）。因此，这里推荐将ESP分区挂载在 <code>/boot</code>。</li>
+<li>
+<code>/usr/bin/syslinux-install_update</code> 自动安装脚本不支持 UEFI 安装。</li>
+<li>
+<code>syslinux.cfg</code> 文件的配置与 BIOS 的配置方法相同。</li>
+</ul>
+</div>
+<h3>
+<span id="UEFI_Syslinux_.E7.9A.84.E5.B1.80.E9.99.90.E6.80.A7"></span><span class="mw-headline" id="UEFI_Syslinux_的局限性">UEFI Syslinux 的局限性</span>
+</h3>
+<ul>
+<li>UEFI Syslinux 程序 <code>syslinux.efi</code> 不能通过 <code>sbsign</code>(<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sbsigntools">sbsigntools</a></span> 软件包提供)签名，导致无法进行 UEFI 安全启动。查看关于此的 Bug 报告：<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=8">[5]</a>
+</li>
+<li>在 UEFI Syslinux 目录中编辑内核参数时使用 TAB 缩进会导致显示错误（重叠显示）。查看关于此的 Bug 报告：<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=9">[6]</a>
+</li>
+<li>UEFI Syslinux 程序不支持链式加载其他如 <code>UEFI Shell</code>、<code>Windows Boot Manager</code> 等 EFI 应用程序。查看关于此的增强请求：<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=17">[7]</a>
+</li>
+<li>在某些情况下，UEFI Syslinux 可能不能在通过 <a href="../zh-CN/QEMU.html" title="QEMU (简体中文)">QEMU</a>/OVMF、<a href="../zh-CN/VirtualBox.html" title="VirtualBox (简体中文)">VirtualBox</a> 和 <a href="../zh-CN/VMware.html" title="VMware (简体中文)">VMware</a> 的一些特定产品或版本构建的虚拟机的中启动。一些如 DUET 等 UEFI 模拟环境中也是如此。Syslinux 的贡献者已经确认，在 VMware Workstation  10.0.2 版本、Syslinux 6.02 版本以后不会发生这个问题。查看关于此的 Bug 报告：<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=21">[8]</a>, <a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=23">[9]</a> 和 <a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=72">[10]</a>
+</li>
+<li>Memdisk 不被 UEFI 支持。查看关于此的增强请求：<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=30">[11]</a>
+</li>
+</ul>
+<h3>
+<span id=".E5.9C.A8_UEFI_.E4.B8.8A.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="在_UEFI_上安装">在 UEFI 上安装</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 在与 UEFI 有关的命令中，<code><i>esp</i></code> 指的是 <a href="../zh-CN/EFI_system_partition.html" title="EFI system partition (简体中文)">EFI 系统分区</a>(ESP)所挂载的位置。</div>
+<ul>
+<li>安装来自<a href="../zh-CN/Official_repositories.html" title="Official repositories (简体中文)">官方软件源</a>的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=efibootmgr">efibootmgr</a></span>。然后按如下步骤安装 Syslinux 到 EFI 系统分区(ESP)：</li>
+<li>复制 Syslinux 文件到 EFI 系统分区:</li>
+</ul>
+<pre># mkdir -p <i>esp</i>/EFI/syslinux
+# cp -r /usr/lib/syslinux/efi64/* <i>esp</i>/EFI/syslinux
+</pre>
+<ul><li>使用 <a href="../zh-CN/Unified_Extensible_Firmware_Interface.html#efibootmgr" title="Unified Extensible Firmware Interface (简体中文)">efibootmgr</a> 安装引导记录:</li></ul>
+<pre># efibootmgr --create --disk /dev/sdX --part Y --loader /EFI/syslinux/syslinux.efi --label "Syslinux" --verbose
+</pre>
+<p>其中，<code>/dev/sdXY</code>是包含启动加载器的分区。
+</p>
+<ul><li>按照<a href="#%E9%85%8D%E7%BD%AE">#配置</a>创建或编辑<code><i>esp</i>/EFI/syslinux/syslinux.cfg</code>文件。</li></ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul><li>UEFI 的配置文件是 <code><i>esp</i>/EFI/syslinux/syslinux.cfg</code> 而非 <code>/boot/syslinux/syslinux.cfg</code>。在 <code>/boot/syslinux/</code> 中的文件是 BIOS 启动专用的，和 UEFI Syslinux 无关。</li></ul>
+<p>在BIOS模式下启动时， <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=efibootmgr">efibootmgr</a></span> 将无法为 <code> /EFI/syslinux/syslinux.efi</code> 设置 EFI 存储于非易失性存储器（nvram）的条目。欲实现此，请将资源放在默认 EFI 位置：<code><i>esp</i>/EFI/syslinux/* -&gt; <i>esp</i>/EFI/BOOT/*</code> 和 <code><i>esp</i>/EFI/syslinux/syslinux.efi -&gt; <i>esp</i>/EFI/BOOT/bootx64.efi</code> 处。
+</p>
+</div>
+<p><br>
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>Syslinux 的配置文件 <code>syslinux.cfg</code> 必须和 Syslinux 放在同一个目录下。在我们的示例中，BIOS 系统放在 <code>/boot/syslinux/</code> 处，UEFI 系统放在 <code><i>esp</i>/EFI/syslinux/</code> 处。
+</p>
+<p>启动器将自动寻找 <code>syslinux.cfg</code> (优先)和 <code>extlinux.conf</code>这两个配置文件之一。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 
+<ul>
+<li>除了 <code>LINUX</code>，您也可以使用 <code>KERNEL</code> 关键字。<code>KERNEL</code> 关键字会试图去检测内核文件的类型，而 <code>LINUX</code> 总是会将其按照 Linux 内核处理。</li>
+<li>
+<code>TIMEOUT</code> 的单位是 <b>0.1 秒</b>，也就是说 50 代表 5 秒。</li>
+</ul>
+</div>
+<h3>
+<span id=".E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="示例">示例</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>示例这一节中的所有配置文件都需要编辑并设定合适的内核参数。参见<a href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0">#内核参数</a>节。</li>
+<li>请一定仔细检查路径。这个实例可能不能够直接照搬到您的安装实例，尤其是 UEFI 系统。</li>
+<li>接下来的例子假设内核与 initrd 文件都位于 <code>syslinux.cfg</code> 的父目录。(准确的说，是工作目录的父目录)。</li>
+</ul>
+</div>
+<h4>
+<span id=".E5.90.AF.E5.8A.A8.E6.8F.90.E7.A4.BA.E7.AC.A6"></span><span class="mw-headline" id="启动提示符">启动提示符</span>
+</h4>
+<p>这是一个非常简单的配置文件，会显示 <code>boot:</code> 提示符并在 5 秒后自动启动。如果您不希望看见提示符，请将 <code>PROMPT</code> 设置为 <code>0</code>。
+</p>
+<p>配置文件：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">* BIOS: /boot/syslinux/syslinux.cfg
+* UEFI: <i>esp</i>/EFI/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">PROMPT 1
+TIMEOUT 50
+DEFAULT arch
+
+LABEL arch
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux.img
+
+LABEL archfallback
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux-fallback.img
+</pre>
+<h4>
+<span id=".E6.96.87.E6.9C.AC.E5.90.AF.E5.8A.A8.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="文本启动目录">文本启动目录</span>
+</h4>
+<p>Syslinux 允许您使用一个文本启动目录来选择。要做到这一点，请将 <code>menu</code> 和 <code>libutil</code> 模块复制到您的 Syslinux 目录：
+</p>
+<pre># cp /usr/lib/syslinux/bios/{menu,libutil}.c32 /boot/syslinux/
+</pre>
+<p>在 5.00 版本之后，其他的 <code>lib*.c32</code> 库模块也会频繁地被调用。参考 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php?title=Library_modules#Syslinux_modules_working_dependencies">Syslinux 维基</a>来查看依赖树。
+</p>
+<p>配置文件：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">* BIOS: /boot/syslinux/syslinux.cfg
+* UEFI: <i>esp</i>/EFI/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">UI menu.c32
+PROMPT 0
+
+MENU TITLE Boot Menu
+TIMEOUT 50
+DEFAULT arch
+
+LABEL arch
+	MENU LABEL Arch Linux
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux.img
+
+LABEL archfallback
+	MENU LABEL Arch Linux Fallback
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux-fallback.img
+</pre>
+<p>更多关于启动目录的信息，请参考 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Menu">Syslinux 维基</a>。
+</p>
+<h4>
+<span id=".E5.9B.BE.E5.BD.A2.E5.8C.96.E5.90.AF.E5.8A.A8.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="图形化启动目录">图形化启动目录</span>
+</h4>
+<p>Syslinux 允许您使用一个文本启动目录来选择。要做到这一点，请将 <code>vesamenu</code> COM32 模块复制到您的 Syslinux 目录：
+</p>
+<pre># cp /usr/lib/syslinux/bios/vesamenu.c32 /boot/syslinux/
+</pre>
+<p>在 5.00 版本之后，其他的 <code>lib*.c32</code> 库模块也会频繁地被调用。参考 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php?title=Library_modules#Syslinux_modules_working_dependencies">Syslinux 维基</a>来查看依赖树。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong>  如果您使用的是 <a href="../zh-CN/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI (简体中文)">UEFI</a> 系统，请一定从 <code>/usr/lib/syslinux/efi64/</code> 目录(或者 IA32 (32位) EFI 的 <code>efi32</code>) 中复制。否则电脑会黑屏。如果出现这个情况，请从 Live CD 中启动并使用 <a href="../zh-CN/Chroot.html" title="Chroot (简体中文)">chroot</a> 来进行正确的修改。</div>
+<p>这个配置文件使用了和 Arch Linux 安装光盘相同的目录设计，您可以在 <a rel="nofollow" class="external text" href="https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/releng/syslinux">gitlab.archlinux.org</a> 上找到。<a rel="nofollow" class="external text" href="https://gitlab.archlinux.org/archlinux/archiso/-/raw/master/configs/releng/syslinux/splash.png?inline=false">Arch Linux 启动背景图像</a> 也可以在那儿下载。请把图像复制到 <code>/boot/syslinux/splash.png</code> 处。
+</p>
+<p>配置文件：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">* BIOS: /boot/syslinux/syslinux.cfg
+* UEFI: <i>esp</i>/EFI/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">UI vesamenu.c32
+DEFAULT arch
+PROMPT 0
+MENU TITLE Boot Menu
+MENU BACKGROUND splash.png
+TIMEOUT 50
+
+MENU WIDTH 78
+MENU MARGIN 4
+MENU ROWS 5
+MENU VSHIFT 10
+MENU TIMEOUTROW 13
+MENU TABMSGROW 11
+MENU CMDLINEROW 11
+MENU HELPMSGROW 16
+MENU HELPMSGENDROW 29
+
+# Refer to https://wiki.syslinux.org/wiki/index.php/Comboot/menu.c32
+
+MENU COLOR border       30;44   #40ffffff #a0000000 std
+MENU COLOR title        1;36;44 #9033ccff #a0000000 std
+MENU COLOR sel          7;37;40 #e0ffffff #20ffffff all
+MENU COLOR unsel        37;44   #50ffffff #a0000000 std
+MENU COLOR help         37;40   #c0ffffff #a0000000 std
+MENU COLOR timeout_msg  37;40   #80ffffff #00000000 std
+MENU COLOR timeout      1;37;40 #c0ffffff #00000000 std
+MENU COLOR msg07        37;40   #90ffffff #a0000000 std
+MENU COLOR tabmsg       31;40   #30ffffff #00000000 std
+
+
+LABEL arch
+	MENU LABEL Arch Linux
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux.img
+
+
+LABEL archfallback
+	MENU LABEL Arch Linux Fallback
+	LINUX ../vmlinuz-linux
+	APPEND root=/dev/sda2 rw
+	INITRD ../initramfs-linux-fallback.img
+</pre>
+<p>从 Syslinux 3.84 版本开始，<code>vesamenu.c32</code> 支持 <code>MENU RESOLUTION $WIDTH $HEIGHT</code> 指令。
+使用这个指令，请将 <code>MENU RESOLUTION 1440 900</code> 插入您的配置文件，这样可以将分辨率设置为 1440x900。
+但是，背景图像需要和分辨率完全一致，否则 Syslinux 将拒绝加载目录。
+</p>
+<p>如果想要将目录居中并调整分辨率，请调节 <code>MENU RESOLUTION</code>、<code>MENU HSHIFT $N</code> 和 <code>MENU VSHIFT $N</code> 三个参数。将 <code>$N</code> 设置为非负值会将其从左上角开始移动。默认值都是 <code>0</code>，因此目录会显示在显示器的左上角。反过来，如果这个数值为负，则会从反方向开始移动。(比如说 <code>VHSHIFT -4</code>是从底部向上移动四行)。
+</p>
+<p>如果想要使目录居中，请添加或改为这些值：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">* BIOS: /boot/syslinux/syslinux.cfg
+* UEFI: <i>esp</i>/EFI/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MENU RESOLUTION 800 600 # or whatever your screen resolution is
+MENU WIDTH 78           # width of the menu also required to bring the menu box to size
+MENU VSHIFT 10          # moves menu down
+MENU HSHIFT 10          # moves menu right
+</pre>
+<p>VESA 标准通常最大允许 25 行 80 列，因此如果将其设置得过大可能会将目录移出屏幕外，可能需要使用救援介质才能改回来。
+</p>
+<h3>
+<span id=".E5.86.85.E6.A0.B8.E5.8F.82.E6.95.B0"></span><span class="mw-headline" id="内核参数">内核参数</span>
+</h3>
+<p>在 <code>syslinux.cfg</code> 中，<a href="../zh-CN/Kernel_parameters.html" title="Kernel parameters (简体中文)">内核参数</a>的设定使用 <code>APPEND</code> 指令： 
+对每一个 <code>LABEL</code> 记录， <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Config#APPEND">APPEND</a> 命令只能出现在一行内(就是说，把命令拆分成多行是无效的)。
+</p>
+<p>推荐将下列的设置同时作为回滚条目。
+</p>
+<p><b>最简单的情形</b>，<code>root</code> 参数中的分区名称需要被修改。 将 <code>/dev/sda2</code> 改为正确的启动分区。
+</p>
+<pre>APPEND root=/dev/sda2
+</pre>
+<p><b>如果您想使用 <a href="../zh-CN/Persistent_block_device_naming.html#by-uuid" title="Persistent block device naming (简体中文)">UUID</a></b>，通过<a href="../zh-CN/Persistent_block_device_naming.html" title="Persistent block device naming (简体中文)">块设备持久化命名</a>制定启动分区，请如下改变 <code>APPEND</code> 行。这里我们用<code>1234</code>来代表您需要修改的<code>UUID</code>：
+</p>
+<pre>APPEND root=UUID=<i>1234</i> rw
+</pre>
+<p><b>如果您想使用 <a href="../zh-CN/Dm-crypt.html" title="Dm-crypt (简体中文)">dm-crypt</a> 加密设备</b> 请如下改变 <code>APPEND</code> 行。
+</p>
+<pre>APPEND root=/dev/mapper/<i>name</i> cryptdevice=/dev/sda2:<i>name</i> rw
+</pre>
+<p><b>如果您使用 <a rel="nofollow" class="external text" href="http://neil.brown.name/blog/mdadm">mdadm</a> 构建的软 RAID</b> , 请如下改变 <code>APPEND</code> 行来适配您的 RAID 阵列。下面是一个适配 3 RAID-1 阵列、并将一个合适的分区设为根分区的示例。
+</p>
+<pre>APPEND root=/dev/md1 rw md=0,/dev/sda2,/dev/sdb2 md=1,/dev/sda3,/dev/sdb3 md=2,/dev/sda4,/dev/sdb4
+</pre>
+<p>如果在内核设备节点模式下通过软 RAID 启动失败，下面是一个替代的更可靠的方法：使用分区标签：
+</p>
+<pre>APPEND root=LABEL=<i>THEROOTPARTITIONLABEL</i> rw
+</pre>
+<p><b>如果从一个 <a href="../zh-CN/Btrfs.html" title="Btrfs (简体中文)">btrfs</a> 子卷启动</b>，向 <code>APPEND</code> 添加 <code>rootflags=subvol=&lt;root subvolume&gt;</code> 这一行。举个例子，我们称 <code>/dev/sda2</code> 被挂载到一个叫 'ROOT' 的 btrfs 子卷。(例如 <code>mount -o noatime,subvol=ROOT /dev/sda2 /mnt</code>)，这时应该将 <code>APPEND</code> 行改为这样：
+</p>
+<pre>APPEND root=/dev/sda2 rw rootflags=subvol=ROOT
+</pre>
+<p>如果此处错误，会收到 <code>ERROR: Root device mounted successfully, but /sbin/init does not exist.</code>错误信息。
+</p>
+<h3>
+<span id=".E8.87.AA.E5.8A.A8.E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="自动启动">自动启动</span>
+</h3>
+<p>If you do not want to see the Syslinux menu at all, use the 如果您根本不想看见 Syslinux 的目录，请参考<a href="#%E5%90%AF%E5%8A%A8%E6%8F%90%E7%A4%BA%E7%AC%A6">#启动提示符</a>一节，将 <code>PROMPT</code> 设置为 <code>0</code> 并将任何 <code>UI</code> 的目录记录注释掉。将 <code>TIMEOUT</code> 设置为 <code>0</code> 也可以。确保您在 <code>syslinux.cfg</code> 设置的有默认回滚 <code>DEFAULT</code> 选项。按下 <code>Shift</code> 或者 <code>Alt</code>，或者设置为按下 <code>Caps Lock</code> 或 <code>Scroll Lock</code>， 在启动时可以允许更多除了默认选项以外的操作。更多可以设置的替代键，请参考<a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Directives/special_keys">上游的维基</a>。
+</p>
+<h3>
+<span id=".E5.AE.89.E5.85.A8.E6.8E.AA.E6.96.BD"></span><span class="mw-headline" id="安全措施">安全措施</span>
+</h3>
+<p>Syslinux 有两级启动加载器安全措施，可以在 <code>syslinux.cfg</code> 中配置目录主密码，和分别针对每个条目的密码。使用
+</p>
+<pre>MENU MASTER PASSWD passwd 
+</pre>
+<p>来配置目录主密码，在 <code>LABEL</code> 的块中使用
+</p>
+<pre>MENU PASSWD passwd 
+</pre>
+<p>来设定针对这个条目的密码。
+</p>
+<p>密码可以是明文，也可以是哈希值。更多信息，请参考<a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Comboot/menu.c32">官方文档</a>。
+</p>
+<h3>
+<span id=".E9.93.BE.E5.BC.8F.E5.8A.A0.E8.BD.BD"></span><span class="mw-headline" id="链式加载">链式加载</span>
+</h3>
+<p>在 BIOS 上配置的 Syslinux 不能直接链式加载其他分区上的文件，但是 <code>chain.c32</code> 模块可以启动其他启动分区上的卷启动记录程序(VBR)，或是另一个磁盘上的 MBR 启动代码。
+</p>
+<h4>
+<span id=".E9.93.BE.E5.BC.8F.E5.8A.A0.E8.BD.BD.E5.8D.B7.E5.90.AF.E5.8A.A8.E8.AE.B0.E5.BD.95.E7.A8.8B.E5.BA.8F"></span><span class="mw-headline" id="链式加载卷启动记录程序">链式加载卷启动记录程序</span>
+</h4>
+<p>如果您想要链式加载另一个操作系统（比如 Windows）或启动加载器，请将 <code>chain.c32</code> 模块复制到 Syslinux 目录(还需要复制其他需要的 <code>lib*.c32</code> 库模块。更多信息请参考前面几节)，然后在配置文件中建立下面这一节：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+LABEL windows
+	MENU LABEL Windows
+	COM32 chain.c32
+	APPEND hd0 3
+...
+</pre>
+<p><code>hd0 3</code> 是第一个 BIOS 控制驱动器上的第三个分区。请注意，驱动器计数从 0 开始，而分区计数则是从 1 开始。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 对于引导 Windows，这样会跳过 Windows 自己的启动管理器环节 (<code>bootmgr</code>)，而一些系统更新（<a rel="nofollow" class="external text" href="https://support.microsoft.com/kb/2883200">例子</a>）会需要这个组件才能完成。如果更新需要，在这种情况下建议临时将 MBR 的启动分区标记设在 Windows 所在分区(可以使用 <a href="../zh-CN/Parted.html" class="mw-redirect" title="GParted (简体中文)">GParted</a>)并完成更新安装，再将启动分区标记改回 Syslinux 所在的分区。(可以使用 Windows自带的 <a rel="nofollow" class="external text" href="https://www.online-tech-tips.com/computer-tips/set-active-partition-vista-xp">DiskPart</a>)。</div>
+<h4>
+<span id=".E9.93.BE.E5.BC.8F.E5.8A.A0.E8.BD.BD_MBR_.E5.90.AF.E5.8A.A8.E4.BB.A3.E7.A0.81"></span><span class="mw-headline" id="链式加载_MBR_启动代码">链式加载 MBR 启动代码</span>
+</h4>
+<p>如果您不知道 BIOS 会怎么安排驱动器的编号，您也可以使用 MBR 标记，或者说 GPT 的文件系统标签。使用 MBR 标记请如下文所示设置：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l /dev/sdb</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Disk /dev/sdb: 128.0 GB, 128035676160 bytes 
+255 heads, 63 sectors/track, 15566 cylinders, total 250069680 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0xf00f1fd3
+ 
+Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     4196351     2097152    7  HPFS/NTFS/exFAT
+/dev/sdb2         4196352   250066943   122935296    7  HPFS/NTFS/exFAT
+</pre>
+<p>将 <code>/dev/sdb</code> 改成您想要链式加载的驱动器。这里需要使用您磁盘的十六进制标识符，这个例子中是 <code>0xf00f1fd3</code>。<code>syslinux.cfg</code> 需要改成这个样子：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+LABEL windows
+	MENU LABEL Windows
+	COM32 chain.c32
+	APPEND mbr:0xf00f1fd3
+...
+</pre>
+<p>更多关于链式启动的信息，请参阅 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Comboot/chain.c32">Syslinux 维基</a>。
+</p>
+<h4>
+<span id=".E9.93.BE.E5.BC.8F.E5.8A.A0.E8.BD.BD.E5.8F.A6.E4.B8.80.E4.B8.AA.E5.90.AF.E5.8A.A8.E5.8A.A0.E8.BD.BD.E5.99.A8"></span><span class="mw-headline" id="链式加载另一个启动加载器">链式加载另一个启动加载器</span>
+</h4>
+<p>如果您在同一个分区安装了 <a href="../zh-CN/GRUB.html" title="GRUB (简体中文)">GRUB</a> 引导程序，您可以像这样来链式加载它：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+LABEL grub2
+	MENU LABEL Grub2
+	COM32 chain.c32
+	APPEND file=../grub/boot.img
+...
+</pre>
+<p>作为替代，也可以将 <a href="../zh-CN/GRUB.html" title="GRUB (简体中文)">GRUB</a> 作为一个 linux 内核来引导。只需要用 <code>lnxboot.img</code> 来替代 <code>core.img</code>。<code>lnxboot.img</code> 文件是 <code>core/grub</code> 提供的，您可以在 <code>/usr/lib/grub/i386-pc</code> 处找到它。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+LABEL grub2lnx
+	MENU LABEL Grub2 (lnxboot)
+	LINUX ../grub/i386-pc/lnxboot.img
+	INITRD ../grub/i386-pc/core.img
+...
+</pre>
+<p>对于需要从 ISO 镜像引导的系统，这可能会被用到。
+</p>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8.E5.86.85.E5.AD.98.E6.B5.8B.E8.AF.95_memtest"></span><span class="mw-headline" id="使用内存测试_memtest">使用内存测试 memtest</span>
+</h3>
+<p>安装来自<a href="../zh-CN/Official_repositories.html" title="Official repositories (简体中文)">官方软件源</a>的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=memtest86%2B">memtest86+</a></span>。
+</p>
+<p>用这个 <code>LABEL</code> 片段来启动<a href="https://en.wikipedia.org/wiki/Memtest86" class="extiw" title="wikipedia:Memtest86">内存测试</a>：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+LABEL memtest
+	MENU LABEL Memtest86+
+	LINUX ../memtest86+/memtest.bin
+...
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果您使用 PXELINUX，请将 <code>memtest.bin</code> 重命名为 <code>memtest</code>。因为 PXELINUX 会把有 <i>.bin</i> 后缀名的文件当作启动扇区，这样就只会读取文件的前 2KB。</div>
+<h3>
+<span id=".E7.A1.AC.E4.BB.B6.E6.A3.80.E6.B5.8B.E5.B7.A5.E5.85.B7"></span><span class="mw-headline" id="硬件检测工具">硬件检测工具</span>
+</h3>
+<p><a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Hdt_(Hardware_Detection_Tool)">硬件检测工具(HDT)</a> 可以显示硬件信息。和前文所述的一样，<code>.c32</code> 模块需要从 <code>/boot/syslinux/</code> 中复制，其他需要的 <code>lib*.c32</code> 库模块也需要一并复制。
+如果想要显示 PCI 总线信息请将 <code>/usr/share/hwdata/pci.ids</code> 复制到 <code>/boot/syslinux/pci.ids</code>，并在您的配置文件中添加这些行：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">LABEL hdt
+	MENU LABEL Hardware Info
+	COM32 hdt.c32
+</pre>
+<h3>
+<span id=".E9.87.8D.E5.90.AF.E5.92.8C.E5.85.B3.E6.9C.BA"></span><span class="mw-headline" id="重启和关机">重启和关机</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 对于 Syslinux 6.03 版本，<code>poweroff.c32</code> 只能在<a href="https://en.wikipedia.org/wiki/Advanced_Power_Management" class="extiw" title="wikipedia:Advanced Power Management">高级电源管理（APM）</a>下使用，而不适配<a href="https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface" class="extiw" title="wikipedia:Advanced Configuration and Power Interface">高级配置与电源接口（ACPI）</a>。您可以参考<a rel="nofollow" class="external text" href="https://www.syslinux.org/archives/2012-March/017661.html">acpioff: 一种关闭使用 ACPI 控制机器的 COM32 模块</a>，这是一种可能的解决办法。</div>
+<p>使用下面的片段来重启或关机：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">LABEL reboot
+	MENU LABEL Reboot
+	COM32 reboot.c32
+
+LABEL poweroff
+	MENU LABEL Power Off
+	COM32 poweroff.c32
+</pre>
+<h3>
+<span id=".E6.B8.85.E7.A9.BA.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="清空目录">清空目录</span>
+</h3>
+<p>当退出时清空屏幕，在配置文件中加入下面这一行：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MENU CLEAR
+</pre>
+<h3>
+<span id=".E9.94.AE.E7.9B.98.E5.B8.83.E5.B1.80"></span><span class="mw-headline" id="键盘布局">键盘布局</span>
+</h3>
+<p>如果您需要经常修改 Syslinux 启动提示符下的参数，您可能想要匹配您的键盘布局。这样您就可以在一个非美式英语键盘上方便地输入"="、"/"等字符了。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> 软件包下的 <code>keytab-lilo</code> 是一个调用<i>键位加载</i>的 perl 脚本。</div>
+<p>生成一个适配的键盘布局映射表，（比如说，德语键盘），运行：
+</p>
+<pre># keytab-lilo /usr/share/kbd/keymaps/i386/qwerty/us.map.gz /usr/share/kbd/keymaps/i386/qwertz/de.map.gz &gt; /boot/syslinux/de.ktl
+</pre>
+<p>现在在 <code>syslinux.cfg</code> 文件中加入
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KBDMAP de.ktl
+</pre>
+<p>更多细节，请参考 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/Directives/kbdmap">Syslinux 维基</a>。
+</p>
+<h3>
+<span id=".E9.9A.90.E8.97.8F.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="隐藏目录">隐藏目录</span>
+</h3>
+<p>在配置文件中使用
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MENU HIDDEN
+</pre>
+<p>参数来隐藏目录并只显示超时倒计时。按下任意按键来显示目录。
+</p>
+<h3><span class="mw-headline" id="PXELINUX">PXELINUX</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 对于 UEFI 设备，Syslinux 使用相同的二进制文件来从磁盘和网络启动。从 TFTP 或其他网络协议中启动要求 Syslinux 的网络启动。</div>
+<p>PXELINUX 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> 软件包一起提供。
+</p>
+<p>对于一个 BIOS 客户机，将 <code>{l,}pxelinux.0</code> 启动加载器复制到客户机的启动目录。对于 5.00 版本及以上的 Syslinux，还需要将同一个软件包中的 <code>ldlinux.c32</code> 复制过去。
+</p>
+<pre># cp /usr/lib/syslinux/bios/pxelinux.0 "<i>TFTP_root</i>/boot/"
+# cp /usr/lib/syslinux/bios/ldlinux.c32 "<i>TFTP_root</i>/boot/"
+# mkdir "<i>TFTP_root</i>/boot/pxelinux.cfg"
+</pre>
+<p>这时，我们同时也创建了 <code>pxelinux.cfg</code> 目录。PXELINUX 会默认在这个目录中寻找配置文件。我们不想对每一个不同的主机 MAC 地址都作出单独的设置，我们需要创建 <code>default</code> 作为默认配置。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"><i>TFTP_root</i>/boot/pxelinux.cfg/default</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">DEFAULT linux
+
+LABEL linux
+	KERNEL vmlinuz-linux
+	APPEND initrd=initramfs-linux.img quiet ip=:::::eth0:dhcp nfsroot=10.0.0.1:/arch
+</pre>
+<p>如果您使用 NBD 网络存储启动，添加下面这行：
+</p>
+<pre>append ro initrd=initramfs-linux.img ip=:::::eth0:dhcp nbd_host=10.0.0.1 nbd_port=10809 nbd_name=arch root=/dev/nbd0</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 您需要对应修改 <code>nbd_host</code> 和/或 <code>nfsroot</code> 来与您的网络配置（NFS/NBD 服务器的地址）相匹配。</div>
+<p>PXELINUX 的配置和 SYSLINUX 使用相同的语法。参考上游的文档来获取更多信息。
+</p>
+<p>内核与 initramfs 会通过 TFTP 传输，因此需要设置对 TFTP 根目录的相对路径。否则，根文件系统需要挂载在 NFS 挂载点上。
+</p>
+<p>若要加载 PXELINUX, 请将 <code>/etc/dhcpd.conf</code> 文件中的 <code>filename "/grub/i386-pc/core.0";</code> 替换为 <code>filename "/pxelinux.0"</code> (或 <code>filename "/lpxelinux.0"</code>)。
+</p>
+<h3>
+<span id=".E9.80.9A.E8.BF.87_memdisk_.E5.90.AF.E5.8A.A8_ISO9660_.E9.95.9C.E5.83.8F"></span><span class="mw-headline" id="通过_memdisk_启动_ISO9660_镜像">通过 memdisk 启动 ISO9660 镜像</span>
+</h3>
+<p>Syslinux 支持通过 <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/MEMDISK">memdisk</a> 模块从 ISO 镜像中启动。参考<a href="../en/Multiboot_USB_drive.html#Using_Syslinux_and_memdisk" title="Multiboot USB drive">Multiboot USB drive#Using Syslinux and memdisk</a>中的示例。
+</p>
+<h3>
+<span id=".E4.B8.B2.E8.A1.8C.E6.8E.A7.E5.88.B6.E5.8F.B0"></span><span class="mw-headline" id="串行控制台">串行控制台</span>
+</h3>
+<p>参考 <a href="../en/Working_with_the_serial_console.html#Syslinux" title="Working with the serial console">Working with the serial console#Syslinux</a>。
+</p>
+<h3>
+<span id=".E5.8D.95.E6.AC.A1.E5.BC.95.E5.AF.BC.E5.88.B0.E5.8F.A6.E4.B8.80.E4.B8.AA.E6.93.8D.E4.BD.9C.E7.B3.BB.E7.BB.9F"></span><span class="mw-headline" id="单次引导到另一个操作系统">单次引导到另一个操作系统</span>
+</h3>
+<p>可以临时改变 Syslinux 的行为，让其仅在下一次启动时引导进入另一个操作系统。下面的命令展示了怎样临时引导 <code>archfallback</code>。
+</p>
+<pre># extlinux -o archfallback /boot/syslinux
+</pre>
+<p>在下一次启动的过程中，上面制定的启动标签会在没有任何 Syslinux 启动提示符的情况下直接启动。默认的启动行为会在下一次重启的时候复原。
+</p>
+<h2>
+<span id=".E5.B8.B8.E8.A7.81.E9.97.AE.E9.A2.98"></span><span class="mw-headline" id="常见问题">常见问题</span>
+</h2>
+<h3>
+<span id=".E6.97.A0.E6.B3.95.E5.8A.A0.E8.BD.BD_ldlinux"></span><span class="mw-headline" id="无法加载_ldlinux">无法加载 ldlinux</span>
+</h3>
+<p>启动时出现 "Failed to load ldlinux.c32" 错误提示可能会有很多原因。
+其中的一种可能是文件系统工具或者文件系统结构遭到了更改。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 在 Syslinux 6.03 版本中，启动加载器可能不支持某些文件系统的部分功能。详情请参考 <a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php/Filesystem">[12]</a>。</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 出现 <code>Failed to load ldlinux.c32</code> 并不一定与文件系统出现问题直接相关：
+<ul>
+<li>文件系统可能出现的其他症状，除了这条信息，还可能指出另一些与文件系统有关的问题。</li>
+<li>这条信息并不说明问题处在了文件系统。还有其他的一些问题会导致这条信息出现。</li>
+</ul>
+</div>
+<p>您也可以参考 <a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php/Common_Problems#Failed_to_load_ldlinux">[13]</a>。 (这一整页都和常见问题有关)。
+</p>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8_Syslinux_.E5.90.AF.E5.8A.A8.E6.8F.90.E7.A4.BA.E7.AC.A6"></span><span class="mw-headline" id="使用_Syslinux_启动提示符">使用 Syslinux 启动提示符</span>
+</h3>
+<p>您可以输入(在您的 <code>syslinux.cfg</code> 配置过的) <code>LABEL</code> 的名称来启动对应的系统。如果您是按照上述的例子进行的配置，您只需要输入：
+</p>
+<pre>boot: arch
+</pre>
+<p>如果您收到了配置文件无法加载的错误信息，您可以向启动提示符中直接输入您的启动参数。比如说：
+</p>
+<pre>boot: ../vmlinuz-linux root=/dev/sda2 rw initrd=../initramfs-linux.img
+</pre>
+<p>如果在<a href="../en/Tmpfs.html" class="mw-redirect" title="Ramdisk">ramfs</a>中您没有 <code>boot:</code> 的访问权限，并且您暂时无法启动内核，
+</p>
+<dl><dd>1. 创建一个临时的目录，来加载您的根分区 (如果不存在的话)：</dd></dl>
+<pre> # mkdir -p /new_root
+</pre>
+<dl><dd>2. 将 <code>/</code> 挂载到 <code>/new_root</code> (我们假设 <code>/boot/</code> 也在同一个分区，否则您需要将这些分区全部挂载):</dd></dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果 <code>/boot</code> 在自己的 ext2 分区，Busybox 将无法挂载。</div>
+<pre> # mount /dev/sd[a-z][1-9] /new_root
+</pre>
+<dl>
+<dd>3. 使用 <code>vim</code> 来重新将 <code>syslinux.cfg</code> 编辑正确。保存文件。</dd>
+<dd>4. 重启。</dd>
+</dl>
+<h3>
+<span id=".E6.A0.B9.E5.88.86.E5.8C.BA.E6.96.87.E4.BB.B6.E7.B3.BB.E7.BB.9F.E6.A3.80.E6.B5.8B.E5.A4.B1.E8.B4.A5"></span><span class="mw-headline" id="根分区文件系统检测失败">根分区文件系统检测失败</span>
+</h3>
+<p>如果根分区被严重损坏（分区日志受损），在ramfs的应急 shell 中，加载根分区文件系统：
+</p>
+<pre># mount /dev/<i>root partition</i> /new_root
+</pre>
+<p>将二进制程序 tune2fs 从根分区中复制出来（这个不包含在 Syslinux 中）。
+</p>
+<pre># cp /new_root/sbin/tune2fs /sbin/
+</pre>
+<p>按照下面的指示<a href="../en/Fsck.html#ext2fs:_no_external_journal" title="Fsck">ext2fs: 日志损坏</a>重建根分区日志。
+</p>
+<h3>
+<span id=".E6.B2.A1.E6.9C.89.E6.89.BE.E5.88.B0.E9.BB.98.E8.AE.A4.E5.9B.9E.E6.BB.9A.E5.92.8C.E7.95.8C.E9.9D.A2.E8.AE.BE.E7.BD.AE"></span><span class="mw-headline" id="没有找到默认回滚和界面设置">没有找到默认回滚和界面设置</span>
+</h3>
+<p>有些主板厂家对 USB 设备启动的支持会差一些。此时一个在通常的现代电脑上都能启动的 ext4 格式的 U 盘，一些要求内核与 initrd 文件必须存储在 FAT16 分区的电脑可能无法正常运作。为了避免这种老设备无法读取 <code>syslinux.cfg</code> 而去加载 <code>ldlinux</code>，用 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dosfstools">dosfstools</a></span> 工具建立一个 <a href="../en/FAT.html" class="mw-redirect" title="FAT16">FAT16</a> 的小分区(≤ 2 GB)：
+</p>
+<pre># mkfs.fat -F 16 /dev/sda1
+</pre>
+<p>再来安装配置 Syslinux。
+</p>
+<h3>
+<span id=".E6.89.BE.E4.B8.8D.E5.88.B0.E6.93.8D.E4.BD.9C.E7.B3.BB.E7.BB.9F"></span><span class="mw-headline" id="找不到操作系统">找不到操作系统</span>
+</h3>
+<ul>
+<li>确保您在<a href="#MBR_%E5%88%86%E5%8C%BA%E8%A1%A8">#MBR 分区表</a>上安装的是 <code>mbr.bin</code>，在<a href="#GPT_%E5%88%86%E5%8C%BA%E8%A1%A8">#GPT 分区表</a>上安装的是 <code>gptmbr.bin</code>。如果安装错误，<code>mbr.bin</code> 会显示 "Missing operating system" 错误信息，而 <code>gptmbr.bin</code> 会显示 "Missing OS" 信息。</li>
+<li>检查包含 <code>/boot</code> 的分区是否有可启动标记。</li>
+<li>检查第一个分区是否是从 1 扇区，而不是 63 扇区或 2048 扇区开始的。您可以使用 <code>fdisk -l</code> 命令确认。如果是从 1 扇区开始的，您可以通过救援介质上的 <code>gparted</code> 修改。如果您有另一个启动分区，您可以将 <code>/boot</code> 备份：</li>
+</ul>
+<pre># cp -a /boot /boot.bak
+</pre>
+<p>然后使用 Arch 安装磁盘启动。接下来，使用 <code>cfdisk</code> 删掉 <code>/boot</code> 分区，再重建它。现在这个分区应该从正确的 <b>63</b> 扇区开始。现在挂载您的分区，并按照<a href="../zh-CN/Installation_guide.html" title="Installation guide (简体中文)">安装指南</a>中写的那样 <code>chroot</code> 进入待修复系统。使用以下指令恢复 <code>/boot</code>。
+</p>
+<pre># cp -a /boot.bak/ /boot/
+</pre>
+<p>检查 <code>/etc/fstab</code> 是否正确：
+</p>
+<pre># syslinux-install_update -iam
+</pre>
+<p>然后重启。
+</p>
+<p>如果您试图从用一个太新以至于 Syslinux 无法识别其元数据的工具创建的 md <a href="../zh-CN/RAID.html" title="RAID (简体中文)">RAID</a>-1 阵列启动，您也会得到这个错误信息。在 2013 年 8 月 mdadm 会创建使用 1.2 版本的元数据的阵列，但是 Syslinux 不能够识别高于 1.0 版本的元数据。如果是因此而出错，您需要重建您的序列，并在使用 mdadm 时添加 <code>--metadata=1.0</code> 参数。
+</p>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E4.BA.86_Windows.EF.BC.8CSyslinux_.E8.A2.AB.E5.BF.BD.E7.95.A5.E6.8E.89.E4.BA.86"></span><span class="mw-headline" id="启动了_Windows，Syslinux_被忽略掉了">启动了 Windows，Syslinux 被忽略掉了</span>
+</h3>
+<p><b>解决办法：</b> 确保包含 <code>/boot</code> 的分区上有可启动标记。同时，确保 Windows 分区上没有这个标记。请参考上面的<a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD%E5%8D%B7%E5%90%AF%E5%8A%A8%E8%AE%B0%E5%BD%95%E7%A8%8B%E5%BA%8F">#链式加载卷启动记录程序</a>部分。
+</p>
+<p>Syslinux 所在的 MBR 会找到第一个有可启动标记的活动分区。Windows 分区很可能最先被发现。如果您想要修改，您可以使用 Windows 或 MS-DOS 上的 <code>fdisk</code>。
+</p>
+<h3>
+<span id=".E7.9B.AE.E5.BD.95.E9.A1.B9.E5.A4.B1.E6.95.88"></span><span class="mw-headline" id="目录项失效">目录项失效</span>
+</h3>
+<p>您选择了一个目录项，但是什么都没有发生，只是<i>"刷新"</i>了一下目录。这通常意味着您的 <code>syslinux.cfg</code> 文件出了问题。按下 <code>Tab</code> 键来修改您的启动参数。或者您也可以按下 <code>Esc</code> 键，并输入您的启动项的 <code>LABEL</code>。（比如说，<i>arch</i>）。另一种可能导致这个情况的原因可能是您没有安装内核。想个办法进入您的文件系统（比如说，用live CD），检查 <code>/mount/vmlinuz-linux</code> 文件存在并且非空。如果是这里出错，请重新安装您的内核。
+</p>
+<h3>
+<span id=".E6.97.A0.E6.B3.95.E5.88.A0.E9.99.A4_ldlinux.sys"></span><span class="mw-headline" id="无法删除_ldlinux.sys">无法删除 ldlinux.sys</span>
+</h3>
+<p><code>ldlinux.sys</code> 文件设置了<a href="../en/File_permissions_and_attributes.html#File_attributes" title="File permissions and attributes">不可变属性</a>，禁止您删除或覆盖它。这样保证了除了重装 Syslinux，没有别的办法来修改这个文件。若要删除这个文件，请运行下面的指令：
+</p>
+<pre># chattr -i /boot/syslinux/ldlinux.sys
+# rm /boot/syslinux/ldlinux.sys
+</pre>
+<h3>
+<span id="vesamenu.E7.9A.84.E5.B7.A6.E4.B8.8A.E8.A7.92.E6.9C.89.E7.99.BD.E8.89.B2.E5.9D.97"></span><span class="mw-headline" id="vesamenu的左上角有白色块">vesamenu的左上角有白色块</span>
+</h3>
+<p>问题：
+<i>从 linux-3.0 开始，模式设置驱动程序会在更改分辨率后尝试保留屏幕的当前内容（至少在我的 Intel 设备上，使用 Syslinux 的文本模式的情况下如此）。而 Syslinux 中的 vesamenu 模块会与这个特性冲突。（白色方框实际上是驱动程序试图保留 Syslinux 目录，但是驱动程序无法从 vesa 图形模式下捕获图片）。</i>
+</p>
+<p>如果您的分辨率是自定义的，而 <code>vesamenu</code> 在很早就进行了模式设置，请尝试在 <code>syslinux.cfg</code> 添加这一行来消除白色块：
+</p>
+<pre>APPEND root=/dev/sda6 rw 5 <b>vga=current</b> quiet splash
+</pre>
+<h3>
+<span id=".E5.BD.93_Windows_.E5.AE.89.E8.A3.85.E5.9C.A8.E5.8F.A6.E4.B8.80.E5.BC.A0.E7.A3.81.E7.9B.98.E4.B8.8A.E6.97.B6.EF.BC.8C.E9.93.BE.E5.BC.8F.E5.90.AF.E5.8A.A8.E5.A4.B1.E6.95.88"></span><span class="mw-headline" id="当_Windows_安装在另一张磁盘上时，链式启动失效">当 Windows 安装在另一张磁盘上时，链式启动失效</span>
+</h3>
+<p>如果 Windows 安装在在另一张磁盘上，您又不能通过链式启动来引导 Windows， 请尝试下列配置：
+</p>
+<pre>LABEL Windows
+	MENU LABEL Windows
+	COM32 chain.c32
+	APPEND mbr:0xdfc1ba9e swap
+</pre>
+<p>将 MBR 代码换成您的 Windows 驱动器的值(详见<a href="#%E9%93%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD">上文</a>)，并将 <code>swap</code> 加入选项。
+</p>
+<h3>
+<span id=".E6.9F.A5.E7.9C.8B.E5.90.AF.E5.8A.A8.E5.8A.A0.E8.BD.BD.E5.99.A8.E6.97.A5.E5.BF.97"></span><span class="mw-headline" id="查看启动加载器日志">查看启动加载器日志</span>
+</h3>
+<p>在一些情况下（比如启动加载器无法启动内核），我们很想得到启动的更多信息。Syslinux 会显示错误信息，但是文字一闪而过，看不清。为了保留日志信息，请禁用 <code>syslinux.cfg</code> 中的 <code>UI menu</code>，并使用默认的命令提示符。这意味着
+</p>
+<ul>
+<li>不使用 <code>UI</code> 命令</li>
+<li>不使用 <code>ONTIMEOUT</code>
+</li>
+<li>不使用 <code>ONERROR</code>
+</li>
+<li>不使用 <code>MENU CLEAR</code>
+</li>
+<li>将 <code>TIMEOUT</code> 设为更高的值</li>
+<li>使用 <code>PROMPT 1</code>
+</li>
+<li>使用 <code>DEFAULT <i>problematic_label</i></code>
+</li>
+</ul>
+<p>若要得到更详细的调试日志，To get more detailed debug log, 添加下面的 C 编译标志并<a href="../zh-CN/Arch_Build_System.html" title="Arch Build System (简体中文)">重新编译</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> 软件包：
+</p>
+<pre>-DDEBUG_STDIO=1 -DCORE_DEBUG=1
+</pre>
+<h3>
+<span id="Btrfs_.E5.8E.8B.E7.BC.A9"></span><span class="mw-headline" id="Btrfs_压缩">Btrfs 压缩</span>
+</h3>
+<p>从压缩 Btrfs 文件系统启动不受支持。<a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php/Syslinux_4_Changelog#Changes_in_4.02">[14]</a>
+会显示下列错误信息：
+</p>
+<pre>btrfs: found compressed data, cannot continue!
+invalid or corrupt kernel image.
+</pre>
+<h3>
+<span id=".E5.A4.9A.E8.AE.BE.E5.A4.87_Btrfs"></span><span class="mw-headline" id="多设备_Btrfs">多设备 Btrfs</span>
+</h3>
+<p>从多设备 Btrfs 文件系统启动不受支持。<a rel="nofollow" class="external autonumber" href="http://repo.or.cz/syslinux.git/blob/HEAD:/extlinux/main.c">[15]</a> (21-Jul-2016 版本，main.c 文件第 1246 行validate_device_btrfs()会对此进行检查)
+这个令人抓狂的问题会显示下列错误信息：(假设您将 Syslinux 装在 sda1):
+</p>
+<pre>/boot/syslinux is device /dev/sda1
+extlinux: path /boot/syslinux doesn't match device /dev/sda1
+</pre>
+<h2>
+<span id=".E6.9B.B4.E5.A4.9A.E4.BF.A1.E6.81.AF"></span><span class="mw-headline" id="更多信息">更多信息</span>
+</h2>
+<ul><li><a rel="nofollow" class="external text" href="https://www.syslinux.org">官方网站</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Boot_loaders.html" title="Category:Boot loaders (简体中文)">Boot loaders (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Syslinux_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=638649">https://wiki.archlinux.org/index.php?title=Syslinux_(简体中文)&amp;oldid=638649</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

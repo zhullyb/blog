@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Xmm7360-pci - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Xmm7360-pci rootpage-Xmm7360-pci skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Xmm7360-pci</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Since for AMD Thinkpads from 2020 
+Lenovo Thinkpad T14 (AMD) Gen 1,
+<a href="../en/Lenovo_Thinkpad_T14s_(AMD)_Gen_1.html" title="Lenovo Thinkpad T14s (AMD) Gen 1">Lenovo Thinkpad T14s (AMD) Gen 1</a>,
+Lenovo Thinkpad L14 (AMD) Gen 1,
+Lenovo Thinkpad L15 (AMD) Gen 1
+with AMD processors <b>only PCIe</b> is routed to the LTE modem, the only solution is an alpha stage driver written with Python 3 found at <a rel="nofollow" class="external free" href="https://github.com/xmm7360/xmm7360-pci">https://github.com/xmm7360/xmm7360-pci</a>. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Hardware"><span class="tocnumber">1</span> <span class="toctext">Hardware</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Preparation"><span class="tocnumber">2</span> <span class="toctext">Preparation</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Compile_and_run"><span class="tocnumber">3</span> <span class="toctext">Compile and run</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Problems"><span class="tocnumber">4</span> <span class="toctext">Problems</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Hardware">Hardware</span></h2>
+<p>This driver is intended to work with Fibocom L850-GL LTE by PCIe, not by mode switch to USB, which is not supported on AMD models, but with commands directly to the modem. Fibocom "supports" Linux but only in USB mode. There is no sign of driver beeing developt. For newer generations (L860 ?)  Lenovo is developing a driver.
+</p>
+<pre>lspci | grep XMM
+</pre>
+<p>shows the Intel name Intel XMM7360 (PCI ID 8086:7360)
+</p>
+<pre>&gt; 05:00.0 Wireless controller [0d40]: Intel Corporation XMM7360 LTE Advanced Modem (rev 01)
+</pre>
+<p>Thanks to <a rel="nofollow" class="external free" href="https://github.com/abrasive">https://github.com/abrasive</a> for his work!
+</p>
+<h2><span class="mw-headline" id="Preparation">Preparation</span></h2>
+<p>Get the linux headers and build tools.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> these packages: <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acpi_call">acpi_call</a></span> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-pyroute2">python-pyroute2</a></span> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-configargparse">python-configargparse</a></span>
+</p>
+<p>Remove PIN in Windows and check that it is a working card. 
+Alternativly echo the PIN with 
+</p>
+<pre>`echo "AT+CPIN=\"0000\"" | sudo tee -a /dev/ttyXMM1`
+</pre>
+<p>after the make &amp;&amp; make load steps.
+Replace `0000` with your pin code.(ref. <a rel="nofollow" class="external free" href="https://github.com/xmm7360/xmm7360-pci/pull/21/files">https://github.com/xmm7360/xmm7360-pci/pull/21/files</a>)
+</p>
+<h2><span class="mw-headline" id="Compile_and_run">Compile and run</span></h2>
+<pre>git clone <a rel="nofollow" class="external free" href="https://github.com/xmm7360/xmm7360-pci.git">https://github.com/xmm7360/xmm7360-pci.git</a>
+cd xmm7360-pci
+make &amp;&amp; make load
+make &amp;&amp; make load
+sudo python3 rpc/open_xdatachannel.py --apn apn.url
+echo "nameserver 1.1.1.1" </pre>
+<h2><span class="mw-headline" id="Problems">Problems</span></h2>
+<p>If you are stuck when running open_xdatachannel.py kill the process with CTRL-C and reload the module.
+If it still does not work patch two python files with the pull request content from <a rel="nofollow" class="external free" href="https://github.com/xmm7360/xmm7360-pci/pull/26/files">https://github.com/xmm7360/xmm7360-pci/pull/26/files</a> to retry getting an IP. Load the module again and try again.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Modems.html" title="Category:Modems">Modems</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Xmm7360-pci&amp;oldid=649110">https://wiki.archlinux.org/index.php?title=Xmm7360-pci&amp;oldid=649110</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 17 January 2021, at 06:21.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Apple Fusion Drive - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Apple_Fusion_Drive rootpage-Apple_Fusion_Drive skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Apple Fusion Drive</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Apple uses a <a href="https://en.wikipedia.org/wiki/RAID" class="extiw" title="wikipedia:RAID">Wikipedia:RAID</a> alternative called CoreStorage to merge the SSD and HDD into a single logical volume (sold as Fusion). We need to remove this volume, so we can reinstall OS X to the HDD without using the SSD.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Boot_into_recovery"><span class="tocnumber">1</span> <span class="toctext">Boot into recovery</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Destroy_CoreStorage_and_prepare_new_volumes"><span class="tocnumber">2</span> <span class="toctext">Destroy CoreStorage and prepare new volumes</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Install_OS_X_on_the_HDD"><span class="tocnumber">3</span> <span class="toctext">Install OS X on the HDD</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Proceed_installing_Arch_Linux"><span class="tocnumber">4</span> <span class="toctext">Proceed installing Arch Linux</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Boot_into_recovery">Boot into recovery</span></h2>
+<p>The iMacs that come with Fusion also come with a rescue partition that runs itself from RAM (a virtual disk2). This will allow you to play with the HDD and SDD without problems caused by mounted disks. Power on your iMac, holding down Command+R to enter the recovery environment. 
+</p>
+<p>When the recovery has started, start a terminal (in the Utilities menu).
+</p>
+<h2><span class="mw-headline" id="Destroy_CoreStorage_and_prepare_new_volumes">Destroy CoreStorage and prepare new volumes</span></h2>
+<p>Find the CoreStorage 'Logical volume group' ID, and take note of the SSD and larger disk (disk0 &amp; 1)
+</p>
+<pre>diskutil cs list
+</pre>
+<p>Remove the CoreStorage volume
+</p>
+<pre>diskutil cs delete &lt;VOLUMEID&gt;
+</pre>
+<p>Sometimes you need to unmount a volume or try the above command twice for OS X to actually run it successfuly.
+</p>
+<p>Zero the SSD (if you specify the correct disk this takes around 5 minutes)
+This will remove everything, including the partition table, so OS X doesn't see the disk and won't try to use it during installation.
+</p>
+<pre>diskutil zeroDisk disk1
+</pre>
+<p>Erase the HDD (this is faster then zeroDisk plus it creates a new HFS+ volume for OSx)
+</p>
+<pre>diskutil eraseDisk JHFS+ Macintosh disk0
+</pre>
+<h2><span class="mw-headline" id="Install_OS_X_on_the_HDD">Install OS X on the HDD</span></h2>
+<p>Quit the terminal and start the OS X installer. <b>Do not use the GUI-based Disk Utility at this point</b>, it will show your disks as errored (red) and will want to fix them for you. This will actually screw things up as it will recreate the CoreStorage volume (even if you choose not to 'fix' anything). The OS X installer should show you 1 disk; which is the created Journaled HFS+ volume on the HDD.
+</p>
+<p>Proceed by installing a fresh OS X version on the HDD. You can play around in OS X, for example use the <b>Disk Utility</b> to resize the OS X partition so you can allocate some space for Linux to use besides the SSD. Now boot the Arch Linux USB stick by holding the Option key while booting your iMac (you might need to use an Apple keyboard for this to work). This will show you a boot menu where you can select the USB drive for booting.
+</p>
+<h2><span class="mw-headline" id="Proceed_installing_Arch_Linux">Proceed installing Arch Linux</span></h2>
+<p>Installing Arch Linux requires no special tricks; follow the <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a>; mount /dev/sda1 (the first partition of the HDD is the <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> partition) on /boot/efi; install grub-efi-x86_64 and you should be good to go! Since you will be installing on the <a href="../en/Solid_state_drive.html" title="Solid state drive">solid state drive</a>, use parted and created aligned partitions. I use this scheme:
+</p>
+<pre>Model: ATA APPLE SSD SM128E (scsi)
+Disk /dev/sdb: 121332826112B
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start         End            Size           File system     Name  Flags
+1      1048576B      16383999999B   16382951424B   linux-swap(v1)
+2      16384000000B  121331777535B  104947777536B  ext4
+</pre>
+<p>Also, to use the internal network card you will need at least kernel 3.9! I use a Thunderbolt cable (which works in kernel 3.7+) to download the latest 3.9-rc
+</p>
+<p>When rebooting, hold Option to show the internal bootloader so you can select your new install. To change the default boot option to Arch Linux, you need to 'bless' the earlier created UEFI file. It is best to rename the created 'EFI/arch_grub/grubx64_standalone.efi' to 'EFI/BOOT/BOOTX64.EFI', then run the following command from Mac OS X, after mounting the EFI partition:
+</p>
+<pre>sudo bless --device=/dev/disk1s2 --file=/Volumes/EFI/efi/BOOT/BOOTX64.EFI --setBoot
+</pre>
+<p>Make sure you specify a partition on the SSD as '--device'! Otherwise OS X will boot EFI from the partition, but GRUB will not find the SSD (where the actual install is) and you'll end up in rescue mode.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="../en/IMac_Aluminum.html" class="mw-redirect" title="IMac Aluminium">IMac Aluminium</a></li>
+<li><a rel="nofollow" class="external free" href="http://blog.fosketts.net/2011/08/05/undocumented-corestorage-commands/">http://blog.fosketts.net/2011/08/05/undocumented-corestorage-commands/</a></li>
+<li><a rel="nofollow" class="external free" href="http://arstechnica.com/apple/2012/11/achieving-fusion-with-a-service-training-doc-ars-tears-open-apples-fusion-drive/2/">http://arstechnica.com/apple/2012/11/achieving-fusion-with-a-service-training-doc-ars-tears-open-apples-fusion-drive/2/</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Apple.html" title="Category:Apple">Apple</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Apple_Fusion_Drive&amp;oldid=536052">https://wiki.archlinux.org/index.php?title=Apple_Fusion_Drive&amp;oldid=536052</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 18 August 2018, at 21:53.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

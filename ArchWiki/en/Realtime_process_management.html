@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Realtime process management - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Realtime_process_management rootpage-Realtime_process_management skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Realtime process management</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Cgroups.html" title="Cgroups">cgroups</a></li>
+<li><a href="../en/Improving_performance.html" class="mw-redirect" title="Performance">Performance</a></li>
+</ul>
+</div>
+<p>This article provides information on prioritizing process threads in real time, as opposed to at startup only. It shows how you can control CPU, memory, and other resource utilization of individual processes, or all processes run by a particular group.
+</p>
+<p>While many recent processors are powerful enough to play a dozen video or audio streams simultaneously, it is still possible that another thread hijacks the processor for half a second to complete another task. This results in short interrupts in audio or video streams. It is also possible that video/audio streams get out of sync. While this is annoying for a casual music listener; for a content producer, composer or video editor this issue is much more serious as it interrupts their workflow. 
+</p>
+<p>The simple solution is to give the audio and video processes a <b>higher priority</b>. However, while normal users can set a higher <i>nice</i> value to a process, which means that its priority is lower, only root can set lower values and start processes at a lower <i>nice</i> value than 0. This protects the normal user from underpowering processes which are essential to the system. This can be especially important on multi-user machines.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Configuration"><span class="tocnumber">1</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Configuring_PAM"><span class="tocnumber">1.1</span> <span class="toctext">Configuring PAM</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Configuring_systemd_services"><span class="tocnumber">1.2</span> <span class="toctext">Configuring systemd services</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Hard_and_soft_realtime"><span class="tocnumber">2</span> <span class="toctext">Hard and soft realtime</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Power_is_nothing_without_control"><span class="tocnumber">3</span> <span class="toctext">Power is nothing without control</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Tips_and_tricks"><span class="tocnumber">4</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#PAM-enabled_login"><span class="tocnumber">4.1</span> <span class="toctext">PAM-enabled login</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Console/autologin"><span class="tocnumber">4.2</span> <span class="toctext">Console/autologin</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>By default, real-time prioritizing is enabled on Arch. System, group and user wide configuration can be achieved using <a href="../en/PAM.html" title="PAM">PAM</a> and <a href="../en/Systemd.html" title="Systemd">systemd</a>.
+</p>
+<p>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/groups/x86_64/realtime/">realtime</a></span> package group provides additional tools to modify the realtime scheduling policies of <a href="https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture)" class="extiw" title="wikipedia:Interrupt request (PC architecture)">IRQs</a> and processes. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> When running a custom kernel, ensure it is <code>PREEMPT</code> enabled to make use of the methods mentioned above.</div>
+<h3><span class="mw-headline" id="Configuring_PAM">Configuring PAM</span></h3>
+<p>The <code>/etc/security/limits.conf</code> file provides configuration for the <code>pam_limits</code> PAM module, which sets limits on system resources (see <span class="plainlinks archwiki-template-man" title="$ man 5 limits.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/limits.conf.5">limits.conf(5)</a></span>).
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong>  It is advised to externalize the configuration of <code>pam_limits</code> to separate files below <code>/etc/security/limits.d</code> as those take precedence over the main configuration file.</div>
+<p>There are two types of resource limits that <code>pam_limits</code> provides: <b>hard limits</b> and <b>soft limits</b>. Hard limits are set by <code>root</code> and enforced by the kernel, while soft limits may be configured by the user within the range allowed by the hard limits.
+</p>
+<p>Installing the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=realtime-privileges">realtime-privileges</a></span> and adding the user to the <code>realtime</code> group, provides reasonable default values (e.g. relevant for <a href="../en/Professional_audio.html" title="Professional audio">Professional audio</a>).
+</p>
+<h3><span class="mw-headline" id="Configuring_systemd_services">Configuring systemd services</span></h3>
+<p>Processes spawned by systemd system services need to specifically setup equivalents to <code>limits.conf</code>. Further information can be found in the sections <code>CREDENTIALS</code> and <code>PROCESS PROPERTIES</code> in <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.exec"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.exec.5">systemd.exec(5)</a></span>.
+</p>
+<h2><span class="mw-headline" id="Hard_and_soft_realtime">Hard and soft realtime</span></h2>
+<p>Realtime is a synonym for a process which has the capability to run
+in time without being interrupted by any other process. However, cycles can occasionally be dropped despite this. Low power supply or a process with higher priority could be a potential cause. To solve this problem, there is a scaling of realtime quality. This article deals with <b>soft</b> realtime.  Hard realtime is usually not so much desired as it is <i>needed</i>. An example could be made for car's ABS (anti-lock braking system). This can not be "rendered" and there is no second chance.
+</p>
+<h2><span class="mw-headline" id="Power_is_nothing_without_control">Power is nothing without control</span></h2>
+<p>The realtime-lsm module granted the right to get higher capabilities to users belonging to a certain UID. The rlimit way works similar, but it can be controlled graduated finer. There is a new functionality in PAM which can be used to control the capabilities on a per user or a per group level. In the current version (0.80-2) these values are not set correctly out of the box and still create problems.
+With PAM you can grant realtime priority to a certain user or to a certain user group. PAM's concept makes it imaginable that there will be ways in the future to grant rights on a per application level; however, this is not yet possible.
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="PAM-enabled_login">PAM-enabled login</span></h3>
+<p>See <a href="../en/Xinit.html#Autostart_X_at_login" class="mw-redirect" title="Start X at login">Start X at login</a>.
+</p>
+<p>For your system to use PAM limits settings you have to use a <code>pam</code>-enabled login method/manager. Nearly all graphical login managers are pam-enabled, and it now appears that the default Arch login is <code>pam</code>-enabled as well. You can confirm this by searching <code>/etc/pam.d</code>:
+</p>
+<pre>$ grep pam_limits.so /etc/pam.d/*
+</pre>
+<p>If you get nothing, you are whacked. But you will, as long as you have a login manager (and now <a href="../en/Polkit.html" class="mw-redirect" title="PolicyKit">PolicyKit</a>). We want an output like this one:
+</p>
+<pre>/etc/pam.d/crond:session   required    pam_limits.so
+/etc/pam.d/login:session		required	pam_limits.so
+/etc/pam.d/polkit-1:session         required        pam_limits.so
+/etc/pam.d/system-auth:session   required  pam_limits.so
+/etc/pam.d/system-services:session   required    pam_limits.so
+</pre>
+<p>So we see that <code>login</code>, PolicyKit, and the others all require the pam_limits.so module. This is a good thing, and means PAM limits will be enforced.
+</p>
+<h3>
+<span id="Console.2Fautologin"></span><span class="mw-headline" id="Console/autologin">Console/autologin</span>
+</h3>
+<p>See: <a href="../en/Getty.html#Automatic_login_to_virtual_console" class="mw-redirect" title="Automatically login some user to a virtual console on startup">Automatically login some user to a virtual console on startup</a>
+</p>
+<p>If you prefer to not have a graphical login, you still have a way. You need to edit the <code>pam</code> stuff for <code>su</code> (from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=coreutils">coreutils</a></span>):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pam.d/su</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> ...
+ session              required        pam_limits.so
+</pre>
+<p>Source <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?pid=387214">[1]</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><span class="plainlinks archwiki-template-man" title="$ man 2 getrlimit"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/getrlimit.2">getrlimit(2)</a></span></li>
+<li><a rel="nofollow" class="external free" href="https://www.kernel.org/doc/html/latest/scheduler/sched-design-CFS.html">https://www.kernel.org/doc/html/latest/scheduler/sched-design-CFS.html</a></li>
+<li><a rel="nofollow" class="external free" href="https://www.kernel.org/doc/html/latest/block/ioprio.html">https://www.kernel.org/doc/html/latest/block/ioprio.html</a></li>
+<li><a rel="nofollow" class="external text" href="http://cuddletech.com/?p=330">IO Benchmarking: How, why and with what</a></li>
+<li><a rel="nofollow" class="external text" href="http://sebastien.godard.pagesperso-orange.fr/">SYSSTAT utilities home page</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Realtime_process_management&amp;oldid=637347">https://wiki.archlinux.org/index.php?title=Realtime_process_management&amp;oldid=637347</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 October 2020, at 07:45.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Keyboard backlight - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Keyboard_backlight rootpage-Keyboard_backlight skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Keyboard backlight</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>There a various methods to control the <i>keyboard backlight</i> brightness level.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Any_vendor"><span class="tocnumber">1</span> <span class="toctext">Any vendor</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#D-Bus"><span class="tocnumber">1.1</span> <span class="toctext">D-Bus</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#On_GNOME"><span class="tocnumber">1.1.1</span> <span class="toctext">On GNOME</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#On_MATE"><span class="tocnumber">1.1.2</span> <span class="toctext">On MATE</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Any_vendor">Any vendor</span></h2>
+<p>There are a variety ways to manage the brightness level and different helpers tools to accomplish this, such as <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=brightnessctl">brightnessctl</a></span> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=light">light</a></span>.
+</p>
+<p>The <code>sys</code> pseudo-file system exposes an interface to the keyboard backlight. The current brightness level can be get by reading <code>/sys/class/leds/tpacpi::kbd_backlight/brightness</code>. For example to get the maximum brightness level:
+</p>
+<pre> cat /sys/class/leds/tpacpi::kbd_backlight/max_brightness
+</pre>
+<p>To set the brightness to 1:
+</p>
+<pre> echo 1 | sudo tee /sys/class/leds/tpacpi::kbd_backlight/brightness
+</pre>
+<p>When using <code>brightnessctl</code> you can get a list of available brightness controls with <code>brightnessctl --list</code>, then to show the kbd backlight information:
+</p>
+<pre> brightnessctl --device='tpacpi::kbd_backlight' info
+</pre>
+<p>This will show the absolute and relative current value and the maximum absolute value. To set a different value:
+</p>
+<pre> brightnessctl --device='tpacpi::kbd_backlight' set 1 
+</pre>
+<h3><span class="mw-headline" id="D-Bus">D-Bus</span></h3>
+<p>You can control your computer keyboard backlight via the <a href="../en/D-Bus.html" title="D-Bus">D-Bus</a> interface. The benefits of using it are that no modification to device files is required and it is vendor agnostic.
+</p>
+<p>The following is an example implementation in Python 3. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=upower">upower</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-dbus">python-dbus</a></span> packages then place the following script in <code>/usr/local/bin/</code> and make it executable. You can then map your keyboard shortcuts to run <code>/usr/local/bin/kb-light.py + x</code> and <code>/usr/local/bin/kb-light.py - x</code> to increase and decrease your keyboard backlight level by <code>x</code> amounts.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You should try with an x = 1 to determine the limits of the keyboard backlight levels</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/kb-light.py</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/env python3
+
+import dbus
+import sys
+
+def kb_light_set(delta):
+    bus = dbus.SystemBus()
+    kbd_backlight_proxy = bus.get_object('org.freedesktop.UPower', '/org/freedesktop/UPower/KbdBacklight')
+    kbd_backlight = dbus.Interface(kbd_backlight_proxy, 'org.freedesktop.UPower.KbdBacklight')
+
+    current = kbd_backlight.GetBrightness()
+    maximum = kbd_backlight.GetMaxBrightness()
+    new = max(0, min(current + delta, maximum))
+
+    if 0 &lt;= new &lt;= maximum:
+        current = new
+        kbd_backlight.SetBrightness(current)
+
+    # Return current backlight level percentage
+    return 100 * current / maximum
+
+if __name__ ==  '__main__':
+    if len(sys.argv) == 2 or len(sys.argv) == 3:
+        if sys.argv[1] == "--up" or sys.argv[1] == "+":
+            if len(sys.argv) == 3:
+                print(kb_light_set(int(sys.argv[2])))
+            else:
+                print(kb_light_set(17))
+        elif sys.argv[1] == "--down" or sys.argv[1] == "-":
+            if len(sys.argv) == 3:
+                print(kb_light_set(-int(sys.argv[2])))
+            else:
+                print(kb_light_set(-17))
+        else:
+            print("Unknown argument:", sys.argv[1])
+    else:
+        print("Script takes one or two argument.", len(sys.argv) - 1, "arguments provided.")
+
+
+</pre>
+<p>Alternatively the following bash one-liner will set the backlight to the value specified in the <i>argument</i>:
+</p>
+<pre>setKeyboardLight () {
+    dbus-send --system --type=method_call  --dest="org.freedesktop.UPower" "/org/freedesktop/UPower/KbdBacklight" "org.freedesktop.UPower.KbdBacklight.SetBrightness" int32:$1 
+}
+</pre>
+<h4><span class="mw-headline" id="On_GNOME">On GNOME</span></h4>
+<p>The following can be run from a terminal or mapped to keybindings 
+</p>
+<pre>gdbus call --session --dest org.gnome.SettingsDaemon.Power --object-path /org/gnome/SettingsDaemon/Power --method org.gnome.SettingsDaemon.Power.Keyboard.StepUp
+gdbus call --session --dest org.gnome.SettingsDaemon.Power --object-path /org/gnome/SettingsDaemon/Power --method org.gnome.SettingsDaemon.Power.Keyboard.StepDown
+</pre>
+<h4><span class="mw-headline" id="On_MATE">On MATE</span></h4>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Informal and unclear description. No relevance to MATE. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Keyboard_backlight">Talk:Keyboard backlight#</a>)</div>
+</div>
+<p>In case you use <a href="../en/MATE.html" title="MATE">MATE</a> environment you might get tired with repeated lighting keyboard backlight while logging in, unlocking screen or waking up dimmed display. Following setup prevent from automatic lighting up during any action. The only triggers remain plugging in the adapter and fresh boot. After that you can control keyboard backlight only via hotkeys (eg. ThinkPad Fn + spacebar).
+</p>
+<p>To prevent automatic lightning up just edit file <code>/usr/share/dbus-1/system.d/org.freedesktop.UPower.conf</code> as follows (two occurrences of "deny"):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/share/dbus-1/system.d/org.freedesktop.UPower.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;?xml version="1.0" encoding="UTF-8"?&gt; &lt;!-- -*- XML -*- --&gt;
+
+&lt;!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd"&gt;
+&lt;busconfig&gt;
+  &lt;!-- Only root can own the service --&gt;
+  &lt;policy user="root"&gt;
+    &lt;allow own="org.freedesktop.UPower"/&gt;
+  &lt;/policy&gt;
+  &lt;policy context="default"&gt;
+
+    &lt;allow send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.DBus.Introspectable"/&gt;
+
+    &lt;allow send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.DBus.Peer"/&gt;
+    &lt;allow send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.DBus.Properties"/&gt;
+    &lt;allow send_destination="org.freedesktop.UPower.Device"
+           send_interface="org.freedesktop.DBus.Properties"/&gt;
+    &lt;deny  send_destination="org.freedesktop.UPower.KbdBacklight"
+           send_interface="org.freedesktop.DBus.Properties"/&gt;
+    &lt;allow send_destination="org.freedesktop.UPower.Wakeups"
+           send_interface="org.freedesktop.DBus.Properties"/&gt;
+
+    &lt;allow send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.UPower"/&gt;
+    &lt;allow send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.UPower.Device"/&gt;
+    &lt;deny  send_destination="org.freedesktop.UPower"
+           send_interface="org.freedesktop.UPower.KbdBacklight"/&gt;
+    &lt;allow send_destination="org.freedesktop.UPower"
+	   send_interface="org.freedesktop.UPower.Wakeups"/&gt;
+  &lt;/policy&gt;
+&lt;/busconfig&gt;
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Keyboards.html" title="Category:Keyboards">Keyboards</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Keyboard_backlight&amp;oldid=602071">https://wiki.archlinux.org/index.php?title=Keyboard_backlight&amp;oldid=602071</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 March 2020, at 16:41.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

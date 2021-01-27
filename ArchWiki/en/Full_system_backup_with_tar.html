@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Full system backup with tar - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Full_system_backup_with_tar rootpage-Full_system_backup_with_tar skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Full system backup with tar</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Full_system_backup_with_SquashFS.html" title="Full system backup with SquashFS">Full system backup with SquashFS</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Uses a half-baked script instead of explaining basic options and referring to the manual, duplication with articles such as <a href="../en/Help:Reading.html" title="Help:Reading">Help:Reading</a>, numerous <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> issues (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Full_system_backup_with_tar">Talk:Full system backup with tar#</a>)</div>
+</div>
+<p>This article will show you how to do a full system backup with <a href="../en/Archiving_and_compression.html" class="mw-redirect" title="Tar">tar</a>.
+</p>
+<p>Backing up with tar has the advantages of using compression that can help save disk space, and simplicity.  The process only requires several steps, they are:
+</p>
+<ol>
+<li>Boot from a LiveCD</li>
+<li>Change root to the Linux install</li>
+<li>Mount additional (if any) partitions/drives</li>
+<li>Add exclusions</li>
+<li>Use the backup script to backup</li>
+</ol>
+<p>To minimize downtime the backup can alternatively be performed on a running system using <a href="../en/LVM.html#Snapshots" title="LVM">LVM snapshots</a>,
+if all filesystems reside on LVM volumes.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Boot_with_LiveCD"><span class="tocnumber">1</span> <span class="toctext">Boot with LiveCD</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Changing_root"><span class="tocnumber">2</span> <span class="toctext">Changing root</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Mount_other_partitions"><span class="tocnumber">3</span> <span class="toctext">Mount other partitions</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Exclude_file"><span class="tocnumber">4</span> <span class="toctext">Exclude file</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Backup_script"><span class="tocnumber">5</span> <span class="toctext">Backup script</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Restoring"><span class="tocnumber">6</span> <span class="toctext">Restoring</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Backup_with_parallel_compression"><span class="tocnumber">7</span> <span class="toctext">Backup with parallel compression</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Boot_with_LiveCD">Boot with LiveCD</span></h2>
+<p>Many Linux bootable CDs, USBs... have the ability to let you change root to your install.  While changing root is not necessary to do a backup, it provides the ability to just run the script without need to transfer it to a temporary drive or having to locate it on the filesystem.  The Live medium must be of the same architecture that your Linux install currently is (i.e. i686 or x86_64).
+</p>
+<h2><span class="mw-headline" id="Changing_root">Changing root</span></h2>
+<p>First you should have a scripting environment set up on your current Linux install.  If you do not know what that is, it means that you are able to execute any scripts that you may have as if they are regular programs.  If you do not, see this <a rel="nofollow" class="external text" href="https://linuxtidbits.wordpress.com/2009/12/03/setting-up-a-scripting-environment/">article</a> on how to do that.  What you will need to do next is change root, to learn more about what changing root is, read <a href="../en/Chroot.html" class="mw-redirect" title="Change root">this</a>.  When you change root, you do not need to mount any temporary file systems (<code>/proc</code>, <code>/sys</code>, and <code>/dev</code>).  These temporary file systems get populated on boot and you actually do not want to backup them up because they can interfere with the normal (and necessary) population process which can change on any upgrade.  To change root, you will need to mount your current Linux installs root partition.  For example:
+</p>
+<pre># mkdir /mnt/arch
+# mount /dev/<i>your-partition-or-drive</i>
+</pre>
+<p>Use <code>fdisk -l</code> to discover you partitions and drives.  Now <a href="../en/Chroot.html" title="Chroot">chroot</a>:
+</p>
+<pre># cd /mnt/arch
+# chroot . /bin/bash
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use <code>arch-chroot</code> to chroot into the target system - the backup process will fail as it will try to back up temporary file systems, all system memory and other interesting things. Use plain <code>chroot</code> instead.</div>
+<p>This example obviously uses bash but you can use other shells if available.  Now you will be in your scripted environment (this is provided that you have your <code>~/.bashrc</code> sourced on entry):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.bash_profile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># If using bash, source the local .bashrc
+source ~/.bashrc
+</pre>
+<h2><span class="mw-headline" id="Mount_other_partitions">Mount other partitions</span></h2>
+<p>Other partitions that you use (if any) will need to be mounted in their proper places (e.g. if you have a separate <code>/home</code> partition).
+</p>
+<h2><span class="mw-headline" id="Exclude_file">Exclude file</span></h2>
+<p><i>tar</i> has the ability to ignore specified files and directories.  The syntax is one definition per line. <i>tar</i> also has the capability to understand regular expressions (regexps).  For example:
+</p>
+<pre># Not old backups                                                               
+/opt/backup/arch-full*                                                                   
+                                                                                
+# Not temporary files                                                           
+/tmp/*
+
+# Not the cache for pacman
+/var/cache/pacman/pkg/
+...
+</pre>
+<h2><span class="mw-headline" id="Backup_script">Backup script</span></h2>
+<p>Backing up with tar is straight-forward process.  Here is a basic script that can do it and provides a couple checks.  You will need to modify this script to define your backup location, and exclude file (if you have one), and then just run this command after you have <code>chroot</code>ed and mounted all your partitions.
+</p>
+<pre>#!/bin/bash
+# full system backup
+
+# Backup destination
+backdest=/opt/backup
+
+# Labels for backup name
+#PC=${HOSTNAME}
+pc=pavilion
+distro=arch
+type=full
+date=$(date "+%F")
+backupfile="$backdest/$distro-$type-$date.tar.gz"
+
+# Exclude file location
+prog=${0##*/} # Program name from filename
+excdir="/home/&lt;user&gt;/.bin/root/backup"
+exclude_file="$excdir/$prog-exc.txt"
+
+# Check if chrooted prompt.
+echo -n "First chroot from a LiveCD.  Are you ready to backup? (y/n): "
+read executeback
+
+# Check if exclude file exists
+if [ ! -f $exclude_file ]; then
+  echo -n "No exclude file exists, continue? (y/n): "
+  read continue
+  if [ $continue == "n" ]; then exit; fi
+fi
+
+if [ $executeback = "y" ]; then
+  # -p, --acls and --xattrs store all permissions, ACLs and extended attributes. 
+  # Without both of these, many programs will stop working!
+  # It is safe to remove the verbose (-v) flag. If you are using a 
+  # slow terminal, this can greatly speed up the backup process.
+  tar --exclude-from=$exclude_file --acls --xattrs -cpvf $backupfile /
+fi</pre>
+<h2><span class="mw-headline" id="Restoring">Restoring</span></h2>
+<p>To restore from a previous backup, mount all relevant partitions, change the current working directory to the root directory, and execute
+</p>
+<pre>$ tar --acls --xattrs -xpf <i>backupfile</i>
+</pre>
+<p>replacing <i>backupfile</i> with the backup archive. Removing all files that had been added since the backup was made must be done manually. Recreating the filesystem(s) is an easy way to do this.
+</p>
+<h2><span class="mw-headline" id="Backup_with_parallel_compression">Backup with parallel compression</span></h2>
+<p>To back up using parallel compression (<a href="https://en.wikipedia.org/wiki/Symmetric_multiprocessing" class="extiw" title="wikipedia:Symmetric multiprocessing">SMP</a>), use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pbzip2">pbzip2</a></span> (Parallel bzip2):
+</p>
+<pre># tar -cvf /path/to/chosen/directory/etc-backup.tar.bz2 -I pbzip2 /etc
+</pre>
+<p>Store <code>etc-backup.tar.bz2</code> on one or more offline media, such as a USB stick, external hard drive, or CD-R. Occasionally verify the integrity of the backup process by comparing original files and directories with their backups. Possibly maintain a list of hashes of the backed up files to make the comparison quicker.
+</p>
+<p>Restore corrupted <code>/etc</code> files by extracting the <code>etc-backup.tar.bz2</code> file in a temporary working directory, and copying over individual files and directories as needed. To restore the entire <code>/etc</code> directory with all its contents execute the following command as root:
+</p>
+<pre># tar -xvf etc-backup.tar.bz2 -C /
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Backup.html" title="Category:Backup">Backup</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Full_system_backup_with_tar&amp;oldid=637513">https://wiki.archlinux.org/index.php?title=Full_system_backup_with_tar&amp;oldid=637513</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 7 October 2020, at 11:56.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

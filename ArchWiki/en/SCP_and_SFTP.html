@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>SCP and SFTP - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-SCP_and_SFTP rootpage-SCP_and_SFTP skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">SCP and SFTP</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/SSHFS.html" title="SSHFS">SSHFS</a></li>
+<li><a href="../en/SFTP_chroot.html" title="SFTP chroot">SFTP chroot</a></li>
+<li><a href="../en/Pure-FTPd.html" title="Pure-FTPd">Pure-FTPd</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/SFTP_chroot.html" title="SFTP chroot">SFTP chroot</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> Instructions seem to be the same as in <a href="../en/SFTP_chroot.html" title="SFTP chroot">SFTP chroot</a> and has more content. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:SCP_and_SFTP#Incorrect_'Considered_for_redirection'_banner?">Talk:SCP and SFTP#Incorrect 'Considered for redirection' banner?</a>)</div>
+</div>
+<p>The <a href="https://en.wikipedia.org/wiki/Secure_copy" class="extiw" title="wikipedia:Secure copy">Secure copy (SCP)</a> is a protocol to transfer files via a <a href="../en/Secure_Shell.html" title="Secure Shell">Secure Shell</a> connection. The <a href="https://en.wikipedia.org/wiki/SSH_file_transfer_protocol" class="extiw" title="wikipedia:SSH file transfer protocol">SSH file transfer protocol (SFTP)</a> is a related protocol, also relying on a secure shell back-end. Both protocols allow secure file transfers, encrypting passwords and transferred data. The SFTP protocol, however, features additional capabilities like, for example, resuming broken transfers or remote file manipulation like deletion. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Secure_file_transfer_protocol_(SFTP)"><span class="tocnumber">1</span> <span class="toctext">Secure file transfer protocol (SFTP)</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Secure_file_transfer_protocol_(SFTP)_with_a_chroot_jail"><span class="tocnumber">2</span> <span class="toctext">Secure file transfer protocol (SFTP) with a chroot jail</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Setup_the_filesystem"><span class="tocnumber">2.1</span> <span class="toctext">Setup the filesystem</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Create_an_unprivileged_user"><span class="tocnumber">2.2</span> <span class="toctext">Create an unprivileged user</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Setup_OpenSSH"><span class="tocnumber">2.3</span> <span class="toctext">Setup OpenSSH</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Secure_copy_protocol_(SCP)"><span class="tocnumber">3</span> <span class="toctext">Secure copy protocol (SCP)</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7">
+<a href="#General_Usage"><span class="tocnumber">3.1</span> <span class="toctext">General Usage</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Linux_to_Linux"><span class="tocnumber">3.1.1</span> <span class="toctext">Linux to Linux</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Linux_to_Windows"><span class="tocnumber">3.1.2</span> <span class="toctext">Linux to Windows</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10">
+<a href="#Scponly"><span class="tocnumber">3.2</span> <span class="toctext">Scponly</span></a>
+<ul>
+<li class="toclevel-3 tocsection-11"><a href="#Adding_a_chroot_jail"><span class="tocnumber">3.2.1</span> <span class="toctext">Adding a chroot jail</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#Uploads_to_Chroot_jail_root_dir"><span class="tocnumber">3.2.2</span> <span class="toctext">Uploads to Chroot jail root dir</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id="Secure_file_transfer_protocol_.28SFTP.29"></span><span class="mw-headline" id="Secure_file_transfer_protocol_(SFTP)">Secure file transfer protocol (SFTP)</span>
+</h2>
+<p>Install and configure <a href="../en/OpenSSH.html" title="OpenSSH">OpenSSH</a>. Once running, SFTP is available by default.
+</p>
+<p>Access files with the <i>sftp</i> program or <a href="../en/SSHFS.html" title="SSHFS">SSHFS</a>. Many standard FTP programs should work as well.
+</p>
+<h2>
+<span id="Secure_file_transfer_protocol_.28SFTP.29_with_a_chroot_jail"></span><span class="mw-headline" id="Secure_file_transfer_protocol_(SFTP)_with_a_chroot_jail">Secure file transfer protocol (SFTP) with a chroot jail</span>
+</h2>
+<p>Sysadmins can jail a subset of users to a chroot jail using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openssh">openssh</a></span> thus restricting their access to a particular directory tree.  This can be useful to simply share some files without granting full system access or shell access.  Users with this type of setup may use SFTP clients such as <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=filezilla">filezilla</a></span> to put/get files in the chroot jail.
+</p>
+<h3><span class="mw-headline" id="Setup_the_filesystem">Setup the filesystem</span></h3>
+<p>Create a jail directory:
+</p>
+<pre># mkdir -p /var/lib/jail
+</pre>
+<p>Optionally, bind mount the filesystem to be shared to this directory. In this example, <code>/mnt/data/share</code> is to be used.  It is owned by root and has octal permissions of 755.
+</p>
+<pre># mount -o bind /mnt/data/share /var/lib/jail
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Consider adding an entry to <code>/etc/fstab</code> to make the bind mount survive a reboot.</div>
+<h3><span class="mw-headline" id="Create_an_unprivileged_user">Create an unprivileged user</span></h3>
+<p>Create the share user and setup a good password:
+</p>
+<pre># useradd -g sshusers -d /var/lib/jail foo
+# passwd foo
+</pre>
+<h3><span class="mw-headline" id="Setup_OpenSSH">Setup OpenSSH</span></h3>
+<p>Add the following to the end of <code>/etc/ssh/sshd_config</code> to enable the share and to enforce the restrictions:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ssh/sshd_config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ Match group sshusers
+  ChrootDirectory %h
+  X11Forwarding no
+  AllowTcpForwarding no
+  PasswordAuthentication yes
+  ForceCommand internal-sftp
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">Restart</a> <code>sshd.service</code> to re-read the config file.
+</p>
+<p>Test that in fact, the restrictions are enforced by attempting an ssh connection via the shell. The ssh server should return a polite notice of the setup:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ssh foo@someserver.com</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">foo@someserver.com's password:
+This service allows sftp connections only.
+Connection to someserver.com closed.
+</pre>
+<h2>
+<span id="Secure_copy_protocol_.28SCP.29"></span><span class="mw-headline" id="Secure_copy_protocol_(SCP)">Secure copy protocol (SCP)</span>
+</h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a>, configure and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <a href="../en/OpenSSH.html" title="OpenSSH">OpenSSH</a>. It contains the <i>scp</i> utility to transfer files.
+</p>
+<p>More features are available by installing additional packages, for example <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rssh/">rssh</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=scponly">scponly</a></span> described below.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The scp protocol is outdated, inflexible and not readily fixed. Its authors recommend the use of more modern protocols like sftp and rsync for file transfer instead.<a rel="nofollow" class="external autonumber" href="https://lists.mindrot.org/pipermail/openssh-unix-dev/2019-March/037672.html">[1]</a>
+</div>
+<h3><span class="mw-headline" id="General_Usage">General Usage</span></h3>
+<h4><span class="mw-headline" id="Linux_to_Linux">Linux to Linux</span></h4>
+<p>Copy file from a remote host to local host SCP example:
+</p>
+<pre>$ scp username@from_host:file.txt /local/directory/
+</pre>
+<p>Copy file from local host to a remote host SCP example:
+</p>
+<pre>$ scp file.txt username@to_host:/remote/directory/
+</pre>
+<p>Copy directory from a remote host to local host SCP example:
+</p>
+<pre>$ scp -r username@from_host:/remote/directory/  /local/directory/
+</pre>
+<p>Copy directory from local host to a remote host SCP example:
+</p>
+<pre>$ scp -r /local/directory/ username@to_host:/remote/directory/
+</pre>
+<p>Copy file from remote host to remote host SCP example:
+</p>
+<pre>$ scp username@from_host:/remote/directory/file.txt username@to_host:/remote/directory/
+</pre>
+<h4><span class="mw-headline" id="Linux_to_Windows">Linux to Windows</span></h4>
+<p>Use a Windows program such as <a rel="nofollow" class="external text" href="https://winscp.net/eng/download.php">WinSCP</a>
+</p>
+<h3><span class="mw-headline" id="Scponly">Scponly</span></h3>
+<p><a rel="nofollow" class="external text" href="https://github.com/scponly/scponly/wiki">Scponly</a> is a limited shell for allowing users scp/sftp access and only scp/sftp access. Additionally, one can setup <i>scponly</i> to chroot the user into a particular directory increasing the level of security. 
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=scponly">scponly</a></span>. 
+</p>
+<p>For existing users, simply set the user's shell to scponly:
+</p>
+<pre># usermod -s /usr/bin/scponly <i>username</i>
+</pre>
+<h4><span class="mw-headline" id="Adding_a_chroot_jail">Adding a chroot jail</span></h4>
+<p>The package comes with a script to create a chroot. To use it, run: 
+</p>
+<pre># /usr/share/doc/scponly/setup_chroot.sh
+</pre>
+<ul>
+<li>Provide answers</li>
+<li>Check that <code>/path/to/chroot</code> has <code>root:root</code> owner and <code>r-x</code> for others</li>
+<li>Change the shell for selected user to <code>/usr/bin/scponlyc</code>
+</li>
+<li>sftp-server may require some libnss modules such as libnss_files. Copy them to chroot's <code>/lib</code> path.</li>
+</ul>
+<h4><span class="mw-headline" id="Uploads_to_Chroot_jail_root_dir">Uploads to Chroot jail root dir</span></h4>
+<p>For security reasons the directory set as the chroot directory must be owned by root with only root having write access to it otherwise sftp/ssh connections will be denied. This of course means regular users cannot upload files to the root directory. In order to get around this while not compromising security you can create a folder inside the chroot directory which the regular user or group has write access to, e.g:
+</p>
+<pre># cd /var/lib/jail
+# mkdir uploads
+# chown :sshusers uploads
+# chmod 730 uploads
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This will only allow users of group "sshusers" to upload to (but not list the contents of) the "uploads" directory. Use <code>chmod 770</code> to allow sshusers to view contents.</div>
+<p>Some applications utilizing SFTP do not allow input of sub-directories when performing operations (e.g. uploading files), and will attempt to upload files to the chroot base directory (which will be denied). In order to force these applications to use a specific sub-directory you can append the following to the "ForceCommand" option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ssh/sshd_config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ Match group sshusers
+  ...
+  ForceCommand internal-sftp -d /uploads
+</pre>
+<p>Users on connect will then have their start directory change to the specified sub-directory (remember to restart the sshd server).
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Secure_Shell.html" title="Category:Secure Shell">Secure Shell</a></li>
+<li><a href="../en/Category:File_Transfer_Protocol.html" title="Category:File Transfer Protocol">File Transfer Protocol</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=SCP_and_SFTP&amp;oldid=627353">https://wiki.archlinux.org/index.php?title=SCP_and_SFTP&amp;oldid=627353</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 31 July 2020, at 10:30.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

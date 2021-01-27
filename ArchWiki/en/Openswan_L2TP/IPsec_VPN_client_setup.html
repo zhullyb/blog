@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Openswan L2TP/IPsec VPN client setup - ArchWiki</title>
+<link rel="stylesheet" href="../../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Openswan_L2TP_IPsec_VPN_client_setup rootpage-Openswan_L2TP skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Openswan L2TP/IPsec VPN client setup</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../../en/StrongSwan.html" title="StrongSwan">strongSwan</a></li>
+</ul>
+</div>
+<p>This article describes how to configure and use a L2TP/IPsec Virtual Private Network client on Arch Linux. It covers the installation and setup of several needed software packages. L2TP refers to the <a href="https://en.wikipedia.org/wiki/Layer_2_Tunneling_Protocol" class="extiw" title="w:Layer 2 Tunneling Protocol">w:Layer 2 Tunneling Protocol</a> and for <a href="https://en.wikipedia.org/wiki/IPsec" class="extiw" title="w:IPsec">w:IPsec</a>, the <a rel="nofollow" class="external text" href="https://www.openswan.org/">Openswan</a> implementation is employed. 
+</p>
+<p>This guide is primarily targeted for clients connecting to a Windows Server machine, as it uses some settings that are specific to the Microsoft implementation of L2TP/IPsec. However, it is adaptable with any other common L2TP/IPsec setup. The <a rel="nofollow" class="external text" href="https://github.com/xelerance/Openswan/wiki/L2tp-ipsec-configuration-using-openswan-and-xl2tpd">Openswan wiki</a> features instructions to set up a corresponding L2TP/IPSec Linux server. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#OpenSwan"><span class="tocnumber">2.1</span> <span class="toctext">OpenSwan</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#Running_Openswan_in_a_container"><span class="tocnumber">2.1.1</span> <span class="toctext">Running Openswan in a container</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5"><a href="#xl2tpd"><span class="tocnumber">2.2</span> <span class="toctext">xl2tpd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Routing"><span class="tocnumber">3</span> <span class="toctext">Routing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Routing_traffic_to_a_single_IP_address_or_Subnet_through_the_tunnel"><span class="tocnumber">3.1</span> <span class="toctext">Routing traffic to a single IP address or Subnet through the tunnel</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Routing_all_traffic_through_the_tunnel"><span class="tocnumber">3.2</span> <span class="toctext">Routing all traffic through the tunnel</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a></li>
+<li class="toclevel-1 tocsection-10">
+<a href="#Tips_and_Tricks"><span class="tocnumber">5</span> <span class="toctext">Tips and Tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#Script_start_up_and_shut_down"><span class="tocnumber">5.1</span> <span class="toctext">Script start up and shut down</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#A_further_script"><span class="tocnumber">5.2</span> <span class="toctext">A further script</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Script_to_resolve_dns_names_and_connect"><span class="tocnumber">5.3</span> <span class="toctext">Script to resolve dns names and connect</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xl2tpd">xl2tpd</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/openswan/">openswan</a></span><sup><small>AUR</small></sup> (To use with NetworkManager: <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=strongswan">strongswan</a></span>) packages.
+</p>
+<p>Now you can <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>openswan.service</code>. If it's not running you may get an error message about a missing pluto_ctl <code>connect(pluto_ctl) failed: No such file or directory</code>.
+</p>
+<p>Run <code>ipsec verify</code> to check your configuration and resolve possible issues before continuing.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="OpenSwan">OpenSwan</span></h3>
+<p>Edit <code>/etc/ipsec.conf</code> to contain the following lines:
+</p>
+<pre>config setup
+     virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12
+     nat_traversal=yes
+     protostack=netkey            # default is auto, which will try netkey first
+     plutoopts="--interface=eth0" # Replace eth0 with your network interface or use %defaultroute to use default route
+
+conn L2TP-PSK
+     authby=secret
+     pfs=no
+     auto=add
+     keyingtries=3
+     dpddelay=30
+     dpdtimeout=120
+     dpdaction=clear
+     rekey=yes
+     ikelifetime=8h
+     keylife=1h
+     type=transport
+     left=192.168.0.123           # Replace with your local IP address (private, behind NAT IP is okay as well)
+     leftprotoport=17/1701
+     right=68.68.32.79            # Replace with your VPN server's IP
+     rightprotoport=17/1701
+</pre>
+<p>This file contains the basic information to establish a secure IPsec tunnel to the VPN server. It enables NAT Traversal for if your machine is behind a NAT'ing router (most people are), and various other options that are necessary to connect correctly to the remote IPsec server. The next file contains your pre-shared key (PSK) for the server.
+</p>
+<p>Create the file <code>/etc/ipsec.secrets</code>: It should contain the following line:
+</p>
+<pre>192.168.0.123 68.68.32.79 : PSK "<b>your_pre_shared_key</b>"
+</pre>
+<p>Remember to replace the local (<code>192.168.0.123</code>) and remote (<code>68.68.32.79</code>) IP addresses with the correct numbers for your location. The pre-shared key will be supplied by the VPN provider and will need to be placed in this file in cleartext form. You may find this file already exists and already have some data, try to back it up and create a new file only with your PSK if you'll see "Can't authenticate: no preshared key found for ..." when enabling connection in next section.
+</p>
+<p>Add the connection, so it's available to use:
+</p>
+<pre># ipsec auto --add L2TP-PSK
+</pre>
+<p>At this point the IPsec configuration is complete and we can move on to the L2TP configuration.
+</p>
+<h4><span class="mw-headline" id="Running_Openswan_in_a_container">Running Openswan in a container</span></h4>
+<p>Don't forget to add CAP_SYS_MODULE capability and access to host module tree. Example for nspawn:
+</p>
+<pre>--bind=/lib/modules --capability=CAP_SYS_MODULE
+</pre>
+<h3><span class="mw-headline" id="xl2tpd">xl2tpd</span></h3>
+<p>Edit <code>/etc/xl2tpd/xl2tpd.conf</code> so it has the following contents:
+</p>
+<pre>[lac vpn-connection]
+lns = 68.68.32.79
+ppp debug = yes
+pppoptfile = /etc/ppp/options.l2tpd.client
+length bit = yes
+</pre>
+<p>This file configures xl2tpd with the connection name, server IP address (which again, please remember to change to your servers address) and various options that will be passed to pppd once the tunnel is set up.
+</p>
+<p>Now create <code>/etc/ppp/options.l2tpd.client</code> with the following contents:
+</p>
+<pre>ipcp-accept-local
+ipcp-accept-remote
+refuse-eap
+require-mschap-v2
+noccp
+noauth
+idle 1800
+mtu 1410
+mru 1410
+defaultroute
+usepeerdns
+debug
+connect-delay 5000
+name <b>your_vpn_username</b>
+password <b>your_password</b>
+</pre>
+<p>Place your assigned username and password for the VPN server in this file. A lot of these options are for interoperability with Windows Server L2TP servers. If your VPN server uses PAP authentication, replace <code>require-mschap-v2</code> with <code>require-pap</code>.
+</p>
+<p>This concludes the configuration of the applicable software suites to connect to a L2TP/IPsec server. To start the connection do the following:
+</p>
+<pre># systemctl start openswan
+# systemctl start xl2tpd
+# ipsec auto --up L2TP-PSK
+# echo "c vpn-connection" &gt; /var/run/xl2tpd/l2tp-control
+</pre>
+<p>At this point the tunnel is up and you should be able to see the interface for it if you type:
+</p>
+<pre>$ ip link
+</pre>
+<p>You should see a <code>pppX</code> device that represents the tunnel. Right now, nothing is going to get routed through it. You need to add some routing rules to make it work right:
+</p>
+<h2><span class="mw-headline" id="Routing">Routing</span></h2>
+<h3><span class="mw-headline" id="Routing_traffic_to_a_single_IP_address_or_Subnet_through_the_tunnel">Routing traffic to a single IP address or Subnet through the tunnel</span></h3>
+<p>This is as easy as adding a routing rule to your kernel table:
+</p>
+<pre># ip route add xxx.xxx.xxx.xxx via yyy.yyy.yyy.yyy dev pppX
+</pre>
+<p>Note xxx.xxx.xxx.xxx is the specific ip address (e.g. 192.168.3.10) or subnet (e.g. 192.168.3.0/24) that you wish to communicate with through the tunnel device (e.g. ppp0). 
+</p>
+<p>Note yyy.yyy.yyy.yyy is "peer ip" of your pppX device used to route traffic to tunnel destination xxx.xxx.xxx.xxx. 
+</p>
+<p><br>  
+See example below for command to identify tunnel device name and peer ip and then add route. :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ip address</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">4: ppp0: &lt;POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UNKNOWN group default qlen 3
+    link/ppp 
+    inet 10.192.168.40 <b>peer 192.0.2.1/32</b> scope global ppp0
+       valid_lft forever preferred_lft forever
+</pre>
+<pre># ip route add 192.168.3.0/24 via 192.0.2.1 dev ppp0
+</pre>
+<h3><span class="mw-headline" id="Routing_all_traffic_through_the_tunnel">Routing all traffic through the tunnel</span></h3>
+<p>This is a lot more complex, but all your traffic will travel through the tunnel. Start by adding a special route for the actual VPN server through your current gateway:
+</p>
+<pre># ip route add 68.68.32.79 via 192.168.1.1 dev eth0
+</pre>
+<p>This will ensure that once the default gateway is changed to the ppp interface that your network stack can still find the VPN server by routing around the tunnel. If you miss this step you will lose connectivity to the Internet and the tunnel will collapse. Now add a default route that routes to the PPP remote end:
+</p>
+<pre># ip route add default via yyy.yyy.yyy.yyy dev pppX
+</pre>
+<p>The remote PPP end can be discovered by following the step in the previous section. Now to ensure that ALL traffic is routing through the tunnel, delete the original default route:
+</p>
+<pre># ip route delete default via 192.168.1.1 dev eth0
+</pre>
+<p>To restore your system to the previous state, you can reboot or reverse all of the above steps.
+</p>
+<p>The route creation can also be automated by placing a script in /etc/ppp/ip-up.d.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The first step may be to use the <b>ipsec verify</b> command to check the configuration of the installed IPSEC.</div>
+<p><b>Issue:</b> I get a message from pppd saying "Failed to authenticate ourselves to peer" and I've verified my password is correct. What could be wrong?
+</p>
+<p><b>Solution:</b> If you see the following in your /var/log/daemon.log:
+</p>
+<pre>Dec 20 15:14:03 myhost pppd[26529]: rcvd [CHAP Challenge id=0x1 &lt;some_or_another_hash&gt;, name = "SonicWALL"]
+Dec 20 15:14:03 myhost pppd[26529]: sent [CHAP Response id=0x1 &lt;some_or_another_hash&gt;, name = "your_vpn_username"]
+Dec 20 15:14:03 myhost pppd[26529]: rcvd [LCP EchoRep id=0x0 magic=0x45c269c6]
+Dec 20 15:14:03 myhost pppd[26529]: rcvd [CHAP Failure id=0x1 ""]
+Dec 20 15:14:03 myhost pppd[26529]: CHAP authentication failed
+Dec 20 15:14:03 myhost pppd[26529]: CHAP authentication failed
+Dec 20 15:14:03 myhost pppd[26529]: sent [LCP TermReq id=0x3 "Failed to authenticate ourselves to peer"]
+Dec 20 15:14:03 myhost pppd[26529]: rcvd [LCP TermReq id=0x2]
+Dec 20 15:14:03 myhost pppd[26529]: sent [LCP TermAck id=0x2]
+Dec 20 15:14:03 myhost pppd[26529]: rcvd [LCP TermAck id=0x3]</pre>
+<p>then you are authenticating against a SonicWALL LNS that does not know how to handle CHAP-style authentication correctly.
+</p>
+<p>The solution to this is to add the following to your options.l2tp.client file:
+</p>
+<pre>   refuse-chap
+</pre>
+<p>This will cause the SonicWALL to default to the next authentication mechanism, namely MSCHAP-v2. This should authenticate successfully, and from this point xl2tpd should successfully construct a tunnel between you and the remote L2TP server.
+</p>
+<h2><span class="mw-headline" id="Tips_and_Tricks">Tips and Tricks</span></h2>
+<h3><span class="mw-headline" id="Script_start_up_and_shut_down">Script start up and shut down</span></h3>
+<p>You can create some scripts either in your home directory or elsewhere(remember where you put them) to bring up the tunnel then shut it back down.
+</p>
+<p>First, a utility script to automatically discover PPP distant ends:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">getip.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+ifconfig $1 | grep "P-t-P" | gawk -F: '{print $2}' | gawk '{print $1}'
+</pre>
+<p>Next, the script to bring the tunnel up. This will replace the default route, so all traffic will pass via the tunnel:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">startvpn.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+systemctl start openswan
+sleep 2                                                   #delay to ensure that IPsec is started before overlaying L2TP
+systemctl start xl2tpd
+ipsec auto --up L2TP-PSK                        
+echo "c vpn-connection" &gt; /var/run/xl2tpd/l2tp-control     
+sleep 2                                                   #delay again to make that the PPP connection is up.
+PPP_GW_ADD=`./getip.sh ppp0`
+
+ip route add 68.68.32.79 via 192.168.1.1 dev eth0
+ip route add default via $PPP_GW_ADD
+ip route del default via 192.168.1.1
+</pre>
+<p>Finally, the shutdown script, it simply reverses the process:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">stopvpn.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+ipsec auto --down L2TP-PSK
+echo "d vpn-connection" &gt; /var/run/xl2tpd/l2tp-control
+systemctl stop xl2tpd
+systemctl stop openswan
+
+ip route del 68.68.32.79 via 192.168.1.1 dev eth0
+ip route add default via 192.168.1.1
+</pre>
+<h3><span class="mw-headline" id="A_further_script">A further script</span></h3>
+<p>Above script really help me work. And notice the script use fixed ip, and someone like me may change net vpn addr, i'd like to put my further script below(not sure how to add attachment, so just raw ):
+</p>
+<pre>#!/bin/bash
+if [ $# != 1 ] ; then
+	echo "Usage: (sudo) sh $0 {init|start|stop}" 
+	exit 1;
+fi
+
+VPN_ADDR=XXX
+IFACE=wlan0
+
+function getIP(){
+	ip addr show $1 | grep "inet " | awk '{print $2}' | sed 's:/.*::'       
+}
+
+function getGateWay(){
+	ip route show default | awk '/default/ {print $3}'
+}
+function getVPNGateWay(){
+	ip route | grep -m 1 "$VPN_ADDR" | awk '{print $3}'
+}
+
+GW_ADDR=$(getGateWay)  
+
+function init(){
+	cp ./options.l2tpd.client /etc/ppp/
+	cp ./ipsec.conf /etc/
+	cp ./ipsec.secrets /etc/
+	cp ./xl2tpd.conf /etc/xl2tpd/
+}
+
+function start(){
+	sed -i "s/^lns =.*/lns = $VPN_ADDR/g" /etc/xl2tpd/xl2tpd.conf
+	sed -i "s/plutoopts=.*/plutoopts=\"--interface=$IFACE\"/g" /etc/ipsec.conf
+	sed -i "s/left=.*$/left=$(getIP $IFACE)/g" /etc/ipsec.conf
+	sed -i "s/right=.*$/right=$VPN_ADDR/g" /etc/ipsec.conf
+	sed -i "s/^.*: PSK/$(getIP $IFACE) $VPN_ADDR : PSK/g" /etc/ipsec.secrets
+	systemctl start openswan
+	sleep 2    #delay to ensure that IPsec is started before overlaying L2TP
+
+	systemctl start xl2tpd
+	ipsec auto --up L2TP-PSK                        
+	echo "c vpn-connection" &gt; /var/run/xl2tpd/l2tp-control     
+	sleep 2    #delay again to make that the PPP connection is up.
+
+        ip route add $VPN_ADDR via $GW_ADDR dev $IFACE
+        ip route add default via $(getIP ppp0)
+        ip route del default via $GW_ADDR
+}
+
+function stop(){
+	ipsec auto --down L2TP-PSK
+	echo "d vpn-connection" &gt; /var/run/xl2tpd/l2tp-control
+	systemctl stop xl2tpd
+	systemctl stop openswan
+	
+	VPN_GW=$(getVPNGateWay)
+        ip route del $VPN_ADDR via $VPN_GW dev $IFACE
+        ip route add default via $VPN_GW
+}
+
+$1
+exit 0
+</pre>
+<h3><span class="mw-headline" id="Script_to_resolve_dns_names_and_connect">Script to resolve dns names and connect</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> The wiki should not host scripts. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Openswan_L2TP/IPsec_VPN_client_setup">Talk:Openswan L2TP/IPsec VPN client setup#</a>)</div>
+</div>
+<p>Very useful if you have dynamic IP for the server. 
+</p>
+<pre>#!/bin/python
+
+from os import system
+from socket import gethostbyname
+from netifaces import ifaddresses, AF_INET
+from time import sleep
+
+# netifaces is a library installed with pip, not part of default insatllation of python
+# The script is useful if you have dynamic IP, or need to use a domain for the vpn server
+# gist: https://gist.github.com/physicalit/bf9e27c7ecbc12843cd68e442358616c
+# The template files are identical to the examples from the link above, except they use the sign `&lt;` as placeholder for the server ip
+# can be added to cron, don't forghet to modify your domain and the ip/subnet from the `ip add route ...`
+
+ip = gethostbyname('your.domain.tld')
+
+file_list = ['/etc/xl2tpd/xl2tpd.conf_tmp', '/etc/ipsec.secrets_tmp', '/etc/ipsec.conf_tmp']
+
+def read_file(file):
+    with open(file, 'r') as f:
+        result = f.readlines()
+        #result = [l.rstrip('\n') for l in result]  # l.split('_')[0] 
+        return result
+
+def write_ip(ip):
+    for l in file_list:
+        result = [ip.join(e.split('&lt;')) if "&lt;" in e else e for e in read_file(l)]
+        with open(l.split('_')[0], 'w') as f:
+            for e in result:
+                f.write(e)
+
+if __name__ == "__main__":
+    write_ip(ip)
+    [ system('systemctl restart {}'.format(l)) for l in ['openswan', 'xl2tpd']]
+    vpn = system('ipsec auto --up L2TP-PSK')
+    system('echo "c vpn-connection" &gt; /var/run/xl2tpd/l2tp-control')
+    sleep(2) # very important or is not going to see ppp0 interface
+    if not vpn:
+        peer = ifaddresses('ppp0')[AF_INET][0]['peer']
+        route = system('ip route add 192.168.88.0/24 via {0} dev ppp0'.format(peer))
+        if not route:
+            print("VPN sucesfully connected. Route created.")
+        else:
+            print("VPN KO")
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external free" href="https://openswan.org/">https://openswan.org/</a></li>
+<li><a rel="nofollow" class="external free" href="https://github.com/xelerance/xl2tpd">https://github.com/xelerance/xl2tpd</a></li>
+<li>
+<a rel="nofollow" class="external free" href="https://strongvpn.com/forum/viewtopic.php?pid=1844">https://strongvpn.com/forum/viewtopic.php?pid=1844</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-04-01 ⓘ]</sup> (<a rel="nofollow" class="external text" href="https://web.archive.org/web/20130129212118/https://strongvpn.com/forum/viewtopic.php?pid=1844">archive link</a>) — The main source used to write the initial revisions of this article.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Openswan_L2TP/IPsec_VPN_client_setup&amp;oldid=622141">https://wiki.archlinux.org/index.php?title=Openswan_L2TP/IPsec_VPN_client_setup&amp;oldid=622141</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 June 2020, at 12:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

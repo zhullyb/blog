@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch Linux on a VPS (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_Linux_on_a_VPS_简体中文 rootpage-Arch_Linux_on_a_VPS_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch Linux on a VPS (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../en/Category:Servers.html" class="mw-redirect" title="Comprehensive Server Guide">Comprehensive Server Guide</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Arch_Linux_on_a_VPS.html" class="mw-redirect" title="Virtual Private Server">Virtual_Private_Server</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2015-1-19。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Virtual_Private_Server&amp;diff=0&amp;oldid=356784">更改</a>，则您可以帮助同步翻译。</div>
+<p>摘自 <a href="https://en.wikipedia.org/wiki/Virtual_private_server" class="extiw" title="wikipedia:Virtual private server">Wikipedia:Virtual private server</a>:
+</p>
+<dl><dd><i>Virtual private server (VPS) is a term used by Internet hosting services to refer to a virtual machine. The term is used for emphasizing that the virtual machine, although running in software on the same physical computer as other customers' virtual machines, is in many respects functionally equivalent to a separate physical computer, is dedicated to the individual customer's needs, has the privacy of a separate physical computer, and can be configured to run server software.</i></dd></dl>
+<p>本文主要讨论Arch Linux在VPS方面的应用, 并且包括了一些VPS的详细的安装于维护的指南.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> systemd从版本205开始就不再支持Linux 2.6.32了(system-212或更高的版本也不行). 因为很多基于容器的虚拟环境依赖较老版本的内核, 在这样的环境下想要保证Arch Linux 随时都是最新版本是不现实的. 然而截止<a rel="nofollow" class="external text" href="http://openvz.org/Download/kernel/rhel6/042stab094.7">kernel build 042stab094.7</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>, OpenVZ已经对 CLOCK_BOOTTIME 特性进行了backport, 并且现在他可以和最新的systemd一起正常运行.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E6%94%AF%E6%8C%81Arch_Linux%E7%9A%84%E6%8F%90%E4%BE%9B%E5%95%86"><span class="tocnumber">1</span> <span class="toctext">支持Arch Linux的提供商</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">2</span> <span class="toctext">安装</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#KVM"><span class="tocnumber">2.1</span> <span class="toctext">KVM</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#OpenVZ"><span class="tocnumber">2.2</span> <span class="toctext">OpenVZ</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5">
+<a href="#%E5%9C%A8%E4%BB%BB%E6%84%8FOpenVZ%E6%8F%90%E4%BE%9B%E5%95%86%E4%B8%8A%E5%AE%89%E8%A3%85Arch_Linux"><span class="tocnumber">2.2.1</span> <span class="toctext">在任意OpenVZ提供商上安装Arch Linux</span></a>
+<ul>
+<li class="toclevel-4 tocsection-6"><a href="#%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86"><span class="tocnumber">2.2.1.1</span> <span class="toctext">前置知识</span></a></li>
+<li class="toclevel-4 tocsection-7"><a href="#%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%B9%B2%E5%87%80%E7%9A%84Arch_Linux"><span class="tocnumber">2.2.1.2</span> <span class="toctext">搭建一个干净的Arch Linux</span></a></li>
+<li class="toclevel-4 tocsection-8"><a href="#%E6%8A%8AVPS%E4%B8%8A%E7%9A%84%E6%89%80%E6%9C%89%E4%B8%9C%E8%A5%BF%E9%83%BDArch_Arch%E6%8E%89"><span class="tocnumber">2.2.1.3</span> <span class="toctext">把VPS上的所有东西都Arch Arch掉</span></a></li>
+<li class="toclevel-4 tocsection-9"><a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">2.2.1.4</span> <span class="toctext">配置</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10"><a href="#Xen"><span class="tocnumber">2.3</span> <span class="toctext">Xen</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id=".E6.94.AF.E6.8C.81Arch_Linux.E7.9A.84.E6.8F.90.E4.BE.9B.E5.95.86"></span><span class="mw-headline" id="支持Arch_Linux的提供商">支持Arch Linux的提供商</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 我们无法为提供商的质量与诚信做担保. 请在下订单前自行进行调查.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 这个列表只列出了那些提供便捷的Arch Linux模板的提供商. 在其他提供商的环境中试用Arch Linux仍然是可行的, 只是相比之下需要更多的工作.  比如我们可以加载自定义的光盘映像 (这需要硬件层面的虚拟化, 比如Xen or KVM), <a href="../en/Installation_guide.html" title="Installation guide">installing under chroot</a>, 或者 <a href="../en/Arch_Linux_on_a_VPS.html#Installing_the_latest_Arch_Linux_on_any_OpenVZ_container_provider" class="mw-redirect" title="Virtual Private Server">using rsync to synchronize Arch over the top of another distribution</a>.</div>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>提供商名</th>
+<th>Arch 版本</th>
+<th>虚拟化环境</th>
+<th>地理地点</th>
+<th>注意事项
+</th>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="http://www.milesweb.com/vps-hosting.php">A MilesWeb VPS</a><sup title="最后检查状态：403">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-19 ⓘ]</sup>
+</td>
+<td>2013.10.14</td>
+<td>OpenVZ</td>
+<td>欧洲, 印度, 美利坚</td>
+<td>Latest Arch Linux available on OpenVZ platform. Quick setup, 24/7 support via Live Chat, Email and Phone. VPS starts from $20 / mo
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://123systems.net">123 Systems</a></td>
+<td>2010.05.xx</td>
+<td>OpenVZ</td>
+<td>达拉斯, 美国-德克萨斯</td>
+<td>Arch available as a selection upon reinstall. Very old (2.6.18-308) kernel - See <a href="../en/Arch_Linux_on_a_VPS.html#OpenVZ:_kernel_too_old_for_glibc" class="mw-redirect" title="Virtual Private Server">OpenVZ troubleshooting</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>. Limited information available before purchase. Cannot verify Arch Linux version without purchase.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://ausweb.com.au">AUSWEB</a></td>
+<td>一律最新 (啥?)</td>
+<td>VMware ESXi</td>
+<td>悉尼, 澳大利亚</td>
+<td>Latest ISO (clarify?) of Arch Available. Enterprise Service.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.affinity.net.nz">affinity.net.nz</a></td>
+<td>2013.08.01</td>
+<td>KVM</td>
+<td>奥克兰, 新西兰</td>
+<td>IRC channel is #affinity on ircs.kiwicon.org
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://afterburst.com/">Afterburst</a></td>
+<td>2012.12.01</td>
+<td>OpenVZ</td>
+<td>迈阿密, 美国-佛罗里达; 纽伦堡, 德国</td>
+<td>Formerly FanaticalVPS, kernel version depends on what node your VPS is on, the ones in Miami are fine (2.6.32-042stab072.10) but some of the ones in Germany require a <a href="../en/Arch_Linux_on_a_VPS.html#OpenVZ:_kernel_too_old_for_glibc" class="mw-redirect" title="Virtual Private Server">custom glibc</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.buyvm.net/">BuyVM</a></td>
+<td>2013.07.01</td>
+<td>KVM</td>
+<td>洛杉矶, 水牛城 纽约</td>
+<td>Must chose a different OS at sign up.  Once accessible, choose to mount the latest Arch ISO and reboot to install manually.
+</td>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="http://en.edis.at/">Edis</a><sup title="最后检查状态：SSL error">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.edis.at/en/support-and-service/faq/server-faq/which-distributions-are-available-with-edis-kvm-vps-plans/">2013.03.01</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>vServer, KVM, OpenVZ</td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.edis.at/en/server/kvm-vps/austria/">大量国际节点</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>.</td>
+<td>Also offer dedicated server options as well as an "off-shore" location at the Isle of Man (IM).
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.directvps.nl/">DirectVPS</a></td>
+<td>2014.01.xx</td>
+<td>OpenVZ</td>
+<td>阿姆斯特丹, 荷兰; 洛特丹, 荷兰</td>
+<td>Dutch language site. Version verifyable by clicking through <a rel="nofollow" class="external free" href="https://www.directvps.nl/try-1.plp?p=31">https://www.directvps.nl/try-1.plp?p=31</a>
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.gandi.net/hosting/">Gandi</a></td>
+<td>2013.10.27</td>
+<td>Xen</td>
+<td>巴黎, 法国; 巴尔地摩, 马里兰, 美国; 比森, 卢森堡</td>
+<td>Very granular scaling of system resources (e.g. RAM, disk space); IPv6-only option available; you can supply your own install image, version based on keyring package version</td>
+<td>
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.gigatux.com/virtual.php">GigaTux</a></td>
+<td><a rel="nofollow" class="external text" href="https://www.gigatux.com/distro/">2013.06.01</a></td>
+<td>Xen</td>
+<td>芝加哥, 美国-伊利诺伊; 法兰克福, 德国, 伦敦, 大不列颠; 圣琼斯, 美国-加州</td>
+<td>
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.vr.org/">Host Virtual</a></td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.vr.org/os/linux-vps/archlinux-vps">2011.08.19</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>KVM</td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.vr.org/cloud-locations/">大量国际节点</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>Appears to use KVM virtualization. Site lists "Xen based virtualization" and <a rel="nofollow" class="external text" href="http://www.vr.org/features/">features</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup> lists ability to install from ISO.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://hostigation.com/">Hostigation</a></td>
+<td>
+<a rel="nofollow" class="external text" href="https://hostigation.com/wiki/index.php?title=KVM:Install">2010.05 i686</a><sup title="最后检查状态：domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-19 ⓘ]</sup>
+</td>
+<td>OpenVZ, KVM</td>
+<td>夏洛特, 美国-北卡; 洛杉矶, 美国-加州</td>
+<td>You can <a href="../en/Migrating_between_architectures.html" class="mw-redirect" title="Migrating Between Architectures Without Reinstalling">migrate to x86_64</a>.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.intovps.com">IntoVPS</a></td>
+<td>2012.09.xx</td>
+<td>OpenVZ</td>
+<td>阿姆斯特丹, 荷兰; 布加列斯特, 罗马尼亚; 达拉斯, 美国-德克萨斯; 费利蒙, 美国-加州; 伦敦, 大不列颠</td>
+<td>Blog has not been updated since September, 2012 which included the Arch Linux update.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://leapswitch.com">Leapswitch Networks</a></td>
+<td>[2013.10.xx]</td>
+<td>OpenVZ/KVM</td>
+<td>美利坚, 印度, 葡萄牙, 西班牙, 乌克兰, 德国</td>
+<td>ArchLinux currently available in Control Panel for reinstall, not on order form.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.linode.com">Linode.com</a></td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.linode.com/faq.cfm">2013.06.xx</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-19 ⓘ]</sup>
+</td>
+<td>Xen</td>
+<td><a rel="nofollow" class="external text" href="https://www.linode.com/speedtest/">东京, 日本; 美国; 伦敦, 大不列颠</a></td>
+<td>To run a custom kernel, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/linux-linode/">linux-linode</a></span><sup><small>AUR</small></sup>. (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> will break on a 32-bit Linode.)
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://lylix.net/">LYLIX</a></td>
+<td><a rel="nofollow" class="external text" href="http://lylix.net/archlinux">2014.01.xx</a></td>
+<td>OpenVZ</td>
+<td>美利坚; 欧洲</td>
+<td>32-bit and 64-bit available
+</td>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="http://www.nodedeploy.com">Node Deploy</a><sup title="最后检查状态：domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-20 ⓘ]</sup>
+</td>
+<td>2014.10.01</td>
+<td>OpenVZ, KVM</td>
+<td>德国; 洛杉矶, 美国-加州; 亚特兰大, 美国-佐治亚; 凤凰城, 美国-亚利桑那</td>
+<td>"At NodeDeploy we support virtually every linux distribution." Arch Linux is listed under their Operating Systems. No version information.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://netcup.de">Netcup</a></td>
+<td>2012.11.xx</td>
+<td>KVM</td>
+<td>德国</td>
+<td>German language site.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://onepoundwebhosting.co.uk">OnePoundWebHosting</a></td>
+<td>2013.05.xx</td>
+<td>Xen PV, Xen HVM</td>
+<td>英国</td>
+<td>They are a registrar too. Unable to verify server locations.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.proplay.biz/">proPlay.de</a></td>
+<td>2012.12.xx</td>
+<td>OpenVZ, KVM</td>
+<td>德国</td>
+<td>German language site.
+</td>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="https://www.quickvz.com">QuickVZ</a><sup title="最后检查状态：domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>2013.10</td>
+<td>OpenVZ, Xen</td>
+<td>阿姆斯特丹, 荷兰; 斯德哥尔摩, 瑞典</td>
+<td>Provide hardened Arch Linux images along with Enterprise services (e,g. VPN, Virtual Private LAN Service (VPLS) and Virtual Routers.
+</td>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="http://www.rackspace.com/cloud/cloud_hosting_products/servers/">Rackspace Cloud</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-19 ⓘ]</sup>
+</td>
+<td>2013.6</td>
+<td>Xen</td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.rackspace.com/whyrackspace/network/datacenters/">大量国际节点</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-12-19 ⓘ]</sup>
+</td>
+<td>Billed per hour. Use their "next gen" VPSes (using the mycloud.rackspace.com panel); the Arch image on the first gen Rackspace VPSes is out of date.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.ramhost.us">RamHost.us</a></td>
+<td><a rel="nofollow" class="external text" href="http://www.ramhost.us/?page=news">2013.05.01</a></td>
+<td>OpenVZ, KVM</td>
+<td>洛杉矶, 美国-加州; 大不列颠; 亚特兰大, 美国-佐治亚; 德国</td>
+<td>You can request a newer ISO on RamHost's IRC network.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.ramnode.com">RamNode</a></td>
+<td><a rel="nofollow" class="external text" href="https://clientarea.ramnode.com/knowledgebase.php?action=displayarticle&amp;id=48">2013.07.01</a></td>
+<td>
+<a rel="nofollow" class="external text" href="https://clientarea.ramnode.com/knowledgebase.php?action=displayarticle&amp;id=39">SSD and SSD Cached:</a> <a rel="nofollow" class="external text" href="https://clientarea.ramnode.com/knowledgebase.php?action=displayarticle&amp;id=52">OpenVZ, KVM</a>
+</td>
+<td><a rel="nofollow" class="external text" href="https://clientarea.ramnode.com/knowledgebase.php?action=displayarticle&amp;id=18">西雅图, 华盛顿 美国, 亚特兰大, 佐治亚 美国</a></td>
+<td>You can request Host/CPU passthrough with KVM service.<a rel="nofollow" class="external autonumber" href="https://clientarea.ramnode.com/knowledgebase.php?action=displayarticle&amp;id=66">[1]</a> Frequent use of discount promotions.<a rel="nofollow" class="external autonumber" href="https://twitter.com/search?q=ramnode%20code&amp;src=typd">[2]</a>
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.tilaa.nl/">Tilaa</a></td>
+<td>2014.10.01</td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.tilaa.com/pages/vps/technology">KVM</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>阿姆斯特丹, 荷兰</td>
+<td>English or Dutch language site.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://www.transip.eu/">TransIP</a></td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.transip.eu/vps/vps-os/">2013.05.01</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td><a rel="nofollow" class="external text" href="https://www.transip.eu/vps/vps-technology/">KVM</a></td>
+<td>阿姆斯特丹, 荷兰</td>
+<td>English language site. Registrar.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.xenvz.co.uk/">XenVZ</a></td>
+<td>2009.12.07</td>
+<td>OpenVZ, Xen</td>
+<td>英国, 美利坚</td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.xenvz.co.uk/faq.php#use2">Hardware</a>
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.virpus.com/">Virpus</a></td>
+<td><a rel="nofollow" class="external text" href="http://virpus.com/linux-vps.php">2014.11.07</a></td>
+<td>Xen</td>
+<td>堪萨斯城, 美国-堪萨斯; 洛杉矶, 美国-加州</td>
+<td>A subcompany of Wow Technologies, Inc.  24/7 support via Live Chat, Email, Phone, and Ticket System.  Service starts at $5/month.
+</td>
+</tr>
+<tr>
+<td>
+<a rel="nofollow" class="external text" href="http://www.vmline.pl/">Vmline</a><sup title="最后检查状态：domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</td>
+<td>2013.09.01</td>
+<td>KVM, OpenVZ</td>
+<td>克拉科夫, 波兰</td>
+<td>
+<a rel="nofollow" class="external text" href="http://www.s-net.pl/en/">S-Net</a> reseller. Full virtualization. Polish language site.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://vpsbg.eu/">VPSBG.eu</a></td>
+<td>2013.10</td>
+<td>OpenVZ</td>
+<td><a rel="nofollow" class="external text" href="https://vpsbg.eu/en/index.php?page=vps-datacenter">索菲亚, 保加利亚</a></td>
+<td>Offshore VPS in Bulgaria - anonymous registrations and Bitcoin are accepted.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="https://vps6.net/">VPS6.NET</a></td>
+<td>2013.01.xx</td>
+<td>OpenVZ, Xen, HVM-ISO</td>
+<td>
+<a rel="nofollow" class="external text" href="http://vps6.net/network/">美国</a>; 法兰克福, 德国; 布加列斯特, 罗马尼亚; 伊斯坦布尔, 土耳其</td>
+<td>Registrar.
+</td>
+</tr>
+<tr>
+<td><a rel="nofollow" class="external text" href="http://www.vps.net/">VPS.NET</a></td>
+<td>2014.01.xx</td>
+<td>OpenVZ, Xen, HVM-ISO</td>
+<td><a rel="nofollow" class="external text" href="http://vps.net/cloud-datacenter-locations">US, 加拿大, 英国, 巴西, 荷兰, 法国, 德国, 日本, 新加坡, 印度, 澳大利亚</a></td>
+<td>Managed &amp; Un managed VPS service provider, multiple OS and configurations..
+</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<h3><span class="mw-headline" id="KVM">KVM</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 我们需要专门针对VPS的指南. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Arch_Linux_on_a_VPS_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Arch Linux on a VPS (简体中文)#</a>)</div>
+</div>
+<p>参阅 <a href="../en/QEMU.html#Preparing_an_(Arch)_Linux_guest" title="QEMU">QEMU#Preparing an (Arch) Linux guest</a>.
+</p>
+<h3><span class="mw-headline" id="OpenVZ">OpenVZ</span></h3>
+<h4>
+<span id=".E5.9C.A8.E4.BB.BB.E6.84.8FOpenVZ.E6.8F.90.E4.BE.9B.E5.95.86.E4.B8.8A.E5.AE.89.E8.A3.85Arch_Linux"></span><span class="mw-headline" id="在任意OpenVZ提供商上安装Arch_Linux">在任意OpenVZ提供商上安装Arch Linux</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 阅读 <a href="#top">最上的警告</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 来了解关于较老版本内核和systemd的相关信息.</div>
+<p>It's possible to directly copy an installation of Arch Linux over the top of a working OpenVZ VPS.  This tutorial explains how to create a basic installation of Arch Linux with <code>pacstrap</code> (as used in a standard install) and then replace the contents of a target VPS with it using <a href="../en/Rsync.html" title="Rsync">rsync</a>.
+</p>
+<p>This process (with minor modification) also works to migrate existing Arch installations between various environments and has been confirmed to work in migrating from OpenVZ to Xen and from Xen to OpenVZ.  For an install to Xen, other hardware-virtualized platforms, or probably even to physical hardware (unconfirmed), extra steps (basically running <code>mkinitcpio</code> and installing a <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a>) are needed.
+</p>
+<h5>
+<span id=".E5.89.8D.E7.BD.AE.E7.9F.A5.E8.AF.86"></span><span class="mw-headline" id="前置知识">前置知识</span>
+</h5>
+<ul>
+<li>A working Arch Linux installation
+<ul>
+<li>To keep things simple, it should match the architecture you want to install on your VPS (x86_64 or i686).</li>
+<li>To build from other distributions, <a href="../en/Install_Arch_Linux_from_existing_Linux.html" class="mw-redirect" title="Archbootstrap">arch-bootstrap.sh</a> can be used in place of <code>pacstrap</code>.</li>
+</ul>
+</li>
+<li>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rsync">rsync</a></span>, and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openssh">openssh</a></span> packages from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>
+<ul><li>SSH isn't strictly required, but rsync over SSH is the method used here.</li></ul>
+</li>
+<li>A VPS running any distribution, with <code>rsync</code> and a working SSH server
+<ul><li>Its architecture (x86_64 or i686) doesn't matter as long as the OpenVZ installation can support your target architecture.</li></ul>
+</li>
+<li>OpenVZ's serial console feature (usually accessible via your provider's control panel)
+<ul><li>Without this, any network configuration for the target VPS will have to be done immediately after the "Build" step below.</li></ul>
+</li>
+</ul>
+<h5>
+<span id=".E6.90.AD.E5.BB.BA.E4.B8.80.E4.B8.AA.E5.B9.B2.E5.87.80.E7.9A.84Arch_Linux"></span><span class="mw-headline" id="搭建一个干净的Arch_Linux">搭建一个干净的Arch Linux</span>
+</h5>
+<p>As root, build the installation (optionally replacing <code>build</code> with your preferred target directory):
+</p>
+<pre># mkdir build
+# pacstrap -cd build
+</pre>
+<p>Other tweaks for the <code>pacstrap</code> command:
+</p>
+<ul>
+<li>
+<code>-C custom-pacman-config.conf</code> - Use a custom pacman configuration file. By default, pacstrap builds according to your local pacman.conf.  This determines the architecture (i686 or x86_64) of the build, the mirror list, etc.</li>
+<li>
+<code>-B</code> - Prevent pacstrap from copying your system's pacman keyring to the new build. If you use this option, you'll need to run <code>pacman-key --init</code> and <code>pacman-key --populate archlinux</code> in the <a href="../en/Arch_Linux_on_a_VPS.html#Configuration" class="mw-redirect" title="Virtual Private Server">Configuration</a> step to set up the keyring.</li>
+<li>
+<code>-M</code> - Prevent pacstrap from copying your system's pacman mirror list to the new build.</li>
+</ul>
+<h5>
+<span id=".E6.8A.8AVPS.E4.B8.8A.E7.9A.84.E6.89.80.E6.9C.89.E4.B8.9C.E8.A5.BF.E9.83.BDArch_Arch.E6.8E.89"></span><span class="mw-headline" id="把VPS上的所有东西都Arch_Arch掉">把VPS上的所有东西都Arch Arch掉</span>
+</h5>
+<p>把目标VPS上所有的文件, 目录和其它各种东西都用你的<code>build</code>目录的内容替换掉 (把下面的 "YOUR.VPS.IP.ADDRESS" 换掉):
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 处理下面的命令的时候当心点. <code>rsync</code>这个命令根据设计就是极具毁灭性的, 特别是带上 <code>--delete</code> 选项的时候.</div>
+<pre># rsync -ax --delete-delay -e ssh --stats -P build/ YOUR.VPS.IP.ADDRESS:/
+</pre>
+<p>选项的解释:
+</p>
+<p>At minimum, only the <code>-a</code> (preserve timestamps, permissions, etc.), <code>-x</code> (don't cross filesystem boundaries), and <code>--delete</code> (delete anything in the target that doesn't exist in the source) options are required.  The <code>--delete-delay</code> option is an alternate deletion mode which waits to delete anything until the synchronization is otherwise complete; this isn't necessary but may reduce the risk of a slow transfer causing the target VPS to lock-up. The <code>-e ssh</code> (use rsync over SSH) option is recommended and makes things simple.  The <code>--stats</code> and <code>-P</code> options are just to show more information.
+</p>
+<h5>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h5>
+<ol>
+<li>将VPS从外部重启 (比如你可以利用provider的控制面板来干这件事).</li>
+<li>使用 OpenVZ 的端口控制特性来配置 <a href="../en/Network_configuration.html" title="Network configuration">网络</a> 和 <a href="../en/Installation_guide.html#Configure_the_system" title="Installation guide">基本系统设定</a> (无视 fstab 的生成和 arch-chroot 的相关步骤).
+<ul><li>如果你接触不到端口控制特性, 那你在把Arch Linux同步到VPS前就提前配置好你的网络设定.</li></ul>
+</li>
+</ol>
+<h3><span class="mw-headline" id="Xen">Xen</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 我们需要专门针对VPS的指南. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Arch_Linux_on_a_VPS_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Arch Linux on a VPS (简体中文)#</a>)</div>
+</div>
+<p>参阅 <a href="../en/Xen.html#Arch_as_Xen_guest_(PVHVM_mode)" title="Xen">Xen#Arch as Xen guest (PVHVM mode)</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 及/或 <a href="../en/Xen.html#Arch_as_Xen_guest_(PV_mode)" title="Xen">Xen#Arch as Xen guest (PV mode)</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../zh-CN/Category:Installation_process.html" title="Category:Installation process (简体中文)">Installation process (简体中文)</a></li>
+<li><a href="../zh-CN/Category:Virtualization.html" title="Category:Virtualization (简体中文)">Virtualization (简体中文)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_Linux_on_a_VPS_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=646160">https://wiki.archlinux.org/index.php?title=Arch_Linux_on_a_VPS_(简体中文)&amp;oldid=646160</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 21 December 2020, at 11:55.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

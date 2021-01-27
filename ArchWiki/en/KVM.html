@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>KVM - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-KVM rootpage-KVM skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">KVM</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Category:Hypervisors.html" title="Category:Hypervisors">Category:Hypervisors</a></li>
+<li><a href="../en/Libvirt.html" title="Libvirt">Libvirt</a></li>
+</ul>
+</div>
+<p><b>KVM</b>, <a href="https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine" class="extiw" title="wikipedia:Kernel-based Virtual Machine">Kernel-based Virtual Machine</a>, is a <a href="https://en.wikipedia.org/wiki/hypervisor" class="extiw" title="wikipedia:hypervisor">hypervisor</a> built into the Linux kernel. It is similar to <a href="../en/Xen.html" title="Xen">Xen</a> in purpose but much simpler to get running. Unlike native <a href="../en/QEMU.html" title="QEMU">QEMU</a>, which uses emulation, KVM is a special operating mode of QEMU that uses CPU extensions (<a href="https://en.wikipedia.org/wiki/Hardware-assisted_virtualization" class="extiw" title="wikipedia:Hardware-assisted virtualization">HVM</a>) for virtualization via a kernel module.
+</p>
+<p>Using KVM, one can run multiple virtual machines running unmodified GNU/Linux, Windows, or any other operating system. (See <a rel="nofollow" class="external text" href="http://www.linux-kvm.org/page/Guest_Support_Status">Guest Support Status</a> for more information.) Each virtual machine has private virtualized hardware: a network card, disk, graphics card, etc.
+</p>
+<p>Differences between KVM and <a href="../en/Xen.html" title="Xen">Xen</a>, <a href="../en/VMware.html" title="VMware">VMware</a>, or QEMU can be found at the <a rel="nofollow" class="external text" href="http://www.linux-kvm.org/page/FAQ#General_KVM_information">KVM FAQ</a>.
+</p>
+<p>This article does not cover features common to multiple emulators using KVM as a backend. You should see related articles for such information.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Checking_support_for_KVM"><span class="tocnumber">1</span> <span class="toctext">Checking support for KVM</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Hardware_support"><span class="tocnumber">1.1</span> <span class="toctext">Hardware support</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Kernel_support"><span class="tocnumber">1.2</span> <span class="toctext">Kernel support</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Para-virtualization_with_Virtio"><span class="tocnumber">2</span> <span class="toctext">Para-virtualization with Virtio</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Kernel_support_2"><span class="tocnumber">2.1</span> <span class="toctext">Kernel support</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#List_of_para-virtualized_devices"><span class="tocnumber">2.2</span> <span class="toctext">List of para-virtualized devices</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#How_to_use_KVM"><span class="tocnumber">3</span> <span class="toctext">How to use KVM</span></a></li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Tips_and_tricks"><span class="tocnumber">4</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Nested_virtualization"><span class="tocnumber">4.1</span> <span class="toctext">Nested virtualization</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Enabling_huge_pages"><span class="tocnumber">4.2</span> <span class="toctext">Enabling huge pages</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Checking_support_for_KVM">Checking support for KVM</span></h2>
+<h3><span class="mw-headline" id="Hardware_support">Hardware support</span></h3>
+<p>KVM requires that the virtual machine host's processor has virtualization support (named VT-x for Intel processors and AMD-V for AMD processors). You can check whether your processor supports hardware virtualization with the following command:
+</p>
+<pre>$ LC_ALL=C lscpu | grep Virtualization
+</pre>
+<p>Alternatively:
+</p>
+<pre>$ grep -E --color=auto 'vmx|svm|0xc0f' /proc/cpuinfo
+</pre>
+<p>If nothing is displayed after running either command, then your processor does <b>not</b> support hardware virtualization, and you will <b>not</b> be able to use KVM.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You may need to enable virtualization support in your BIOS.  All x86_64 processors manufactured by AMD and Intel in the last 10 years support virtualization.  If it looks like your processor does not support virtualization, it's almost certainly turned off in the BIOS.</div>
+<h3><span class="mw-headline" id="Kernel_support">Kernel support</span></h3>
+<p>Arch Linux kernels provide the required <a href="../en/Kernel_module.html" class="mw-redirect" title="Kernel modules">kernel modules</a> to support KVM.
+</p>
+<ul><li>One can check if the necessary modules, <code>kvm</code> and either <code>kvm_amd</code> or <code>kvm_intel</code>, are available in the kernel with the following command:</li></ul>
+<pre>$ zgrep CONFIG_KVM /proc/config.gz
+</pre>
+<p>The module is available only if it is set to either <code>y</code> or <code>m</code>.
+</p>
+<ul><li>Then, ensure that the kernel modules are automatically loaded, with the command:</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsmod | grep kvm</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">kvm_intel             245760  0
+kvmgt                  28672  0
+mdev                   20480  2 kvmgt,vfio_mdev
+vfio                   32768  3 kvmgt,vfio_mdev,vfio_iommu_type1
+kvm                   737280  2 kvmgt,kvm_intel
+irqbypass              16384  1 kvm
+</pre>
+<p>If the command returns nothing, the module needs to be loaded manually, see <a href="../en/Kernel_module.html#Manual_module_handling" class="mw-redirect" title="Kernel modules">Kernel modules#Manual module handling</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If modprobing <code>kvm_intel</code> or <code>kvm_amd</code> fails but modprobing <code>kvm</code> succeeds, and <code>lscpu</code> claims that hardware acceleration is supported, check the BIOS settings. Some vendors, especially laptop vendors, disable these processor extensions by default. To determine whether there is no hardware support or whether the extensions are disabled in BIOS, the output from <code>dmesg</code> after having failed to modprobe will tell.</div>
+<h2><span class="mw-headline" id="Para-virtualization_with_Virtio">Para-virtualization with Virtio</span></h2>
+<p>Para-virtualization provides a fast and efficient means of communication for guests to use devices on the host machine. KVM provides para-virtualized devices to virtual machines using the <b>Virtio</b> API as a layer between the hypervisor and guest.
+</p>
+<p>All Virtio devices have two parts: the host device and the guest driver. 
+</p>
+<h3><span class="mw-headline" id="Kernel_support_2">Kernel support</span></h3>
+<p>Use the following command to check if the VIRTIO modules are available in the kernel <b>inside the virtual machine</b>:
+</p>
+<pre>$ zgrep VIRTIO /proc/config.gz
+</pre>
+<p>Then, check if the kernel modules are automatically loaded with the command:
+</p>
+<pre>$ lsmod | grep virtio
+</pre>
+<p>In case the above commands return nothing, you need to <a href="../en/Kernel_module.html#Manual_module_handling" class="mw-redirect" title="Kernel modules">load the kernel modules</a> manually.
+</p>
+<h3><span class="mw-headline" id="List_of_para-virtualized_devices">List of para-virtualized devices</span></h3>
+<ul>
+<li>network device (virtio-net)</li>
+<li>block device (virtio-blk)</li>
+<li>controller device (virtio-scsi)</li>
+<li>serial device (virtio-serial)</li>
+<li>balloon device (virtio-balloon)</li>
+</ul>
+<h2><span class="mw-headline" id="How_to_use_KVM">How to use KVM</span></h2>
+<p>See the main article: <a href="../en/QEMU.html" title="QEMU">QEMU</a>.
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> See <a href="../en/QEMU.html#Tips_and_tricks" title="QEMU">QEMU#Tips and tricks</a> and <a href="../en/QEMU.html#Troubleshooting" title="QEMU">QEMU#Troubleshooting</a> for general tips and tricks.</div>
+<h3><span class="mw-headline" id="Nested_virtualization">Nested virtualization</span></h3>
+<p>Nested virtualization enables existing virtual machines to be run on third-party hypervisors and on other clouds without any modifications to the original virtual machines or their networking.
+</p>
+<p>On host, enable nested feature for <code>kvm_intel</code>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> the same can be done for AMD, just replace <code>intel</code> with <code>amd</code> where necessary</div>
+<pre># modprobe -r kvm_intel
+# modprobe kvm_intel nested=1
+</pre>
+<p>To make it permanent (see <a href="../en/Kernel_module.html#Setting_module_options" class="mw-redirect" title="Kernel modules">Kernel modules#Setting module options</a>):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/kvm_intel.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">options kvm_intel nested=1</pre>
+<p>Verify that feature is activated:  
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ systool -m kvm_intel -v | grep nested</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">nested              = "Y"</pre>
+<p>Enable the "host passthrough" mode to forward all CPU features to the guest system:
+</p>
+<ol>
+<li>If using <a href="../en/QEMU.html" title="QEMU">QEMU</a>, run the guest virtual machine with the following command: <code>qemu-system-x86_64 -enable-kvm -cpu host</code>.</li>
+<li>If using <i>virt-manager</i>, change the CPU model to <code>host-passthrough</code>.</li>
+<li>If using <i>virsh</i>, use <code>virsh edit <i>vm-name</i></code> and change the CPU line to <code>&lt;cpu mode='host-passthrough' check='partial'/&gt;</code>
+</li>
+</ol>
+<p>Boot VM and check if vmx flag is present:
+</p>
+<pre>$ grep -E --color=auto 'vmx|svm' /proc/cpuinfo
+</pre>
+<h3><span class="mw-headline" id="Enabling_huge_pages">Enabling huge pages</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/QEMU.html" title="QEMU">QEMU</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> qemu-kvm no longer exists as all of its features have been merged into <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qemu">qemu</a></span>. After the above issue is cleared, I suggest merging this section into <a href="../en/QEMU.html" title="QEMU">QEMU</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:KVM">Talk:KVM#</a>)</div>
+</div>
+<p>You may also want to enable hugepages to improve the performance of your virtual machine.
+With an up to date Arch Linux and a running KVM you probably already have everything you need. Check if you have the directory <code>/dev/hugepages</code>. If not, create it. 
+Now we need the right permissions to use this directory. The default permission is root's uid and gid with 0755, but we want anyone in the kvm group to have access to hugepages.
+</p>
+<p>Add to your <code>/etc/fstab</code>:
+</p>
+<pre>hugetlbfs       /dev/hugepages  hugetlbfs       mode=01770,gid=78        0 0
+</pre>
+<p>Of course the gid must match that of the <code>kvm</code> group. The mode of <code>1770</code> allows anyone in the group to create files but not unlink or rename each other's files. Make sure <code>/dev/hugepages</code> is mounted properly:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># umount /dev/hugepages
+# mount /dev/hugepages
+$ mount | grep huge</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">hugetlbfs on /dev/hugepages type hugetlbfs (rw,relatime,mode=1770,gid=78)</pre>
+<p>Now you can calculate how many hugepages you need. Check how large your hugepages are:
+</p>
+<pre>$ grep Hugepagesize /proc/meminfo
+</pre>
+<p>Normally that should be 2048 kB ≙ 2 MB. Let us say you want to run your virtual machine with 1024 MB. 1024 / 2 = 512. Add a few extra so we can round this up to 550. Now tell your machine how many hugepages you want:
+</p>
+<pre># echo 550 &gt; /proc/sys/vm/nr_hugepages
+</pre>
+<p>If you had enough free memory you should see:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ grep HugePages_Total /proc/meminfo</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">HugesPages_Total:  550
+</pre>
+<p>If the number is smaller, close some applications or start your virtual machine with less memory (number_of_pages x 2):
+</p>
+<pre>$ qemu-system-x86_64 -enable-kvm -m 1024 -mem-path /dev/hugepages -hda &lt;disk_image&gt; [...]
+</pre>
+<p>Note the <code>-mem-path</code> parameter. This will make use of the hugepages.
+</p>
+<p>Now you can check, while your virtual machine is running, how many pages are used:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ grep HugePages /proc/meminfo</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">HugePages_Total:     550
+HugePages_Free:       48
+HugePages_Rsvd:        6
+HugePages_Surp:        0
+</pre>
+<p>Now that everything seems to work you can enable hugepages by default if you like. Add to your <code>/etc/sysctl.d/40-hugepage.conf</code>:
+</p>
+<pre>vm.nr_hugepages = 550
+</pre>
+<p>See also:
+</p>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt">summary of hugetlbpage support in the Linux kernel</a></li>
+<li><a href="https://wiki.debian.org/Hugepages" class="extiw" title="debian:Hugepages">Debian Wiki - Hugepages</a></li>
+</ul>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.linux-kvm.org/page/HOWTO">KVM Howto</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.linux-kvm.org/page/FAQ#General_KVM_information">KVM FAQ</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Hypervisors.html" title="Category:Hypervisors">Hypervisors</a></li>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=KVM&amp;oldid=648786">https://wiki.archlinux.org/index.php?title=KVM&amp;oldid=648786</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 January 2021, at 16:23.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

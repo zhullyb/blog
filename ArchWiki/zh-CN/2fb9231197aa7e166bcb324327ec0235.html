@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Pacman (简体中文)/Restore local database (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Pacman_简体中文_Restore_local_database_简体中文 rootpage-Pacman_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Pacman (简体中文)/Restore local database (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">Pacman (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Pacman/Restore_local_database.html" title="Pacman/Restore local database">Pacman/Restore local database</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-10-16。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Pacman/Restore_local_database&amp;diff=0&amp;oldid=489928">更改</a>，则您可以帮助同步翻译。</div>
+<p>如果遇到下面的问题，很可能需要恢复pacman本地数据库：
+</p>
+<ul>
+<li>
+<code>pacman -Q</code>什么都不输出，<code>pacman -Syu</code>错误地报告系统已为最新。</li>
+<li>使用<code>pacman -S</code>安装软件包时，很多已经安装过的依赖提示未安装。</li>
+</ul>
+<p>pacman储存本地软件包的数据库<code>/var/lib/pacman/local</code>很可能已经损坏甚至丢失。这是很严重的问题，请按照如下步骤修复。
+</p>
+<p>首先，确认pacman的日志文件还在：
+</p>
+<pre>$ ls /var/log/pacman.log
+</pre>
+<p>如果日志丢失了，那就<i>不能</i>使用本方法修复，可以尝试使用<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=670876">Xyne的软件包检测脚本</a>重建数据库。要是还行不通，很遗憾，最后的路就是重装系统。
+</p>
+<h2>
+<span id=".E6.97.A5.E5.BF.97.E8.BF.87.E6.BB.A4.E8.84.9A.E6.9C.AC"></span><span class="mw-headline" id="日志过滤脚本">日志过滤脚本</span>
+</h2>
+<p>创建一个awk脚本文件，内容如下 <sup>基于<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=38531">[1]</a></sup>：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">log2pkglist.awk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/awk -f
+
+i = 3 {}
+
+$3 ~ /^\[[^]]+\]$/ {
+  i = 4
+}
+
+$i ~ /^(installed|upgraded)$/ {
+  pkg[$(i+1)] = 1
+  next
+} 
+
+$i == "removed" {
+  pkg[$(i+1)] = 0
+} 
+
+END {
+  for (i in pkg) if (pkg[i]) print i
+}
+</pre>
+<p>打上可执行标志：
+</p>
+<pre>$ chmod +x log2pkglist.awk
+</pre>
+<h2>
+<span id=".E7.94.9F.E6.88.90.E8.BD.AF.E4.BB.B6.E5.8C.85.E5.88.97.E8.A1.A8"></span><span class="mw-headline" id="生成软件包列表">生成软件包列表</span>
+</h2>
+<p>运行该脚本，输出到一个文本文件中：
+</p>
+<pre>$ ./log2pkglist.awk /var/log/pacman.log &gt; pkglist.orig
+</pre>
+<p>（可选）手动检查<code>pkglist.orig</code>，删除所有不需要重新安装的软件包，例如：自己从ABS安装的软件包。
+</p>
+<p>过滤掉无法从软件仓库中安装的软件包：
+</p>
+<pre>$ { cat pkglist.orig; pacman -Slq; } | sort | uniq -d &gt; pkglist
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If this fails with <code>failed to initialise alpm library</code>, then check if <code>/var/lib/pacman/local/ALPM_DB_VERSION</code> exists - if not, then run <code>pacman-db-upgrade</code> as root followed by <code>pacman -Sy</code> and then <b>retry the previous command</b>.</div>
+<p>检查<b>base</b>软件包组中的软件包是否缺失，并加入列表：
+</p>
+<pre>$ comm -23 &lt;(pacman -Sgq base) pkglist.orig &gt;&gt; pkglist
+</pre>
+<p>当<code>pkglist</code>列表内容完备后，继续下一步，利用这个列表恢复数据库。
+</p>
+<h2>
+<span id=".E6.81.A2.E5.A4.8D.E6.95.B0.E6.8D.AE.E5.BA.93"></span><span class="mw-headline" id="恢复数据库">恢复数据库</span>
+</h2>
+<p>建立临时的缓存、数据库以及根目录：
+</p>
+<pre>tmp=~/tmp
+mkdir -p "${tmp}"
+
+pushd "${tmp}"
+dbpath=$(readlink -f ./dbpath)
+root=$(readlink -f ./root)
+cache=$(readlink -f ./cache)
+log=/dev/null
+mkdir -p "${dbpath}" "${cache}" "${root}"
+popd
+
+recovery-pacman() {
+     sudo pacman "$@"  \
+     --log /dev/null   \
+     --noscriptlet     \
+     --dbonly          \
+     --force           \
+     --nodeps          \
+     --needed
+ }</pre>
+<p>同步临时目录中的数据库：
+</p>
+<pre>$ recovery-pacman -Sy
+</pre>
+<p>或者复制系统的数据库：
+</p>
+<pre>$ cp -r /var/lib/pacman/sync "${dbpath}"
+</pre>
+<p>（可选）要避免下载和处理当前系统本地数据库中存在的软件包，复制本地数据库到临时目录：
+</p>
+<pre>$ cp -r /var/lib/pacman/local "${dbpath}"
+</pre>
+<p>从上一步获取的<code>pkglist</code>生成临时本地数据库：
+</p>
+<pre>$ recovery-pacman -S --nodeps --needed $(&lt; pkglist)
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 由于<code>--noscriptlet</code>选项，fakeroot生成的文件不会被真正安装到系统中。</div>
+<p>生成数据库后，复制到真正的系统中：
+</p>
+<pre># cp -r "${dbpath}"/local /var/lib/pacman
+</pre>
+<p>最后，更新本地数据库，将不受其他软件包依赖的软件包标记为手动安装，剩下的标记为依赖安装：
+</p>
+<pre># pacman -D --asdeps $(pacman -Qq)
+# pacman -D --asexplicit $(pacman -Qtq)
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Package_management.html" title="Category:Package management (简体中文)">Package management (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Pacman_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Restore_local_database_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=610532">https://wiki.archlinux.org/index.php?title=Pacman_(简体中文)/Restore_local_database_(简体中文)&amp;oldid=610532</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 May 2020, at 13:14.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

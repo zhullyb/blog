@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Bcache (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Bcache_简体中文 rootpage-Bcache_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Bcache (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><br>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Bcache.html" title="Bcache">Bcache</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2019-05-05。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Bcache&amp;diff=0&amp;oldid=572594">更改</a>，则您可以帮助同步翻译。</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 包含个人主观评价, see <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Bcache_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Bcache (简体中文)#</a>)</div>
+</div>
+<p><a rel="nofollow" class="external text" href="https://bcache.evilpiepirate.org/">Bcache</a> (block 缓存) 允许使用固态硬盘作为读写缓存（writeback模式）或者读缓存（writethrough 或者 writearound模式）来为另一个 block 设备（通常是机械硬盘或硬盘阵列）加速。这篇文章会展示如何把 Bcache 作为根分区安装 Archlinux。如果要看对于 bcache 本身的介绍，请浏览 <a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org/">the bcache homepage</a>。请一定要阅读并参考 <a rel="nofollow" class="external text" href="https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt">the bcache manual</a>。Bcache 从 Linux 内核 3.10 版本开始就已经并入 mainline，而 Archlinux 的安装盘自从 2013.08.01 版本开始就支持 bcache。
+</p>
+<p>类似 Bcache 的还有 Facebook 的 <a href="../en/Flashcache.html" title="Flashcache">Flashcache</a>。
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Backwards incompatible changes to on-disk format for linux 3.18 appears to be false. bcache on-disk format changes have not yet landed upstream yet as of 3.19 (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Bcache_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Bcache (简体中文)#</a>)</div>
+</div>
+<p>Bcache 需要把后端设备格式化成 bcache block 设备。多数情况下，<a rel="nofollow" class="external text" href="https://github.com/g2p/blocks">blocks to-bcache</a> 可以用来做转换。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>一定要先备份数据！</li>
+<li>bcache-dev 分支正处于非常不成熟的开发阶段。The on-disk format has undergone changes in 3.18 which are not backwards compatible with previous formats<a rel="nofollow" class="external autonumber" href="http://www.spinics.net/lists/linux-bcache/msg02721.html">[1]</a>. Note: This only applies to users who compile-in bcache-dev. The version built-in to the upstream Linux kernel is unaffected<a rel="nofollow" class="external autonumber" href="http://www.spinics.net/lists/linux-bcache/msg02724.html">[2]</a>.</li>
+<li>Bcache and <a href="../en/Btrfs.html" title="Btrfs">btrfs</a> could leave you with a corrupted filesystem. Please visit <a rel="nofollow" class="external text" href="https://www.hdevalence.ca/blog/2013-09-21-notes-on-my-archlinux-install">this post</a> for more information. Btrfs wiki reports that it was fixed in kernels 3.19+ <a rel="nofollow" class="external autonumber" href="https://btrfs.wiki.kernel.org/index.php/Gotchas#Historical_references">[3]</a>.</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E5%9C%A8%E7%8E%B0%E5%AD%98%E7%9A%84%E7%B3%BB%E7%BB%9F%E4%B8%8A%E9%85%8D%E7%BD%AEbcache%E8%AE%BE%E5%A4%87"><span class="tocnumber">1</span> <span class="toctext">在现存的系统上配置bcache设备</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%E7%AE%A1%E7%90%86_Bcache"><span class="tocnumber">1.1</span> <span class="toctext">管理 Bcache</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#%E5%B0%86%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85%E5%88%B0%E4%B8%80%E4%B8%AA_bcache_%E8%AE%BE%E5%A4%87"><span class="tocnumber">2</span> <span class="toctext">将系统安装到一个 bcache 设备</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#%E4%BB%8E%E5%AE%89%E8%A3%85%E7%9B%98%E8%AE%BF%E9%97%AEbcache%E5%88%86%E5%8C%BA"><span class="tocnumber">3</span> <span class="toctext">从安装盘访问bcache分区</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">4</span> <span class="toctext">配置</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#%E9%AB%98%E7%BA%A7%E6%93%8D%E4%BD%9C"><span class="tocnumber">5</span> <span class="toctext">高级操作</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7">
+<a href="#%E8%B0%83%E6%95%B4%E5%90%8E%E7%AB%AF%E8%AE%BE%E5%A4%87%E7%9A%84%E5%AE%B9%E9%87%8F"><span class="tocnumber">5.1</span> <span class="toctext">调整后端设备的容量</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#%E6%89%A9%E5%AE%B9%E4%B8%BE%E4%BE%8B"><span class="tocnumber">5.1.1</span> <span class="toctext">扩容举例</span></a></li>
+<li class="toclevel-3 tocsection-9">
+<a href="#%E7%BC%A9%E5%AE%B9%E4%B8%BE%E4%BE%8B"><span class="tocnumber">5.1.2</span> <span class="toctext">缩容举例</span></a>
+<ul>
+<li class="toclevel-4 tocsection-10"><a href="#%E5%BC%BA%E5%88%B6%E6%8A%8A%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%E5%90%8E%E7%AB%AF%E8%AE%BE%E5%A4%87"><span class="tocnumber">5.1.2.1</span> <span class="toctext">强制把缓存写入后端设备</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%E7%96%91%E9%9A%BE%E8%A7%A3%E7%AD%94"><span class="tocnumber">6</span> <span class="toctext">疑难解答</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#%E5%90%AF%E5%8A%A8%E6%97%B6_/dev/bcache_%E4%B8%8D%E5%AD%98%E5%9C%A8"><span class="tocnumber">6.1</span> <span class="toctext">启动时 /dev/bcache 不存在</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#/sys/fs/bcache/_%E4%B8%8D%E5%AD%98%E5%9C%A8"><span class="tocnumber">6.2</span> <span class="toctext">/sys/fs/bcache/ 不存在</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="tocnumber">7</span> <span class="toctext">参考资料</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.9C.A8.E7.8E.B0.E5.AD.98.E7.9A.84.E7.B3.BB.E7.BB.9F.E4.B8.8A.E9.85.8D.E7.BD.AEbcache.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="在现存的系统上配置bcache设备">在现存的系统上配置bcache设备</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> make-bcache <b>不会</b> 导入(import)一个现存的设备或分区——它会格式化它。请务必做好数据备份。</div>
+<p>1. 从 <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> <a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>。
+</p>
+<p>2. 创建一个后端设备（通常来说这是你的机械硬盘）。后端设备可以是整个设备、一个分区或者其他任何的block设备。这将会创建/dev/bcache0：
+</p>
+<pre># make-bcache -B /dev/sdx1
+</pre>
+<p>3. 创建一个缓存设备（这通常是你的固态硬盘）。缓存设备可以是整个设备、一个分区或者其他任何的block设备：
+</p>
+<pre># make-bcache -C /dev/sdy2
+</pre>
+<p>在这个例子里，默认的block大小是512B、bucket大小是128kB。block的大小应该与后端设备的sector大小匹配（通常是512或者4k）。bucket的大小应该与缓存设备的擦除block大小匹配（以减少写入放大）。例如，如果是一个4k sector的HDD和一个擦除block大小是2MB的SSD搭配，命令就应该是这样的：
+</p>
+<pre># make-bcache --block 4k --bucket 2M -C /dev/sdy2
+</pre>
+<p>4. 把缓存设备注册到后端设备。为了找到它的<i>cache set UUID</i>，运行<code># bcache-super-show /dev/sdy2 | grep cset.uuid</code>然后把它添加到bcache设备。Udev规则会在以后的重启阶段自动搞定这个，因此你只需要执行一次这个命令：
+</p>
+<pre># echo <b>cset.uuid</b> &gt; /sys/block/bcache0/bcache/attach
+</pre>
+<p>5. 更改你的缓存模式（如果你想要同时缓存读和写）：
+</p>
+<pre># echo writeback &gt; /sys/block/bcache0/bcache/cache_mode
+</pre>
+<p>6. 如果你需要让这个分区在initcpio的时候就已经可以使用（即，在系统启动过程中需要用到它），你需要把'bcache'添加到<code>/etc/mkinitcpio.conf</code>文件里：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+MODULES=(... <b>bcache</b>)
+...
+HOOKS=(... block ... <b>bcache</b> ... filesystems ...)
+...</pre>
+<p>然后请重新生成initramfs镜像：
+</p>
+<pre># mkinitcpio -p linux
+</pre>
+<h3>
+<span id=".E7.AE.A1.E7.90.86_Bcache"></span><span class="mw-headline" id="管理_Bcache">管理 Bcache</span>
+</h3>
+<p>1. 确认所有的东西都已经正确地配置了：
+</p>
+<pre># cat /sys/block/bcache0/bcache/state
+</pre>
+<p>输出的内容有以下可能：
+</p>
+<ul>
+<li>
+<b>no cache</b>: 这代表你还没有绑定缓存设备到你的后端设备上</li>
+<li>
+<b>clean</b>: 这代表一切正常，缓存是clean的</li>
+<li>
+<b>dirty</b>: 这代表一切正常，缓存模式被设置成了<i>writeback</i>，缓存是dirty的</li>
+<li>
+<b>inconsistent</b>: 这代表问题很大，后端设备与缓存设备没有同步</li>
+</ul>
+<p>使用一个没有缓存设备的 <code>/dev/bcache0</code> 的话所有的IO都会直接在后端设备上执行，等于pass-through模式。
+</p>
+<p>2. 查看正在使用的缓存模式：
+</p>
+<pre># cat /sys/block/bcache0/bcache/cache_mode
+[writethrough] writeback writearound none
+</pre>
+<p>在这个示例中，输出显示当前使用的是<i>writethrough</i>模式。
+</p>
+<p>3. 显示bcached设备的信息：
+</p>
+<pre># bcache-super-show /dev/sdXY
+</pre>
+<p>4. 停止后端设备：
+</p>
+<pre># echo 1 &gt; /sys/block/sdX/sdX[Y]/bcache/stop
+</pre>
+<p>5. 让缓存设备脱机：
+</p>
+<pre># echo 1 &gt; /sys/block/sdX/sdX[Y]/bcache/detach
+</pre>
+<p>6. 安全移除缓存设备：
+</p>
+<pre># echo &lt;cache-set-uuid&gt; &gt; /sys/block/bcache0/bcache/detach
+</pre>
+<p>7. 释放已连接的设备：
+</p>
+<pre># echo 1 &gt; /sys/fs/bcache/&lt;cache-set-uuid&gt;/stop
+</pre>
+<h2>
+<span id=".E5.B0.86.E7.B3.BB.E7.BB.9F.E5.AE.89.E8.A3.85.E5.88.B0.E4.B8.80.E4.B8.AA_bcache_.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="将系统安装到一个_bcache_设备">将系统安装到一个 bcache 设备</span>
+</h2>
+<p>1. 从 Archlinux 的USB安装盘启动 (至少是 2013.08.01 版本的)。
+</p>
+<p>2. 从 <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> 安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>。
+</p>
+<p>3. 对硬盘进行分区
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 虽然 Grub2 理论上不提供对 bcache 的支持，但是因为它完整支持 UEFI ，所以是有办法启动系统的。只要用来处理 boot 设备的模块被正确编译进内核或者包含在 initramfs 里面，那么就没必要按照下面的例子单独分区一个 boot 分区（第二行，名字是 arch_boot 的）。详情参考 <a href="../en/GRUB.html" title="GRUB">GRUB</a> 和 <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>。</div>
+<p>grub 无法处理 bcache, 所以你需要至少两个分区 (一个 boot 和一个作为 bcache 后端设备的分区). 如果你用的是 UEFI, 则额外需要 <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a> (ESP)。比如:
+</p>
+<pre>     1            2048           22527   10.0 MiB    EF00  EFI System
+     2           22528          432127   200.0 MiB   8300  arch_boot
+     3          432128       625142414   297.9 GiB   8300  bcache_backing
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 例子里是没有 swap 文件或分区的，如果要让 swap 也受到 cache 设备缓存，使用步骤7里面的 LVM 来实现。如果不需要 swap 被缓存，请在这一步就创建 swap 分区。</div>
+<p>4. 配置你的机械硬盘作为 bcache 后端设备。
+</p>
+<pre># make-bcache -B /dev/sda3
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>在配置启动盘的时候，一定要明白自己在做什么——多看几次你选择的 boot-loader/boot-manager 的文档，想想它和 bcache 一起用会不会有兼容性问题。</li>
+<li>如果所有相关的设备都通过下面这样的命令连接起来的话，bcache 会自动把缓存设备连接到后端设备，步骤5就可以跳过。<code># make-bcache -B /dev/sd? /dev/sd? -C /dev/sd?</code>
+</li>
+</ul>
+</div>
+<p>现在你有了一个 <code>/dev/bcache0</code>。
+</p>
+<p>5. 配置固态硬盘。
+</p>
+<p>下面这个例子是把整个固态硬盘（<code>/dev/sdb</code>）作为缓存设备格式化，并链接到后端设备：
+</p>
+<pre># make-bcache -C /dev/sdb
+# echo /dev/sdb &gt; /sys/fs/bcache/register 
+# echo <i>前面的命令输出的UUID</i> &gt; /sys/block/bcache0/bcache/attach
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果忘了 UUID 是什么，可以用 <code>ls /sys/fs/bcache/</code> 命令找到（如果缓存设备成功链接），最长的那一串东西就是 UUID。</div>
+<p>6. 格式化 bcache 设备。如果你要在 <code>/dev/bcache0</code> 里面分区的话，用 LVM 或者 btrfs 的 子卷来实现，比如下面的例子用 btrfs 的子卷功能分了 <code>/</code> 和 <code>/home</code> 两个区：
+</p>
+<pre># mkfs.btrfs /dev/bcache0
+# mount /dev/bcache0 /mnt/
+# btrfs subvolume create /mnt/root
+# btrfs subvolume create /mnt/home
+# umount /mnt
+</pre>
+<p>你甚至可以配置 LUKS 如果你想要用类似 cryptsetup 的东西。把内核 option 'cryptdevice' 指向 bcache 设备是没有问题的。
+</p>
+<p>7. 配置安装挂载点（这里用的是步骤3的分区方案和步骤6的btrfs子卷分区方案）：
+</p>
+<pre># mkfs.ext4 /dev/sda2 （arch_boot 分区）
+# mkfs.msdos /dev/sda1 (如果你的 ESP 分区有至少 500MB，请用 mkfs.vfat 命令来创建一个 FAT32 分区)
+# pacman -S arch-install-scripts
+# mount /dev/bcache0 -o subvol=root,compress=lzo /mnt/ （挂载btrfs的root子卷作为根目录）
+# mkdir /mnt/boot /mnt/home
+# mount /dev/bcache0 -o subvol=home,compress=lzo /mnt/home （挂载btrfs的home子卷作为home目录）
+# mount /dev/sda2 /mnt/boot
+# mkdir /boot/efi
+# mount /dev/sda1 /mnt/boot/efi/
+</pre>
+<p>8. 按照 <a href="../en/Installation_guide.html#Connect_to_the_internet" title="Installation guide">Installation Guide</a> 的步骤安装系统，除了下面这个：
+</p>
+<p>在修改 <code>/etc/mkinitcpio.conf</code> 并运行 <code>mkinitcpio -p linux</code> 之前：
+</p>
+<ul>
+<li>在新系统上，从 <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> 安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>。</li>
+<li>修改 <code>/etc/mkinitcpio.conf</code>:
+<ul>
+<li>添加 bcache 到 MODULES=() 里面</li>
+<li>添加 bcache 到 HOOKS=() 的 block 和 filesystems 之间</li>
+</ul>
+</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 因为安装介质不会储存任何更改，所以如果你想在重启之后再在安装介质里打开bcache的后端设备，你需要手动注册它。首先确认 bcache 模块已经加载，然后把相关的设备都 echo 到 <code>/sys/bcache/register</code>。可以通过 <code>dmesg</code> 来检查是否已经成功注册。
+</div>
+<h2>
+<span id=".E4.BB.8E.E5.AE.89.E8.A3.85.E7.9B.98.E8.AE.BF.E9.97.AEbcache.E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="从安装盘访问bcache分区">从安装盘访问bcache分区</span>
+</h2>
+<p>要访问一个在安装盘启动之前就已经存在的 bcache 分区，首先从 AUR 安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>，然后加载 bcache 模块：
+</p>
+<pre># modprobe bcache
+</pre>
+<p>然后强制内核重新加载分区表：
+</p>
+<pre># partprobe
+</pre>
+<p>现在 <code>/dev/bcache*</code> 应该会存在了，挂载、格式化之类的操作也可以进行了。
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>可以配置的选项有很多，比如缓存模式、缓存写入时间间隔、启发式顺序写入等。通过写入 <code>/sys/block/bcache[0-9]/bcache</code> 目录中的对应文件可以进行相应的配置，详情查看 <a rel="nofollow" class="external text" href="https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt">bcache user documentation</a>。
+</p>
+<p>例如，改变缓存模式通过以下命令实现：
+</p>
+<pre>echo 'writethrough' &gt; /sys/block/bcache[0-9]/bcache/cache
+</pre>
+<p>可以把 'writethrough' 换成 'writeback', 'writearound' 或者 'none' 中的任意一个。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 写入 /sys 的设置有些是临时的，重启之后就会失效（缓存模式的更改不会失效）。如果要“模拟”永久更改，在 <code>/etc/tmpfile.d</code> 目录中创建包含类似下面的内容的 <i>.conf</i> 文件：
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/tmpfile.d/my-bcache.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">w /sys/block/bcache0/bcache/sequential_cutoff - - - - 1M
+w /sys/block/bcache0/bcache/cache_mode        - - - - writeback</pre>
+<p>在这个例子中该文件会在系统启动时把 sequential cutoff 设置为1M、cache mode 设置为 writeback。
+</p>
+</div>
+<h2>
+<span id=".E9.AB.98.E7.BA.A7.E6.93.8D.E4.BD.9C"></span><span class="mw-headline" id="高级操作">高级操作</span>
+</h2>
+<h3>
+<span id=".E8.B0.83.E6.95.B4.E5.90.8E.E7.AB.AF.E8.AE.BE.E5.A4.87.E7.9A.84.E5.AE.B9.E9.87.8F"></span><span class="mw-headline" id="调整后端设备的容量">调整后端设备的容量</span>
+</h3>
+<p>It is possible to resize the backing device so long as you do not move the partition start. This process is described on <a rel="nofollow" class="external text" href="http://comments.gmane.org/gmane.linux.kernel.bcache.devel/249">the mailing list</a>. Here is an example using btrfs volume directly on bcache0. For LVM containers or for other filesystems, procedure will differ.
+</p>
+<h4>
+<span id=".E6.89.A9.E5.AE.B9.E4.B8.BE.E4.BE.8B"></span><span class="mw-headline" id="扩容举例">扩容举例</span>
+</h4>
+<p>In this example, I grow the filesystem by 4GB. 
+</p>
+<p>1. Reboot to a live CD/USB Drive (need not be bcache enabled) and use fdisk, gdisk, parted, or your other favorite tool to delete the backing partition and recreate it with the same start and a total size 4G larger. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use a tool like GParted that might perform filesystem operations! It will not recognize the bcache partition and might overwrite part of it!!</div>
+<p>2. Reboot to your normal install. Your filesystem will be currently mounted. That is fine. Issue the command to resize the partition to its maximum. For btrfs, that is
+</p>
+<pre># btrfs filesystem resize max /
+</pre>
+<p>For ext3/4, that is:
+</p>
+<pre># resize2fs /dev/bcache0
+</pre>
+<h4>
+<span id=".E7.BC.A9.E5.AE.B9.E4.B8.BE.E4.BE.8B"></span><span class="mw-headline" id="缩容举例">缩容举例</span>
+</h4>
+<p>这里举例的是缩小4G容量。
+</p>
+<p>1. 切换缓存模式，从 writeback 改成 writethrough，并等待缓存写入后端设备。
+</p>
+<pre># echo writethrough &gt; /sys/block/bcache0/bcache/cache_mode
+$ watch cat /sys/block/bcache0/bcache/state
+</pre>
+<p>请等到第二个命令输出 "clean"。
+</p>
+<h6>
+<span id=".E5.BC.BA.E5.88.B6.E6.8A.8A.E7.BC.93.E5.AD.98.E5.86.99.E5.85.A5.E5.90.8E.E7.AB.AF.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="强制把缓存写入后端设备">强制把缓存写入后端设备</span>
+</h6>
+<pre> # echo 0 &gt; /sys/block/bcache0/bcache/writeback_percent
+</pre>
+<p>这会把缓存比例改成0，从而强制把缓存的内容写入到后端设备。
+</p>
+<p>然后把缓存比例改回来：
+</p>
+<pre> # echo 10 &gt; /sys/block/bcache0/bcache/writeback_percent
+</pre>
+<p>2. 为了避免之后缩小分区的时候不会破坏文件系统，请把文件系统缩小比想要缩小的大小更多的量。比如例子里要把分区缩小4G，那就要把文件系统缩小5G以避免破坏了文件系统。如果用的是 btrfs，用下面的命令来缩小文件系统：
+</p>
+<pre># btrfs filesystem resize -5G /
+</pre>
+<p>对于 ext3/4，用的命令是 <i>resize2fs</i>，但是需要目标文件系统没有处于挂载：
+</p>
+<pre>$ df -h /home
+/dev/bcache0    290G   20G   270G   1% /home
+# umount /home
+# resize2fs /dev/bcache0 283G
+</pre>
+<p>3. 重启到 LiveCD/USB盘 (并不需要支持 bcache) 并使用 fdisk、gdisk、parted或者其他你用得顺手的工具去把后端分区删掉并重新创建一个 start 位置一样的、但是总大小少4G的分区。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 不要使用类似 Gparted 的工具，因为它们会进行文件系统操作！它们可能识别不出来 bcache 分区并破坏它！</div>
+<p>4. 重启到原来的系统，现在你的文件系统会挂载好，并且分区已经缩小了4G。现在要做的是把文件系统扩展到分区的大小。对于 btrfs，命令是：
+</p>
+<pre># btrfs filesystem resize max /
+</pre>
+<p>对于 ext3/4：
+</p>
+<pre># resize2fs /dev/bcache0
+</pre>
+<p>5. 把缓存模式重新改成 writeback （如果你想用 writeback 的话）：
+</p>
+<pre># echo writeback &gt; /sys/block/bcache0/bcache/cache_mode
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果你够小心，第二步里面文件系统可以刚好缩小4G而不预留更多的空间，但是很多分区工具并不是按照字面意思来工作的，它们会把分区的起始和终止位置对齐到底层硬盘的 sector 边界，所以就会出现意料之外的文件系统破坏事故。小心为妙。</div>
+<h2>
+<span id=".E7.96.91.E9.9A.BE.E8.A7.A3.E7.AD.94"></span><span class="mw-headline" id="疑难解答">疑难解答</span>
+</h2>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E6.97.B6_.2Fdev.2Fbcache_.E4.B8.8D.E5.AD.98.E5.9C.A8"></span><span class="mw-headline" id="启动时_/dev/bcache_不存在">启动时 /dev/bcache 不存在</span>
+</h3>
+<p>如果你在启动时见到下面的提示信息并进入了busybox shell:
+</p>
+<pre>ERROR: Unable to find root device 'UUID=b6b2d82b-f87e-44d5-bbc5-c51dd7aace15'.
+You are being dropped to a recovery shell
+    Type 'exit' to try and continue booting</pre>
+<p>可能是因为后端设备设置成了"writeback"模式 (默认是 writearound)。在"writeback"模式下 /dev/bcache0 在缓存设备注册并连接之前是不存在的。注册(register)是每次启动时需要进行的操作，但是连接(attach)只需要进行一次。 
+</p>
+<p>To continue booting, try one of the following:
+</p>
+<ul><li>Register both the backing device and the caching device</li></ul>
+<pre># echo /dev/sda3 &gt; /sys/fs/bcache/register
+# echo /dev/sdb &gt; /sys/fs/bcache/register
+</pre>
+<p>If the /dev/bcache0 device now exists, type exit and continue booting. You will need to fix your initcpio to ensure devices are registered before mounting the root device.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>An error of "sh: echo: write error: Invalid argument" means the device was already registered or is not recognized as either a bcache backing device or cache. If using the udev rule on boot it should only attempt to register a device if it finds a bcache superblock</li>
+<li>This can also happen if using udev's 69-bcache.rules in Installation's step 7 and blkid and bcache-probe "disagree" due to rogue superblocks. See <a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org/#index6h1">bcache's wiki</a> for a possible explanation/resolution.</li>
+</ul>
+</div>
+<ul><li>Re-attach the cache to the backing device:</li></ul>
+<p>If the cache device was registered, a folder with the UUID of the cache should exist in <code>/sys/fs/bcache</code>. Use that UUID when following the example below:
+</p>
+<pre># ls /sys/fs/bcache/
+b6b2d82b-f87e-44d5-bbc5-c51dd7aace15     register     register_quiet
+# echo b6b2d82b-f87e-44d5-bbc5-c51dd7aace15 &gt; /sys/block/sda/sda3/bcache/attach
+</pre>
+<p>If the <code>/dev/bcache0</code> device now exists, type exit and continue booting. You should not have to do this again. If it persists, ask on the bcache mailing list.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> An error of <code>sh: echo: write error: Invalid argument</code> means the device was already attached. An error of <code>sh: echo: write error: No such file or directory</code> means the UUID is not a valid cache (make sure you typed it correctly).</div>
+<ul><li>Invalidate the cache and force the backing device to run without it. You might want to check some stats, such as "dirty_data" so you have some idea of how much data will be lost.</li></ul>
+<pre># cat /sys/block/sda/sda3/bcache/dirty_data
+-3.9M
+</pre>
+<p>dirty data is data in the cache that has not been written to the backing device. If you force the backing device to run, this data will be lost, even if you later re-attach the cache.
+</p>
+<pre># cat /sys/block/sda/sda3/bcache/running
+0
+# echo 1 &gt; /sys/block/sda/sda3/bcache/running
+</pre>
+<p>The <code>/dev/bcache0</code> device will now exist. Type exit and continue booting. You might want to unregister the cache device and run make-bcache again. An fsck on <code>/dev/bcache0</code> would also be wise. See the <a rel="nofollow" class="external text" href="http://atlas.evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt?h=bcache">bcache user documentation</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Only invalidate the cache if one of the two options above did not work.</div>
+<h3>
+<span id=".2Fsys.2Ffs.2Fbcache.2F_.E4.B8.8D.E5.AD.98.E5.9C.A8"></span><span class="mw-headline" id="/sys/fs/bcache/_不存在">/sys/fs/bcache/ 不存在</span>
+</h3>
+<p>当前尝试启动的内核不支持bcache或者bcache<a href="../en/Kernel_module.html#Manual_module_handling" title="Kernel module">内核模块未加载</a>。
+</p>
+<h2>
+<span id=".E5.8F.82.E8.80.83.E8.B5.84.E6.96.99"></span><span class="mw-headline" id="参考资料">参考资料</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org">Bcache Homepage</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/bcache.txt">Bcache Manual</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:File_systems.html" title="Category:File systems (简体中文)">File systems (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Bcache_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=641541">https://wiki.archlinux.org/index.php?title=Bcache_(简体中文)&amp;oldid=641541</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 November 2020, at 00:49.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

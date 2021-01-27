@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>VPN over SSH - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-VPN_over_SSH rootpage-VPN_over_SSH skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">VPN over SSH</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>There are several ways to set up a Virtual Private Network through SSH. Note that, while this may be useful from time to time, it may not be a full replacement for a regular VPN. See for example <a rel="nofollow" class="external autonumber" href="http://sites.inka.de/bigred/devel/tcp-tcp.html">[1]</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Using_badvpn's_tun2socks"><span class="tocnumber">1</span> <span class="toctext">Using badvpn's tun2socks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Start_SSH_dynamic_SOCKS_proxy"><span class="tocnumber">1.1</span> <span class="toctext">Start SSH dynamic SOCKS proxy</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Set_up_badvpn_and_tunnel_interface"><span class="tocnumber">1.2</span> <span class="toctext">Set up badvpn and tunnel interface</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Get_traffic_into_the_tunnel"><span class="tocnumber">1.3</span> <span class="toctext">Get traffic into the tunnel</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#OpenSSH's_built_in_tunneling"><span class="tocnumber">2</span> <span class="toctext">OpenSSH's built in tunneling</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Enable_forwarding_for_the_TUN_device"><span class="tocnumber">2.1</span> <span class="toctext">Enable forwarding for the TUN device</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#Create_tun_interfaces_using_systemd-networkd"><span class="tocnumber">2.2</span> <span class="toctext">Create tun interfaces using systemd-networkd</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Creating_interfaces_in_SSH_command"><span class="tocnumber">2.2.1</span> <span class="toctext">Creating interfaces in SSH command</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9"><a href="#Start_SSH"><span class="tocnumber">2.3</span> <span class="toctext">Start SSH</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Troubleshooting"><span class="tocnumber">2.4</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Using_PPP_over_SSH"><span class="tocnumber">3</span> <span class="toctext">Using PPP over SSH</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Helper_script"><span class="tocnumber">3.1</span> <span class="toctext">Helper script</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Using_badvpn.27s_tun2socks"></span><span class="mw-headline" id="Using_badvpn's_tun2socks">Using badvpn's tun2socks</span>
+</h2>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=badvpn">badvpn</a></span> is a collection of utilities for various VPN-related use cases.
+</p>
+<h3><span class="mw-headline" id="Start_SSH_dynamic_SOCKS_proxy">Start SSH dynamic SOCKS proxy</span></h3>
+<p>First, we'll set up a normal SSH dynamic socks proxy like usual:
+</p>
+<pre>$ ssh -TND 4711 &lt;your_user&gt;@&lt;SSH_server&gt;
+</pre>
+<h3><span class="mw-headline" id="Set_up_badvpn_and_tunnel_interface">Set up badvpn and tunnel interface</span></h3>
+<p>Afterwards, we can go ahead with setting up the TUN.
+</p>
+<pre># ip tuntap add dev tun0 mode tun user &lt;your_local_user&gt;
+# ip addr replace 10.0.0.1/24 dev tun0
+# badvpn-tun2socks --tundev tun0 --netif-ipaddr 10.0.0.2 --netif-netmask 255.255.255.0 --socks-server-addr localhost:4711
+</pre>
+<p>Now you have a working local <code>tun0</code> interface which routes all traffic going into it through the SOCKS proxy you set up earlier.
+</p>
+<h3><span class="mw-headline" id="Get_traffic_into_the_tunnel">Get traffic into the tunnel</span></h3>
+<p>All that's left to do now is to set up a local route to get some traffic into it. Let's set up a route that routes all traffic into it. We'll need three routes:
+</p>
+<ol>
+<li>Route that goes to the SSH server that we use for the tunnel with a low metric.</li>
+<li>Route for DNS server (because tun2socks doesn't do UDP which is necessary for DNS) with a low metric.</li>
+<li>Default route for all other traffic with a higher metric than the other routes.</li>
+</ol>
+<p>The idea behind setting the metrics specifically is because we need to ensure that the route picked to the SSH server is always direct because otherwise it would go back into the SSH tunnel which would cause a loop and we'd lose the SSH connection as a result. Apart from that, we need to set an explicit DNS route because tun2socks doesn't tunnel UDP (required for DNS). We also need a new default route with a lower metric than your old default route so that traffic goes into the tunnel at all. With all of that said, let's get to work:
+</p>
+<pre># ip route add &lt;IP_of_SSH_server&gt; via &lt;IP_of_original_gateway&gt; metric 5
+# ip route add &lt;IP_of_DNS_server&gt; via &lt;IP_of_original_gateway&gt; metric 5
+# ip route add default via 10.0.0.2 metric 6
+</pre>
+<p>Now all traffic (except for DNS and the SSH server itself) should go through <code>tun0</code>.
+</p>
+<h2>
+<span id="OpenSSH.27s_built_in_tunneling"></span><span class="mw-headline" id="OpenSSH's_built_in_tunneling">OpenSSH's built in tunneling</span>
+</h2>
+<p>OpenSSH has built-in TUN/TAP support using <code>-w&lt;local-tun-number&gt;:&lt;remote-tun-number&gt;</code>. Here, a layer 3/point-to-point/ TUN tunnel is described. It is also possible to create a layer 2/ethernet/TAP tunnel.
+</p>
+<h3><span class="mw-headline" id="Enable_forwarding_for_the_TUN_device">Enable forwarding for the TUN device</span></h3>
+<p>To enable forwarding for the TUN device, edit <code>/etc/ssh/sshd_config</code> and set <code>PermitTunnel</code> to <code>yes</code>, <code>point-to-point</code> or <code>ethernet</code>. Setting <code>yes</code> enables forwarding for both <code>point-to-point</code> and <code>ethernet</code> tunnels. See <span class="plainlinks archwiki-template-man" title="$ man 5 sshd_config"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sshd_config.5">sshd_config(5)</a></span> for details.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ssh/sshd_config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+PermitTunnel yes
+...
+</pre>
+<p>Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Reload">reload</a> <code>sshd.service</code>.
+</p>
+<h3><span class="mw-headline" id="Create_tun_interfaces_using_systemd-networkd">Create tun interfaces using systemd-networkd</span></h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/network/vpn.netdev</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[NetDev]
+Name=tun5
+Kind=tun
+
+[Tun]
+User=vpn
+Group=network</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/network/vpn.network</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Match]
+Name=tun5
+
+[Address]
+Address=192.168.200.2/24</pre>
+<p>Once these files are created, enable them by <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restarting</a> <code>systemd-networkd.service</code>.
+</p>
+<p>Also, you may manage tun interfaces with <code>ip tunnel</code> command.
+</p>
+<h4><span class="mw-headline" id="Creating_interfaces_in_SSH_command">Creating interfaces in SSH command</span></h4>
+<p>SSH creates both interfaces automatically, but IP and routing should be configured after the connection is established.
+</p>
+<pre>ssh \
+  -o PermitLocalCommand=yes \
+  -o LocalCommand="sudo ifconfig tun5 192.168.244.2 pointopoint 192.168.244.1 netmask 255.255.255.0" \
+  -o ServerAliveInterval=60 \
+  -w 5:5 vpn@example.com \
+  'sudo ifconfig tun5 192.168.244.1 pointopoint 192.168.244.2 netmask 255.255.255.0; echo tun0 ready'</pre>
+<h3><span class="mw-headline" id="Start_SSH">Start SSH</span></h3>
+<pre>ssh -f -w5:5 vpn@example.com -i ~/.ssh/key "sleep 1000000000"
+</pre>
+<p>or you may add keep-alive options if you are behind a NAT.
+</p>
+<pre>ssh -f -w5:5 vpn@example.com \
+        -o ServerAliveInterval=30 \
+        -o ServerAliveCountMax=5 \
+        -o TCPKeepAlive=yes \
+        -i ~/.ssh/key "sleep 1000000000"</pre>
+<h3><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h3>
+<ul>
+<li>ssh should have access rights to tun interface or permissions to create it. Check owner of tun interface and/or /dev/net/tun.</li>
+<li>Obviously if you want to access a network rather than a single machine you should properly set up IP packet forwarding, routing and maybe a netfilter on both sides.</li>
+<li>If you do not enable tunneling, you may get the following error when you want to create an SSH tunnel using <code>-w</code>:</li>
+</ul>
+<pre>channel 0: open failed: connect failed: open failed
+Tunnel forwarding failed</pre>
+<h2><span class="mw-headline" id="Using_PPP_over_SSH">Using PPP over SSH</span></h2>
+<p><a href="../en/Ppp.html" class="mw-redirect" title="Pppd">pppd</a> can easily be used to create a tunnel through an SSH server:
+</p>
+<pre># pppd updetach noauth silent nodeflate pty "/usr/bin/ssh root@remote-gw /usr/sbin/pppd nodetach notty noauth" ipparam vpn 10.0.8.1:10.0.8.2
+</pre>
+<p>When the VPN is established, you can route traffic through it. To get access to an internal network:
+</p>
+<pre># ip route add 192.168.0.0/16 via 10.0.8.2
+</pre>
+<p>To route all Internet traffic through the tunnel, for example, to protect your communication on an unencrypted network, first add a route to the SSH server through your regular gateway:
+</p>
+<pre># ip route add &lt;remote-gw&gt; via &lt;current default gateway&gt;
+</pre>
+<p>Next, replace the default route with the tunnel
+</p>
+<pre># ip route replace default via 10.0.8.2
+</pre>
+<h3><span class="mw-headline" id="Helper_script">Helper script</span></h3>
+<p><a rel="nofollow" class="external text" href="https://github.com/halhen/pvpn">pvpn</a> (package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pvpn/">pvpn</a></span><sup><small>AUR</small></sup>) is a wrapper script around <code>pppd</code> over SSH.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="../en/Network_configuration.html" title="Network configuration">Network configuration</a></li>
+<li><a href="../en/Router.html" title="Router">Router</a></li>
+<li><a href="../en/OpenSSH.html" title="OpenSSH">OpenSSH</a></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sshuttle">sshuttle</a></span>, a <a href="../en/Python.html" title="Python">python</a> tunnel</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li>
+<li><a href="../en/Category:Secure_Shell.html" title="Category:Secure Shell">Secure Shell</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=VPN_over_SSH&amp;oldid=631934">https://wiki.archlinux.org/index.php?title=VPN_over_SSH&amp;oldid=631934</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 August 2020, at 07:37.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

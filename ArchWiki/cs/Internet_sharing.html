@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Internet sharing (Česky) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Internet_sharing_Česky rootpage-Internet_sharing_Česky skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Internet sharing (Česky)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>This article or section needs to be <a href="../en/ArchWiki:Contributing.html#Translating" title="ArchWiki:Contributing">translated</a>.</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> English pages changes a lot. Need re-translate. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Internet_sharing_(%C4%8Cesky)">Talk:Internet sharing (Česky)#</a>)</div>
+</div>
+<h2>
+<span id="P.C5.99edmluva"></span><span class="mw-headline" id="Předmluva">Předmluva</span>
+</h2>
+<p>Předpokládejme, že máte připojení k internetu a chcete sdílet. Existují dva hlavní způsoby, jak to udělat.
+</p>
+<pre>   internet                           pc1
+1. ----&gt; |router| ---&gt; |switch| ---&gt;-&lt;
+                                      pc2 ..atd
+ 
+   internet
+2. ------&gt; |pc1 (router)| --&gt; pc2..atd
+</pre>
+<h2>
+<span id="N.C3.A1vod"></span><span class="mw-headline" id="Návod">Návod</span>
+</h2>
+<p>Vysvětlím vám druhý způsob.
+</p>
+<ol>
+<li>Nainstalujte druhou síťovou kartu do PC1.</li>
+
+<li>Propojte PC pomocí kříženého kabelu.</li>
+
+<li>Předpokládejme že první karta (s internetem) je <i><b>eth0</b></i> a druhá je <i><b>eth1</b></i>. (If those two keep switching at every boot read <a href="../en/Udev.html#Mixed_Up_Devices.2C_Sound.2FNetwork_Cards_Changing_Order_Each_Boot" title="Udev">this</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> ).</li>
+
+<li>Konfigurace druhé síťové karty s:
+<dl>
+<dd>
+<b>IP:</b> 192.168.0.1</dd>
+<dd>
+<b>Netmask:</b> 255.255.255.0</dd>
+</dl>
+nebo zadejte v konzoli (jako root)
+<pre>ifconfig eth1 192.168.0.1 netmask 255.255.255.0
+ifconfig eth1 up</pre>
+</li>
+<li>Zadejte stejné informace v souboru <b>/etc/rc.conf</b> so that this card is set up correctly earch time your computer starts.
+<b>Poznámka</b>: pokuď používáte <b>Wicd</b>, nemusíte to udělat.
+<pre>eth1="eth1 192.168.0.1 netmask 255.255.255.0"
+INTERFACES=(lo eth0 eth1)</pre>
+</li>
+<li>Povolení předávání paketů.
+<pre>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</pre>
+</li>
+<li>Editujte <code>/etc/sysctl.d/30-ipforward.conf</code> nastavte 1 u net.ipv4.ip_forward (<b>net.ipv4.ip_forward=1</b>). To umožní uchování změny po restartu.</li>
+
+<li>Nainstalujte iptables(Pokuď ještě nemáte) a nastavte pravidlo pro přesměrování internetu do PC2 a uložte. iptables.
+<pre>pacman -S iptables
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+/etc/rc.d/iptables save</pre>
+</li>
+<li>Editujte <b>/etc/conf.d/iptables</b> a zapněte forwarding (IPTABLES_FORWARD=1).</li>
+
+<li>Start démona iptables:<pre>/etc/rc.d/iptables start</pre>
+</li>
+<li>Přidejte iptables do pole DAEMONS v souboru /etc/rc.conf, aby byl spuštěn po zapnutí pc.</li>
+
+<li>V PC2 nastavte:
+<dl>
+<dd>
+<b>IP:</b> 192.168.0.2</dd>
+<dd>
+<b>Netmask:</b> 255.255.255.0</dd>
+<dd>
+<b>Gateway:</b> 192.168.0.1</dd>
+<dd>
+<b>DNS:</b> stejný jako v PC1</dd>
+</dl>
+</li>
+
+Postupujte takhle (předpokládá se že eth0 je vaše připojení k PC1):
+<pre>ifconfig eth0 192.168.0.2 netmask 255.255.255.0
+ifconfig eth0 up
+route add default gw 192.168.0.1 eth0
+echo "nameserver &lt;adresa nameserveru&gt;" &gt;&gt; /etc/resolv.conf
+</pre>
+<p>Adresu nameserveru můžete zjistit v /etc/resolv.conf na PC1.
+</p>
+<p>Hotovo
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Of course, this also works with a mobile broadband connection (usually called ppp0 on PC1)</div>
+</ol>
+<h2>
+<span id="Viz_tak.C3.A9"></span><span class="mw-headline" id="Viz_také">Viz také</span>
+</h2>
+<ul>
+<li><a href="../en/Sharing_PPP_Connection.html" class="mw-redirect" title="Sharing ppp connection with wlan interface">Sharing ppp connection with wlan interface</a></li>
+<li><a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a></li>
+<li><a href="../en/Router.html" title="Router">Router</a></li>
+<li><a href="../en/USB_3G_Modem.html" title="USB 3G Modem">USB 3G Modem</a></li>
+</ul>
+<hr>
+<p>pozn.překladatele: Omlouvám se za kvalitu. Překládal jsem pomocí překladače a hned to i nastavoval, takže můžu potvrdit funkčnost. Jestli to umíte přeložit lépe, jako že vás bude jistě spousta, s chutí do toho.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../cs/Category:Internet_applications.html" title="Category:Internet applications (Česky)">Internet applications (Česky)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme">Pages or sections flagged with Template:Translateme</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Internet_sharing_(%C4%8Cesky)&amp;oldid=480638">https://wiki.archlinux.org/index.php?title=Internet_sharing_(Česky)&amp;oldid=480638</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 28 June 2017, at 20:53.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

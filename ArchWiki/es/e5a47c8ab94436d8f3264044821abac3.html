@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Power management (Español)/Suspend and hibernate (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Power_management_Español_Suspend_and_hibernate_Español rootpage-Power_management_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Power management (Español)/Suspend and hibernate (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Power_management.html" title="Power management (Español)">Power management (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Power_management/Suspend_and_hibernate.html" title="Power management/Suspend and hibernate">Power management/Suspend and hibernate</a> revisada por última vez el <b>2019-04-06</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Power_management/Suspend_and_hibernate&amp;diff=0&amp;oldid=568198">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../en/Uswsusp.html" title="Uswsusp">Uswsusp</a></li>
+<li><a href="../es/Systemd.html" title="Systemd (Español)">systemd (Español)</a></li>
+<li><a href="../es/Power_management.html" title="Power management (Español)">Power management (Español)</a></li>
+</ul>
+</div>
+<p>Actualmente hay tres métodos de suspensión disponibles: <b>suspender en RAM</b> (llamado solo <b>suspender</b>), <b>suspender en disco</b> (conocido como <b>hibernar</b>) y <b>suspensión híbrida</b> (a veces llamado <b>suspender a ambos</b>):
+</p>
+<ul><li>
+<b>Suspender en RAM</b>: Este método corta la corriente en muchas partes del sistema excepto de la RAM, que es necesaria para restaurar el estado de la máquina, de ahí el gran ahorro energético. Es recomendable para los portátiles que entre en este modo automáticamente cuando el ordenador esta consumiendo baterías y la pantalla está cerrada (o el usuario está inactivo por un periodo de tiempo).</li></ul>
+<ul><li>
+<b>Suspender en disco</b>: Este método guarda el estado de la máquina en <a href="../es/Swap.html" title="Swap (Español)">espacio swap</a> y apaga completamente la máquina. Cuando la máquina se enciende el estado se restaura. Hasta entonces no hay consumo de energía.</li></ul>
+<ul><li>
+<b>Suspensión híbrida</b>: Este método guarda el estado en el espacio swap, pero no apaga la máquina. En su lugar, invoca un suspender en RAM. De esta forma si la batería no se agota, el sistema puede continuar desde RAM. Si se agota, el sistema puede continuar desde el disco, que es más lento que continuar desde RAM, pero el estado de la máquina no se pierde.</li></ul>
+<p>Hay varias interfaces de bajo nivel (backends) que proporcionan una funcionalidad básica y varias interfaces de alto nivel que proporcionan retoques para encargarse de los controladores de hardware problemáticos/módulos kernel (p.ej. reinicialización de la tarjeta de vídeo). 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Interfaces_de_bajo_nivel"><span class="tocnumber">1</span> <span class="toctext">Interfaces de bajo nivel</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#N%C3%BAcleo_(swsusp)"><span class="tocnumber">1.1</span> <span class="toctext">Núcleo (swsusp)</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Uswsusp"><span class="tocnumber">1.2</span> <span class="toctext">Uswsusp</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Interfaces_de_alto_nivel"><span class="tocnumber">2</span> <span class="toctext">Interfaces de alto nivel</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Systemd"><span class="tocnumber">2.1</span> <span class="toctext">Systemd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Hibernar"><span class="tocnumber">3</span> <span class="toctext">Hibernar</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Sobre_el_tama%C3%B1o_de_la_partici%C3%B3n/archivo_swap"><span class="tocnumber">3.1</span> <span class="toctext">Sobre el tamaño de la partición/archivo swap</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Par%C3%A1metros_necesarios_del_kernel"><span class="tocnumber">3.2</span> <span class="toctext">Parámetros necesarios del kernel</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Hibernar_en_un_archivo_swap"><span class="tocnumber">3.2.1</span> <span class="toctext">Hibernar en un archivo swap</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10"><a href="#Configurar_initramfs"><span class="tocnumber">3.3</span> <span class="toctext">Configurar initramfs</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Soluci%C3%B3n_de_problemas"><span class="tocnumber">4</span> <span class="toctext">Solución de problemas</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#ACPI_OS_NAME"><span class="tocnumber">4.1</span> <span class="toctext">ACPI_OS_NAME</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Usuarios_VAIO"><span class="tocnumber">4.2</span> <span class="toctext">Usuarios VAIO</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Suspender/hibernar_no_funciona_o_no_es_consistente"><span class="tocnumber">4.3</span> <span class="toctext">Suspender/hibernar no funciona o no es consistente</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Wake-on-LAN"><span class="tocnumber">4.4</span> <span class="toctext">Wake-on-LAN</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Despertar_instant%C3%A1neo_desde_la_suspensi%C3%B3n"><span class="tocnumber">4.5</span> <span class="toctext">Despertar instantáneo desde la suspensión</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#El_sistema_no_se_apaga_cuando_hiberna"><span class="tocnumber">4.6</span> <span class="toctext">El sistema no se apaga cuando hiberna</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Interfaces_de_bajo_nivel">Interfaces de bajo nivel</span></h2>
+<p>Aunque estas interfaces se pueden usar directamente es aconsejable que se utilice alguna <a href="#Interfaces_de_alto_nivel">interfaz de alto nivel</a> para suspender/hibernar. Utilizar interfaces de bajo nivel es significativamente más rápido que utilizar las interfaces de alto nivel, ya que ejecutar los pre y post hooks lleva tiempo, pero estos hooks pueden establecer apropiadamente el reloj hardware, restaurar las redes inalámbricas, etc.
+</p>
+<h3>
+<span id="N.C3.BAcleo_.28swsusp.29"></span><span class="mw-headline" id="Núcleo_(swsusp)">Núcleo (swsusp)</span>
+</h3>
+<p>Lo más directo es informar directamente al núcleo (kernel) el código de suspensión del software para cambiar a un estado de suspensión (swsusp); el método exacto y el estado depende del nivel que soporta el hardware. En los núcleos modernos, el principal mecanismo para lanzar esta suspensión es escribir las apropiadas instrucciones en <code>/sys/power/state</code>.
+</p>
+<p>vea la <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/power/states.txt">documentación del kernel (en inglés)</a> para más detalles.
+</p>
+<h3><span class="mw-headline" id="Uswsusp">Uswsusp</span></h3>
+<p>La suspensión de software de espacio de usuario ('uswsusp') es un envoltorio del mecanismo de suspensión a RAM del núcleo que realiza algunas manipulaciones del adaptador gráfico desde el espacio de usuario antes de suspender y después de reanudar.
+Vea el articulo del manual <a href="../en/Uswsusp.html" title="Uswsusp">Uswsusp</a>.
+</p>
+<h2><span class="mw-headline" id="Interfaces_de_alto_nivel">Interfaces de alto nivel</span></h2>
+<p>El objetivo de estos paquetes es proporcionar script/binarios que puedan invocar y realizar la suspensión/hibernación. En realidad los enlaces a los botones de encendido o a los clic en un menú o a los eventos de la tapa de un portátil se les deja a otras herramientas. Para suspender/hibernar automáticamente en ciertos eventos de energía, como el cierre de la tapa del ordenador o bajo porcentaje de batería puede que estés buscando ejecutar <a href="../es/Acpid.html" title="Acpid (Español)">acpid</a>.
+</p>
+<h3><span class="mw-headline" id="Systemd">Systemd</span></h3>
+<p><a href="../es/Systemd.html" title="Systemd (Español)">Systemd</a> proporciona de forma nativa comandos para suspender, hibernar y suspender de forma híbrida, vea <a href="../en/Power_management.html#Power_management_with_systemd" title="Power management">administración de energía con systemd (en inglés)</a> para más detalles. Esta es la interfaz por defecto usada en Arch Linux.
+</p>
+<p>Vea <a href="../es/Power_management.html#Sleep_hooks" title="Power management (Español)">sleep hooks</a> como información adicional para configurar los hook de suspensión/hibernación. Vea también <span class="plainlinks archwiki-template-man" title="$ man 1 systemctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemctl.1">systemctl(1)</a></span>, <span class="plainlinks archwiki-template-man" title="$ man 8 systemd-sleep"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-sleep.8">systemd-sleep(8)</a></span>, y <span class="plainlinks archwiki-template-man" title="$ man 7 systemd.special"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.special.7">systemd.special(7)</a></span>.
+</p>
+<h2><span class="mw-headline" id="Hibernar">Hibernar</span></h2>
+<p>Para utilizar la hibernación, necesita crear la partición o el archivo <a href="../es/Swap.html" title="Swap (Español)">swap</a>. Necesitará que el kernel apunte a su swap utilizando el parámetro del kernel <code>resume=</code>, configurado a través del gestor de arranque. También necesitará <a href="#Configurar_initramfs">configurar los initramfs</a>. Esto le dice al kernel que se reanude desde un espacio inicial específico del swap. Abajo se describen en detalle estos tres pasos.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Vea <a href="../es/84afb542e7cada28b45fecb86ba0d58f.html#Con_soporte_para_suspensi%C3%B3n_en_disco" class="mw-redirect" title="Dm-crypt/Swap encryption (Español)">soporte de suspensión en disco</a> cuando utilice el <a href="../es/Data-at-rest_encryption.html" class="mw-redirect" title="Disk encryption (Español)">cifrado</a>.</div>
+<h3>
+<span id="Sobre_el_tama.C3.B1o_de_la_partici.C3.B3n.2Farchivo_swap"></span><span class="mw-headline" id="Sobre_el_tamaño_de_la_partición/archivo_swap">Sobre el tamaño de la partición/archivo swap</span>
+</h3>
+<p>Incluso si su partición swap es más pequeña que la RAM, tiene grandes oportunidades de hibernar correctamente. Acorde con la 
+Even if your swap partition is smaller than RAM, you still have a big chance of hibernating successfully. According to <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/power/interface.txt">documentación del kernel (en inglés)</a>:
+</p>
+<dl><dd><i><code>/sys/power/image_size</code> controla el tamaño de la imagen creada para el mecanismo suspender en disco. Se puede escribir representando un número entero no negativo que se utilizará como límite de la imagen creada, en bytes. El mecanismo suspender en disco se asegurará que la imagen no exceda ese número. Sin embargo, si es imposible, intentará suspender de cualquier forma utilizando la imagen más pequeña posible. Particularmente si en el archivo está escrito un "0" la imagen de suspensión sera lo más pequeña posible. Si se le ese archivo mostrará el actual límite de la imagen, que se establece 2/5 de la RAM disponible por defecto.</i></dd></dl>
+<p>Puede disminuir el valor de <code>/sys/power/image_size</code> para hacer que la imagen sea lo más pequeña que sea posible (para particiones swap pequeñas) o aumentar para acelerar el proceso de hibernación.
+</p>
+<p>Vea <a href="../es/Systemd.html#Archivos_temporales" title="Systemd (Español)">archivos temporales de systemd</a> para hacer este cambio permanente.
+</p>
+<h3>
+<span id="Par.C3.A1metros_necesarios_del_kernel"></span><span class="mw-headline" id="Parámetros_necesarios_del_kernel">Parámetros necesarios del kernel</span>
+</h3>
+<p>El parámetro del kernel <code>resume=<i>swap_partition</i></code> se tiene que usar. Ya sea con el nombre que le asigna el kernel a la partición o su <a href="../es/Persistent_block_device_naming.html#by-uuid" title="Persistent block device naming (Español)">UUID</a> se puede utilizar como <code><i>partición swap</i></code>. Por ejemplo:
+</p>
+<ul>
+<li><code>resume=/dev/sda1</code></li>
+<li><code>resume=UUID=4209c845-f495-4c43-8a03-5363dd433153</code></li>
+<li>
+<code>resume=/dev/archVolumeGroup/archLogicVolume</code> -- Ejemplo utilizando LVM</li>
+</ul>
+<p>Generalmente, el método de nombrar utilizado por el parámetro <code>resume</code> debe de ser el mismo utilizado por el parámetro <code>root</code>.
+</p>
+<p>La configuración depende del <a href="../es/Arch_boot_process.html#Gestor_de_arranque" title="Arch boot process (Español)">gestor de arranque</a> utilizado, para más detalles vea <a href="../es/Kernel_parameters.html" title="Kernel parameters (Español)">parámetros del kernel</a>.
+</p>
+<h4><span class="mw-headline" id="Hibernar_en_un_archivo_swap">Hibernar en un archivo swap</span></h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> <a href="../en/Btrfs.html#Swap_file" title="Btrfs">Btrfs</a> en el kernel Linux antes de la versión 5.0 no soporta archivos swap. Incumplir esta advertencia puede causar que se corrompa el sistema de archivos. Mientras que el archivo swap se utilice en Btrfs cuando está montado a través de un dispositivo loop hace que se degrade severamente el rendimiento de la swap.</div>
+<p>Utilizar un archivo swap en vez de una partición swap requiere un parámetro adicional del kernel <code>resume_offset=<i>compensación_del_archivo_swap</i></code>.
+</p>
+<p>el valor de <code><i>compensación_del_archivo_swap</i></code> se puede obtener ejecutando <code>filefrag -v <i>archivo_swap</i></code>, la salida de este comando esta en un formato de tabla y el valor requerido se localiza en la primera fila de la columna <code>physical_offset</code>. Por ejemplo:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># filefrag -v /swapfile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Filesystem type is: ef53
+File size of /swapfile is 4294967296 (1048576 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:      38912..     38912:      1:            
+   1:        1..   22527:      38913..     61439:  22527:             unwritten
+   2:    22528..   53247:     899072..    929791:  30720:      61440: unwritten
+...
+</pre>
+<p>En el ejemplo el valor de la <code><i>compensación_del_archivo_swap</i></code> es el primer <code>38912</code> con dos puntos.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> El siguiente comando se puede utilizar para identificar la <code><i>compensación_del_archivo_swap</i></code>: <code>filefrag -v /swapfile | awk '{ if($1=="0:"){print $4} }'</code>.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Antes de hibernar por primera vez es necesario reiniciar para activar la característica.</li>
+<li>el valor de <code><i>compensación_del_archivo_swap</i></code> se puede obtener también ejecutando <code>swap-offset <i>archivo_swap</i></code>. El binario <i>swap-offset</i> lo proporciona el conjunto de herramientas <a href="../en/Uswsusp.html" title="Uswsusp">uswsusp (en inglés)</a>. Si utiliza este método después se tiene que proporcionar estos dos parámetros en <code>/etc/suspend.conf</code> a través de <code>resume device</code> y <code>resume offset</code>. No se necesita reiniciar en este caso.</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> Puede que quiera disminuir el <a href="../es/Swap.html#Swappiness" title="Swap (Español)">swappiness</a> de su archivo swap si el único objetivo es ser capaz de hibernar y no expandir la RAM.</div>
+<h3><span class="mw-headline" id="Configurar_initramfs">Configurar initramfs</span></h3>
+<ul><li>Cuando se utiliza el hook <code>base</code> en el <a href="../es/Arch_boot_process.html#initramfs" title="Arch boot process (Español)">initramfs</a>, que está por defecto, es necesario el hook <code>resume</code> en <code>/etc/mkinitcpio.conf</code>. La partición swap está referenciada, ya sea por etiqueta o por UUID, a un nodo del dispositivo udev, por tanto el hook <code>resume</code> debe de ir <i>después</i> del hook <code>udev</code>. Este ejemplo se ha realizado partiendo de la configuración por defecto:</li></ul>
+<dl><dd><pre>HOOKS=(base udev autodetect keyboard modconf block filesystems <b>resume</b> fsck)</pre></dd></dl>
+<dl><dd>Recuerde <a href="../es/Mkinitcpio.html#Creaci%C3%B3n_de_la_imagen_y_activaci%C3%B3n" title="Mkinitcpio (Español)">regenerar los initramfs</a> para que los cambios surtan efecto.</dd></dl>
+<dl><dd><div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Los usuarios <a href="../es/LVM.html" title="LVM (Español)">LVM</a> deben añadir el hook <code>resume</code> después de <code>lvm2</code>.</div></dd></dl>
+<ul><li>Cuando se utiliza el hook <code>systemd</code> en el initramfs ya se proporciona el mecanismo de reanudación y no se necesita añadir nuevos hooks.</li></ul>
+<h2>
+<span id="Soluci.C3.B3n_de_problemas"></span><span class="mw-headline" id="Solución_de_problemas">Solución de problemas</span>
+</h2>
+<h3><span class="mw-headline" id="ACPI_OS_NAME">ACPI_OS_NAME</span></h3>
+<p>Puede que quiera retocar su <b>tabla DSDT</b> para hacer que funcione. Vea el artículo <a href="../en/DSDT.html" title="DSDT">DSDT (en inglés)</a>.
+</p>
+<h3><span class="mw-headline" id="Usuarios_VAIO">Usuarios VAIO</span></h3>
+<p>Añada el <a href="../es/Kernel_parameters.html" title="Kernel parameters (Español)">parámetro del kernel</a> <code>acpi_sleep=nonvs</code> a su gestor de arranque.
+</p>
+<h3>
+<span id="Suspender.2Fhibernar_no_funciona_o_no_es_consistente"></span><span class="mw-headline" id="Suspender/hibernar_no_funciona_o_no_es_consistente">Suspender/hibernar no funciona o no es consistente</span>
+</h3>
+<p>Ha habido muchos informes sobre que la pantalla se vuelve negra sin ver los errores fácilmente o poder hacer algo cuando se va a suspender/hibernar y vuelve atrás. Estos problemas se han visto tanto en portátiles como en escritorio. Esta es una solución no oficial pero cambiar a un kernel más antiguo, especialmente un kernel-LTS, resolverá probablemente este problema.
+</p>
+<p>También puede surgir el problema cuando se utiliza un temporizador de vigilancia hardware (desactivado por defecto, vea <code>RuntimeWatchdogSec=</code> en <span class="plainlinks archwiki-template-man" title="$ man 5 systemd-system.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-system.conf.5#OPCIONES">systemd-system.conf(5) § OPCIONES</a></span>). Un temporizador con errores puede reiniciar el ordenador antes de que se cree la imagen de hibernación.
+</p>
+<p>A veces la pantalla se vuelve negra en el inicio del dispositivo desde dentro del initramfs. Eliminar cualquier módulo que puede que tenga en <a href="../es/Mkinitcpio.html#M%C3%93DULOS" title="Mkinitcpio (Español)">mkinitcpio</a> y reconstruir los initramfs, posiblemente puede solucionar este error, especialmente con controladores gráficos para <a href="../es/Kernel_mode_setting.html#Iniciar_de_forma_anticipada_KMS" title="Kernel mode setting (Español)">iniciar de forma anticipada KMS</a>. Iniciar tales dispositivos antes de reanudar puede causar inconsistencias que evitan reanudar desde la hibernación. Esto no afecta a reanudar desde RAM. También compruebe el artículo del blog <a rel="nofollow" class="external text" href="https://01.org/blogs/rzhang/2015/best-practice-debug-linux-suspend/hibernate-issues">mejores prácticas para depurar errores de suspensión</a>.
+</p>
+<p>Para los controladores gráficos de Intel, activar KMS anticipado puede ayudar a solucionar el problema de la pantalla en negro. Vea <a href="../es/Kernel_mode_setting.html#Iniciar_de_forma_anticipada_KMS" title="Kernel mode setting (Español)">iniciar de forma anticipada KMS</a> para más detalles.
+</p>
+<p>Después de actualizar al kernel 4.15.3 puede fallar al reanudar con un cursor estático (sin parpadear) en la pantalla negra. 
+After upgrading to kernel 4.15.3, resume may fail with a static (non-blinking) cursor on a black screen. Poner en el módulo <code>nvidiafb</code> en la <a href="../es/Kernel_module.html#Lista_negra" title="Kernel module (Español)">lista negra</a> puede ayudar. <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=234646">[1]</a>
+</p>
+<h3><span class="mw-headline" id="Wake-on-LAN">Wake-on-LAN</span></h3>
+<p>Si <a href="../en/Wake-on-LAN.html" title="Wake-on-LAN">wake-on-LAN</a> está activado la tarjeta de red consumirá energía incluso si el ordenador está hibernado.
+</p>
+<h3>
+<span id="Despertar_instant.C3.A1neo_desde_la_suspensi.C3.B3n"></span><span class="mw-headline" id="Despertar_instantáneo_desde_la_suspensión">Despertar instantáneo desde la suspensión</span>
+</h3>
+<p>Se informa que para algunos sistemas Intel Haswell con el chipset LynxPoint y LynxPoint-LP se despiertan de forma instantánea después de suspender. Estos enlazan de forma errónea a las implementaciones ACPI BIOS y como lo interpreta el modulo <code>xhci_hcd</code> durante el inicio. Como un trabajo por turnos los sistemas afectados y reportados se añaden a una lista negra (llamada <code>XHCI_SPURIOUS_WAKEUP</code>) en el núcleo caso por caso. <a rel="nofollow" class="external autonumber" href="https://bugzilla.kernel.org/show_bug.cgi?id=66171#c6">[2]</a> 
+</p>
+<p>Puede que se despierte de forma instantánea debido a un dispositivo USB que está conectado durante la suspensión y los disparadores ACPI para despertar el dispositivo se activan. Una solución viable para dichos sistemas es desactivar los disparadores para despertar el dispositivo si no están aún en la lista negra. A continuación un ejemplo para desactivar el despertar a través del USB. <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617">[3]</a> 
+</p>
+<p>Para ver la configuración actual:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/acpi/wakeup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Device  S-state   Status   Sysfs node
+...
+EHC1      S3    *enabled  pci:0000:00:1d.0
+EHC2      S3    *enabled  pci:0000:00:1a.0
+XHC       S3    *enabled  pci:0000:00:14.0
+...
+</pre>
+<p>Los dispositivos relevantes son <code>EHC1</code>, <code>EHC2</code> y <code>XHC</code> (para USB 3.0). Para cambiar su estado tiene que repetir el nombre del dispositivo al archivo como root.
+</p>
+<pre># echo EHC1 &gt; /proc/acpi/wakeup
+# echo EHC2 &gt; /proc/acpi/wakeup
+# echo XHC &gt; /proc/acpi/wakeup
+</pre>
+<p>Esto hará que la suspensión vuelva a funcionar otra vez. Sin embargo estos ajustes son temporales y debe de establecerlos en cada reinicio. Para automatizar eche un vistazo a <a href="../es/Systemd.html#Escribir_archivos_de_unidad" title="Systemd (Español)">escribir archivos unitarios</a>. Vea el <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617#p1575617">hilo BBS</a> para una posible solución y más información.
+</p>
+<p>Si utiliza el controlador <code>nouveau</code> la razón para el despertar instantáneo puede ocurrir por un error en el controlador que a veces previene que se suspenda la tarjeta gráfica. Una posible solución es no cargar el módulo del núcleo <code>nouveau</code> antes de suspender y cargarlo después de despertar. Para hacerlo cree el siguiente script:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/lib/systemd/system-sleep/10-nouveau.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+case $1/$2 in
+  pre/*)
+    # echo "Going to $2..."
+    /usr/bin/echo "0" &gt; /sys/class/vtconsole/vtcon1/bind
+    /usr/bin/rmmod nouveau
+    ;;
+  post/*)
+    # echo "Waking up from $2..."
+    /usr/bin/modprobe nouveau
+    /usr/bin/echo "1" &gt; /sys/class/vtconsole/vtcon1/bind
+    ;;
+esac</pre>
+<p>La primera línea echo desata nouveaufb del controlador del dispositivo de almacenamiento de fotogramas de la consola (fbcon). Normalmente es <code>vtcon1</code> como en este ejemplo, pero puede haber otro <code>vtcon*</code>. Vea <code>/sys/class/vtconsole/vtcon*/name</code> que uno de ellos es un "dispositivo de almacenamiento de fotogramas" <a rel="nofollow" class="external autonumber" href="https://nouveau.freedesktop.org/wiki/KernelModeSetting/">[4]</a>.
+</p>
+<h3><span class="mw-headline" id="El_sistema_no_se_apaga_cuando_hiberna">El sistema no se apaga cuando hiberna</span></h3>
+<p>Cuando hiberna sus sistema el sistema se debe de apagar (después de guardar el estado en el disco). A veces puede que vea el LED de energía siga encendido. Si esto ocurre puede ser recomendable establecer el <code>HibernateMode</code> a <code>shutdown</code> en <span class="plainlinks archwiki-template-man" title="$ man 5 sleep.conf.d"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sleep.conf.d.5">sleep.conf.d(5)</a></span>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/sleep.conf.d/hibernatemode.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Sleep]
+HibernateMode=shutdown</pre>
+<p>Con la configuración de arriba, si todo lo demás está configurado correctamente, en la invocación a <code>systemctl hibernate</code> el sistema se apagará guardando el estado en el disco.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Power_management.html" title="Category:Power management (Español)">Power management (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Power_management_(Espa%C3%B1ol)/Suspend_and_hibernate_(Espa%C3%B1ol)&amp;oldid=638585">https://wiki.archlinux.org/index.php?title=Power_management_(Español)/Suspend_and_hibernate_(Español)&amp;oldid=638585</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

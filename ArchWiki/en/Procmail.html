@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Procmail - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Procmail rootpage-Procmail skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Procmail</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Procmail is unmaintained (last update 2001), the author recommends to use something else.<a rel="nofollow" class="external autonumber" href="https://marc.info/?l=openbsd-ports&amp;m=141634350915839&amp;w=2">[1]</a> An example for an alternative is <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/courier-maildrop/">courier-maildrop</a></span><sup><small>AUR</small></sup>.</div>
+<p><a href="https://en.wikipedia.org/wiki/procmail" class="extiw" title="wikipedia:procmail">Procmail</a> is a program for filtering, sorting and storing email. It can be used both on mail clients and mail servers. 
+It can be used to filter out spam, checking for viruses, to send automatic replies, etc.
+</p>
+<p>The goal of this article is to teach the configuration of procmail. This article assumes you already have either a email client (<a href="../en/Mutt.html" title="Mutt">Mutt</a>, <a href="../en/Nmh.html" title="Nmh">nmh</a>, etc) or a mail server (<a href="../en/Sendmail.html" title="Sendmail">Sendmail</a>, <a href="../en/Postfix.html" title="Postfix">Postfix</a>, etc) working, that can use (or requires) procmail. It also assumes you have at least basic knowledge on regular expressions. This article will give only a minimal explanation, for a complete manual, check the <span class="plainlinks archwiki-template-man" title="$ man 5 procmailrc"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/procmailrc.5">procmailrc(5)</a></span>
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Assignments"><span class="tocnumber">2.1</span> <span class="toctext">Assignments</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Recipes"><span class="tocnumber">2.2</span> <span class="toctext">Recipes</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Flags_and_lockfile"><span class="tocnumber">2.2.1</span> <span class="toctext">Flags and lockfile</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Conditions"><span class="tocnumber">2.2.2</span> <span class="toctext">Conditions</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Action"><span class="tocnumber">2.2.3</span> <span class="toctext">Action</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Tips_and_tricks"><span class="tocnumber">3</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#SpamAssassin"><span class="tocnumber">3.1</span> <span class="toctext">SpamAssassin</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#ClamAV"><span class="tocnumber">3.2</span> <span class="toctext">ClamAV</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Filtering_mail_to_a_different_mailbox"><span class="tocnumber">3.3</span> <span class="toctext">Filtering mail to a different mailbox</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Postfix_Piping"><span class="tocnumber">3.4</span> <span class="toctext">Postfix Piping</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Exim"><span class="tocnumber">3.5</span> <span class="toctext">Exim</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Sending_to_Dovecot"><span class="tocnumber">3.6</span> <span class="toctext">Sending to Dovecot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=procmail">procmail</a></span> from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>The configuration is going to be saved on <code>~/.procmailrc</code> if this is the configuration for an email client, or on <code>/etc/procmailrc</code> if is going to be used by an email server.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Be careful when testing your procmail configuration on sample messages you have received, as messages can be automatically bounced back to sender if there is an error in your configuration file. To avoid this potentially embarrassing situation, turn off bounces by passing <code>-t</code> to <code>procmail</code>, or setting the <code>DELIVERED</code> environment variable (<span class="plainlinks archwiki-template-man" title="$ man 5 procmailrc"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/procmailrc.5">procmailrc(5)</a></span>).</div>
+<p>The configuration is composed of two sections; <b>assignments</b> and <b>recipes</b>.
+</p>
+<h3><span class="mw-headline" id="Assignments">Assignments</span></h3>
+<p>The assignments section provides variables for procmail
+</p>
+<pre>PATH=/bin:/usr/bin
+MAILDIR=$HOME/Mail
+DEFAULT=$HOME/Mail/inbox
+LOGFILE=/dev/null
+SHELL=/bin/sh
+</pre>
+<h3><span class="mw-headline" id="Recipes">Recipes</span></h3>
+<p>Recipes are the main section, they are the actual filters that do the actions.
+Recipes have the following format:
+</p>
+<pre>:0 [flags] [ : [locallockfile] ]
+&lt;zero or more conditions (one per line)&gt;
+&lt;exactly one action line&gt;
+</pre>
+<p>The conditions are extended regular expressions, with some few extra options. Conditions always start with an asterisk.
+</p>
+<p>The action can be only a mailbox name, or an external program.
+</p>
+<h4><span class="mw-headline" id="Flags_and_lockfile">Flags and lockfile</span></h4>
+<p>For basic recipes, you do not need any flags. But they can be necessary if your script calls an external command.
+Here is a list of some of the most used flags:
+</p>
+<ul>
+<li>
+<b>f</b> Consider the pipe as a filter.</li>
+<li>
+<b>w</b> Wait for the filter or program to finish and check its exitcode (normally ignored); if the filter is unsuccessful, then the text will not have been filtered.</li>
+</ul>
+<p>Using a <code>:</code> after the <code>:0</code> is to use a lockfile. A lockfile is necessary to prevent problems if 2 or more instances of procmail are working at the same time (that may happen if 2 or more email arrive almost at the same moment).
+</p>
+<p>You can set the name of the lockfile after the <code>:</code>
+</p>
+<h4><span class="mw-headline" id="Conditions">Conditions</span></h4>
+<p>A condition starts with an asterisk, following an extended regexp, like this one:
+</p>
+<pre>* ^From.* someperson@\w+.com</pre>
+<h4><span class="mw-headline" id="Action">Action</span></h4>
+<p>An action can be something as simple as 
+</p>
+<pre>work</pre>
+<p>in that case, the mail that complies with the condition will be saved in the <code>work</code> inbox.
+</p>
+<p>An action can also start with a pipe, which means the message is going to be passed to the standard input of the command following the pipe. For example: 
+</p>
+<pre>| /usr/bin/vendor_perl/spamc 
+</pre>
+<p>By default, once a recipe's action is done, the processing is over. 
+</p>
+<p>If the <b>f</b> flag was used, the command can alter the message and keep reading recipes. In this example, the SpamAssassin command will add headers to the mail, with its spam status level, which later can be used by <b>another recipe</b> to block it, or store it on a different mailbox.
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="SpamAssassin">SpamAssassin</span></h3>
+<p>Here is an example using SpamAssassin to block spam. You should already have SpamAssassin installed and working.
+</p>
+<pre># By using the f and w flags and no condition, SpamAssassin is going add the X-Spam headers to every single mail, and then process other recipes.
+# No lockfile is used.
+:0fw
+| /usr/bin/vendor_perl/spamc
+
+# Messages with a 5 stars or higher spam level are going to be deleted right away
+# And since we never touch any inbox, no lockfile is needed.
+:0
+* ^X-Spam-Level: \*\*\*\*\*
+/dev/null
+
+# If a mail with spam-status:yes was not deleted by previous line, it could be a false positive. So its going to be sent to an spam mailbox instead.
+# Since we do not want the possibility of one procmail instance messing with another procmail instance, we use a lockfile
+:0:
+* ^X-Spam-Status: Yes
+$HOME/mail/Spam
+</pre>
+<h3><span class="mw-headline" id="ClamAV">ClamAV</span></h3>
+<p>An example using the <a href="../en/ClamAV.html" title="ClamAV">ClamAV</a> antivirus.
+</p>
+<pre># We make sure its going to use the sh shell. Mostly needed for mail-only account that have /sbin/nologin as shell
+SHELL=/bin/sh
+
+# We will scan the mail with clam using the standard input, and saving the result on the AV_REPORT variable
+AV_REPORT=`clamdscan --stdout --no-summary - |sed 's/^stream: //'`
+
+# We check if the word FOUND was in the result and save "Yes" or "No" according to that
+VIRUS=`echo $AV_REPORT|sed '/FOUND/ { s/.*/Yes/; q  };  /FOUND/  !s/.*/No/'`
+
+# formail is a filter that can alter a mail message, while keeping the correct format. We use it here to add/alter a header called 
+# X-Virus with either value Yes or No
+:0fw
+| formail -i "X-Virus: $VIRUS"
+
+# And if we just added "X-Virus: Yes", we will also add another header with the scan result, and alter the subject, again, with the scan result.
+# Since we are using the f flag, the mail is going to be delivered anyway.
+:0fw
+* ^X-Virus: Yes
+| formail -i "X-Virus-Report: $AV_REPORT" -i "Subject: [Virus] $AV_REPORT"
+</pre>
+<h3><span class="mw-headline" id="Filtering_mail_to_a_different_mailbox">Filtering mail to a different mailbox</span></h3>
+<p>If a coworker keeps using <i>forward</i> to send you jokes and other non serious stuff, but at the same time, writes you work related mails, you could save the forwarded mails (most likely not-work-related mails) on a different mailbox.
+</p>
+<pre>:0:
+* ^From.*coworker@domain.com
+* ^Subject.*FW:
+$HOME/mail/jokes
+</pre>
+<h3><span class="mw-headline" id="Postfix_Piping">Postfix Piping</span></h3>
+<p>To pipe from <a href="../en/Postfix.html" title="Postfix">postfix</a> open <code>/etc/postfix/main.cf</code> then add
+</p>
+<pre>mailbox_command = /usr/bin/procmail -a "$EXTENSION"
+</pre>
+<p>After <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Reload">reloading</a> <code>postfix.service</code>, email will be send to procmail for filtering and delivery.
+</p>
+<h3><span class="mw-headline" id="Exim">Exim</span></h3>
+<p>To use with <a href="../en/Exim.html" title="Exim">Exim</a>, invoke <code>procmail</code> in the <code>.forward</code> file, or edit <code>/etc/mail/exim.conf</code> to use it directly as a local delivery agent:
+</p>
+<pre># under "Routers" (order important, define before the "localuser:" router)
+procmail:
+  driver = accept
+  check_local_user
+  # only invoke procmail for users with a conf file:
+  require_files = $local_part_data:$home/.procmailrc
+  transport = procmail_pipe
+
+# under "Transports" (in any order)
+procmail_pipe:
+  driver = pipe
+  command = /usr/bin/procmail -d $local_part_data
+  return_path_add
+  delivery_date_add
+  envelope_to_add
+  # Next 2 lines unneeded unless using obsolete MBOX files
+  # check_string = "From "
+  # escape_string = "&gt;From "
+  umask = 077
+  user = $local_part_data
+  group = mail
+</pre>
+<p>This was tested on Arch's standard Exim 4.94-2 package.
+</p>
+<h3><span class="mw-headline" id="Sending_to_Dovecot">Sending to Dovecot</span></h3>
+<p>To forward to <a href="../en/Dovecot.html" title="Dovecot">dovecot</a> change the following assignments
+</p>
+<p>The deliver will be the first attempt then Default will be the back up.
+</p>
+<pre>DELIVER="/usr/lib/dovecot/deliver -d $LOGNAME"
+DEFAULT="$HOME/Maildir/"
+MAILDIR="$HOME/Maildir/"
+</pre>
+<p>The advantage is the dovecot will have its databases up to date at all times. 
+</p>
+<p>Then to spam mail and deliver for example 
+</p>
+<pre># deliver spam to spam folder
+:0 w
+* ^X-Spam-Status: Yes
+| $DELIVER -m Spam
+
+# deliver to INBOX and stop
+:0 w
+| $DELIVER
+</pre>
+<p>Further information can be found here <a rel="nofollow" class="external free" href="http://wiki2.dovecot.org/procmail">http://wiki2.dovecot.org/procmail</a> 
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.procmail.org/">Procmail Homepage</a></li>
+<li><a rel="nofollow" class="external text" href="https://web.archive.org/web/20151013184044/http://www.procmail.org/">Last working version of the Procmail Homepage from the Web Archive</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Email.html" title="Category:Email">Email</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Procmail&amp;oldid=624840">https://wiki.archlinux.org/index.php?title=Procmail&amp;oldid=624840</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 July 2020, at 02:45.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Easy-RSA - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Easy-RSA rootpage-Easy-RSA skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Easy-RSA</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>The first step when setting up <a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a> is to create a <a href="https://en.wikipedia.org/wiki/Public_key_infrastructure" class="extiw" title="wikipedia:Public key infrastructure">Public Key Infrastructure (PKI)</a>.  In summary, this consists of:
+</p>
+<ul>
+<li>A public master <a href="https://en.wikipedia.org/wiki/Certificate_Authority" class="extiw" title="wikipedia:Certificate Authority">Certificate Authority (CA)</a> certificate and a private key.</li>
+<li>A separate public certificate and private key pair for each server.</li>
+<li>A separate public certificate and private key pair for each client.</li>
+</ul>
+<p>One can think of the key-based authentication in terms similar to that of how <a href="../en/SSH_keys.html" title="SSH keys">SSH keys</a> work with the added layer of a signing authority (the CA).  OpenVPN relies on a bidirectional authentication strategy, so the client must authenticate the server's certificate and in parallel, the server must authenticate the client's certificate.  This is accomplished by the 3rd party's signature (the CA) on both the client and server certificates.  Once this is established, further checks are performed before the authentication is complete.  For more details, see <a rel="nofollow" class="external text" href="https://www.secure-computing.net/openvpn/howto.php#pki">secure-computing's guide</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>The process outlined below requires users to securely transfer private key files to/from machines. For the purposes of this guide, using scp is shown, but readers may employ alternative methods as well.  Since the Arch default is to deny the root user over ssh, using scp requires transferring ownership of the files to be exported to a non-root user called <i>foo</i> throughout the guide.</li>
+<li>Avoid generating keys on devices without a good entropy source. See <a rel="nofollow" class="external autonumber" href="https://community.openvpn.net/openvpn/wiki/GettingStartedwithOVPN#Configuringencryption">[1]</a>. Sometimes, <a href="../en/Random_number_generation.html#Alternatives" title="Random number generation">cryptographically secure pseudorandom number generators</a> can be used.</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Certificate_Authority_(CA)"><span class="tocnumber">1</span> <span class="toctext">Certificate Authority (CA)</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#OpenVPN_server_files"><span class="tocnumber">2</span> <span class="toctext">OpenVPN server files</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#CA_public_certificate"><span class="tocnumber">2.1</span> <span class="toctext">CA public certificate</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Server_certificate_and_private_key"><span class="tocnumber">2.2</span> <span class="toctext">Server certificate and private key</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Diffie-Hellman_(DH)_parameters_file"><span class="tocnumber">2.3</span> <span class="toctext">Diffie-Hellman (DH) parameters file</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Hash-based_Message_Authentication_Code_(HMAC)_key"><span class="tocnumber">2.4</span> <span class="toctext">Hash-based Message Authentication Code (HMAC) key</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#OpenVPN_client_files"><span class="tocnumber">3</span> <span class="toctext">OpenVPN client files</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Client_certificate_and_private_key"><span class="tocnumber">3.1</span> <span class="toctext">Client certificate and private key</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Sign_the_certificates_and_pass_them_back_to_the_server_and_clients"><span class="tocnumber">4</span> <span class="toctext">Sign the certificates and pass them back to the server and clients</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Obtain_and_sign_the_certificates_on_the_CA"><span class="tocnumber">4.1</span> <span class="toctext">Obtain and sign the certificates on the CA</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Pass_the_signed_certificates_back_to_the_server_and_client(s)"><span class="tocnumber">4.2</span> <span class="toctext">Pass the signed certificates back to the server and client(s)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Revoking_certificates_and_alerting_the_OpenVPN_server"><span class="tocnumber">5</span> <span class="toctext">Revoking certificates and alerting the OpenVPN server</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#Revoke_a_certificate"><span class="tocnumber">5.1</span> <span class="toctext">Revoke a certificate</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Alert_the_OpenVPN_server"><span class="tocnumber">5.2</span> <span class="toctext">Alert the OpenVPN server</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#Abbreviated_example_specifically_for_containerized_Openvpn"><span class="tocnumber">6</span> <span class="toctext">Abbreviated example specifically for containerized Openvpn</span></a></li>
+<li class="toclevel-1 tocsection-16"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Certificate_Authority_.28CA.29"></span><span class="mw-headline" id="Certificate_Authority_(CA)">Certificate Authority (CA)</span>
+</h2>
+<p>For security purposes, it is recommended that the CA machine be separate from the machine running OpenVPN.
+</p>
+<p>On the <b>CA machine</b>, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=easy-rsa">easy-rsa</a></span>, initialize a new PKI and generate a CA keypair that will be used to sign certificates:
+</p>
+<pre># cd /etc/easy-rsa
+# export EASYRSA=$(pwd)
+# easyrsa init-pki
+# easyrsa build-ca
+</pre>
+<p>Starting from OpenVPN 2.4, one can also use elliptic curves for TLS connections (e.g. tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384). Elliptic curve cryptography provides more security and eliminates the need for a Diffie-Hellman parameters file. See <a rel="nofollow" class="external autonumber" href="https://forums.openvpn.net/viewtopic.php?f=4&amp;t=23227">[2]</a> and <a rel="nofollow" class="external autonumber" href="https://www.maths.tcd.ie/~fionn/misc/ec_vpn.php">[3]</a>.
+</p>
+<p>Append the following lines to <code>/etc/easy-rsa/vars</code> to make Easy-RSA use elliptic curves:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/easy-rsa/vars</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">set_var EASYRSA_ALGO ec
+set_var EASYRSA_CURVE secp521r1
+set_var EASYRSA_DIGEST "sha512"
+set_var EASYRSA_NS_SUPPORT "yes"
+</pre>
+<p>Now set up PKI and generate a CA certificate:
+</p>
+<pre># cd /etc/easy-rsa
+# export EASYRSA=$(pwd)
+# export EASYRSA_VARS_FILE=/etc/easy-rsa/vars
+# easyrsa init-pki
+# easyrsa build-ca
+</pre>
+<h2><span class="mw-headline" id="OpenVPN_server_files">OpenVPN server files</span></h2>
+<p>A functional OpenVPN server requires the following:
+</p>
+<ol>
+<li>The CA's public certificate</li>
+<li>The Diffie-Hellman (DH) parameters file (required by TLS mode when not using TLS with elliptic curves).</li>
+<li>The server key pair (a public certificate and a private key).</li>
+<li>The Hash-based Message Authentication Code (HMAC) key.</li>
+</ol>
+<p>Upon completing the steps outlined in this article, users will have generated the following files on the server:
+</p>
+<ol>
+<li><code>/etc/openvpn/server/ca.crt</code></li>
+<li>
+<code>/etc/openvpn/server/dh.pem</code> (not when using TLS with elliptic curves)</li>
+<li>
+<code>/etc/openvpn/server/servername.crt</code> and <code>/etc/openvpn/server/servername.key</code>
+</li>
+<li><code>/etc/openvpn/server/ta.key</code></li>
+</ol>
+<h3><span class="mw-headline" id="CA_public_certificate">CA public certificate</span></h3>
+<p>The CA public certificate <code>/etc/easy-rsa/pki/ca.crt</code> generated in the previous step needs to be copied over to the machine that will be running OpenVPN.
+</p>
+<p>On the <b>CA machine</b>:
+</p>
+<pre># scp /etc/easy-rsa/pki/ca.crt foo@hostname-of-openvpn-server:/tmp/ca.crt
+</pre>
+<p>On the <b>OpenVPN server machine</b>:
+</p>
+<pre># mv /tmp/ca.crt /etc/openvpn/server/
+# chown root:root /etc/openvpn/server/ca.crt
+</pre>
+<h3><span class="mw-headline" id="Server_certificate_and_private_key">Server certificate and private key</span></h3>
+<p>On the <b>OpenVPN server machine</b>, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=easy-rsa">easy-rsa</a></span> and generate a key pair for the server:
+</p>
+<pre># cd /etc/easy-rsa
+# easyrsa init-pki
+# easyrsa gen-req servername nopass
+# cp /etc/easy-rsa/pki/private/servername.key /etc/openvpn/server/
+</pre>
+<p>This will create two files:
+</p>
+<p><code>/etc/easy-rsa/pki/reqs/servername.req</code>
+<code>/etc/easy-rsa/pki/private/servername.key</code>
+</p>
+<h3>
+<span id="Diffie-Hellman_.28DH.29_parameters_file"></span><span class="mw-headline" id="Diffie-Hellman_(DH)_parameters_file">Diffie-Hellman (DH) parameters file</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are using TLS with elliptic curves, skip this step.</div>
+<p>On the <b>OpenVPN server machine</b>, create the initial dh.pem file:
+</p>
+<pre># openssl dhparam -out /etc/openvpn/server/dh.pem 2048
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Although values higher than 2048 (4096 for example) may be used, they take considerably more time to generate and offer little benefit in security but advisable to have the DH prime number length to match the length of the RSA key. See <a rel="nofollow" class="external autonumber" href="https://community.openvpn.net/openvpn/wiki/GettingStartedwithOVPN#Configuringencryption">[4]</a>
+</div>
+<h3>
+<span id="Hash-based_Message_Authentication_Code_.28HMAC.29_key"></span><span class="mw-headline" id="Hash-based_Message_Authentication_Code_(HMAC)_key">Hash-based Message Authentication Code (HMAC) key</span>
+</h3>
+<p>On the <b>OpenVPN server machine</b>, create the HMAC key:
+</p>
+<pre># openvpn --genkey secret /etc/openvpn/server/ta.key
+</pre>
+<p>This will be used to add an additional HMAC signature to all SSL/TLS handshake packets.  In addition any UDP packet not having the correct HMAC signature will be immediately dropped, protecting against:
+</p>
+<ul>
+<li>Portscanning.</li>
+<li>DOS attacks on the OpenVPN UDP port.</li>
+<li>SSL/TLS handshake initiations from unauthorized machines.</li>
+<li>Any eventual buffer overflow vulnerabilities in the SSL/TLS implementation.</li>
+</ul>
+<h2><span class="mw-headline" id="OpenVPN_client_files">OpenVPN client files</span></h2>
+<h3><span class="mw-headline" id="Client_certificate_and_private_key">Client certificate and private key</span></h3>
+<p>Any machine can generate client files provided that <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=easy-rsa">easy-rsa</a></span> is installed.
+</p>
+<p>If the pki is not initialized, do so via:
+</p>
+<pre># cd /etc/easy-rsa
+# easyrsa init-pki
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> As seen in <a href="#Certificate_Authority_(CA)">Certificate Authority</a> section, it is possible to use Elliptic curve instead of RSA for client certificate too by defining EC configuration in <code>/etc/easy-rsa/vars</code> and then exporting it.
+<pre># export EASYRSA=$(pwd)
+# export EASYRSA_VARS_FILE=/etc/easy-rsa/vars
+</pre>
+<p>Else it's possible not to use the <a rel="nofollow" class="external text" href="https://github.com/OpenVPN/easy-rsa/blob/master/doc/EasyRSA-Advanced.md#environmental-variables-reference">Environmental Variables</a> and use the corresponding options instead, eg.
+</p>
+<pre># easyrsa --use-algo=ec --curve=secp521r1 --digest=sha512 init-pki
+</pre>
+</div>
+<p>Generate the client key and certificate:
+</p>
+<pre># cd /etc/easy-rsa
+# easyrsa gen-req client1 nopass
+</pre>
+<p>This will create two files:
+</p>
+<p><code>/etc/easy-rsa/pki/reqs/client1.req</code>
+<code>/etc/easy-rsa/pki/private/client1.key</code>
+</p>
+<p>The gen-req set can be repeated as many times as needed for additional clients.
+</p>
+<h2><span class="mw-headline" id="Sign_the_certificates_and_pass_them_back_to_the_server_and_clients">Sign the certificates and pass them back to the server and clients</span></h2>
+<h3><span class="mw-headline" id="Obtain_and_sign_the_certificates_on_the_CA">Obtain and sign the certificates on the CA</span></h3>
+<p>The server and client(s) certificates need to be signed by the CA then transferred back to the OpenVPN server/client(s).
+</p>
+<p>On the <b>OpenVPN server</b> (or the box used to generate the certificate/key pairs):
+</p>
+<pre># cp /etc/easy-rsa/pki/reqs/*.req /tmp
+# chown foo /tmp/*.req
+</pre>
+<p>Securely transfer the files to the CA machine for signing:
+</p>
+<pre>$ scp /tmp/*.req foo@hostname-of-CA:/tmp
+</pre>
+<p>On the <b>CA machine</b>, import and sign the certificate requests:
+</p>
+<pre># cd /etc/easy-rsa
+# easyrsa import-req /tmp/servername.req servername
+# easyrsa import-req /tmp/client1.req client1
+# easyrsa sign-req server servername
+# easyrsa sign-req client client1
+</pre>
+<p>This will create the following signed certificates which can be transferred back to their respective machines:
+</p>
+<p><code>/etc/easy-rsa/pki/issued/servername.crt</code>
+<code>/etc/easy-rsa/pki/issued/client1.crt</code>
+</p>
+<p>The leftover .req files can be safely deleted:
+</p>
+<pre># rm -f /tmp/*.req
+</pre>
+<h3>
+<span id="Pass_the_signed_certificates_back_to_the_server_and_client.28s.29"></span><span class="mw-headline" id="Pass_the_signed_certificates_back_to_the_server_and_client(s)">Pass the signed certificates back to the server and client(s)</span>
+</h3>
+<p>On the <b>CA machine</b>, copy the signed certificates and transfer them to the server/client(s):
+</p>
+<pre># cp /etc/easy-rsa/pki/issued/*.crt /tmp
+# chown foo /tmp/*.crt
+$ scp /tmp/*.crt foo@hostname-of-openvpn_server:/tmp
+</pre>
+<p>On the <b>OpenVPN server</b>, move the certificates in place and reassign ownership.
+For the server:
+</p>
+<pre># mv /tmp/servername.crt /etc/openvpn/server/
+# chown root:root /etc/openvpn/server/servername.crt
+</pre>
+<p>For the client:
+</p>
+<pre># mkdir /etc/easy-rsa/pki/signed
+# mv /tmp/client1.crt /etc/easy-rsa/pki/signed
+</pre>
+<p>That is it.  To generate the client profile. See: <a href="../en/OpenVPN.html#ovpngen" title="OpenVPN">OpenVPN#ovpngen</a>.
+</p>
+<h2><span class="mw-headline" id="Revoking_certificates_and_alerting_the_OpenVPN_server">Revoking certificates and alerting the OpenVPN server</span></h2>
+<h3><span class="mw-headline" id="Revoke_a_certificate">Revoke a certificate</span></h3>
+<p>Over time, it may become necessary to revoke a certificate thus denying access to the affected user(s).  This example revokes the "client1" certificate.
+</p>
+<p>On the <b>CA machine</b>:
+</p>
+<pre># cd /etc/easy-rsa
+# easyrsa revoke client1
+# easyrsa gen-crl
+</pre>
+<p>This will produce the CRL file <code>/etc/easy-rsa/pki/crl.pem</code> that needs to be transferred to the OpenVPN server and made active there.
+</p>
+<h3><span class="mw-headline" id="Alert_the_OpenVPN_server">Alert the OpenVPN server</span></h3>
+<p>On the <b>CA machine</b>:
+</p>
+<pre># cp /etc/easy-rsa/pki/crl.pem /tmp
+# chown foo /tmp/crl.pem
+</pre>
+<p>On the <b>OpenVPN machine</b>, copy <code>crl.pem</code> and inform the server to read it:
+</p>
+<pre># mv /tmp/crl.pem /etc/openvpn/server/
+# chown root:root /etc/openvpn/server/crl.pem
+</pre>
+<p>Edit <code>/etc/openvpn/server/server.conf</code> uncommenting the crl-verify directive, then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> openvpn-server@server.service to re-read it:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/server/server.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">.
+crl-verify /etc/openvpn/server/crl.pem
+.
+</pre>
+<h2><span class="mw-headline" id="Abbreviated_example_specifically_for_containerized_Openvpn">Abbreviated example specifically for containerized Openvpn</span></h2>
+<p>This section is specifically for users wanting to run Openvpn in a Linux container (<a href="../en/Linux_Containers.html" class="mw-redirect" title="LXC">LXC</a>).  The code below is designed to be  pasted into a root shell; the standard hash has been omitted to allow for easy copy/paste operations.  It is recommended to have two different shell windows open, one for the host and one for the container.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>It is assumed that the CA machine is the host and the server machine is the container.</li>
+<li>Both the host and container need to have both <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openvpn">openvpn</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=easy-rsa">easy-rsa</a></span> installed.</li>
+<li>The container needs to be running.</li>
+<li>Define the name of the container in the CONTAINERNAME variable below.</li>
+</ul>
+</div>
+<p>On the host:
+</p>
+<pre>CONTAINERNAME=foo
+/etc/easy-rsa
+easyrsa init-pki &amp;&amp; easyrsa build-ca
+cp /etc/easy-rsa/pki/ca.crt /var/lib/lxc/$CONTAINERNAME/rootfs/etc/openvpn/server/
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> One may substitute other names in the 2nd line of this code (the for loop).  At a minimum, one needs to generate a key for the server and for at least 1 client.  The generic words "server" and "client" are shown, but in reality, these can by any words such as the hostname of the container or the name of the intended user.  As well, one can add additional words to the for loop if more than 2 keys are needed.  If that is the case, just be sure to add corresponding lines to the subsequent steps for each of them.</div>
+<p>In the container:
+</p>
+<pre>cd /etc/easy-rsa &amp;&amp; easyrsa init-pki
+for i in server client; do easyrsa gen-req $i nopass; done
+cp /etc/easy-rsa/pki/private/server.key /etc/openvpn/server/
+openssl dhparam -out /etc/openvpn/server/dh.pem 2048
+openvpn --genkey secret /etc/openvpn/server/ta.key
+</pre>
+<p>Back on the host:
+</p>
+<pre>easyrsa import-req /var/lib/lxc/$CONTAINERNAME/rootfs/etc/easy-rsa/pki/reqs/junk.req junk
+easyrsa import-req /var/lib/lxc/$CONTAINERNAME/rootfs/etc/easy-rsa/pki/reqs/client.req client
+easyrsa sign-req client client
+easyrsa sign-req server server
+mkdir /var/lib/lxc/$CONTAINERNAME/rootfs/etc/easy-rsa/pki/issued/
+mkdir /var/lib/lxc/$CONTAINERNAME/rootfs/etc/easy-rsa/pki/signed/
+cp /etc/easy-rsa/pki/issued/*.crt /var/lib/lxc/$CONTAINERNAME/rootfs/etc/easy-rsa/pki/issued/
+</pre>
+<p>That will provide the needed files to make an OpenVPN compatible tunnel profile for the client, and the needed server key files for the server.  To generate a client profile, refer to  <a href="../en/OpenVPN.html#ovpngen" title="OpenVPN">OpenVPN#ovpngen</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/OpenVPN/easy-rsa/blob/master/README.quickstart.md">README.quickstart</a>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/OpenVPN/easy-rsa/blob/master/doc/EasyRSA-Advanced.md">EASYRSA-Advanced</a>.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Easy-RSA&amp;oldid=647174">https://wiki.archlinux.org/index.php?title=Easy-RSA&amp;oldid=647174</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 14:34.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

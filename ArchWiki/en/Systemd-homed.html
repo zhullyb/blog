@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd-homed - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd-homed rootpage-Systemd-homed skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd-homed</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Users_and_groups.html" title="Users and groups">Users and groups</a></li>
+<li><a href="../en/Fscrypt.html" title="Fscrypt">fscrypt</a></li>
+<li><a href="../en/Security.html" title="Security">Security</a></li>
+<li><a href="../en/PAM.html" title="PAM">PAM</a></li>
+</ul>
+</div>
+<p><b>systemd-homed</b> is a <a href="../en/Systemd.html" title="Systemd">systemd</a> service providing portable human-user accounts that are not dependent on current system configuration.
+</p>
+<p>It achieves portability by moving all user-related information into a storage medium, optionally encrypted, and creating an <code>~/.identity</code> file that contains signed information about the user, password, what groups they belong to, UID/GID and other information that would typically be scattered over multiple files in <code>/</code>.
+</p>
+<p>This approach allows not only for a home directory portability, but also provides security by automatically managing <code>/home</code> encryption on login and locking the folder if the system is suspended. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Utilities"><span class="tocnumber">2</span> <span class="toctext">Utilities</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#homectl"><span class="tocnumber">2.1</span> <span class="toctext">homectl</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#userdbctl"><span class="tocnumber">2.2</span> <span class="toctext">userdbctl</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Storage_mechanism"><span class="tocnumber">3</span> <span class="toctext">Storage mechanism</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#LUKS_home_directory"><span class="tocnumber">3.1</span> <span class="toctext">LUKS home directory</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#fscrypt_directory"><span class="tocnumber">3.2</span> <span class="toctext">fscrypt directory</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Directory_or_Btrfs_subvolume"><span class="tocnumber">3.3</span> <span class="toctext">Directory or Btrfs subvolume</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#CIFS_server"><span class="tocnumber">3.4</span> <span class="toctext">CIFS server</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#User_record_properties"><span class="tocnumber">4</span> <span class="toctext">User record properties</span></a></li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Managing_users"><span class="tocnumber">5</span> <span class="toctext">Managing users</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Creation"><span class="tocnumber">5.1</span> <span class="toctext">Creation</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Deletion"><span class="tocnumber">5.2</span> <span class="toctext">Deletion</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Tips_and_tricks"><span class="tocnumber">6</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#Forget_key_on_suspend"><span class="tocnumber">6.1</span> <span class="toctext">Forget key on suspend</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#SSH_remote_unlocking"><span class="tocnumber">6.2</span> <span class="toctext">SSH remote unlocking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17">
+<a href="#Troubleshooting"><span class="tocnumber">7</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-18"><a href="#SDDM_does_not_list_users"><span class="tocnumber">7.1</span> <span class="toctext">SDDM does not list users</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#polkit_does_not_detect_groups_of_systemd-homed_users"><span class="tocnumber">7.2</span> <span class="toctext">polkit does not detect groups of systemd-homed users</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><i>systemd-homed</i> is part of and packaged with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span>. The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pambase">pambase</a></span> package since version 20200721.1-2 comes with the necessary <a href="../en/PAM.html#Configuration" title="PAM">PAM configuration</a> to allow systemd-homed user sessions.
+</p>
+<p>However, you must <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> the <code>systemd-homed.service</code>.
+</p>
+<h2><span class="mw-headline" id="Utilities">Utilities</span></h2>
+<h3><span class="mw-headline" id="homectl">homectl</span></h3>
+<p><code>homectl</code> is the main utility you will use for homed. With it, you can create, update, and inspect users; their home directories; and their <code>~/.identity</code> files controlled by the <span class="plainlinks archwiki-template-man" title="$ man 8 systemd-homed"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-homed.8">systemd-homed(8)</a></span> service.
+</p>
+<p>The simplest usage of homectl is:
+</p>
+<pre># homectl create <i>username</i>
+</pre>
+<p>This command will create a user with the specified username, a free UID <a rel="nofollow" class="external text" href="https://systemd.io/UIDS-GIDS/">in range 60001–60513</a>, create a group with the same name and a GID equal to the chosen UID, set the specified user as its member, and set the user's default shell to <code>/bin/bash</code>.
+</p>
+<p>The home directory mount point is set to <code>/home/<i>username</i></code>. The storage mechanism is chosen in this order:
+</p>
+<ol>
+<li>
+<code>luks</code> if supported;</li>
+<li>
+<code>subvolume</code> if LUKS is not supported and subvolume is supported;</li>
+<li>
+<code>directory</code> if none of the above is supported and no other manual option is specified.</li>
+</ol>
+<p>The image path for the LUKS mechanism is set to <code>/home/<i>username</i>.home</code>. The directory path for the directory mechanism is set to <code>/home/<i>username</i>.homedir</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  homectl does not manage group creation or deletion other than those matching the name and ID of users managed by systemd-homed.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The <code>~/.identity</code> files are signed and must not be edited directly with a text editor as it will break the signature and render them invalid. Use <code>homectl update --identity=/path/to/.identity</code> to modify it.</div>
+<h3><span class="mw-headline" id="userdbctl">userdbctl</span></h3>
+<p>A query tool used to inspect users, groups and group memberships provided by both classic UNIX mechanisms and systemd-homed.
+</p>
+<h2><span class="mw-headline" id="Storage_mechanism">Storage mechanism</span></h2>
+<h3><span class="mw-headline" id="LUKS_home_directory">LUKS home directory</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> It does not have to be <b>removable</b> media. <code>homectl create </code> wipes the partition table of the block device specified by <code>--image-path</code>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd-homed">Talk:Systemd-homed#</a>)</div>
+</div>
+<p>A user home folder is stored in a Linux <a href="../en/File_systems.html" class="mw-redirect" title="Filesystem">filesystem</a>, inside an encrypted <a href="../en/Dm-crypt.html" class="mw-redirect" title="LUKS">LUKS</a> (<i>Linux Unified Key Setup</i>) volume inside a loopback file or any removable media.  To use this mechanism provide <code>--storage=luks</code> to <i>homectl</i>.
+</p>
+<p>If you are using a removable media, make sure that these conditions are met:
+</p>
+<ul>
+<li>The image contains a GPT partition table. For now it should only contain a single partition, and that partition must have the type UUID <code>773f91ef-66d4-49b5-bd83-d683bf40ad16</code>. Its partition label must be the user name.</li>
+<li>This partition must contain a LUKS2 volume, whose label must be the user name. The LUKS2 volume must contain a LUKS2 token field of type systemd-homed. The JSON data of this token must have a record field, containing a string with base64-encoded data. This data is the JSON user record, in the same serialization as in ~/.identity, though encrypted. The JSON data of this token must also have an iv field, which contains a base64-encoded binary initialization vector for the encryption. The encryption used is the same as the LUKS2 volume itself uses, unlocked by the same volume key, but based on its own IV.</li>
+<li>Inside of this LUKS2 volume must be a Linux file system, one of <a href="../en/Ext4.html" title="Ext4">ext4</a>, <a href="../en/Btrfs.html" title="Btrfs">btrfs</a> and <a href="../en/XFS.html" title="XFS">XFS</a>. The file system label must be the user name.</li>
+<li>This file system should contain a single directory named after the user. This directory will become the home directory of the user when activated. It contains a second copy of the user record in the <code>~/.identity</code> file, like in the other storage mechanisms.</li>
+</ul>
+<h3><span class="mw-headline" id="fscrypt_directory">fscrypt directory</span></h3>
+<p>A user home folder is stored the same way as when using the above method, but this time a native filesystem encryption is used. To use this mechanism provide <code>--storage=fscrypt</code> to <i>homectl</i>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Filesystems with fscrypt support include <a href="../en/Ext4.html" title="Ext4">ext4</a> and <a href="../en/F2FS.html" title="F2FS">F2FS</a>.</div>
+<h3><span class="mw-headline" id="Directory_or_Btrfs_subvolume">Directory or Btrfs subvolume</span></h3>
+<p>A user home folder is stored in <code>/home/<i>username</i>.homedir</code> and mounted to <code>/home/<i>username</i></code> using bind <a href="../en/File_systems.html#Mount_a_file_system" class="mw-redirect" title="Mount">mount</a> on unlocking. When this method is used no encryption is provided. To use this mechanism provide <code>--storage=directory</code> or <code>--storage=subvolume</code> to <i>homectl</i>.
+</p>
+<h3><span class="mw-headline" id="CIFS_server">CIFS server</span></h3>
+<p>Here, the home directory is mounted from a CIFS (<i>Common Internet File System</i>) server at login. Note that CIFS is implemented via the <a href="../en/Samba.html" title="Samba">Samba</a> protocol. Use <code>--storage=cifs</code> on the <i>homectl</i> command line. The local password of the user is used to log into the CIFS service.
+</p>
+<h2><span class="mw-headline" id="User_record_properties">User record properties</span></h2>
+<p>You can view an entire user record with:
+</p>
+<pre># homectl inspect <i>username</i>
+</pre>
+<p>You can modify or add to the user record with:
+</p>
+<pre># homectl update <i>username</i> --<i>property</i>=<i>VALUE</i>
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 1 homectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/homectl.1">homectl(1)</a></span> for more options.
+</p>
+<h2><span class="mw-headline" id="Managing_users">Managing users</span></h2>
+<h3><span class="mw-headline" id="Creation">Creation</span></h3>
+<p>Create a user with LUKS encryption:
+</p>
+<pre># homectl create <i>username</i> --storage=luks
+</pre>
+<p>Create a user with fscrypt encryption (make sure that fscrypt is <a href="../en/Fscrypt.html#File_system" title="Fscrypt">enabled on the file system</a>):
+</p>
+<pre># homectl create <i>username</i> --storage=fscrypt
+</pre>
+<p>Create a user with a specific UID, shell and groups:
+</p>
+<pre># homectl create <i>username</i> --shell=/usr/bin/zsh --uid=60100 --member-of=wheel,adm,uucp
+</pre>
+<p>Other options can be found in <span class="plainlinks archwiki-template-man" title="$ man 1 homectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/homectl.1#USER_RECORD_PROPERTIES">homectl(1) § USER RECORD PROPERTIES</a></span>.
+</p>
+<h3><span class="mw-headline" id="Deletion">Deletion</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The user deletion is instant, be careful!</div>
+<p>It is possible to delete several users at the same time, as root, you can run the command below to immediately delete 2 users:
+</p>
+<pre># homectl remove <i>username</i> <i>username2</i>
+</pre>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Forget_key_on_suspend">Forget key on suspend</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Mistakes in <a href="../en/PAM.html" title="PAM">PAM</a> configuration can break the system authorization up to not being able to login even as <i>root</i>. Backing up existing configuration files is recommended before making any changes.</div> 
+<p>The <code>suspend</code> option can be used with <code>pam_systemd_home.so</code> entries in the files in <code>/etc/pam.d/</code> to enable forget key on suspend. No session manager at the moment supports this feature. Furthermore, TTY sessions do not support the reathentication mechanism. So, when session managers start supporting this feature, the suspend option should only be enabled for them. Read <span class="plainlinks archwiki-template-man" title="$ man 8 pam_systemd_home"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/pam_systemd_home.8">pam_systemd_home(8)</a></span> and the <a rel="nofollow" class="external text" href="http://www.linux-pam.org/Linux-PAM-html/Linux-PAM_SAG.html">Linux-PAM System Administrators' Guide</a> for more details.
+</p>
+<h3><span class="mw-headline" id="SSH_remote_unlocking">SSH remote unlocking</span></h3>
+<p><i>systemd-homed</i> encrypts your home directory using your password, so SSH configured for public key authentication cannot mount it or read <code>authorized_keys</code>. A possible solution is to add authorized keys to your user record and require both public key and password for authentication. Add the following to <code>sshd_config</code>:
+</p>
+<pre>AuthenticationMethods publickey,password
+AuthorizedKeysCommand /usr/bin/userdbctl ssh-authorized-keys %u
+AuthorizedKeysCommandUser root
+</pre>
+<p>Make sure that you have not disabled password authentication:
+</p>
+<pre>#PasswordAuthentication yes
+</pre>
+<p>Update your user record with your authorized keys using:
+</p>
+<pre># homectl update <i>username</i> --ssh-authorized-keys=@/path/to/.ssh/authorized_keys
+</pre>
+<p>From now on, SSH will ask you to enter your password after completing key-based authentication. <i>systemd-homed</i> will use it to unlock and mount your home directory.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="SDDM_does_not_list_users">SDDM does not list users</span></h3>
+<p>See <a href="../en/SDDM.html#One_or_more_users_do_not_show_up_on_the_greeter" title="SDDM">SDDM#One or more users do not show up on the greeter</a>.
+</p>
+<h3><span class="mw-headline" id="polkit_does_not_detect_groups_of_systemd-homed_users">polkit does not detect groups of systemd-homed users</span></h3>
+<p>By default, <a href="../en/Polkit.html" title="Polkit">polkit</a> adds members of the wheel group as administrators. A normal user who is a wheel member would get a password prompt after e.g. typing <code>systemctl restart polkit.service</code>. This however does not work for systemd-homed users (see <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/67658">FS#67658</a>). To fix it, edit <code>/etc/nsswitch.conf</code> and change the <code>groups</code> line to query the systemd database even if the files database returns an answer:
+</p>
+<pre>group: files <b>[SUCCESS=merge]</b> systemd
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external free" href="https://systemd.io/HOME_DIRECTORY/">https://systemd.io/HOME_DIRECTORY/</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd-homed&amp;oldid=641204">https://wiki.archlinux.org/index.php?title=Systemd-homed&amp;oldid=641204</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 10 November 2020, at 18:10.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

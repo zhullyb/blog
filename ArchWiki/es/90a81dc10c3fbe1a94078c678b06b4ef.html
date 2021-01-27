@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Apache HTTP Server (Español)/mod_gnutls (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Apache_HTTP_Server_Español_mod_gnutls_Español rootpage-Apache_HTTP_Server_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Apache HTTP Server (Español)/mod_gnutls (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Apache_HTTP_Server.html" title="Apache HTTP Server (Español)">Apache HTTP Server (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Apache_HTTP_Server/mod_gnutls.html" title="Apache HTTP Server/mod gnutls">Apache HTTP Server/mod_gnutls</a> revisada por última vez el <b>2020-12-02</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Apache_HTTP_Server/mod_gnutls&amp;diff=0&amp;oldid=602918">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<p>Traducido desde la <a rel="nofollow" class="external text" href="https://mod.gnutls.org/wiki">mod_gnutls wiki</a>:
+</p>
+<dl>
+<dd>mod_gnutls es una extensión para httpd de Apache que ocupa la librería <a href="../es/GnuTLS.html" title="GnuTLS (Español)">GnuTLS</a> para proveer HTTPS.</dd>
+<dd>Es similar en propósito a mod_ssl, pero soporta algunas características y protocolos que mod_ssl no, y no utiliza OpenSSL.</dd>
+</dl>
+<h2>
+<span id="Instalaci.C3.B3n"></span><span class="mw-headline" id="Instalación">Instalación</span>
+</h2>
+<p>Instale <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mod_gnutls/">mod_gnutls</a></span><sup><small>AUR</small></sup>.
+</p>
+<h3>
+<span id="Configuraci.C3.B3n_de_Apache"></span><span class="mw-headline" id="Configuración_de_Apache">Configuración de Apache</span>
+</h3>
+<p>Añada estas lineas a <code>/etc/httpd/conf/httpd.conf</code>:
+</p>
+<pre>LoadModule gnutls_module modules/mod_gnutls.so
+Include conf/extra/httpd-gnutls.conf
+</pre>
+<p>Asegúrese que la siguiente linea este comentada en <code>/etc/httpd/conf/httpd.conf</code>:
+</p>
+<pre>Include conf/extra/httpd-ssl.conf
+</pre>
+<p>Y asegúrese que ninguna definición de host virtual incluya mod_ssl.
+</p>
+<p>Cree el archivo <code>/etc/httpd/conf/extra/httpd-gnutls.conf</code> con el contenido siguiente:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/httpd/conf/extra/httpd-gnutls.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Listen 443
+
+AddType application/x-x509-ca-cert .crt
+AddType application/x-pkcs7-crl    .crl
+
+GnuTLSCache dbm "/var/run/httpd/gnutls_scache"
+GnuTLSCacheTimeout 600
+
+&lt;VirtualHost _default_:443&gt;
+
+DocumentRoot "/srv/http"
+ServerName www.example.org
+ServerAdmin youremail@example.org
+ErrorLog "/var/log/httpd/error_log"
+TransferLog "/var/log/httpd/access_log"
+
+GnuTLSEnable on
+GnuTLSPriorities NORMAL
+
+GNUTLSExportCertificates on
+
+GnuTLSCertificateFile /path/to/certificate/domain.tld.crt
+GnuTLSKeyFile /path/to/certificate/domain.tld.key
+
+&lt;/VirtualHost&gt;
+</pre>
+<p><a href="../es/Systemd.html#Utilizando_unidades_del_sistema" title="Systemd (Español)">Reinicie</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> <code>httpd.service</code>.
+</p>
+<pre>Compruebe que Apache cargó correctamente y responde en el puerto 443.
+</pre>
+<p>Documentación adicional de la configuración de directivas esta en la pagina de documentación de <a rel="nofollow" class="external text" href="https://web.archive.org/web/20190917191240/http://www.outoforder.cc/projects/apache/mod_gnutls/docs/">outoforder.cc mod_gnutls</a>
+</p>
+<h2><span class="mw-headline" id="Pruebas">Pruebas</span></h2>
+<p>Puede probar o verificar su configuración https a través de la <a rel="nofollow" class="external text" href="https://www.ssllabs.com/ssltest/analyze.html">herramienta de análisis de SSL Labs</a>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Web_server.html" title="Category:Web server (Español)">Web server (Español)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Apache_HTTP_Server_(Espa%C3%B1ol)/mod_gnutls_(Espa%C3%B1ol)&amp;oldid=644959">https://wiki.archlinux.org/index.php?title=Apache_HTTP_Server_(Español)/mod_gnutls_(Español)&amp;oldid=644959</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 December 2020, at 10:08.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

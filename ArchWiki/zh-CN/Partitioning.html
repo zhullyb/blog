@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Partitioning (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Partitioning_简体中文 rootpage-Partitioning_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Partitioning (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../en/File_systems.html" title="File systems">File systems</a></li>
+<li><a href="../en/Fdisk.html" title="Fdisk">fdisk</a></li>
+<li><a href="../en/GPT_fdisk.html" class="mw-redirect" title="Gdisk">gdisk</a></li>
+<li><a href="../en/Parted.html" title="Parted">parted</a></li>
+<li><a href="../en/Fstab.html" title="Fstab">fstab</a></li>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+<li><a href="../en/Swap.html" title="Swap">Swap</a></li>
+<li><a href="../en/File_systems.html#Create_a_file_system" class="mw-redirect" title="Format a device">Format a device</a></li>
+<li><a href="../en/Arch_boot_process.html" title="Arch boot process">Arch boot process</a></li>
+<li><a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">Unified Extensible Firmware Interface</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Partitioning.html" title="Partitioning">Partitioning</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2018-11-01。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Partitioning&amp;diff=0&amp;oldid=548479">更改</a>，则您可以帮助同步翻译。</div>
+<p><a href="https://en.wikipedia.org/wiki/Disk_partitioning" class="extiw" title="wikipedia:Disk partitioning">分区</a>是将硬盘的可用空间划分为多个可以独立访问的区块。
+</p>
+<p>可以为一个硬盘划分一个或者多个分区。一些场景需要使用多个分区：例如双重或多重启动，使用 <a href="../en/Swap.html" title="Swap">swap</a> 分区等。此外，分区也可以从逻辑上隔离数据，例如为音频和视频数据创建单独的分区。下面将会讨论通用的分区方案。
+</p>
+<p>每个分区在使用前需要格式化为 <a href="../zh-CN/File_systems.html" title="File systems (简体中文)">文件系统</a> 。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="tocnumber">1</span> <span class="toctext">分区表</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#Master_Boot_Record"><span class="tocnumber">1.1</span> <span class="toctext">Master Boot Record</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#%E5%88%86%E5%8C%BA%E8%A1%A8_2"><span class="tocnumber">1.1.1</span> <span class="toctext">分区表</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#%E5%BC%95%E5%AF%BC%E8%AE%B0%E5%BD%95"><span class="tocnumber">1.1.2</span> <span class="toctext">引导记录</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5"><a href="#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="tocnumber">1.2</span> <span class="toctext">GUID 分区表</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#%E9%80%89%E6%8B%A9_GPT_%E8%BF%98%E6%98%AF_MBR"><span class="tocnumber">1.3</span> <span class="toctext">选择 GPT 还是 MBR</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Btrfs_%E5%88%86%E5%8C%BA"><span class="tocnumber">1.4</span> <span class="toctext">Btrfs 分区</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#%E5%A4%87%E4%BB%BD"><span class="tocnumber">1.5</span> <span class="toctext">备份</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#%E6%81%A2%E5%A4%8D"><span class="tocnumber">1.6</span> <span class="toctext">恢复</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10">
+<a href="#%E5%88%86%E5%8C%BA%E6%96%B9%E6%A1%88"><span class="tocnumber">2</span> <span class="toctext">分区方案</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#%E5%8D%95root%E5%88%86%E5%8C%BA"><span class="tocnumber">2.1</span> <span class="toctext">单root分区</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#%E5%A4%9A%E5%88%86%E5%8C%BA"><span class="tocnumber">2.2</span> <span class="toctext">多分区</span></a></li>
+<li class="toclevel-2 tocsection-13">
+<a href="#%E6%8C%82%E8%BD%BD%E7%82%B9"><span class="tocnumber">2.3</span> <span class="toctext">挂载点</span></a>
+<ul>
+<li class="toclevel-3 tocsection-14"><a href="#%E6%A0%B9%E5%88%86%E5%8C%BA"><span class="tocnumber">2.3.1</span> <span class="toctext">根分区</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#/boot"><span class="tocnumber">2.3.2</span> <span class="toctext">/boot</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#/home"><span class="tocnumber">2.3.3</span> <span class="toctext">/home</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#/var"><span class="tocnumber">2.3.4</span> <span class="toctext">/var</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#Swap"><span class="tocnumber">2.3.5</span> <span class="toctext">Swap</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#/data"><span class="tocnumber">2.3.6</span> <span class="toctext">/data</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20">
+<a href="#%E5%B8%83%E5%B1%80%E7%A4%BA%E4%BE%8B"><span class="tocnumber">2.4</span> <span class="toctext">布局示例</span></a>
+<ul>
+<li class="toclevel-3 tocsection-21"><a href="#UEFI/GPT_%E7%A4%BA%E4%BE%8B"><span class="tocnumber">2.4.1</span> <span class="toctext">UEFI/GPT 示例</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#MBR/BIOS_%E7%A4%BA%E4%BE%8B"><span class="tocnumber">2.4.2</span> <span class="toctext">MBR/BIOS 示例</span></a></li>
+<li class="toclevel-3 tocsection-23"><a href="#UEFI_%E5%B8%A6%E5%8D%95%E7%8B%AC%E7%9A%84_/home"><span class="tocnumber">2.4.3</span> <span class="toctext">UEFI 带单独的 /home</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-24">
+<a href="#%E5%88%86%E5%8C%BA%E5%B7%A5%E5%85%B7"><span class="tocnumber">3</span> <span class="toctext">分区工具</span></a>
+<ul>
+<li class="toclevel-2 tocsection-25"><a href="#fdisk/gdisk"><span class="tocnumber">3.1</span> <span class="toctext">fdisk/gdisk</span></a></li>
+<li class="toclevel-2 tocsection-26"><a href="#GNU_Parted"><span class="tocnumber">3.2</span> <span class="toctext">GNU Parted</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-27"><a href="#%E5%88%86%E5%8C%BA%E5%AF%B9%E9%BD%90"><span class="tocnumber">4</span> <span class="toctext">分区对齐</span></a></li>
+<li class="toclevel-1 tocsection-28">
+<a href="#Tips_and_tricks"><span class="tocnumber">5</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-29"><a href="#Converting_MBR_to_GPT"><span class="tocnumber">5.1</span> <span class="toctext">Converting MBR to GPT</span></a></li>
+<li class="toclevel-2 tocsection-30"><a href="#GPT_Kernel_Support"><span class="tocnumber">5.2</span> <span class="toctext">GPT Kernel Support</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-31"><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="tocnumber">6</span> <span class="toctext">参考资料</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.88.86.E5.8C.BA.E8.A1.A8"></span><span class="mw-headline" id="分区表">分区表</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 可以用 <code>parted <i>/dev/sda</i> print</code> 或 <code>fdisk -l <i>/dev/sda</i></code> 查看当前分区信息，<code><i>/dev/sda</i></code> 是设备名。</div>
+<p>分区信息被存放在分区表中。目前有两种主流的模式：传统的 <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a> 和新的 <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table</a>。后者功能更强大，解决了许多MBR的限制。
+</p>
+<h3><span class="mw-headline" id="Master_Boot_Record">Master Boot Record</span></h3>
+<p><a href="https://en.wikipedia.org/wiki/Master_boot_record" class="extiw" title="w:Master boot record">Master Boot Record</a> (MBR) 是存储设备最开始的 512 字节。包含操作系统启动加载器和分区表，在 <a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="w:BIOS">BIOS</a> 系统的  <a href="../en/Arch_boot_process.html" class="mw-redirect" title="Boot process">启动流程</a> 中扮演重要角色。请参阅 <a href="https://en.wikipedia.org/wiki/Master_boot_record#Disk_partitioning" class="extiw" title="wikipedia:Master boot record">Wikipedia:Master boot record#Disk partitioning</a>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> MBR 并不位于某个分区中，而是分区前，设备的最开始部分。无分区设备的启动扇区或分区中的启动扇区被称为 <a href="https://en.wikipedia.org/wiki/Volume_boot_record" class="extiw" title="w:Volume boot record">Volume boot record</a>。</div>
+<h4>
+<span id=".E5.88.86.E5.8C.BA.E8.A1.A8_2"></span><span class="mw-headline" id="分区表_2">分区表</span>
+</h4>
+<p>目前有三种分区类型：
+</p>
+<ul>
+<li>主分区（Primary）</li>
+<li>扩展分区（Extended）
+<ul><li>逻辑分区（Logical）</li></ul>
+</li>
+</ul>
+<p><b>主分区</b>每个磁盘或者RAID卷上只能有4个，可设置为可启动状态。如果分区方案要求使用4个以上的分区，就需将至少一个分区设置为<b>扩展分区</b>,并在上面建立<b>逻辑分区</b>。扩展分区可以被看作是容纳逻辑分区的容器。硬盘上最多只能有1个扩展分区。如果磁盘上有1个扩展分区，它也被看作是1个主分区。因此只能另外再建立3个主分区（例如3个主分区加1个扩展分区）。扩展分区内所包含的逻辑分区数量没有限制。如果在双重启动中有Windows，Windows需要占据一个主分区。
+</p>
+<p>通常习惯是创建主分区<i>sda1</i>到<i>sda3</i>，然后建立一个扩展分区<i>sda4</i>。<i>sda4</i>中包含<i>sda5</i>，<i>sda6</i>等逻辑分区。
+</p>
+<h4>
+<span id=".E5.BC.95.E5.AF.BC.E8.AE.B0.E5.BD.95"></span><span class="mw-headline" id="引导记录">引导记录</span>
+</h4>
+<p>MBR 前面的 446 字节是启动代码区域，在 BIOS 系统中通常包含启动加载器的第一部分。请参阅<a href="https://en.wikipedia.org/wiki/%E4%B8%BB%E5%BC%95%E5%AF%BC%E8%AE%B0%E5%BD%95" class="extiw" title="wikipedia:主引导记录">Wikipedia:主引导记录</a>。可以用 <a href="../en/Dd.html" title="Dd">dd</a> 备份和恢复启动代码。
+</p>
+<h3>
+<span id="GUID_.E5.88.86.E5.8C.BA.E8.A1.A8"></span><span class="mw-headline" id="GUID_分区表">GUID 分区表</span>
+</h3>
+<p>GPT方案中只有一种分区类型，<b>主分区</b>。磁盘和RAID卷中包含的分区数量没有限制。
+</p>
+<p><a href="https://en.wikipedia.org/wiki/GUID_Partition_Table" class="extiw" title="w:GUID Partition Table">GUID Partition Table</a> (GPT) 是 <a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">Unified Extensible Firmware Interface</a> 标准定义的分区规范。使用 <a href="https://en.wikipedia.org/wiki/Globally_unique_identifier" class="extiw" title="w:Globally unique identifier">globally unique identifiers</a> (GUIDs), 或 Linux 中的 UUID 定义分区和 <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs" class="extiw" title="w:GUID Partition Table">分区类型</a>. 设计上是为了替换 <a href="#Master_Boot_Record">#Master Boot Record</a>。
+</p>
+<p><a href="https://en.wikipedia.org/wiki/GUID%E7%A3%81%E7%A2%9F%E5%88%86%E5%89%B2%E8%A1%A8" class="extiw" title="wikipedia:GUID磁碟分割表">Wikipedia:GUID磁碟分割表</a>
+</p>
+<p>GUID 分区表的磁盘开始位置有一个 <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Protective_MBR_.28LBA_0.29" class="extiw" title="wikipedia:GUID Partition Table">protective Master Boot Record</a> (PMBR)，用以处理不支持 GPT 软件的访问。这段 MBR 和真正的 MBR 一样，可以用在支持 BIOS/GPT 启动的启动管理器中。
+</p>
+<h3>
+<span id=".E9.80.89.E6.8B.A9_GPT_.E8.BF.98.E6.98.AF_MBR"></span><span class="mw-headline" id="选择_GPT_还是_MBR">选择 GPT 还是 MBR</span>
+</h3>
+<p><a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table</a> （GPT）是一种更灵活的分区方式。它正在逐步取代<a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a> （MBR）系统。GPT相对于诞生于MS-DOS时代的MBR而言，有许多优点。新版的<i>fdisk</i>（MBR）和<i>gdisk</i>（GPT）使得使用GPT或者MBR在可靠性和性能最大化上都非常容易。
+</p>
+<p>在做出选择前，需要考虑如下内容：
+</p>
+<ul>
+<li>如果使用 GRUB legacy 作为bootloader，必须使用MBR。</li>
+<li>如果使用传统的BIOS，并且双启动中包含 Windows （无论是32位版还是64位版），必须使用MBR。</li>
+<li>如果使用 <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> 而不是BIOS，并且双启动中包含 Windows 64位版，必须使用GPT。</li>
+<li>非常老的机器需要使用 MBR，因为 BIOS 可能不支持 GPT.</li>
+<li>如果不属于上述任何一种情况，可以随意选择使用 GPT 还是 MBR。由于 GPT 更先进，建议选择 GPT。</li>
+<li>建议在使用 <a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">UEFI</a> 的情况下选择 GPT，因为有些 UEFI firmware 不支持从 MBR 启动。</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 为了使 GRUB 从一台有 GPT 分区的基于 BIOS 的系统上启动，需要创建一个 <a href="../en/GRUB.html#GUID_Partition_Table_.28GPT.29_specific_instructions" title="GRUB">BIOS 启动分区</a>, 这个分区和 /boot 没关系，仅仅是 GRUB 使用，不要建立文件系统和挂载。</div>
+<h3>
+<span id="Btrfs_.E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="Btrfs_分区">Btrfs 分区</span>
+</h3>
+<p>Btrfs可以独占整个存储设备并替代 <a href="#Master_Boot_Record">MBR</a> 和 <a href="#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8">GPT</a> 分区方案。请参考<a href="../zh-CN/Btrfs.html#%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F" title="Btrfs (简体中文)">创建 Btrfs 文件系统</a>以获取更多信息。
+</p>
+<p><a href="https://en.wikipedia.org/wiki/Btrfs" class="extiw" title="wikipedia:Btrfs">Wikipedia:Btrfs</a>
+</p>
+<h3>
+<span id=".E5.A4.87.E4.BB.BD"></span><span class="mw-headline" id="备份">备份</span>
+</h3>
+<p>请参阅 <a href="../en/Fdisk.html#Backup_and_restore_partition_table" title="Fdisk">fdisk#Backup and restore partition table</a> 或 <a href="../en/GPT_fdisk.html#Backup_and_restore_partition_table" class="mw-redirect" title="Gdisk">gdisk#Backup and restore partition table</a>.
+</p>
+<h3>
+<span id=".E6.81.A2.E5.A4.8D"></span><span class="mw-headline" id="恢复">恢复</span>
+</h3>
+<p>可以用 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gpart">gpart</a></span> 恢复被破坏的 MBR，详情参考 <span class="plainlinks archwiki-template-man" title="$ man 8 gpart"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/gpart.8">gpart(8)</a></span>。
+</p>
+<p>第一个 GPT 头(located at the start of the disk) from the secondary GPT header (located at the end of the disk) or vice versa. See <a href="../en/GPT_fdisk.html#Recover_GPT_header" class="mw-redirect" title="Gdisk">gdisk#Recover GPT header</a>.
+</p>
+<p>Another option is <a href="../en/File_recovery.html#Testdisk_and_PhotoRec" title="File recovery">TestDisk</a>, which supports recovering lost partitions on both MBR and GPT.
+</p>
+<h2>
+<span id=".E5.88.86.E5.8C.BA.E6.96.B9.E6.A1.88"></span><span class="mw-headline" id="分区方案">分区方案</span>
+</h2>
+<p>虽然有一些关于分区方案的通用建议，但没有严格的准则。有许多影响分区方案的因素，例如对灵活性的期望，访问速度，安全性以及可用磁盘空间的硬性限制。实际上就是个人取舍的问题。如果你想双启动 Arch Linux 和 Windows，请参考 <a href="../en/Dual_boot_with_Windows.html" class="mw-redirect" title="Windows and Arch Dual Boot">Windows and Arch Dual Boot</a>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 请别忘记为boot-loader预留空间。这对于 MBR 和 GRUB-Legacy 来说不是问题，但是许多新方案可能要求占用一个特殊的小分区。</div>
+<ul>
+<li>
+<a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>系统需要有 <a href="../en/EFI_system_partition.html" title="EFI system partition">ESP</a> 分区</li>
+<li>在 <a href="/index.php?title=BIOS&amp;action=edit&amp;redlink=1" class="new" title="BIOS (page does not exist)">BIOS</a> 系统上使用 <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a> 进行分区后，安装 GRUB 时会需要一个额外的 BIOS 启动分区。</li>
+<li>如果使用的是 <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a>, 可以将子卷视为分区，请参考 <a href="../en/Btrfs.html#Mounting_subvolumes" title="Btrfs">Btrfs#Mounting subvolumes</a>.</li>
+</ul>
+<h3>
+<span id=".E5.8D.95root.E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="单root分区">单root分区</span>
+</h3>
+<p>这种是最简单，同时也能满足大部分应用场景的方案。如果需要的话，可以建立一个 <a href="../en/Swap.html#Swap_file" class="mw-redirect" title="Swapfile">swapfile</a>。通常刚开始的时候建议一个单独的 <code>/</code> 分区，然后根据应用场景的需要，例如 RAID，加密，独立的多媒体分区等建立其他的分区。
+</p>
+<h3>
+<span id=".E5.A4.9A.E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="多分区">多分区</span>
+</h3>
+<p>将某个路径挂载为独立分区可以使其拥有不同的文件系统和挂载参数。某些情况下（例如多媒体文件分区），可以被多个操作系统共享。
+</p>
+<h3>
+<span id=".E6.8C.82.E8.BD.BD.E7.82.B9"></span><span class="mw-headline" id="挂载点">挂载点</span>
+</h3>
+<p>下面这些路径可以作为独立分区的挂载点，你也可以根据实际需要做出其他决定。<span class="plainlinks archwiki-template-man" title="$ man 7 file-hierarchy"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/file-hierarchy.7">file-hierarchy(7)</a></span> 介绍了各个目录的作用。
+</p>
+<h4>
+<span id=".E6.A0.B9.E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="根分区">根分区</span>
+</h4>
+<p>根目录是目录树的顶层，这里是主文件系统挂载和其他文件系统挂靠的地方。所有文件和目录都在根目录 <code>/</code> 显示，即使它们实际上存储在其他的物理设备上。根文件系统中的内容应该足以启动、恢复、修复系统。因此 <code>/</code> 目录下的特定目录是不能作为独立分区的。
+</p>
+<p><code>/</code> 分区或叫根分区是最重要而且必需的，需要最先挂载，其他其他分区可以被它取代。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 与系统启动相关的特定目录（除了 <code>/boot</code>） <b>必须</b> 与 <code>/</code> 在同一个分区，或在系统刚进入用户态的时候通过 <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> 挂载。这些特定的目录包括：<code>/etc</code> 和 <code>/usr</code> <a rel="nofollow" class="external autonumber" href="https://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken">[1]</a> 。</div>
+<p>因为包括 <code>/usr</code> 目录，根据安装的软件数量，会产生非常明显的增长。15-20 GB 对于大多数用户来说是一个比较合适的取值。如果你打算在这里放一个交换文件（swap file）的话，需要适当调大取值
+</p>
+<h4>
+<span id=".2Fboot"></span><span class="mw-headline" id="/boot">/boot</span>
+</h4>
+<p><code>/boot</code> 分区包含内核、ramdisk 镜像以及 bootloader 配置文件和 bootloader stage。它也可以存放内核在执行用户态程序之前所使用的其他数据。<code>/boot</code> 在日常系统运行中并不需要，只在启动和内核升级（包括重建initial ramdisk）的时候用到。
+</p>
+<p>如果使用软RAID0（条带化）系统的话，必须有一个独立的 <code>/boot</code> 分区。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果使用 UEFI 启动管理器，支持读取 ESP 文件系统，建议将 <a href="../en/EFI_system_partition.html" class="mw-redirect" title="ESP">ESP</a> 挂载到 <code>/boot</code>.</div>
+<p>不使用 <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> 时，<code>/boot</code> 的建议大小时 200 MB，使用 UEFI 时，需要至少 512 MiB 空间。
+</p>
+<h4>
+<span id=".2Fhome"></span><span class="mw-headline" id="/home">/home</span>
+</h4>
+<p><code>/home</code>目录包含用户定义的配置文件、缓存、应用程序数据和媒体文件。
+</p>
+<p>将<code>/home</code>目录独立使得<code>/</code>分区可以单独重新划分，但是请注意你可以在 <code>/home</code> 没有独立分区的情况下你仍然可以在不修改 <code>/home</code> 目录内容的情况下重装 Arch —— 删除其他顶级目录，然后执行pacstrap。
+</p>
+<p>不能与使用其他发行版的用户共享同一个home目录，因为不同的发行版可能使用不兼容的软件版本和补丁。可以共享媒体目录，或至少使用 <code>/home</code> 分区下的不同home目录。分区大小跟着存储的内容而定。
+</p>
+<h4>
+<span id=".2Fvar"></span><span class="mw-headline" id="/var">/var</span>
+</h4>
+<p><code>/var</code> 目录存储变量数据例如 spool 目录和文件，管理和登录数据，<a href="../en/Pacman.html" title="Pacman">pacman</a> 的缓存，<a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a> 树等等。它通常被用作缓存或者日志记录，因此读写频繁。将它独立出来可以避免由于大量日志写入造成的磁盘空间耗尽等问题。
+</p>
+<p>可以将 <code>/usr</code> 设置为只读挂载。所有在操作系统运行过程中（例如安装或软件维护）写入 <code>/usr</code> 的东西放到 <code>/var</code> 下。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <code>/var</code>包含许多小文件。如果将其作为独立分区，在文件系统的选择上需要考虑这一点。</div>
+<p>除了其他数据以外，还包括<a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a> 树和 <a href="../en/Pacman.html" title="Pacman">pacman</a> 缓存。保留缓存的包提供了包<a href="../en/Downgrading_packages.html" class="mw-redirect" title="Downgrade">降级</a>的能力，因此非常有用。也正因为这样，<code>/var</code> 的大小会随着时间推移而增长。尤其是 pacman 缓存将会随着新软件的安装、系统的升级而增长。在磁盘空间不足的时候，可以安全的清理这个目录。<code>/var</code> 分配 8-12 GB 对于桌面系统来说是比较合适的取值，具体取值取决于安装的软件数量。。
+</p>
+<h4><span class="mw-headline" id="Swap">Swap</span></h4>
+<p><a href="../en/Swap.html" title="Swap">swap</a> 分区提供能够被作为虚拟内存的内存空间。<a href="../en/Swap.html#Swap_file" title="Swap">swap file</a> 也可以实现同样的功能，并且它们之间没有明显的性能区别，但是后者更易于根据需要调整大小。如果没有使用休眠特性的话，swap 分区<i>可以</i>被多个系统共享。查看 <a href="../en/Power_management/Suspend_and_hibernate.html" class="mw-redirect" title="Suspend and hibernate">Suspend and hibernate</a> 了解如何通过 swap 分区或文件休眠。
+</p>
+<p>在拥有不足 512 MB 内存的机器上，通常为 swap 分区分配2倍内存大小的空间。如果有更大的内存（大于 1024 MB），可以分配较少的空间甚至不需要swap 分区。 <a href="../en/Power_management/Suspend_and_hibernate.html" class="mw-redirect" title="Suspend and hibernate">Suspend and hibernate</a> 介绍了如何休眠到 swap 分区或文件.
+</p>
+<h4>
+<span id=".2Fdata"></span><span class="mw-headline" id="/data">/data</span>
+</h4>
+<p>可以为需要多用户共享的文件建立一个“data”分区。也可以使用 <code>/home</code> 分区用于这一目的。
+</p>
+<h3>
+<span id=".E5.B8.83.E5.B1.80.E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="布局示例">布局示例</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> UEFI/GPT does not really have a "bootable" flag. A bootable partition simply has partition type <code>EF00</code>. Some GPT partitioning tools include a bootable flag, but really it just sets the partition type.</div>
+<h4>
+<span id="UEFI.2FGPT_.E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="UEFI/GPT_示例">UEFI/GPT 示例</span>
+</h4>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Mount point
+</th>
+<th>Partition
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs" class="extiw" title="wikipedia:GUID Partition Table">Partition type GUID</a>
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_entries_.28LBA_2-33.29" class="extiw" title="wikipedia:GUID Partition Table">Partition attributes</a>
+</th>
+<th>Suggested size
+</th>
+</tr>
+<tr>
+<td>
+<code>/boot</code> or <code>/efi</code>
+</td>
+<td>
+<code>/dev/sda1</code>
+</td>
+<td>
+<code>C12A7328-F81F-11D2-BA4B-00A0C93EC93B</code>: <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a>
+</td>
+<td>
+</td>
+<td>550 MiB
+</td>
+</tr>
+<tr>
+<td>
+<code>/</code>
+</td>
+<td>
+<code>/dev/sda2</code>
+</td>
+<td>
+<code>4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709</code>: Linux x86-64 root (/)
+</td>
+<td>
+</td>
+<td>23 - 32 GiB
+</td>
+</tr>
+<tr>
+<td>
+<code>[SWAP]</code>
+</td>
+<td>
+<code>/dev/sda3</code>
+</td>
+<td>
+<code>0657FD6D-A4AB-43C4-84E5-0933C84B4F4F</code>: Linux <a href="../en/Swap.html" title="Swap">swap</a>
+</td>
+<td>
+</td>
+<td>More than 512 MiB
+</td>
+</tr>
+<tr>
+<td>
+<code>/home</code>
+</td>
+<td>
+<code>/dev/sda4</code>
+</td>
+<td>
+<code>933AC7E1-2EB4-4F13-B844-0E14E2AEF915</code>: Linux /home
+</td>
+<td>
+</td>
+<td>Remainder of the device
+</td>
+</tr>
+</tbody>
+</table>
+<h4>
+<span id="MBR.2FBIOS_.E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="MBR/BIOS_示例">MBR/BIOS 示例</span>
+</h4>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Mount point
+</th>
+<th>Partition
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/Partition_type" class="extiw" title="wikipedia:Partition type">Partition type ID</a>
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/Boot_flag" class="extiw" title="wikipedia:Boot flag">Boot flag</a>
+</th>
+<th>Suggested size
+</th>
+</tr>
+<tr>
+<td>
+<code>/</code>
+</td>
+<td>
+<code>/dev/sda1</code>
+</td>
+<td>
+<code>83</code>: Linux
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes
+</td>
+<td>23 - 32 GiB
+</td>
+</tr>
+<tr>
+<td>
+<code>[SWAP]</code>
+</td>
+<td>
+<code>/dev/sda2</code>
+</td>
+<td>
+<code>82</code>: Linux <a href="../en/Swap.html" title="Swap">swap</a>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td>More than 512 MiB
+</td>
+</tr>
+<tr>
+<td>
+<code>/home</code>
+</td>
+<td>
+<code>/dev/sda3</code>
+</td>
+<td>
+<code>83</code>: Linux
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No
+</td>
+<td>Remainder of the device
+</td>
+</tr>
+</tbody>
+</table>
+<h4>
+<span id="UEFI_.E5.B8.A6.E5.8D.95.E7.8B.AC.E7.9A.84_.2Fhome"></span><span class="mw-headline" id="UEFI_带单独的_/home">UEFI 带单独的 /home</span>
+</h4>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Mount point
+</th>
+<th>Partition
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs" class="extiw" title="wikipedia:GUID Partition Table">Partition type GUID</a>
+</th>
+<th>
+<a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_entries_.28LBA_2-33.29" class="extiw" title="wikipedia:GUID Partition Table">Partition attributes</a>
+</th>
+<th>Suggested size
+</th>
+</tr>
+<tr>
+<td style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">None
+</td>
+<td>
+<code>/dev/sda1</code>
+</td>
+<td>
+<code>21686148-6449-6E6F-744E-656564454649</code>: <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="BIOS boot partition">BIOS boot partition</a>
+</td>
+<td>
+</td>
+<td>1 MiB
+</td>
+</tr>
+<tr>
+<td>
+<code>/</code>
+</td>
+<td>
+<code>/dev/sda2</code>
+</td>
+<td>
+<code>4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709</code>: Linux x86-64 root (/)
+</td>
+<td>
+<code>2</code>: Legacy BIOS bootable
+</td>
+<td>23 - 32 GiB
+</td>
+</tr>
+<tr>
+<td>
+<code>[SWAP]</code>
+</td>
+<td>
+<code>/dev/sda3</code>
+</td>
+<td>
+<code>0657FD6D-A4AB-43C4-84E5-0933C84B4F4F</code>: Linux <a href="../en/Swap.html" title="Swap">swap</a>
+</td>
+<td>
+</td>
+<td>More than 512 MiB
+</td>
+</tr>
+<tr>
+<td>
+<code>/home</code>
+</td>
+<td>
+<code>/dev/sda4</code>
+</td>
+<td>
+<code>933AC7E1-2EB4-4F13-B844-0E14E2AEF915</code>: Linux /home
+</td>
+<td>
+</td>
+<td>Remainder of the device
+</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<span id=".E5.88.86.E5.8C.BA.E5.B7.A5.E5.85.B7"></span><span class="mw-headline" id="分区工具">分区工具</span>
+</h2>
+<p>下面表格可以帮助选择
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>
+</th>
+<th>MBR
+</th>
+<th>GPT
+</th>
+</tr>
+<tr>
+<th>对话框
+</th>
+<td>fdisk <br> parted
+</td>
+<td>fdisk <br> gdisk <br> parted
+</td>
+</tr>
+<tr>
+<th>模拟图形界面
+</th>
+<td>cfdisk
+</td>
+<td>cfdisk <br> cgdisk
+</td>
+</tr>
+<tr>
+<th>非交互
+</th>
+<td>sfdisk <br> parted
+</td>
+<td>sfdisk <br> sgdisk <br> parted
+</td>
+</tr>
+<tr>
+<th>图形界面
+</th>
+<td>gparted <br> gnome-disk-utility <br> partitionmanager
+</td>
+<td>gparted <br> gnome-disk-utility <br> partitionmanager
+</td>
+</tr>
+</tbody>
+</table>
+<h3>
+<span id="fdisk.2Fgdisk"></span><span class="mw-headline" id="fdisk/gdisk">fdisk/gdisk</span>
+</h3>
+<p>请参考 <a href="../en/Fdisk.html" title="Fdisk">fdisk</a>。
+</p>
+<ul><li>
+<b><a href="../en/Fdisk.html" title="Fdisk">fdisk</a></b> — Linux 自带的命令行分区工具。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Fdisk.html" class="mw-redirect" title="Cfdisk">cfdisk</a></b> — 使用 ncurses 库编写的具有伪图形界面的命令行分区工具。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Fdisk.html" class="mw-redirect" title="Sfdisk">sfdisk</a></b> — 支持脚本的 fdisk.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/pub/linux/utils/util-linux/">https://www.kernel.org/pub/linux/utils/util-linux/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/GPT_fdisk.html" class="mw-redirect" title="Gdisk">gdisk</a></b> — <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a> 版的 fdisk。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/GPT_fdisk.html" class="mw-redirect" title="Cgdisk">cgdisk</a></b> — GPT 版的 cfdisk。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/GPT_fdisk.html" class="mw-redirect" title="Sgdisk">sgdisk</a></b> — Scriptable version of gdisk.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/sgdisk-walkthrough.html">http://www.rodsbooks.com/gdisk/sgdisk-walkthrough.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<h3><span class="mw-headline" id="GNU_Parted">GNU Parted</span></h3>
+<p>下面工具在  <a href="../en/Parted.html" class="mw-redirect" title="GNU Parted">GNU Parted</a> 中有介绍。
+</p>
+<ul><li>
+<b><a href="../en/Parted.html" class="mw-redirect" title="GNU Parted">GNU Parted</a></b> — 命令行分区工具。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.gnu.org/software/parted/parted.html">https://www.gnu.org/software/parted/parted.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=parted">parted</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Parted.html" class="mw-redirect" title="GParted">GParted</a></b> — GTK 图形界面的分区工具。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://gparted.sourceforge.net/">http://gparted.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gparted">gparted</a></span>
+</dd></dl>
+<ul><li>
+<b>GNOME Disks</b> — GTK 写的图形分区工具.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://wiki.gnome.org/Apps/Disks">https://wiki.gnome.org/Apps/Disks</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gnome-disk-utility">gnome-disk-utility</a></span>
+</dd></dl>
+<ul><li>
+<b>Partitionmanager</b> — QT 图形界面的分区工具。</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://sourceforge.net/projects/partitionman/">https://sourceforge.net/projects/partitionman/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=partitionmanager">partitionmanager</a></span>
+</dd></dl>
+<h2>
+<span id=".E5.88.86.E5.8C.BA.E5.AF.B9.E9.BD.90"></span><span class="mw-headline" id="分区对齐">分区对齐</span>
+</h2>
+<p>恰当的分区对齐有助于提升性能和使用寿命。这是由硬件层面和文件系统层面的每次<a href="https://en.wikipedia.org/wiki/Block_(data_storage)" class="extiw" title="w:Block (data storage)">块</a> I/O 操作特性决定的。对齐的关健是分区大小（至少）是<i>块大小</i>的倍数，<i>块大小</i>取决于选用的硬件设备。如果分区没有以<i>块大小</i>的整数倍对齐，对齐文件系统就失去意义了，因为从分区的起始偏移开始就是有偏差的。
+</p>
+<p><a href="../en/Fdisk.html" title="Fdisk">fdisk/gdisk</a> 和 <a href="../en/Parted.html#Alignment" title="Parted">parted</a> 会自动处理分区对齐。<a href="../en/Parted.html#Check_alignment" class="mw-redirect" title="GNU Parted">GNU Parted#Check alignment</a> 介绍了如何验证分区是否对齐。
+</p>
+<p>有些硬盘使用 <a href="../en/Advanced_Format.html" title="Advanced Format">高级格式</a> 会提供更好的读写效率。
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>This article or section needs to be <a href="../en/ArchWiki:Contributing.html#Translating" title="ArchWiki:Contributing">translated</a>.</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> Not translated. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Partitioning_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Partitioning (简体中文)#</a>)</div>
+</div>
+<h4><span class="mw-headline" id="Converting_MBR_to_GPT">Converting MBR to GPT</span></h4>
+<p>See <a href="../en/Fdisk.html#Convert_between_MBR_and_GPT" title="Fdisk">fdisk#Convert between MBR and GPT</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+<h4><span class="mw-headline" id="GPT_Kernel_Support">GPT Kernel Support</span></h4>
+<p>The <code>CONFIG_EFI_PARTITION</code> option in the kernel config enables GPT support in the kernel (despite the name, EFI PARTITION). This option must be built in the kernel and not compiled as a loadable module. This option is required even if GPT disks are used only for data storage and not for booting. This option is enabled by default in Arch's <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span> kernels in the [core] repo. In case of a custom kernel, enable this option by doing <code>CONFIG_EFI_PARTITION=y</code>.
+</p>
+<h2>
+<span id=".E5.8F.82.E8.80.83.E8.B5.84.E6.96.99"></span><span class="mw-headline" id="参考资料">参考资料</span>
+</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Disk_partitioning" class="extiw" title="wikipedia:Disk partitioning">Wikipedia:Disk partitioning</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Binary_prefix" class="extiw" title="wikipedia:Binary prefix">Wikipedia:Binary prefix</a></li>
+<li><a rel="nofollow" class="external text" href="http://thestarman.pcministry.com/asm/mbr/DiskTerms.htm">Understanding Disk Drive Terminology</a></li>
+<li><a rel="nofollow" class="external text" href="http://kb.iu.edu/data/aijw.html">What is a Master Boot Record (MBR)?</a></li>
+<li>Rod Smith's page on <a rel="nofollow" class="external text" href="http://www.rodsbooks.com/gdisk/whatsgpt.html">What's a GPT?</a> and <a rel="nofollow" class="external text" href="http://rodsbooks.com/gdisk/booting.html">Booting OSes from GPT</a>
+</li>
+<li><a rel="nofollow" class="external text" href="http://www.ibm.com/developerworks/linux/library/l-gpt/index.html?ca=dgr-lnxw07GPT-Storagedth-lx&amp;S_TACT=105AGY83&amp;S_CMP=grlnxw07">Make the most of large drives with GPT and Linux - IBM Developer Works</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.microsoft.com/whdc/device/storage/GPT_FAQ.mspx">Microsoft's Windows and GPT FAQ</a><sup title="最后检查状态：403">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-04 ⓘ]</sup>
+</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.thomas-krenn.com/en/wiki/Partition_Alignment">Partition Alignment</a> (with examples)</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../zh-CN/Category:File_systems.html" title="Category:File systems (简体中文)">File systems (简体中文)</a></li>
+<li><a href="../zh-CN/Category:Boot_process.html" title="Category:Boot process (简体中文)">Boot process (简体中文)</a></li>
+<li><a href="../zh-CN/Category:System_recovery.html" title="Category:System recovery (简体中文)">System recovery (简体中文)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme">Pages or sections flagged with Template:Translateme</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Partitioning_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=638566">https://wiki.archlinux.org/index.php?title=Partitioning_(简体中文)&amp;oldid=638566</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:16.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

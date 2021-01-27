@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Kernel mode setting (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Kernel_mode_setting_简体中文 rootpage-Kernel_mode_setting_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Kernel mode setting (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../zh-CN/ATI.html" title="ATI (简体中文)">ATI</a></li>
+<li><a href="../zh-CN/Intel_graphics.html" class="mw-redirect" title="Intel Graphics (简体中文)">Intel</a></li>
+<li><a href="../zh-CN/Nouveau.html" title="Nouveau (简体中文)">Nouveau</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Kernel_mode_setting.html" title="Kernel mode setting">Kernel mode setting</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2019-10-29。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Kernel_mode_setting&amp;diff=0&amp;oldid=586589">更改</a>，则您可以帮助同步翻译。</div>
+<p>内核级<a href="https://en.wikipedia.org/wiki/Mode-setting" class="extiw" title="wikipedia:Mode-setting">显示模式设置</a> (KMS) ，作用是可以在内核级别而不是最终用户级别切换显示分辨率和颜色深度。
+</p>
+<p>Linux 内核的 KMS 实现支持在 framebuffer 中使用原生分辨率和即时终端(tty)切换。KMS 使用了更新的技术(例如 DRI2)，可以减少失真、增强3D性能，甚至使用内核空间节能功能。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <a href="../en/NVIDIA.html" title="NVIDIA">NVIDIA</a> 闭源驱动从 364.12 开始也实现了 KMS，但是没有利用 linux 内核的实现，缺少高分辨率终端的 fbdev 驱动。</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E8%83%8C%E6%99%AF"><span class="tocnumber">1</span> <span class="toctext">背景</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">2</span> <span class="toctext">安装</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#KMS_%E6%99%9A%E5%90%AF%E5%8A%A8"><span class="tocnumber">2.1</span> <span class="toctext">KMS 晚启动</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#KMS_%E6%97%A9%E5%90%AF%E5%8A%A8"><span class="tocnumber">2.2</span> <span class="toctext">KMS 早启动</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="tocnumber">3</span> <span class="toctext">问题解决</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#%E5%AD%97%E4%BD%93%E5%A4%AA%E5%B0%8F"><span class="tocnumber">3.1</span> <span class="toctext">字体太小</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#%E5%90%AF%E5%8A%A8%E9%94%99%E8%AF%AF%E4%BF%A1%E6%81%AF"><span class="tocnumber">3.2</span> <span class="toctext">启动错误信息</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Forcing_modes_and_EDID"><span class="tocnumber">4</span> <span class="toctext">Forcing modes and EDID</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Forcing_modes"><span class="tocnumber">4.1</span> <span class="toctext">Forcing modes</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Forcing_modes_2"><span class="tocnumber">4.2</span> <span class="toctext">Forcing modes</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#%E7%A6%81%E7%94%A8_KMS"><span class="tocnumber">5</span> <span class="toctext">禁用 KMS</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E8.83.8C.E6.99.AF"></span><span class="mw-headline" id="背景">背景</span>
+</h2>
+<p>以前，设定显卡是 X 服务器的工作。所以虚拟终端不可能提供漂亮的图像效果。同时，每次使用<code>Ctrl+Alt+F1~7</code>从X切换到虚拟终端时，x服务器必须将显卡的控制权交给内核，这个流程显得低效并且会导致闪烁。将控制权切回到X服务器同样是一个“痛苦”的过程。
+</p>
+<p>使用内核模式设置后，内核可以设定显卡的模式。这样开机启动即可看到漂亮的显示画面，在 X 图形界面 和 终端 之间也可以快速切换，还有其他的一些优点。
+</p>
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p>不管使用什么方法，都需要先“禁用”下列项：
+</p>
+<ul>
+<li>所有启动加载器中的 "vga=" 选项，这个选项与 KMS 的原生分辨率设置冲突。</li>
+<li>所有 "video=" 选项，这个选项会启动帧缓冲，导致驱动冲突。</li>
+<li>所有帧缓冲驱动(例如 <a href="../en/Uvesafb.html" title="Uvesafb">uvesafb</a>)。</li>
+</ul>
+<h3>
+<span id="KMS_.E6.99.9A.E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="KMS_晚启动">KMS 晚启动</span>
+</h3>
+<p><a href="../zh-CN/Intel_graphics.html" class="mw-redirect" title="Intel (简体中文)">Intel</a>, <a href="../en/Nouveau.html" title="Nouveau">Nouveau</a>, <a href="../zh-CN/ATI.html" title="ATI (简体中文)">ATI</a> 和 <a href="../en/AMDGPU.html" title="AMDGPU">AMDGPU</a> 驱动已经为所有芯片组提供了 KMS 支持。这些驱动也会自动启用 KMS。
+</p>
+<p>闭源的 <a href="../zh-CN/NVIDIA.html" title="NVIDIA (简体中文)">NVIDIA</a> 驱动从 364.12 开始支持 KMS，但是需要 <a href="../en/NVIDIA.html#DRM_kernel_mode_setting" title="NVIDIA">手动启用</a>。 
+</p>
+<p>闭源的 <a href="../en/AMD_Catalyst.html" title="AMD Catalyst">AMD Catalyst</a> 驱动不支持 KMS。 要使用 KMS，需要替换为开源的 <a href="../en/AMDGPU.html" title="AMDGPU">AMDGPU</a> 或 <a href="../en/ATI.html" title="ATI">ATI</a> 驱动。
+</p>
+<h3>
+<span id="KMS_.E6.97.A9.E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="KMS_早启动">KMS 早启动</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果你有分辨率方面的问题，可以参考一下 <a href="#%E5%BC%BA%E8%AE%BE%E6%A8%A1%E5%BC%8F%E5%92%8C_EDID">强设模式</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> ，也许会有帮助。</div>
+<p>KMS通常是在<a href="../en/Arch_boot_process.html#initramfs" title="Arch boot process">initramfs stage</a>之后开始初始化，但是你也可以在initramfs的阶段启用KMS:
+</p>
+<p>将<a href="../en/Xorg.html#Driver_installation" title="Xorg">视频驱动</a>模块加入<code>/etc/mkinitcpio.conf</code>的 MODULES 行。
+</p>
+<ul>
+<li>
+<a href="../en/AMDGPU.html" title="AMDGPU">AMDGPU</a> 驱动加入 <code>amdgpu</code>; 老的 <a href="../en/ATI.html" title="ATI">ATI</a> 驱动加入 <code>radeon</code>
+</li>
+<li>
+<a href="../en/Intel_graphics.html" class="mw-redirect" title="Intel">Intel</a> 卡加入<code>i915</code>
+</li>
+<li>开源的 <a href="../en/Nouveau.html" title="Nouveau">Nouveau</a> 驱动加入<code>nouveau</code>
+</li>
+<li>Matrox 卡加入 <code>mgag200</code>.</li>
+<li>
+<a href="../en/QEMU.html" title="QEMU">QEMU</a> 显卡： VirtIO 加入 <code>virtio-gpu</code>， QXL 加入 <code>qxl</code> for QXL，Cirrus 加入 <code>cirrus</code>
+</li>
+</ul>
+<p>例如对 Intel 显卡,将 <code>i915</code> 模块加入到 <code>/etc/mkinitcpio.conf</code> 的 <code>MODULES</code>行：
+</p>
+<pre>MODULES=(<b>i915</b>)
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 有些用户也许需要在 <code>i915</code> 之前添加<code>intel_agp</code> 用来阻止 ACPI 错误。顺序很重要，因为模块是按顺序加载的.</div>
+<p>如果您使用的是自定义的 <a href="https://en.wikipedia.org/wiki/Extended_display_identification_data" class="extiw" title="wikipedia:Extended display identification data">EDID</a> 文件,你应该也把它添加到initramfs中：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">FILES=(/lib/firmware/edid/your_edid.bin)</pre>
+<p>最后，重新生成内核镜像(详情参阅 <a href="../zh-CN/Mkinitcpio.html" title="Mkinitcpio (简体中文)">mkinitcpio (简体中文)</a>)。
+</p>
+<h2>
+<span id=".E9.97.AE.E9.A2.98.E8.A7.A3.E5.86.B3"></span><span class="mw-headline" id="问题解决">问题解决</span>
+</h2>
+<h3>
+<span id=".E5.AD.97.E4.BD.93.E5.A4.AA.E5.B0.8F"></span><span class="mw-headline" id="字体太小">字体太小</span>
+</h3>
+<p><a href="../zh-CN/Fonts.html#%E7%BB%88%E7%AB%AF%E5%AD%97%E4%BD%93" title="Fonts (简体中文)">Fonts (简体中文)#终端字体</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>介绍了如何在终端中使用大字体。软件仓库中的 (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=terminus-font">terminus-font</a></span>) 字体提供了很多字号，比如更大一些的 <code>ter-132n</code>。
+或者，可以<a href="#%E7%A6%81%E7%94%A8_KMS">#禁用 KMS</a> 以切换为更低的分辨率，使得字体外观显得更大一些。
+</p>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E9.94.99.E8.AF.AF.E4.BF.A1.E6.81.AF"></span><span class="mw-headline" id="启动错误信息">启动错误信息</span>
+</h3>
+<p>在比较老的系统上轮询已连接的显示设备的开销很大。在不同的硬件上甚至可能每几百毫秒就轮询一次。这会导致在视频播放等场景中可见的显示延迟，即使视频具有HDP输出，若硬件设置为其他非HDP输出仍会出现延迟。如果每10秒延迟一次，则应禁用轮询。
+</p>
+<p>如果启动时看到 0x00000010 (2) 错误码，(应该有 10 行文字，最后一行是错误码)，请使用
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/modprobe.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">options drm_kms_helper poll=0</pre>
+<h2><span class="mw-headline" id="Forcing_modes_and_EDID">Forcing modes and EDID</span></h2>
+<p>如果無法自動配置您本機的分辨率，或者根本無法偵測到顯示器；您的顯示器很有可能沒有或發送了破損的 <a href="https://en.wikipedia.org/wiki/EDID" class="extiw" title="wikipedia:EDID">EDID</a> 文件。內核將嘗試捕獲這種情況並設置爲某一通用分辨率。
+</p>
+<p>如果您擁有貴顯示器的 EDID 文件，您只需明確地強制設置即可(詳見下文)。但是，您在大多數情況下可能無法直接取得一個健全的 EDID 文件。您可能需要提取現有 EDID 文件中的信息並試圖修復它，從而獲得了一個新的 EDID 文件。
+</p>
+<p>在內核編譯期間，可以通過遵循 <a rel="nofollow" class="external text" href="https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/EDID/HOWTO.txt">上游文檔</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup> 來生成用於各種分辨率和配置的新EDID二進製文件（另請參見 <a rel="nofollow" class="external text" href="https://www.osadl.org/Single-View.111+M5315d29dd12.0.html">此處</a> 的簡短指南）。 <a rel="nofollow" class="external text" href="https://kodi.wiki/view/Creating_and_using_edid.bin_via_xorg.conf">這篇文章</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup> 也詳細概述了其他解決方案。在大多數情況下，提取現有文件比較容易。例如從Windows下的驅動程序中提取EDID，如果您的監視器在那裡運行良好。或者您可以使用來自 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=read-edid">read-edid</a></span> 包的 <code>get-edid</code> 命令，從具有相同設置的類似顯示器中提取。可以从 <code>/sys/class/drm/*/edid</code> 中查找一下。
+</p>
+<p>在您的EDID準備就緒後，請將它放置於特定的文件夾。例如一個在 <code>/usr/lib/firmware</code> 下名爲 <code>edid</code> 的文件夾，您可以將您的二進制文件放入其中。
+</p>
+<p>爲了使起在啓動時加載，請在<a href="/index.php?title=%E5%85%A7%E6%A0%B8%E5%91%BD%E4%BB%A4%E8%A1%8C&amp;action=edit&amp;redlink=1" class="new" title="內核命令行 (page does not exist)">內核命令行</a>加入下列參數：
+</p>
+<pre>drm_kms_helper.edid_firmware=edid/your_edid.bin
+</pre>
+<p>或者(從內核版本 4.15 開始)，您也可以通過下列方式在底層強制EDID信息:
+</p>
+<pre>drm.edid_firmware=edid/your_edid.bin
+</pre>
+<p>如果您希望僅將其應用於特定的連接器：
+</p>
+<pre>drm_kms_helper.edid_firmware=VGA-1:edid/your_edid.bin
+</pre>
+<p>您可以從下表找到內置的分辨率。<b>名稱</b>列指定了為了強制使用該分辨率而應該使用的名稱。
+</p>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<td><b>分辨率</b></td>
+<td>
+<b>名稱</b>
+</td>
+</tr>
+<tr>
+<td>800x600</td>
+<td>edid/800x600.bin
+</td>
+</tr>
+<tr>
+<td>1024x768</td>
+<td>edid/1024x768.bin
+</td>
+</tr>
+<tr>
+<td>1280x1024</td>
+<td>edid/1280x1024.bin
+</td>
+</tr>
+<tr>
+<td>1600x1200 (kernel 3.10 or higher)</td>
+<td>edid/1600x1200.bin
+</td>
+</tr>
+<tr>
+<td>1680x1050</td>
+<td>edid/1680x1050.bin
+</td>
+</tr>
+<tr>
+<td>1920x1080</td>
+<td>edid/1920x1080.bin
+</td>
+</tr>
+</tbody>
+</table>
+<p>如果您要進行<a href="#KMS_%E6%97%A9%E5%90%AF%E5%8A%A8">KMS早啓動</a>，則必須在initramfs中包含自定義EDID文件，否則可能會遇到問題。
+</p>
+<h3><span class="mw-headline" id="Forcing_modes">Forcing modes</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The method described below is somehow incomplete because e.g. <a href="../en/Xorg.html" title="Xorg">Xorg</a> does not take into account the resolution specified, so users are encouraged to use the method described above. However, specifying resolution with <code>video=</code> command line may be useful in some scenarios.</div>
+<p>From <a rel="nofollow" class="external text" href="https://nouveau.freedesktop.org/wiki/KernelModeSetting">the nouveau wiki</a>:
+</p>
+<dl><dd>A mode can be forced on the kernel command line. Unfortunately, the command line option video is poorly documented in the DRM case. Bits and pieces on how to use it can be found in
+<ul>
+<li><a rel="nofollow" class="external free" href="https://cgit.freedesktop.org/nouveau/linux-2.6/tree/Documentation/fb/modedb.txt">https://cgit.freedesktop.org/nouveau/linux-2.6/tree/Documentation/fb/modedb.txt</a></li>
+<li><a rel="nofollow" class="external free" href="https://cgit.freedesktop.org/nouveau/linux-2.6/tree/drivers/gpu/drm/drm_fb_helper.c">https://cgit.freedesktop.org/nouveau/linux-2.6/tree/drivers/gpu/drm/drm_fb_helper.c</a></li>
+</ul>
+</dd></dl>
+<p>The format is: 
+</p>
+<pre>video=&lt;conn&gt;:&lt;xres&gt;x&lt;yres&gt;[M][R][-&lt;bpp&gt;][@&lt;refresh&gt;][i][m][eDd]
+</pre>
+<ul>
+<li>
+<code>&lt;conn&gt;</code>: Connector, e.g. DVI-I-1, see <code>/sys/class/drm/</code> for available connectors</li>
+<li>
+<code>&lt;xres&gt; x &lt;yres&gt;</code>: resolution</li>
+<li>
+<code>M</code>: compute a CVT mode?</li>
+<li>
+<code>R</code>: reduced blanking?</li>
+<li>
+<code>-&lt;bpp&gt;</code>: color depth</li>
+<li>
+<code>@&lt;refresh&gt;</code>: refresh rate</li>
+<li>
+<code>i</code>: interlaced (non-CVT mode)</li>
+<li>
+<code>m</code>: margins?</li>
+<li>
+<code>e</code>: output forced to on</li>
+<li>
+<code>d</code>: output forced to off</li>
+<li>
+<code>D</code>: digital output forced to on (e.g. DVI-I connector)</li>
+</ul>
+<p>You can override the modes of several outputs using <code>video=</code> several times, for instance, to force <code>DVI</code> to <i>1024x768</i> at <i>85 Hz</i> and <code>TV-out</code> off: 
+</p>
+<pre>video=DVI-I-1:1024x768@85 video=TV-1:d
+</pre>
+<p>To get the name and current status of connectors, you can use the following shell oneliner:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ for p in /sys/class/drm/*/status; do con=${p%/status}; echo -n "${con#*/card?-}: "; cat $p; done</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">DVI-I-1: connected
+HDMI-A-1: disconnected
+VGA-1: disconnected
+</pre>
+<h3><span class="mw-headline" id="Forcing_modes_2">Forcing modes</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 下面描述的方法并不完整，e.g. Xorg does not take into account the resolution specified, so users are encouraged to use the method described above; however, specifying resolution with <code>video=</code> command line may be useful in some scenarios</div>
+<p>来自 <a rel="nofollow" class="external text" href="https://nouveau.freedesktop.org/wiki/KernelModeSetting">nouveau wiki</a>:
+</p>
+<p>用内核命令行可以强制设置使用的模式。但是 DRM 内核选项的文档很少，使用的方法位于：
+</p>
+<ul>
+<li><a rel="nofollow" class="external free" href="https://cgit.freedesktop.org/nouveau/linux-2.6/tree/Documentation/fb/modedb.txt">https://cgit.freedesktop.org/nouveau/linux-2.6/tree/Documentation/fb/modedb.txt</a></li>
+<li><a rel="nofollow" class="external free" href="https://cgit.freedesktop.org/nouveau/linux-2.6/tree/drivers/gpu/drm/drm_fb_helper.c">https://cgit.freedesktop.org/nouveau/linux-2.6/tree/drivers/gpu/drm/drm_fb_helper.c</a></li>
+</ul>
+<p>格式: 
+</p>
+<pre>video=&lt;conn&gt;:&lt;xres&gt;x&lt;yres&gt;[M][R][-&lt;bpp&gt;][@&lt;refresh&gt;][i][m][eDd]
+</pre>
+<ul>
+<li>&lt;conn&gt;: Connector, e.g. DVI-I-1, 查看 <code>/sys/class/drm/</code> .</li>
+<li>&lt;xres&gt; x &lt;yres&gt;: resolution</li>
+<li>M: compute a CVT mode?</li>
+<li>R: reduced blanking?</li>
+<li>-&lt;bpp&gt;: color depth</li>
+<li>@&lt;refresh&gt;: refresh rate</li>
+<li>i: interlaced (non-CVT mode)</li>
+<li>m: margins?</li>
+<li>e: output forced to on</li>
+<li>d: output forced to off</li>
+<li>D: digital output forced to on (e.g. DVI-I connector)</li>
+</ul>
+<p>可以使用多个 "video" 设置不同输出的分辨率，例如要强制 DVI 使用 1024x768 85 Hz ，同时禁用 TV-out : 
+</p>
+<pre>video=DVI-I-1:1024x768@85 video=TV-1:d
+</pre>
+<p>要获取当前连接器的状态，使用下面命令：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ for p in /sys/class/drm/*/status; do con=${p%/status}; echo -n "${con#*/card?-}: "; cat $p; done</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">                                                                                         
+DVI-I-1: connected
+HDMI-A-1: disconnected
+VGA-1: disconnected
+</pre>
+<h2>
+<span id=".E7.A6.81.E7.94.A8_KMS"></span><span class="mw-headline" id="禁用_KMS">禁用 KMS</span>
+</h2>
+<p>有时需要禁用 KMS，例如使用 catalyst 驱动时. 只需在内核参数中加入 <b>nomodeset</b> 即可，设置方法请阅读<a href="../en/Kernel_parameters.html" title="Kernel parameters">内核参数</a>页面。
+</p>
+<p>使用 <code>nomodeset</code> 内核参数的同时，Intel 卡需要添加 <code>i915.modeset=0</code>， Nvidia 卡需要添加 <code>nouveau.modeset=0</code>. Nvidia Optimus 双显卡系统，需要添加三个内核参数：
+</p>
+<pre>"nomodeset i915.modeset=0 nouveau.modeset=0"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 有些 <a href="../en/Xorg.html" title="Xorg">Xorg</a> 驱动必须启用 KMS 才能工作，参阅所用驱动的页面。</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../zh-CN/Category:Graphics.html" title="Category:Graphics (简体中文)">Graphics (简体中文)</a></li>
+<li><a href="../zh-CN/Category:Kernel.html" title="Category:Kernel (简体中文)">Kernel (简体中文)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Kernel_mode_setting_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=645056">https://wiki.archlinux.org/index.php?title=Kernel_mode_setting_(简体中文)&amp;oldid=645056</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 December 2020, at 11:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

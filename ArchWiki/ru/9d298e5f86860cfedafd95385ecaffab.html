@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>pacman (Русский)/Restore local database (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Pacman_Русский_Restore_local_database_Русский rootpage-Pacman_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">pacman (Русский)/Restore local database (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../ru/Pacman.html" title="Pacman (Русский)">Pacman (Русский)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Pacman/Restore_local_database.html" title="Pacman/Restore local database">pacman/Restore local database</a>. Дата последней синхронизации: 2 сентября 2020. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Pacman/Restore_local_database&amp;diff=0&amp;oldid=633053">изменения</a>.</div>
+<p>Несколько признаков необходимости восстановления локальной базы данных pacman:
+</p>
+<ul>
+<li>Команда <code>pacman -Q</code> ничего не выводит, а <code>pacman -Syu</code> ошибочно сообщает, что система обновлена.</li>
+<li>Выводится список уже удовлетворённых зависимостей при попытке установить пакет с помощью <code>pacman -S пакет</code>.</li>
+</ul>
+<p>Скорее всего, база данных pacman с установленными пакетами (<code>/var/lib/pacman/local</code>) была повреждена или удалена. Хотя это и серьёзная проблема, базу данных можно восстановить приведёнными ниже инструкциями.
+</p>
+<p>Для начала убедитесь, что в системе присутствует лог-файл pacman:
+</p>
+<pre>$ ls /var/log/pacman.log
+</pre>
+<p>Если же файл отсутствует, воспользоваться данным методом <i>не</i> получится. В таком случае попробуйте воспользоваться <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=670876">скриптом обнаружения пакетов от Xyne</a>, а если он не поможет, скорее всего, придётся переустановить систему.
+</p>
+<h2>
+<span id=".D0.A1.D0.BE.D0.B7.D0.B4.D0.B0.D0.BD.D0.B8.D0.B5_.D1.81.D0.BF.D0.B8.D1.81.D0.BA.D0.B0_.D0.BF.D0.B0.D0.BA.D0.B5.D1.82.D0.BE.D0.B2_.D0.B4.D0.BB.D1.8F_.D0.B2.D0.BE.D1.81.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BB.D0.B5.D0.BD.D0.B8.D1.8F"></span><span class="mw-headline" id="Создание_списка_пакетов_для_восстановления">Создание списка пакетов для восстановления</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Прежде чем продолжить, удалите пакеты для других архитектур, если они по какой-либо причине содержатся в кеше <a href="../ru/Pacman.html" title="Pacman (Русский)">pacman</a> или целевой директории пакетов <a href="../ru/Makepkg.html" title="Makepkg (Русский)">makepkg</a>.</div>
+<p><a href="../ru/Help:Reading.html#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Установите">Установите</a> пакет <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pacutils">pacutils</a></span>, чтобы получить утилиту <i>paclog</i>.
+</p>
+<p>Создайте скрипт фильтрации логов и сделайте его <a href="../ru/Help:Reading.html#%D0%A1%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C_%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D0%BD%D1%8F%D0%B5%D0%BC%D1%8B%D0%BC" title="Help:Reading (Русский)">исполняемым</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">pacrecover</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash -e
+
+. /etc/makepkg.conf
+
+PKGCACHE=$((grep -m 1 '^CacheDir' /etc/pacman.conf || echo 'CacheDir = /var/cache/pacman/pkg') | sed 's/CacheDir = //')
+
+pkgdirs=("$@" "$PKGDEST" "$PKGCACHE")
+
+while read -r -a parampart; do
+  pkgname="${parampart[0]}-${parampart[1]}-*.pkg.tar.xz"
+  for pkgdir in ${pkgdirs[@]}; do
+    pkgpath="$pkgdir"/$pkgname
+    [ -f $pkgpath ] &amp;&amp; { echo $pkgpath; break; };
+  done || echo ${parampart[0]} 1&gt;&amp;2
+done
+</pre>
+<p>Запустите скрипт (опционально передав в качестве параметров дополнительные директории с пакетами):
+</p>
+<pre>$ paclog --pkglist /var/log/pacman.log | ./pacrecover &gt;files.list 2&gt;pkglist.orig
+</pre>
+<p>Будут созданы два файла: <code>files.list</code> с файлами пакетов, до сих пор присутствующих в системе, и <code>pkglist.orig</code> с пакетами для загрузки. После выполнения следующей команды может проявиться несоответствие между файлами новой и старых версий пакета. Такие несоответствия должны быть исправлены вручную.
+</p>
+<p>Команда, автоматически ограничивающая второй список так, чтобы в списке находились только доступные в репозитории пакеты:
+</p>
+<pre>$ { cat pkglist.orig; pacman -Slq; } | sort | uniq -d &gt; pkglist
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Если эта команда завершается с ошибкой <code>failed to initialise alpm library</code>, проверьте, существует ли файл <code>/var/lib/pacman/local/ALPM_DB_VERSION</code>. Если же он отсутствует, выполните <code>pacman-db-upgrade</code> от имени суперпользователя, после чего также запустив <code>pacman -Sy</code> и <b>повторив предыдущую команду</b>.</div>
+<p>Проверьте список на отсутствие важных пакетов из группы <i>base</i> и добавьте их:
+</p>
+<pre>$ comm -23 &lt;(pacman -Sgq base | sort) pkglist.orig &gt;&gt; pkglist
+</pre>
+<p>Продолжите, когда содержание обеих файлов будет удовлетворительным, так как они используются для восстановления базы данных pacman (<code>/var/lib/pacman/local/</code>).
+</p>
+<h2>
+<span id=".D0.92.D0.BE.D1.81.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BB.D0.B5.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="Восстановление">Восстановление</span>
+</h2>
+<p>Объявите в bash <a href="../ru/80a0b893dde6024bc9b9f7b429c9fad7.html" class="mw-redirect" title="Bash/Функции">функцию</a> восстановления:
+</p>
+<pre> recovery-pacman() {
+    sudo pacman "$@"  \
+    --log /dev/null   \
+    --noscriptlet     \
+    --dbonly          \
+    --overwrite "*"   \
+    --nodeps          \
+    --needed
+}
+</pre>
+<p>Опция <code>--log /dev/null</code> предотвратит засорение лога pacman ненужными сообщениями, <code>--needed</code> сэкономит время, пропуская уже присутствующие в базе пакеты, <code>--nodeps</code> позволит устанавливать пакеты из кэша, даже если им нужны пакеты-зависимости более новых версий. Остальные параметры позволяют pacman работать с файловой системой без прав чтения или записи.
+</p>
+<p>Заполните базу синхронизации:
+</p>
+<pre># pacman -Sy
+</pre>
+<p>Начните генерировать базу данных, установив локально доступные пакеты из файла <code>files.list</code>:
+</p>
+<pre># recovery-pacman -U $(&lt; files.list)
+</pre>
+<p>Установите оставшиеся пакеты из файла <code>pkglist</code>:
+</p>
+<pre># recovery-pacman -S $(&lt; pkglist)
+</pre>
+<p>Обновите локальную базу данных, чтобы пакеты, которые не требуются каким-либо другим пакетам, были помечены как <a href="../ru/Pacman.html#%D0%9F%D1%80%D0%B8%D1%87%D0%B8%D0%BD%D0%B0_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8" class="mw-redirect" title="Причина установки">установленные явно</a>, а все остальные считались зависимостями. В будущем придётся быть более осторожным при удалении пакетов, но это лучшее решение из возможных, когда оригинальная база данных была утрачена.
+</p>
+<pre># pacman -D --asdeps $(pacman -Qq)
+# pacman -D --asexplicit $(pacman -Qtq)
+</pre>
+<p>Проверьте установленные пакеты на наличие повреждений:
+</p>
+<pre># pacman -Qk
+</pre>
+<p>При желании можно также выполнить поиск файлов, <a href="../ru/9162c98b104d744ec851c6ccfd816dd7.html#%D0%9F%D0%BE%D0%B8%D1%81%D0%BA_%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2_%D0%B1%D0%B5%D0%B7_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0-%D0%B2%D0%BB%D0%B0%D0%B4%D0%B5%D0%BB%D1%8C%D1%86%D0%B0" class="mw-redirect" title="Pacman/Советы и приёмы">не принадлежащих ни одному пакету</a>.
+</p>
+<p>Наконец, обновите все пакеты:
+</p>
+<pre># pacman -Su
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Package_manager.html" title="Category:Package manager (Русский)">Package manager (Русский)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Pacman_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Restore_local_database_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=634074">https://wiki.archlinux.org/index.php?title=Pacman_(Русский)/Restore_local_database_(Русский)&amp;oldid=634074</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 September 2020, at 06:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

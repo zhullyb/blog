@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Concurrent Versions System - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Concurrent_Versions_System rootpage-Concurrent_Versions_System skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Concurrent Versions System</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> <span style="color:red;">please use the first argument of the template to provide a brief explanation.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Concurrent_Versions_System">Talk:Concurrent Versions System#</a>)</div>
+</div>
+<p><i>"<a rel="nofollow" class="external text" href="http://www.nongnu.org/cvs/">Concurrent Versions System</a> is a version control system, an important component of Source Configuration Management (SCM). Using it, you can record the history of sources files, and documents. It fills a similar role to the free software RCS, PRCS, and Aegis packages."</i>
+</p>
+<p>This is a quick guide on how to set up the latest CVS server.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Initialization"><span class="tocnumber">2</span> <span class="toctext">Initialization</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Configuration"><span class="tocnumber">3</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Use"><span class="tocnumber">4</span> <span class="toctext">Use</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cvs">cvs</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xinetd">xinetd</a></span>.
+</p>
+<p>Create the cvs group - members of this group will have write access to the repository: 
+</p>
+<pre># groupadd cvs
+</pre>
+<p>Create the cvs user in the cvs group (-md makes the home directory):
+</p>
+<pre># useradd -md /home/cvsroot -g cvs -p Insecure0 cvs
+</pre>
+<h2><span class="mw-headline" id="Initialization">Initialization</span></h2>
+<p>Initialize your CVS repository (as cvs):
+</p>
+<pre>cvs% cvs -d /home/cvsroot init
+</pre>
+<p>The permissions on the directory (not the files inside, however) should be 2775 (drwxrwxr-x), but if not, run (as cvs):
+</p>
+<pre>cvs% chmod 2775 /home/cvsroot
+</pre>
+<p>Add any users that you want to have local access to the repository to the group cvs by using the following two steps.
+You can add pre-existing users to the cvs group with the command:
+</p>
+<pre># gpasswd -a username cvs
+</pre>
+<p>Make a xinetd config file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/xinetd.d/cvspserver</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">service cvspserver
+{
+        port            = 2401
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = root
+        passenv         = /home/cvsroot
+        server          = /usr/bin/cvs
+        server_args     = -f --allow-root=/home/cvsroot pserver
+}</pre>
+<p>Ensure you have the following line in <code>/etc/services</code> (add it if not):
+</p>
+<pre>cvspserver 2401/tcp
+</pre>
+<p>Unset the <code>HOME</code> variable
+</p>
+<pre># unset HOME
+</pre>
+<p>And <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>xinetd.service</code>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Become cvs ("su cvs") and create a 'passwd' file in <code>~/CVSROOT</code>. To add entries in the file you can use htpasswd command (present in the apache package) like that:
+</p>
+<pre>htpasswd -b filename username password
+</pre>
+<p>then edit che file and add che group, should look like this:
+</p>
+<pre># Format is username:password:group
+
+anonymous::
+luser:HopefullySecure0:cvs
+other:Insecure0:cvs
+</pre>
+<p>Now create a 'writers' file in <code>~/CVSROOT</code>, which grants write privileges to the users you created in 'passwd':
+</p>
+<pre>luser
+other
+</pre>
+<p>Now create a 'readers' file in <code>~/CVSROOT</code>, which grants read privileges to the users you created in 'passwd':
+</p>
+<pre>anonymous
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If a user is present in the readers file cannot have write access too.</div>
+<h2><span class="mw-headline" id="Use">Use</span></h2>
+<p>You can test out the server using the following commands:
+</p>
+<pre>export CVSROOT=:pserver:my_user_name@127.0.0.1:/home/cvsroot
+cvs login
+mkdir ~/sandbox
+mkdir ~/sandbox/myproject
+cd ~/sandbox/myproject
+echo "this is a sample file" &gt; myfile
+cvs import -m "description of myproject" myproject v1 r1
+cd ..
+rm -R myproject
+cvs checkout myproject
+cd myproject
+echo "some changes to the file" &gt;&gt; myfile
+cvs commit -m "Explain changes here" myfile
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Version_Control_System.html" title="Category:Version Control System">Version Control System</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Concurrent_Versions_System&amp;oldid=446719">https://wiki.archlinux.org/index.php?title=Concurrent_Versions_System&amp;oldid=446719</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 August 2016, at 13:07.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

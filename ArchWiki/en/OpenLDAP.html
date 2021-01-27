@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>OpenLDAP - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-OpenLDAP rootpage-OpenLDAP skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">OpenLDAP</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/LDAP_authentication.html" class="mw-redirect" title="LDAP Authentication">LDAP Authentication</a></li>
+<li><a href="../en/LDAP_Hosts.html" title="LDAP Hosts">LDAP Hosts</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://www.openldap.org/">OpenLDAP</a> is an open-source implementation of the LDAP protocol. An LDAP server basically is a non-relational database which is optimised for accessing, but not writing, data. It is mainly used as an address book (for e.g. email clients) or authentication backend to various services (such as Samba, where it is used to emulate a domain controller, or <a href="../en/LDAP_authentication.html" title="LDAP authentication">Linux system authentication</a>, where it replaces <code>/etc/passwd</code>) and basically holds the user data.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Commands related to OpenLDAP that begin with <code>ldap</code> (like <code>ldapsearch</code>) are client-side utilities, while commands that begin with <code>slap</code> (like <code>slapcat</code>) are server-side.</div>
+<p>This page is a starting point for a basic OpenLDAP installation and a sanity check.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Directory services are an enormous topic. Configuration can therefore be complex.  If you are totally new to those concepts, <a rel="nofollow" class="external text" href="http://www.brennan.id.au/20-Shared_Address_Book_LDAP.html">this</a> is a good introduction that is easy to understand and that will get you started, even if you are new to LDAP.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#The_server"><span class="tocnumber">2.1</span> <span class="toctext">The server</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#The_client"><span class="tocnumber">2.2</span> <span class="toctext">The client</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Create_initial_entry"><span class="tocnumber">2.3</span> <span class="toctext">Create initial entry</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Test_your_new_OpenLDAP_installation"><span class="tocnumber">2.4</span> <span class="toctext">Test your new OpenLDAP installation</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#OpenLDAP_over_TLS"><span class="tocnumber">2.5</span> <span class="toctext">OpenLDAP over TLS</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Create_a_self-signed_certificate"><span class="tocnumber">2.5.1</span> <span class="toctext">Create a self-signed certificate</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Configure_slapd_for_SSL"><span class="tocnumber">2.5.2</span> <span class="toctext">Configure slapd for SSL</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Start_slapd_with_SSL"><span class="tocnumber">2.5.3</span> <span class="toctext">Start slapd with SSL</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Next_steps"><span class="tocnumber">3</span> <span class="toctext">Next steps</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12">
+<a href="#Backup_LDAP"><span class="tocnumber">3.1</span> <span class="toctext">Backup LDAP</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#Export_configuration"><span class="tocnumber">3.1.1</span> <span class="toctext">Export configuration</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Export_database"><span class="tocnumber">3.1.2</span> <span class="toctext">Export database</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#slapd_configuration_checking"><span class="tocnumber">4.1</span> <span class="toctext">slapd configuration checking</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Client_authentication_checking"><span class="tocnumber">4.2</span> <span class="toctext">Client authentication checking</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#LDAP_server_stops_suddenly"><span class="tocnumber">4.3</span> <span class="toctext">LDAP server stops suddenly</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#LDAP_server_does_not_start"><span class="tocnumber">4.4</span> <span class="toctext">LDAP server does not start</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>OpenLDAP contains both a LDAP server and client. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> it with the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openldap">openldap</a></span>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="The_server">The server</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you already have an OpenLDAP database on your machine and would like to remove it, then it can be removed by deleting everything inside of <code>/var/lib/openldap/openldap-data/</code>. So, backup your <code>DB_CONFIG</code>.</div>
+<p>The server configuration file is located at <code>/etc/openldap/slapd.conf</code>.
+</p>
+<p>Edit the suffix and rootdn. The suffix typically is your domain name but it does not have to be. It depends on how you use your directory. We will use <i>example</i> for the domain name, and <i>com</i> for the tld. The rootdn is your LDAP administrator's name (we will use <i>root</i> here).
+</p>
+<pre>suffix     "dc=example,dc=com"
+rootdn     "cn=root,dc=example,dc=com"
+</pre>
+<p>Now we delete the default root password and create a strong one:
+</p>
+<pre># sed -i "/rootpw/ d" /etc/openldap/slapd.conf #find the line with rootpw and delete it
+# echo "rootpw    $(slappasswd)" &gt;&gt; /etc/openldap/slapd.conf  #add a line which includes the hashed password output from slappasswd
+</pre>
+<p>You will likely want to add some typically used <a rel="nofollow" class="external text" href="http://www.openldap.org/doc/admin24/schema.html">schemas</a> to the top of <code>slapd.conf</code>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> A currently missing <i>samba.schema</i> can be taken from <code>/usr/share/doc/samba/examples/LDAP/samba.schema</code>. In order to employ it, copy it to <code>/etc/openldap/schema</code>.</div>
+<pre>include         /etc/openldap/schema/cosine.schema
+include         /etc/openldap/schema/inetorgperson.schema
+include         /etc/openldap/schema/nis.schema
+#include         /etc/openldap/schema/samba.schema
+</pre>
+<p>You will likely want to add some typically used <a rel="nofollow" class="external text" href="http://www.openldap.org/doc/admin24/tuning.html#Indexes">indexes</a> to the bottom of <code>slapd.conf</code>:
+</p>
+<pre>index   uid             pres,eq
+index   mail            pres,sub,eq
+index   cn              pres,sub,eq
+index   sn              pres,sub,eq
+index   dc              eq
+</pre>
+<p>If you plan to use your LDAP server for authentication, you might want to check access control configuration in <a href="../en/LDAP_authentication.html#LDAP_Server_Setup" title="LDAP authentication">LDAP authentication#LDAP Server Setup</a>.
+</p>
+<p>Now prepare the database directory. You will need to rename the default config:
+</p>
+<pre># cp /var/lib/openldap/openldap-data/DB_CONFIG.example /var/lib/openldap/openldap-data/DB_CONFIG
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> With OpenLDAP 2.4 the configuration of <code>slapd.conf</code> is deprecated. From this version on all configuration settings are stored in <code>/etc/openldap/slapd.d/</code>.</div>
+<p>To store the recent changes in <code>slapd.conf</code> to the new <code>/etc/openldap/slapd.d/</code> configuration settings, we have to delete the old configuration files first, do this every time you change the configuration:
+</p>
+<pre># rm -rf /etc/openldap/slapd.d/*
+</pre>
+<p>Change ownership recursively on the new files and directory in /etc/openldap/slapd.d:
+</p>
+<pre># chown -R ldap:ldap /etc/openldap/slapd.d
+</pre>
+<p>(if you do not have a database yet, you might need to create one by starting and stopping the <code>slapd.service</code> <a href="../en/Systemd.html#Using_units" title="Systemd">using systemd</a> )
+</p>
+<p>Then we generate the new configuration with:
+</p>
+<pre># slaptest -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d/
+</pre>
+<p>The above command has to be run every time you change <code>slapd.conf</code>. Check if everything succeeded. Ignore message "bdb_monitor_db_open: monitoring disabled; configure monitor database to enable". 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If this doesn't work, try doing this first.
+<pre># slapadd -l /dev/null -f /etc/openldap/slapd.conf
+</pre>
+This will initialize the database with no entries.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Berkeley DB (BDB) should no longer be used. The mdb backend to slapd(8) is the recommended primary backend for a normal slapd database. It uses OpenLDAP's own Lightning Memory-Mapped Database (LMDB) library to store data and is intended to replace the Berkeley DB backend. The official OpenLDAP package in [core] defaults to mdb.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Index the directory after you populate it. You should stop slapd before doing this.
+<pre># slapindex
+# chown ldap:ldap /var/lib/openldap/openldap-data/*
+</pre>
+<p>or just
+</p>
+<pre>$ sudo -u ldap slapindex
+</pre>
+</div>
+<p>Finally, start the slapd daemon with <code>slapd.service</code> using systemd.
+</p>
+<h3><span class="mw-headline" id="The_client">The client</span></h3>
+<p>The client config file is located at <code>/etc/openldap/ldap.conf</code>. 
+</p>
+<p>It is quite simple: you will only have to alter <code>BASE</code> to reflect the suffix of the server, and <code>URI</code> to reflect the address of the server, like:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openldap/ldap.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">BASE            dc=example,dc=com
+URI             ldap://localhost</pre>
+<p>If you decide to use SSL:
+</p>
+<ul>
+<li>The protocol (ldap or ldaps) in the <code>URI</code> entry has to conform with the slapd configuration</li>
+<li>If you decide to use self-signed certificates, add a <code>TLS_REQCERT allow</code> line to <code>ldap.conf</code>
+</li>
+<li>If you use a signed certificate from a CA, add the line <code>TLS_CACERTDIR   /usr/share/ca-certificates/trust-source</code> in <code>ldap.conf</code>.</li>
+</ul>
+<h3><span class="mw-headline" id="Create_initial_entry">Create initial entry</span></h3>
+<p>Once your client is configured, you probably want to create the root entry, and an entry for the root role:
+</p>
+<pre>$ ldapadd -x -D 'cn=root,dc=example,dc=com' -W
+dn: dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+dc: example
+o: Example
+description: Example directory
+
+dn: cn=root,dc=example,dc=com
+objectClass: organizationalRole
+cn: root
+description: Directory Manager
+^D
+</pre>
+<p>The text after the first line is entered on stdin, or could be read from a file either with the -f option or a file redirect.
+</p>
+<h3><span class="mw-headline" id="Test_your_new_OpenLDAP_installation">Test your new OpenLDAP installation</span></h3>
+<p>This is easy, just run the command below:
+</p>
+<pre>$ ldapsearch -x '(objectclass=*)' -b 'dc=example,dc=com'
+</pre>
+<p>Or authenticating as the rootdn (replacing <code>-x</code> by <code>-D &lt;user&gt; -W</code>), using the example configuration we had above:
+</p>
+<pre>$ ldapsearch -D "cn=root,dc=example,dc=com" -W '(objectclass=*)' -b 'dc=example,dc=com'
+</pre>
+<p>Now you should see some information about your database.
+</p>
+<h3><span class="mw-headline" id="OpenLDAP_over_TLS">OpenLDAP over TLS</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <a rel="nofollow" class="external text" href="http://www.openldap.org/doc/admin24/">upstream documentation</a> is much more useful/complete than this section</div>
+<p>If you access the OpenLDAP server over the network and especially if you have sensitive data stored on the server you run the risk of someone sniffing your data which is sent clear-text. The next part will guide you on how to setup an SSL connection between the LDAP server and the client so the data will be sent encrypted.
+</p>
+<p>In order to use TLS, you must have a certificate. For testing purposes, a <i>self-signed</i> certificate will suffice. To learn more about certificates, see <a href="../en/OpenSSL.html" title="OpenSSL">OpenSSL</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> OpenLDAP cannot use a certificate that has a password associated to it.</div>
+<h4><span class="mw-headline" id="Create_a_self-signed_certificate">Create a self-signed certificate</span></h4>
+<p>To create a <i>self-signed</i> certificate, type the following:
+</p>
+<pre>$ openssl req -new -x509 -nodes -out slapdcert.pem -keyout slapdkey.pem -days 365
+</pre>
+<p>You will be prompted for information about your LDAP server. Much of the information can be left blank. The most important information is the common name. This must be set to the DNS name of your LDAP server. If your LDAP server's IP address resolves to example.org but its server certificate shows a CN of bad.example.org, LDAP clients will reject the certificate and will be unable to negotiate TLS connections (apparently the results are wholly unpredictable).
+</p>
+<p>Now that the certificate files have been created copy them to <code>/etc/openldap/ssl/</code> (create this directory if it does not exist) and secure them. 
+<code>slapdcert.pem</code> must be world readable because it contains the public key. <code>slapdkey.pem</code> on the other hand should only be readable for the ldap user for security reasons:
+</p>
+<pre># mv slapdcert.pem slapdkey.pem /etc/openldap/ssl/
+# chmod -R 755 /etc/openldap/ssl/
+# chmod 400 /etc/openldap/ssl/slapdkey.pem
+# chmod 444 /etc/openldap/ssl/slapdcert.pem
+# chown ldap /etc/openldap/ssl/slapdkey.pem
+</pre>
+<h4><span class="mw-headline" id="Configure_slapd_for_SSL">Configure slapd for SSL</span></h4>
+<p>Edit the daemon configuration file (<code>/etc/openldap/slapd.conf</code>) to tell LDAP where the certificate files reside by adding the following lines:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+The latest version of OpenLDAP (2.4.45) uses OpenSSL and <u>not</u> GnuTLS. This means that current versions of OpenLDAP <b>do</b> in fact know how to handle the <a rel="nofollow" class="external text" href="https://www.openssl.org/docs/man1.1.0/apps/ciphers.html#CIPHER-STRINGS">DEFAULT TLSCipherSuite</a>. To prove this one could run <code>ldd /usr/bin/slapd</code>
+</div>
+<pre># Certificate/SSL Section
+TLSCipherSuite DEFAULT
+TLSCertificateFile /etc/openldap/ssl/slapdcert.pem
+TLSCertificateKeyFile /etc/openldap/ssl/slapdkey.pem
+</pre>
+<p>If you are using a signed SSL Certificate from a certification authority such as <a href="../en/Certbot.html" class="mw-redirect" title="Let’s Encrypt">Let’s Encrypt</a>, you will also need to specify the path to the root certificates database and your intermediary certificate. You will also need to change ownership of the <code>.pem</code> files and intermediary directories to make them readable to the user <code>ldap</code>:
+</p>
+<pre># Certificate/SSL Section
+TLSCipherSuite DEFAULT
+TLSCertificateFile /etc/letsencrypt/live/ldap.my-domain.com/cert.pem
+TLSCertificateKeyFile /etc/letsencrypt/live/ldap.my-domain.com/privkey.pem
+TLSCACertificateFile /etc/letsencrypt/live/ldap.my-domain.com/chain.pem
+TLSCACertificatePath /usr/share/ca-certificates/trust-source
+</pre>
+<p><b>SSLv2/v3</b>
+</p>
+<p>Disable SSLv2/v3 and use strong ciphers.
+</p>
+<pre>TLSCipherSuite HIGH:MEDIUM:-SSLv2:-SSLv3
+</pre>
+<p>The TLSCipherSuite specifies a list of OpenSSL ciphers from which slapd will choose when negotiating TLS connections, in decreasing order of preference. In addition to those specific ciphers, you can use any of the wildcards supported by OpenSSL. <b>NOTE:</b> DEFAULT is a wildcard. See <span class="plainlinks archwiki-template-man" title="$ man 1ssl ciphers"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ciphers.1ssl">ciphers(1ssl)</a></span> for description of ciphers, wildcards and options supported.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> To see which ciphers are supported by your local OpenSSL installation, type the following: <code>openssl ciphers -v ALL:COMPLEMENTOFALL</code>. Always test which ciphers will actually be enabled by TLSCipherSuite by providing it to OpenSSL command, like this: <code>openssl ciphers -v 'DEFAULT'</code> </div>
+<p>Regenerate the configuration directory:
+</p>
+<pre># rm -rf /etc/openldap/slapd.d/*                                  # erase old config settings
+# slaptest -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d/  # generate new config directory from config file
+# chown -R ldap:ldap /etc/openldap/slapd.d                        # Change ownership recursively to ldap on the config directory
+</pre>
+<h4><span class="mw-headline" id="Start_slapd_with_SSL">Start slapd with SSL</span></h4>
+<p>You will have to edit <code>slapd.service</code> to change to protocol slapd listens on.
+</p>
+<p>Create the override unit:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">systemctl edit slapd.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+ExecStart=
+ExecStart=/usr/bin/slapd -u ldap -g ldap -h "ldaps:///"</pre>
+<p>Localhost connections do not need to use SSL. So, if you want to access the server locally you should change the <code>ExecStart</code> line to:
+</p>
+<pre>ExecStart=/usr/bin/slapd -u ldap -g ldap -h "ldap://127.0.0.1 ldaps:///"
+</pre>
+<p>Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>slapd.service</code>. If it was enabled before, reenable it now.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you created a self-signed certificate above, be sure to add <code>TLS_REQCERT allow</code> to <code>/etc/openldap/ldap.conf</code> on the client, or it will not be able connect to the server.</div>
+<h2><span class="mw-headline" id="Next_steps">Next steps</span></h2>
+<p>You now have a basic LDAP installation. The next step is to design your directory. The design is heavily dependent on what you are using it for. If you are new to LDAP, consider starting with a directory design recommended by the specific client services that will use the directory (<a href="../en/PAM.html" title="PAM">PAM</a>, <a href="../en/Postfix.html" title="Postfix">Postfix</a>, etc).
+</p>
+<p>A directory for system authentication is the <a href="../en/LDAP_authentication.html" title="LDAP authentication">LDAP authentication</a> article.
+</p>
+<p>A nice web frontend is <a href="../en/PhpLDAPadmin.html" title="PhpLDAPadmin">phpLDAPadmin</a>.
+</p>
+<h3><span class="mw-headline" id="Backup_LDAP">Backup LDAP</span></h3>
+<p>It is imperative that we have a backup of our LDAP database and configuration in case we ever need to restore for any number of reasons.
+</p>
+<h4><span class="mw-headline" id="Export_configuration">Export configuration</span></h4>
+<pre>$ slapcat -F /etc/openldap/slapd.d -n 0 -l "$(hostname)-ldap-mdb-config-$(date '+%F').ldif"
+</pre>
+<h4><span class="mw-headline" id="Export_database">Export database</span></h4>
+<pre>$ slapcat -l "$(hostname)-ldap-database-$(date '+%F').ldif"
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="slapd_configuration_checking">slapd configuration checking</span></h3>
+<p>You can check config settings with
+</p>
+<pre>$ slaptest -f /etc/openldap/slapd.conf -v
+</pre>
+<h3><span class="mw-headline" id="Client_authentication_checking">Client authentication checking</span></h3>
+<p>If you cannot connect to your server for non-secure authentication
+</p>
+<pre>$ ldapsearch -x -H ldap://ldaservername:389 -D cn=Manager,dc=example,dc=exampledomain
+</pre>
+<p>and for TLS secured authentication with:
+</p>
+<pre>$ ldapsearch -x -H ldaps://ldaservername:636 -D cn=Manager,dc=example,dc=exampledomain
+</pre>
+<h3><span class="mw-headline" id="LDAP_server_stops_suddenly">LDAP server stops suddenly</span></h3>
+<p>If you notice that slapd seems to start but then stops, try running:
+</p>
+<pre># chown -R ldap:ldap /var/lib/openldap
+</pre>
+<p>to allow slapd write access to its data directory as the user "ldap".
+</p>
+<h3><span class="mw-headline" id="LDAP_server_does_not_start">LDAP server does not start</span></h3>
+<p>Try starting the server from the command line with debugging output enabled:
+</p>
+<pre># slapd -u ldap -g ldap -h ldaps://ldaservername:636 -d Config,Stats
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.openldap.org/doc/admin24/">Official OpenLDAP Software 2.4 Administrator's Guide</a></li>
+<li>
+<a href="../en/PhpLDAPadmin.html" title="PhpLDAPadmin">phpLDAPadmin</a> is a web interface tool in the style of phpMyAdmin.</li>
+<li><a href="../en/LDAP_authentication.html" title="LDAP authentication">LDAP authentication</a></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/apachedirectorystudio/">apachedirectorystudio</a></span><sup><small>AUR</small></sup> from the <a href="../en/Arch_User_Repository.html" title="Arch User Repository">Arch User Repository</a> is an Eclipse-based LDAP viewer. Works perfect with OpenLDAP installations.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Directory_services.html" title="Category:Directory services">Directory services</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=OpenLDAP&amp;oldid=636727">https://wiki.archlinux.org/index.php?title=OpenLDAP&amp;oldid=636727</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 28 September 2020, at 12:05.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

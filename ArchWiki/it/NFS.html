@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>NFS (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-NFS_Italiano rootpage-NFS_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">NFS (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> <span style="color:red;">please use the first argument of the template to provide a brief explanation.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:NFS_(Italiano)">Talk:NFS (Italiano)#</a>)</div>
+</div>
+<p>Lo scopo di questo articolo è quello di configurare un server nfs per condividere file in rete.
+</p>
+<ul>
+<li>Nota: per NFSv4, consultare la guida a <a href="../en/NFS.html" class="mw-redirect" title="NFSv4">NFSv4</a>
+</li>
+<li>nfs-utils è stato aggiornato dal 2009-06-23, ed è ora abilitato il supporto NFS4. Vedere <a rel="nofollow" class="external text" href="https://archlinux.org/news/452/">news bulletin</a>.</li>
+<li>portmap è stato sostituito da rpcbind.</li>
+</ul>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Pacchetti_richiesti"><span class="tocnumber">1</span> <span class="toctext">Pacchetti richiesti</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configurazione_del_server"><span class="tocnumber">2</span> <span class="toctext">Configurazione del server</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#File"><span class="tocnumber">2.1</span> <span class="toctext">File</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#/etc/exports"><span class="tocnumber">2.1.1</span> <span class="toctext">/etc/exports</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href="#/etc/conf.d/nfs-common.conf"><span class="tocnumber">2.1.2</span> <span class="toctext">/etc/conf.d/nfs-common.conf</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Demoni"><span class="tocnumber">2.2</span> <span class="toctext">Demoni</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Configurazione_del_client"><span class="tocnumber">3</span> <span class="toctext">Configurazione del client</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8">
+<a href="#File_2"><span class="tocnumber">3.1</span> <span class="toctext">File</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#/etc/conf.d/nfs-common.conf_2"><span class="tocnumber">3.1.1</span> <span class="toctext">/etc/conf.d/nfs-common.conf</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10"><a href="#Demoni_2"><span class="tocnumber">3.2</span> <span class="toctext">Demoni</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Montaggio"><span class="tocnumber">3.3</span> <span class="toctext">Montaggio</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Montaggio_tramite_cifs"><span class="tocnumber">3.4</span> <span class="toctext">Montaggio tramite cifs</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Auto-mount_all'avvio"><span class="tocnumber">3.5</span> <span class="toctext">Auto-mount all'avvio</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Risoluzione_dei_problemi"><span class="tocnumber">4</span> <span class="toctext">Risoluzione dei problemi</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15">
+<a href="#Performance_scarse,_bassa_velocit%C3%A0_di_trasferimento_e/o_alto_carico_del_sistema_utilizzando_NFS_con_collegamenti_gigabit"><span class="tocnumber">4.1</span> <span class="toctext">Performance scarse, bassa velocità di trasferimento e/o alto carico del sistema utilizzando NFS con collegamenti gigabit</span></a>
+<ul>
+<li class="toclevel-3 tocsection-16"><a href="#Async"><span class="tocnumber">4.1.1</span> <span class="toctext">Async</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#Packetsize"><span class="tocnumber">4.1.2</span> <span class="toctext">Packetsize</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18"><a href="#Il_demone_Portmap_non_si_avvia_correttamente_durante_il_boot"><span class="tocnumber">4.2</span> <span class="toctext">Il demone Portmap non si avvia correttamente durante il boot</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Nfsd_non_si_avvia,_restituendo_%22nfssvc:_No_such_device%22"><span class="tocnumber">4.3</span> <span class="toctext">Nfsd non si avvia, restituendo "nfssvc: No such device"</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#rpcbind_non_si_avvia_e_non_mostra_errori_nell'avvio_da_terminale"><span class="tocnumber">4.4</span> <span class="toctext">rpcbind non si avvia e non mostra errori nell'avvio da terminale</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Nfsd_sembra_funzionare,_ma_non_ci_si_connette_da_clients_MacOS_X"><span class="tocnumber">4.5</span> <span class="toctext">Nfsd sembra funzionare, ma non ci si connette da clients MacOS X</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#mount.nfs:_Operation_not_permitted"><span class="tocnumber">4.6</span> <span class="toctext">mount.nfs: Operation not permitted</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#L'ownership_delle_condivisioni_montate_%C3%A8_4294967294:4294967294"><span class="tocnumber">4.7</span> <span class="toctext">L'ownership delle condivisioni montate è 4294967294:4294967294</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-24">
+<a href="#Trucchi_e_suggerimenti"><span class="tocnumber">5</span> <span class="toctext">Trucchi e suggerimenti</span></a>
+<ul>
+<li class="toclevel-2 tocsection-25"><a href="#Configurare_fixed_porte_su_NFS"><span class="tocnumber">5.1</span> <span class="toctext">Configurare fixed porte su NFS</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-26"><a href="#Link_utili"><span class="tocnumber">6</span> <span class="toctext">Link utili</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Pacchetti_richiesti">Pacchetti richiesti</span></h2>
+<p>I pacchetti necessari per l'installazione e la configurazione del server e del client sono pochi. Sarà solo necessario <a href="../it/Pacman.html" title="Pacman (Italiano)">installare</a> il pacchetto <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nfs-utils">nfs-utils</a></span> dai <a href="../it/Official_repositories.html" title="Official repositories (Italiano)">repositories ufficiali</a>.
+</p>
+<h2><span class="mw-headline" id="Configurazione_del_server">Configurazione del server</span></h2>
+<p>Ora si potranno modificare i file di configurazione necessari e avviare i demoni.
+</p>
+<h3><span class="mw-headline" id="File">File</span></h3>
+<h4>
+<span id=".2Fetc.2Fexports"></span><span class="mw-headline" id="/etc/exports">/etc/exports</span>
+</h4>
+<p>Questo file (/etc/exports) definisce le varie condivisioni e i relativi permessi sul server nfs. Ad esempio:
+</p>
+<pre>/files *(ro,sync) # Accesso in sola lettura per chiunque
+/files 192.168.0.100(rw,sync) # Accesso in lettura/scrittura da un client su 192.168.0.100
+/files 192.168.1.1/24(rw,sync) #  Accesso in lettura/scrittura dai client compresi tra 192.168.1.1 e 192.168.1.255
+</pre>
+<p>Se si effettuano cambiamenti al file /etc/exports dopo aver avviato il demone, è possibile renderli effettivi digitando il seguente comando:
+</p>
+<pre># exportfs -r
+</pre>
+<p>Se si decide di configurare il server nfs come pubblico e accessibile in scrittura, si può utilizzare l'opzione all_squash in combinazione con le opzioni anonuid e anongid.
+Per esempio, per impostare i privilegi per l'utente nobody nel gruppo nobody, si possono impostare i seguenti parametri:
+</p>
+<pre>; Accesso in lettura/scrittura ai client su 192.168.0.100, con accesso rw per l'utente 99 con gid 99
+/files 192.168.0.100(rw,sync,all_squash,anonuid=99,anongid=99)
+</pre>
+<p>Questo inoltre significa che, se si vuole dare diritto di scrittura e lettura a questa direcotry, l'utente nobody.nobody deve essere il possessore della directory condivisa:
+</p>
+<pre># chown -R nobody.nobody /files
+</pre>
+<p>Maggiori e più approfonditi dettagli sui file di export sono disponibili sulla man page exports.
+</p>
+<h4>
+<span id=".2Fetc.2Fconf.d.2Fnfs-common.conf"></span><span class="mw-headline" id="/etc/conf.d/nfs-common.conf">/etc/conf.d/nfs-common.conf</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Quanto utilizzato in /etc/conf.d/nfs è sostituito da "/etc/conf.d/nfs-common.conf" e "/etc/conf.d/nfs-server.conf".</div>
+<p>E' possibile editare il file /etc/conf.d/nfs per passare particolari parametri a run-time a nfsd, mountd, statd, e sm-notify. Lo script di init nfs di default per Arch richiede l'opzione --no-notify per statd. Ad esempio:
+</p>
+<pre>STATD_OPTS="--no-notify"
+</pre>
+<p>Altre opzioni possono essere lasciate impostate come di default o cambiate a seconda delle proprie esigenze. E' opportuno far riferimento alle relative pagine di man per maggiori dettagli. 
+</p>
+<h3><span class="mw-headline" id="Demoni">Demoni</span></h3>
+<p>Potete ora avviare i demoni installati con i seguenti comandi:
+</p>
+<pre># rc.d start rpcbind (or: rc.d start portmap)
+# rc.d start nfs-common (or: rc.d start nfslock)
+# rc.d start nfs-server (or: rc.d start nfsd)
+</pre>
+<p>E' importante notare che i serivzi vanno avviati nell'ordine specificato. 
+Per avviare il server nfs all'avvio del sistema, aggiungere i demoni nella lista DAEMONS del file /etc/rc.conf. È necessario lanciare il demone da root o usando sudo se si fa partire da terminale.
+</p>
+<h2><span class="mw-headline" id="Configurazione_del_client">Configurazione del client</span></h2>
+<h3><span class="mw-headline" id="File_2">File</span></h3>
+<h4>
+<span id=".2Fetc.2Fconf.d.2Fnfs-common.conf_2"></span><span class="mw-headline" id="/etc/conf.d/nfs-common.conf_2">/etc/conf.d/nfs-common.conf</span>
+</h4>
+<p>Editare il file /etc/conf.d/nfs per passare le appropriate opzioni a run-time a statd - le rimanenti opzioni sono solo per il server. <b>NON</b> usare l'opzione --no-notify lato client, se non si conoscono le esatte conseguenze.
+</p>
+<p>Fare riferimento al man di statd per maggiori dettagli.
+</p>
+<h3><span class="mw-headline" id="Demoni_2">Demoni</span></h3>
+<p>Avviare i demoni rpcbind e nfs-common:
+</p>
+<pre>rc.d start rpcbind (or: rc.d start portmap)
+rc.d start nfs-common (or: rc.d start nfslock)
+</pre>
+<p>L'ordine di avvio indicato è obbligatorio.
+</p>
+<p>Per aviare automaticamente i demoni all'avvio del sistema aggiungerli nella lista DAEMONS del file /etc/rc.conf.
+</p>
+<h3><span class="mw-headline" id="Montaggio">Montaggio</span></h3>
+<p>Dopodichè è sufficiente montare normalmente:
+</p>
+<pre>mount server:/files /files
+</pre>
+<p>A differenza delle condivisioni CIFS o <a href="../en/Rsync.html" title="Rsync">rsync</a>, gli exports NFS devono essere richiamati con il percorso completo sul server; ad esempio, se /home/fred/music è definita in /etc/exports sul server ELROND, si deve chiamare:
+</p>
+<pre>mount ELROND:/home/fred/music /mnt/point
+</pre>
+<p>o semplicemente utilizzare:
+</p>
+<pre>mount ELROND:music /mnt/point
+</pre>
+<p>altrimenti si otterrà <i>mount.nfs: access denied by server while mounting</i>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Se si ottengono i seguenti messaggi allora, probabilmente, non si sono avviati i demoni della <a href="#Demoni_2">sezione precedente</a> o durante il loro avvio qualcosa è andato storto.
+<pre>mount: wrong fs type, bad option, bad superblock on 192.168.1.99:/media/raid5-4tb,
+       missing codepage or helper program, or other error
+       (for several filesystems (e.g. nfs, cifs) you might
+       need a /sbin/mount.&lt;type&gt; helper program)
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
+</pre>
+</div>
+<h3><span class="mw-headline" id="Montaggio_tramite_cifs">Montaggio tramite cifs</span></h3>
+<p>Montare la stessa condivisione utilizzando cifs è leggermente diverso da NFS. Prima di tutto, è necessario definire la condivisione in Samba. Per fare ciò, vedere l'articolo <a href="../it/Samba.html" title="Samba (Italiano)">Samba</a>.
+Andiamo a creare una condivisione "ELROND" chiamandola "music". Per montare tale condivisione con cifs, dovrebbe funzionare il seguente comando
+</p>
+<pre>mount -t cifs -v ELROND:music /mnt/point -o guest,iocharset=utf8
+</pre>
+<p>Si può provare con:
+</p>
+<pre>mount -t cifs -v ELROND:music /mnt/point
+</pre>
+<p>O loggandosi con nome e password:
+</p>
+<pre>mount -t cifs -v ELROND:music /mnt/point -o username=USERNAME,password=PASSWORD,iocharset=utf8
+</pre>
+<p>Maggiori informazioni sono disponibili nella sezione <a href="../it/Samba.html#Montare_manualmente_una_condivisione" title="Samba (Italiano)">montaggio manuale</a> del wiki <a href="../it/Samba.html" title="Samba (Italiano)">samba</a>.
+Ora si è resa accessibile 1 cartella per clients NFS (in genere linux) e clients CIFS (in genere windows).
+</p>
+<h3>
+<span id="Auto-mount_all.27avvio"></span><span class="mw-headline" id="Auto-mount_all'avvio">Auto-mount all'avvio</span>
+</h3>
+<p>Se volete che le directory condivise siano montate automaticamente all'avvio del sistema, assicuratevi che network, rpcbind (portmap), nfs-common (nfslock) e netfs siano presenti nella stringa DAEMONS in /etc/rc.conf nell'esatto ordine qui specificato. E' preferibile non inserire nessuna '@' davanti ai demoni (anche se si potrebbe tranquillamente utilizzare @netfs); ad esempio:
+</p>
+<pre>DAEMONS=(... network rpcbind nfs-common @netfs ...)
+</pre>
+<p>oppure
+</p>
+<pre>DAEMONS=(... network portmap nfslock @netfs ...)
+</pre>
+<p>aggiungere le opportune righe al file /etc/fstab, ad esempio:
+</p>
+<pre>server:/files /files nfs defaults 0 0
+</pre>
+<p>È anche possibile specificare la dimensione dei pacchetti in lettura e scrittura, in tal caso le dimensioni vanno specificate in fstab. I valori riportati di seguito sono quelli default, qualora non ne venissero specificati altri:
+</p>
+<pre>server:/files /files nfs rsize=32768,wsize=32768 0 0
+</pre>
+<p>Per ulteriori informazioni fare riferimento alla pagina di man di nfs, che include tutte le opzioni di montaggio disponibili.
+</p>
+<h2><span class="mw-headline" id="Risoluzione_dei_problemi">Risoluzione dei problemi</span></h2>
+<h3>
+<span id="Performance_scarse.2C_bassa_velocit.C3.A0_di_trasferimento_e.2Fo_alto_carico_del_sistema_utilizzando_NFS_con_collegamenti_gigabit"></span><span class="mw-headline" id="Performance_scarse,_bassa_velocità_di_trasferimento_e/o_alto_carico_del_sistema_utilizzando_NFS_con_collegamenti_gigabit">Performance scarse, bassa velocità di trasferimento e/o alto carico del sistema utilizzando NFS con collegamenti gigabit</span>
+</h3>
+<h4><span class="mw-headline" id="Async">Async</span></h4>
+<p>Verificare che il flag async sia utilizzato in <code>/etc/exports</code>
+Esempio:
+</p>
+<pre>/nfs4exports		192.168.0.0/24(ro,fsid=0,no_subtree_check,async)
+/nfs4exports/data	192.168.0.0/24(rw,no_subtree_check,async,nohide)
+/nfs4exports/backup	192.168.0.0/24(rw,no_subtree_check,async,nohide)
+</pre>
+<h4><span class="mw-headline" id="Packetsize">Packetsize</span></h4>
+<p>Questo è un risultato delle dimensioni di default dei pacchetti impostate in NFS, che causa una significante frammentazione su reti gigabit. E' possibile modificare questo comportamento cambiando l'rsize e la wsize nei parametri di mount. Utilizzare rsize=32768,wsize=32768 dovrebbe essere sufficiente. E' importante notare che questo problema non si verifica su reti a 100 Mb, a causa di una velocità di trasferimento più bassa.
+</p>
+<p>La dimensione utilizzata di defualt da NFS4 è 32786. Il massimo è 65536. Aumentare dal valore di default, a blocchi di 1024 finchè non si raggiunge la velocità massima di trasferimento.
+</p>
+<h3><span class="mw-headline" id="Il_demone_Portmap_non_si_avvia_correttamente_durante_il_boot">Il demone Portmap non si avvia correttamente durante il boot</span></h3>
+<p>Assicurarsi di aver inserito il demone portmap <i>prima</i> di netfs nell'array DAEMONS in /etc/rc.conf.
+</p>
+<h3>
+<span id="Nfsd_non_si_avvia.2C_restituendo_.22nfssvc:_No_such_device.22"></span><span class="mw-headline" id='Nfsd_non_si_avvia,_restituendo_"nfssvc:_No_such_device"'>Nfsd non si avvia, restituendo "nfssvc: No such device"</span>
+</h3>
+<p>Assicurarsi che i moduli nfs e nfsd siano caricati nel kernel.
+</p>
+<h3>
+<span id="rpcbind_non_si_avvia_e_non_mostra_errori_nell.27avvio_da_terminale"></span><span class="mw-headline" id="rpcbind_non_si_avvia_e_non_mostra_errori_nell'avvio_da_terminale">rpcbind non si avvia e non mostra errori nell'avvio da terminale</span>
+</h3>
+<p>Lanciare il demone da root o usando sudo.
+</p>
+<pre>sudo rc.d start rpcbind
+</pre>
+<h3>
+<span id="Nfsd_sembra_funzionare.2C_ma_non_ci_si_connette_da_clients_MacOS_X"></span><span class="mw-headline" id="Nfsd_sembra_funzionare,_ma_non_ci_si_connette_da_clients_MacOS_X">Nfsd sembra funzionare, ma non ci si connette da clients MacOS X</span>
+</h3>
+<p>Quando si prova a connettersi da client MacOS X, dai log risulterà tutto ok, ma MacOS X rifiuterà di montare la condivisione NFS. E' necessario aggiungere l'opzione <code>insecure</code> option alla propria condivisione e ri-eseguire <code>exportfs -r</code>.
+</p>
+<h3><span class="mw-headline" id="mount.nfs:_Operation_not_permitted">mount.nfs: Operation not permitted</span></h3>
+<p>Dopo l'aggiornamento di nfs-utils alla versione 1.2.1-2, il montaggio della condivisione NFS smette di funzionare. D'ora in poi, nfs-utils utilizza NFSv4 di default al posto di NFSv3. Il problema può essere risolto utilizzando l'opzione di montaggio <code>'vers=3'</code> oppure <code>'nfsvers=3'</code> dalla linea di comando: 
+</p>
+<pre># mount.nfs &lt;remote target&gt; &lt;directory&gt; -o ...,vers=3,...
+# mount.nfs &lt;remote target&gt; &lt;directory&gt; -o ...,nfsvers=3,...
+</pre>
+<p>oppure in <code>/etc/fstab</code>:
+</p>
+<pre>&lt;remote target&gt; &lt;directory&gt; nfs ...,vers=3,... 0 0
+&lt;remote target&gt; &lt;directory&gt; nfs ...,nfsvers=3,... 0 0
+</pre>
+<h3>
+<span id="L.27ownership_delle_condivisioni_montate_.C3.A8_4294967294:4294967294"></span><span class="mw-headline" id="L'ownership_delle_condivisioni_montate_è_4294967294:4294967294">L'ownership delle condivisioni montate è 4294967294:4294967294</span>
+</h3>
+<p>E' necessario impostare in /etc/conf.d/nfs-common.conf (sul client) i due valori che seguono:
+</p>
+<pre>NEED_STATD="no"
+NEED_IDMAPD="yes"
+</pre>
+<h2><span class="mw-headline" id="Trucchi_e_suggerimenti">Trucchi e suggerimenti</span></h2>
+<h3><span class="mw-headline" id="Configurare_fixed_porte_su_NFS">Configurare fixed porte su NFS</span></h3>
+<p>Se si ha un firewall port-based, si potrebbero voler impostare delle porte. Per rpc.statd e rpc.mountd si dovrebbero impostare i seguenti settaggi in <code>/etc/conf.d/nfs-common</code> e <code>/etc/conf.d/nfs-server</code> (le porte possono essere differenti):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/conf.d/nfs-common</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">STATD_OPTS="-p 4000 -o 4003"</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/conf.d/nfs-server</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MOUNTD_OPTS="--no-nfs-version 2 -p 4002"</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/lockd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Static ports for NFS lockd
+options lockd nlm_udpport=4001 nlm_tcpport=4001</pre>
+<p>Quindi è necessario riavviare i demoni nfs e ricaricare il modulo lockd:
+</p>
+<pre># modprobe -r lockd 
+# modprobe lockd 
+# rc.d restart nfs-common nfs-server</pre>
+<p>Dopo aver riavviato i demoni nfs e ricaricato il modulo, è possibile controllare le porte utilizzando il comando:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ rpcinfo -p</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">rpcinfo -p
+   program vers proto   port  service
+    100000    4   tcp    111  portmapper
+    100000    3   tcp    111  portmapper
+    100000    2   tcp    111  portmapper
+    100000    4   udp    111  portmapper
+    100000    3   udp    111  portmapper
+    100000    2   udp    111  portmapper
+    100024    1   udp   4000  status
+    100024    1   tcp   4000  status
+    100021    1   udp   4001  nlockmgr
+    100021    3   udp   4001  nlockmgr
+    100021    4   udp   4001  nlockmgr
+    100021    1   tcp   4001  nlockmgr
+    100021    3   tcp   4001  nlockmgr
+    100021    4   tcp   4001  nlockmgr
+    100003    2   tcp   2049  nfs
+    100003    3   tcp   2049  nfs
+    100003    4   tcp   2049  nfs
+    100003    2   udp   2049  nfs
+    100003    3   udp   2049  nfs
+    100003    4   udp   2049  nfs
+    100005    3   udp   4002  mountd
+    100005    3   tcp   4002  mountd</pre>
+<p>Quindi, è necessario aprire le porte 111-2049-4000-4001-4002-4003 tcp ed udp.
+</p>
+<h2><span class="mw-headline" id="Link_utili">Link utili</span></h2>
+<ul>
+<li>Vedere anche <a href="../en/Avahi.html" title="Avahi">Avahi</a>, un'implementazione Zeroconf che consente il rilevamento automatico delle condivisioni NFS.</li>
+<li>HOWTO: <a href="../en/Diskless_system.html" class="mw-redirect" title="Diskless network boot NFS root">Diskless network boot NFS root</a>
+</li>
+<li><a rel="nofollow" class="external text" href="http://publib.boulder.ibm.com/infocenter/pseries/v5r3/index.jsp?topic=/com.ibm.aix.prftungd/doc/prftungd/nfs_perf.htm">Veramente utile</a></li>
+<li>Se si sta impostando un server Archlinux NFS per utilizzarlo da clients Windows tramite Microsoft's SFU, si risparmierà molto tempo seguendo quanto riportato <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=523934#p523934">in questo post</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-04]</sup>
+</li>
+<li>
+<a rel="nofollow" class="external text" href="http://blogs.msdn.com/sfu/archive/2008/04/14/all-well-almost-about-client-for-nfs-configuration-and-performance.aspx">Microsoft Services for Unix NFS Client info</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-04]</sup>
+</li>
+<li>
+<a rel="nofollow" class="external text" href="http://blogs.msdn.com/sfu/archive/2007/05/01/unix-interoperability-and-windows-vista.aspx">Unix interoperability and Windows Vista</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-04]</sup> Pre-requisiti per connettersi da Vista a NFS</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../it/Category:File_systems.html" title="Category:File systems (Italiano)">File systems (Italiano)</a></li>
+<li><a href="../it/Category:Networking.html" title="Category:Networking (Italiano)">Networking (Italiano)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=NFS_(Italiano)&amp;oldid=646937">https://wiki.archlinux.org/index.php?title=NFS_(Italiano)&amp;oldid=646937</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:15.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

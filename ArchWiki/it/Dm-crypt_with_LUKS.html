@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt with LUKS (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_with_LUKS_Italiano rootpage-Dm-crypt_with_LUKS_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt with LUKS (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Articoli correlati</p>
+<ul>
+<li><a href="../it/Data-at-rest_encryption.html" class="mw-redirect" title="Disk Encryption (Italiano)">Disk Encryption (Italiano)</a></li>
+<li><a href="../en/Removing_system_encryption.html" class="mw-redirect" title="Removing System Encryption">Removing System Encryption</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>This article or section needs to be <a href="../en/ArchWiki:Contributing.html#Translating" title="ArchWiki:Contributing">translated</a>.</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b>  Questo articolo è in fase di traduzione. Seguite per ora le istruzioni della versione inglese.  (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:ArchWiki_Translation_Team_(Italiano)#Pagine_Marcate_come_">"out_of_date"_e_"Traslateme"  Talk:ArchWiki Translation Team (Italiano)#Pagine Marcate come "out of date" e "Traslateme"</a>)</div>
+</div>
+<p>Questo articolo si concentra su come configurare un sistema completamente crittografato su Arch Linux, usando dm-crypt con LUKS.
+</p>
+<p><b>dm-crypt</b> è il device-mapper standard per le funzionalità di crittografia fornito dal kernel Linux. Può essere utilizzato direttamente da chi desidera avere un completo controllo degli aspetti del partizionamento e della gestione delle chiavi.
+</p>
+<p><b>LUKS</b> è un comodo strato aggiuntivo il quale archivia tutte le informazioni necessarie alla configurazione di dm-crypt sul disco stesso e si occupa anche della gestione delle partizioni e delle chiavi nel tentativo di facilitarne l’uso.
+</p>
+<p>Per maggiori dettagli sui paragoni tra dm-crypt+LUKS e gli altri metodi di crittografia, consultare <a href="../en/Data-at-rest_encryption.html#Comparison_table" class="mw-redirect" title="Disk encryption">la tavola comparativa</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Configurazione_iniziale"><span class="tocnumber">1</span> <span class="toctext">Configurazione iniziale</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Panoramica_e_preparazione"><span class="tocnumber">1.1</span> <span class="toctext">Panoramica e preparazione</span></a></li>
+<li class="toclevel-2 tocsection-3">
+<a href="#Cancellazione_sicura_del/degli_hard_disk"><span class="tocnumber">1.2</span> <span class="toctext">Cancellazione sicura del/degli hard disk</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4">
+<a href="#Usare_un_contenitore_LUKS_come_generatore_di_numeri_pseudo-casuali_(alternativa)"><span class="tocnumber">1.2.1</span> <span class="toctext">Usare un contenitore LUKS come generatore di numeri pseudo-casuali (alternativa)</span></a>
+<ul>
+<li class="toclevel-4 tocsection-5"><a href="#Cancellare_lo_spazio_libero_con_un_file_criptato_dopo_l'installazione"><span class="tocnumber">1.2.1.1</span> <span class="toctext">Cancellare lo spazio libero con un file criptato dopo l'installazione</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-6"><a href="#Cancellare_i_keyslot_LUKS"><span class="tocnumber">1.2.2</span> <span class="toctext">Cancellare i keyslot LUKS</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Cancellare_i_LUKS_header"><span class="tocnumber">1.2.3</span> <span class="toctext">Cancellare i LUKS header</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Supporto_per_discard/TRIM_per_i_dischi_a_stato_solido_(SSD)"><span class="tocnumber">1.2.4</span> <span class="toctext">Supporto per discard/TRIM per i dischi a stato solido (SSD)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Partizionamento"><span class="tocnumber">1.3</span> <span class="toctext">Partizionamento</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#Partizioni_standard"><span class="tocnumber">1.3.1</span> <span class="toctext">Partizioni standard</span></a></li>
+<li class="toclevel-3 tocsection-11">
+<a href="#LVM:_Logical_Volume_Manager"><span class="tocnumber">1.3.2</span> <span class="toctext">LVM: Logical Volume Manager</span></a>
+<ul>
+<li class="toclevel-4 tocsection-12"><a href="#LVM_on_LUKS"><span class="tocnumber">1.3.2.1</span> <span class="toctext">LVM on LUKS</span></a></li>
+<li class="toclevel-4 tocsection-13"><a href="#LUKS_on_LVM"><span class="tocnumber">1.3.2.2</span> <span class="toctext">LUKS on LVM</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-14">
+<a href="#Creare_le_partizioni_sul_disco"><span class="tocnumber">1.3.3</span> <span class="toctext">Creare le partizioni sul disco</span></a>
+<ul>
+<li class="toclevel-4 tocsection-15"><a href="#Sistemi_con_singolo_disco"><span class="tocnumber">1.3.3.1</span> <span class="toctext">Sistemi con singolo disco</span></a></li>
+<li class="toclevel-4 tocsection-16"><a href="#Sistemi_con_dischi_multipli"><span class="tocnumber">1.3.3.2</span> <span class="toctext">Sistemi con dischi multipli</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17">
+<a href="#Configurare_LUKS"><span class="tocnumber">2</span> <span class="toctext">Configurare LUKS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-18">
+<a href="#Mappare_le_partizioni_fisiche_con_LUKS"><span class="tocnumber">2.1</span> <span class="toctext">Mappare le partizioni fisiche con LUKS</span></a>
+<ul>
+<li class="toclevel-3 tocsection-19"><a href="#Usare_LUKS_per_formattare_partizioni_con_la_parola_d'ordine"><span class="tocnumber">2.1.1</span> <span class="toctext">Usare LUKS per formattare partizioni con la parola d'ordine</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Configurazione_iniziale">Configurazione iniziale</span></h2>
+<h3><span class="mw-headline" id="Panoramica_e_preparazione">Panoramica e preparazione</span></h3>
+<p>Il supporto di installazione di Arch comprende gli strumenti necessari per la crittografia del sistema. 
+L’installazione di un sistema crittografato è in gran parte simile ad una normale installazione, sarà quindi possibile seguire la <a href="../it/Installation_guide.html" class="mw-redirect" title="Official Arch Linux Install Guide (Italiano)">Guida all’installazione di Arch Linux</a> oppure la <a href="../it/Installation_guide.html" class="mw-redirect" title="Beginners' guide (Italiano)">Beginners' Guide</a> dopo aver configurato le partizioni crittografate. Sarà necessario sistemare la configurazione del sistema per far si che possa avviarsi dai volumi Luks.
+</p>
+<p>La routine di creazione di un sistema criptato segue questi passaggi generali:
+</p>
+<dl><dd><dl><dd><ul>
+<li>Cancellazione sicura del/degli hard disk</li>
+<li>Partizionamento e configurazione della crittografia (<a href="../it/LVM.html" title="LVM (Italiano)">LVM</a> è opzionale)</li>
+<li>Selezione ed installazione dei pacchetti</li>
+<li>Configurazione del sistema</li>
+</ul></dd></dl></dd></dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Attenzione:</strong>  Crittografando una partizione verrà cancellato tutto il suo contenuto. Si consiglia di effettuare i backup necessari prima di iniziare.</div>
+<h3>
+<span id="Cancellazione_sicura_del.2Fdegli_hard_disk"></span><span class="mw-headline" id="Cancellazione_sicura_del/degli_hard_disk">Cancellazione sicura del/degli hard disk</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> I seguenti metodi sono specifici per dm-crypt/LUKS. Per istruzioni più dettagliate su come cancellare e preparare un disco consultare <a href="../en/Securely_wipe_disk.html" title="Securely wipe disk">Securely wipe disk</a>
+</div>
+<p>Si consiglia di cancellare in modo sicuro i dati accessibili nelle partizioni o dischi utilizzando dati casuali. I dati casuali saranno scritti per motivi di sicurezza perché sono indistinguibili dai dati successivamente scritti da dm-crypt. La cancellazione sicura dei dischi implica la sovrascrittura dell’intero disco con dati casuali.
+</p>
+<p>Entrambi i dischi sia nuovi che usati dovrebbero essere sovrascritti in maniera sicura. Questo aiuta ad assicurare la privacy dei dati che si trovano sulle partizioni criptate. Il contenuto dei dischi comprati dal produttore non è assicurato. Se il disco è stato riempito con bit di valore zero e successivamente usato per dati criptati, allora sarà relativamente semplice identificare dove finiscono i dati criptati e dove iniziano gli zeri. Dato che una partizione criptata si suppone essere indistinguibile da dati casuali, la mancanza di dati casuali su di un disco sovrascritto con degli zeri rende il disco criptato un facile bersaglio per la cripto analisi.
+</p>
+<p>Ripartizionare o riformattare un disco usato rimuove solamente la struttura del file system che serve per identificare dove fisicamente sono collocati i dati, ma lascia i dati intatti sul disco. Sarà relativamente semplice utilizzando programmi di <a href="../en/File_recovery.html" title="File recovery">recupero file</a> accedere ai dati rimasti. Quindi i dischi dovrebbero essere sovrascritti in modo sicuro con dati casuali prima di effettuare la cifratura per evitare il recupero dei dati.
+</p>
+<p>Nel decidere quale metodo utilizzare per la cancellazione sicura del disco, notare che non sarà necessario eseguirlo più di una volta fintanto che il disco viene utilizzato come disco criptato.
+</p>
+<h4>
+<span id="Usare_un_contenitore_LUKS_come_generatore_di_numeri_pseudo-casuali_.28alternativa.29"></span><span class="mw-headline" id="Usare_un_contenitore_LUKS_come_generatore_di_numeri_pseudo-casuali_(alternativa)">Usare un contenitore LUKS come generatore di numeri pseudo-casuali (alternativa)</span>
+</h4>
+<p>Le <a rel="nofollow" class="external text" href="http://code.google.com/p/cryptsetup/wiki/FrequentlyAskedQuestions#5._Security_Aspects">FAQ di cryptsetup</a> menzionano una procedura molto semplice che consiste nell'utilizzare un volume dm-crypt esistente per cancellare tutto lo spazio libero accessibile sul disco sottostante. Questa procedura inoltre mira a proteggere contro la rilevazione dei pattern ripetuti utilizzati per la cancellazione.
+</p>
+<pre># dd if=/dev/zero of=/dev/mapper/luks-container</pre>
+<h5>
+<span id="Cancellare_lo_spazio_libero_con_un_file_criptato_dopo_l.27installazione"></span><span class="mw-headline" id="Cancellare_lo_spazio_libero_con_un_file_criptato_dopo_l'installazione">Cancellare lo spazio libero con un file criptato dopo l'installazione</span>
+</h5>
+<p>Il solito effetto può essere ottenuto creando su tutte le partizioni un file che le riempia completamente dopo che il sistema è stato installato, avviato e con tutte le partizioni criptate montate. Questo perché i dati criptati sono indistinguibili dai dati casuali.
+</p>
+<pre># dd if=/dev/zero of=/file/su/contenitore-luks
+# rm /file/su/contenitore-luks</pre>
+<p>Ovviamente sarà necessario ripetere il precedente processo per ogni contenitore criptato creato.
+</p>
+<h4><span class="mw-headline" id="Cancellare_i_keyslot_LUKS">Cancellare i keyslot LUKS</span></h4>
+<pre>#cryptsetup luksKillSlot <i>device</i> <i>numero_key_slot</i>
+</pre>
+<p>Questo cancellerà solamente un singolo keyslot.
+</p>
+<h4><span class="mw-headline" id="Cancellare_i_LUKS_header">Cancellare i LUKS header</span></h4>
+<p>Le partizioni formattate con dm-crypt/LUKS contengono un header contenete la cifratura e le opzioni utilizzate da <code>dm-mod</code> quando viene aperta la periferica. Dopo l'header iniziano i dati criptati. Quindi, quando si dismette un disco (ad esempio se si vende il PC, sostituzione del disco, eccetera) <i>potrebbe</i> essere sufficiente cancellare l'header della partizione, anziché sovrascrivere l'intero disco - che potrebbe essere un processo molto lungo.
+</p>
+<p>Cancellando l'header LUKS verrà cancellata anche la chiave principale PBKDF2-criptata (AES), salts ed altre.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> It is crucial to write to the LUKS encrypted partition (<code>/dev/sda<b>1</b></code> in this example) and not directly to the disks device node. If you did set up encryption as a device-mapper layer on top of others, e.g. LVM on LUKS on RAID then write to RAID respectively.</div>
+<p>Un header con un singolo keyslot di dimensione 256 bit di sarà grande 1024KB. E' consigliato di sovrascrivere inoltre i primi 4KB scritti da dm-crypt, quindi sarà necessario cancellare 1028KB. Che sono <code>1052672</code> Byte.
+</p>
+<p>Per sovrascrivere con zero usare:
+</p>
+<pre>#head -c 1052672 /dev/zero &gt; /dev/sda1; sync
+</pre>
+<p>Per chiavi lunghe 512 bit (ad esempio per aes-xts-plain con chiavi da 512 bit) l'header è grande 2MB.
+</p>
+<p>In caso di dubbi, è meglio essere generosi e sovrascrivere i primi 10MB o all'incirca.
+</p>
+<pre>#dd if=/dev/zero of=/dev/sda1 bs=512 count=20480
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Con una copia di backup dell'header i dati possono essere recuperati ma il filesystem sarà danneggiato in quanto i primi settori criptati sono stati sovrascritti. Consultare le sezioni seguenti su come creare un backup dei blocchi cruciali dell'header.</div>
+<p>Quando si cancella l'header con dati casuali e l'header è seguito da dati criptati scritti sopra dati casuali, tutto ciò che resta saranno dati casuali.
+</p>
+<h4>
+<span id="Supporto_per_discard.2FTRIM_per_i_dischi_a_stato_solido_.28SSD.29"></span><span class="mw-headline" id="Supporto_per_discard/TRIM_per_i_dischi_a_stato_solido_(SSD)">Supporto per discard/TRIM per i dischi a stato solido (SSD)</span>
+</h4>
+<p>Gli utenti con dischi a stato solido dovrebbero essere consapevoli che per default, il meccanismo di cifratura del kernel Linux <i>non</i> invierà i comandi TRIM dal filesystem al disco sottostante. Gli sviluppatori del device-mapper hanno chiarito che il supporto per TRIM non sarà mai abilitato per default sul device dm-crypt a causa di potenziali problemi di sicurezza.
+</p>
+<p>Molti utenti vorranno comunque utilizzare TRIM sui propri dischi SSD criptati. Questo crea un minimo di dispersione di informazioni riguardo ai blocchi liberati, comunque sufficienti a determinare il filesystem utilizzato, in caso TRIM sia abilitato. Una immagine ed una discussione del problema derivante dall'attivazione di TRIM è disponibile nel <a rel="nofollow" class="external text" href="http://asalor.blogspot.de/2011/08/trim-dm-crypt-problems.html">blog</a> di uno sviluppatore di <code>cryptsetup</code>.
+</p>
+<p>As a semi-tangential caveat, it is worth noting that because TRIM provides information to the disk firmware about which blocks contain data, encryption schemes that rely on plausible deniability, like TrueCrypt's hidden volumes, should never be used on a device that utilizes TRIM. This is probably also valid for TC containers within a LUKS encrypted device that uses TRIM.
+</p>
+<p>Gli sviluppatori di TrueCrypt sconsigliano l'uso di qualsiasi volume TC su un volume che effettua tecniche wear-leveling per estendere la vita del disco; molte periferiche flash inclusi i dischi SSD e le USB flash, utilizzano obbligatoriamente il wear-leveling a livello firmware. I device LUKS sono probabilmente non vulnerabili ai problemi derivanti dal wear-leveling se l'intero device viene cancellato prima dell'inizializzazione della partizione LUKS. Consultare <a rel="nofollow" class="external text" href="http://www.truecrypt.org/docs/?s=trim-operation">questo articolo su trim</a> e <a rel="nofollow" class="external text" href="http://www.truecrypt.org/docs/?s=wear-leveling">questo articolo sul wear-leveling</a> per maggiori informazioni.
+</p>
+<p>A partire dalla versione 3.1 di <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>, il supporto di dm-crypt per l'inoltro dei comandi TRIM può essere attivata sul device alla creazione oppure durante il mount tramite dmsetup. Il supporto per questa opzione è presente anche in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cryptsetup">cryptsetup</a></span> a partire dalla versione 1.4.0. Per attivare il supporto durante l'avvio, sarà necessario aggiungere <code>:allow-discards</code> come opzione al <code>cryptdevice</code>. Un esempio di device con abilitato TRIM sarà simile a questa:
+</p>
+<pre>cryptdevice=/dev/mapper/root:root:allow-discards
+</pre>
+<p>Per le principali configurazioni del <code>cryptdevice</code> prima di <code>:allow-discards</code> consultare i paragrafi che seguono.
+</p>
+<h3><span class="mw-headline" id="Partizionamento">Partizionamento</span></h3>
+<p>Dopo che il disco è stato sovrascritto in modo sicuro, è il momento di creare le partizioni e iniziare la configurazione del sistema criptato.
+</p>
+<p>Ci sono diversi modi di creare partizioni sul disco:
+</p>
+<dl><dd><dl><dd><ul>
+<li>Partizioni standard</li>
+<li><a href="../it/LVM.html" title="LVM (Italiano)">LVM</a></li>
+<li><a href="../it/RAID.html" title="RAID (Italiano)">RAID</a></li>
+</ul></dd></dl></dd></dl>
+<p>LUKS è compatibile con sistemi che necessitano di LVM e/o RAID come con le partizioni standard che siano primarie, estese, e logiche.
+</p>
+<h4><span class="mw-headline" id="Partizioni_standard">Partizioni standard</span></h4>
+<p>Queste sono le partizioni con cui la maggior parte degli utenti avrà maggiore familiarità. Esse possono essere di tre tipi: partizioni primarie, partizioni estese e partizioni logiche.
+</p>
+<dl>
+<dt>Partizioni primarie</dt>
+<dd>Sono le normali partizioni riconosciute dal BIOS. Possono esserne presenti fino a quattro in un partizionamento MBR.</dd>
+</dl>
+<dl>
+<dt>Partizioni estese</dt>
+<dd>Sono partizioni primarie che definiscono al loro interno altre partizioni. Le partizioni estese sono state create per ovviare il limite delle quattro partizioni primarie.</dd>
+</dl>
+<dl>
+<dt>Partizioni logiche</dt>
+<dd>Sono le partizioni definite nelle partizioni estese.</dd>
+</dl>
+<h4><span class="mw-headline" id="LVM:_Logical_Volume_Manager">LVM: Logical Volume Manager</span></h4>
+<p>Il gestore di volumi logici(LVM) permette la creazione di gruppi di volumi per sistemi che richiedono complesse combinazioni di dischi multipli e partizioni che non si possono ottenere con le partizioni standard. LVM è spiegato più dettagliatamente nell'<a href="../it/LVM.html" title="LVM (Italiano)">articolo del Wiki di Arch Linux</a> che si consiglia di leggere prima di procedere con le istruzioni che seguiranno riguardanti la configurazione di LUKS con LVM.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Btrfs has a built-in <a href="../en/Btrfs.html#Subvolumes" title="Btrfs">Subvolume-Feature</a> that fully replaces the need for LVM if no other filesystems are required. An encrypted swap is not possible this way and swap files are <a rel="nofollow" class="external text" href="https://btrfs.wiki.kernel.org/index.php/FAQ#Does_btrfs_support_swap_files.3F">not supported</a> by btrfs up to now.</div>
+<h5><span class="mw-headline" id="LVM_on_LUKS">LVM on LUKS</span></h5>
+<p>There is a growing preference towards logical volume management of LUKS encrypted physical media (LVM on LUKS). The deployment of LVM on LUKS is considered much more generalizable. In a LVM on LUKS scenario, the LUKS-partition has to be opened and mapped before LVM can access the underlaying setup volumes.
+</p>
+<p>One reason for this is that using LUKS as the lowest level of infrastructure most closely approximates the deployment of physical disks with built-in hardware encryption. In that case, logical volume management would be layered on top of the hardware encryption - usage of LUKS would be superfluous.
+</p>
+<h5><span class="mw-headline" id="LUKS_on_LVM">LUKS on LVM</span></h5>
+<p>It is possible there may exist usage scenarios where encrypting logical volumes rather than physical disks is required (LUKS on LVM).
+A usage scenario for LUKS on LVM exists where utmost flexibility for assigning available diskspace or a mix of unencrypted and encrypted volumes is desired. Upon boot the LVM is setup and assigned before the LUKS-encrypted volumes are opened. In order to manage changes of volumes in a LUKS on LVM setup, both module layers' setup have to be taken into account, i.e. shrinking or expanding an encrypted volume has to include the resizing of the encrypted LUKS blockdevice to ensure integrity of it and the filesystem. That said, in simpler scenarios the usage of LVM may be superfluous.
+</p>
+<h4><span class="mw-headline" id="Creare_le_partizioni_sul_disco">Creare le partizioni sul disco</span></h4>
+<p>Le partizioni del disco vengono create utilizzando:
+</p>
+<pre># cfdisk
+</pre>
+<p>Questo comando avvierà una interfaccia grafica per la creazione delle partizioni.
+</p>
+<p>Ci sono due partizioni necessarie ad un sistema criptato:
+</p>
+<dl>
+<dt>Il filesystem di root</dt>
+<dd>
+<code><b>/</b></code> sarà criptata e conterrà tutti i dati utente e di sistema (<code>/usr</code>, <code>/bin</code>, <code>/var</code>, <code>/home</code>, etc.)</dd>
+</dl>
+<dl>
+<dt>Una partizione di boot per l'avvio</dt>
+<dd>la partizione <code><b>/boot</b></code> <i>non</i> sarà criptata; il bootloader necessita di accedere alla cartella <code>/boot</code> da cui caricherà il ramdisk iniziale i moduli per la crittografia e quelli necessari per l'avvio del sistema che <i>sarà</i> criptato (consultare <a href="../it/Mkinitcpio.html" title="Mkinitcpio (Italiano)">mkinitcpio</a> per maggiori informazioni). Per questa ragione, è necessario che <code>/boot</code> risieda su di una propria partizione non criptata.</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  La partizione di swap è opzionale; può essere criptata con dm-crypt/LUKS. Consultare <a href="#Criptare_la_partizione_di_swap">Criptare la partizione di swap</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> per maggiori informazioni.</div>
+<h5><span class="mw-headline" id="Sistemi_con_singolo_disco">Sistemi con singolo disco</span></h5>
+<p>A seconda delle necessità del sistema, possono essere create altre partizioni. Queste partizioni possono essere create individualmente a questo livello definendo partizioni primarie oppure estese/logiche. Comunque, se si intende utilizzare LVM, lo spazio rimasto dopo la creazione della partizione di <code>/boot</code> e quella di swap dovrebbe essere definito come una singola grande partizione che sarà suddivisa successivamente al livello LVM.
+</p>
+<h5><span class="mw-headline" id="Sistemi_con_dischi_multipli">Sistemi con dischi multipli</span></h5>
+<p>Nei sistemi che utilizzano molteplici dischi, sono valide le opzioni elencate per un singolo disco. Dopo la creazione della partizione di <code>/boot</code> e la partizione di swap, il rimanente spazio libero può essere diviso in partizioni a questo livello oppure grandi partizioni possono definire tutto lo spazio libero per ogni singolo disco con lo scopo di suddividerle mediante LVM.
+</p>
+<h2><span class="mw-headline" id="Configurare_LUKS">Configurare LUKS</span></h2>
+<p>Questa sezione del Wiki l'uso della linea di comando per criptare manualmente il sistema utilizzando LUKS.
+</p>
+<p>I passaggi necessari utilizzando l'installer grafico sono molto simili e possono essere trovati nella configurazione manuale del disco.
+</p>
+<h3><span class="mw-headline" id="Mappare_le_partizioni_fisiche_con_LUKS">Mappare le partizioni fisiche con LUKS</span></h3>
+<p>Una volta create le partizioni necessarie, sarà il momento di formattarle come partizioni LUKS e successivamente effettuarne il mount mediante il device mapper.
+</p>
+<p>Quando viene creata una partizione LUKS deve essere associata ad una chiave. La chiave verrà utilizzata per sbloccare l'header della partizione criptata con LUKS.
+</p>
+<p>Una chiave può essere: 
+</p>
+<dl><dd><dl><dd><ul>
+<li>Una parola d'ordine(Passphrase)</li>
+<li>Un file chiave(Keyfile)</li>
+</ul></dd></dl></dd></dl>
+<p>Sarà possibile definire fino ad 8 differenti chiavi per ogni partizione LUKS. Questo permette all'utente di creare chiavi di accesso per effettuare i backup. Inoltre una chiave differente può essere creata per garantire l'accesso alla partizione ad un utente e successivamente revocata senza bisogno di criptare nuovamente la partizione.
+</p>
+<h4>
+<span id="Usare_LUKS_per_formattare_partizioni_con_la_parola_d.27ordine"></span><span class="mw-headline" id="Usare_LUKS_per_formattare_partizioni_con_la_parola_d'ordine">Usare LUKS per formattare partizioni con la parola d'ordine</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Usare una parola d'ordine in <code>/etc/crypttab</code> per decriptare partizioni LUKS automaticamente è <a rel="nofollow" class="external text" href="http://www.mail-archive.com/arch-projects@archlinux.org/msg02115.html">deprecato.</a>
+</div>
+<p>Cryptsetup viene utilizzato per formattare, effettuare il mount e l'umount delle partizioni criptate.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../it/Category:Security.html" title="Category:Security (Italiano)">Security (Italiano)</a></li>
+<li><a href="../it/Category:File_systems.html" title="Category:File systems (Italiano)">File systems (Italiano)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme">Pages or sections flagged with Template:Translateme</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt_with_LUKS_(Italiano)&amp;oldid=620998">https://wiki.archlinux.org/index.php?title=Dm-crypt_with_LUKS_(Italiano)&amp;oldid=620998</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 June 2020, at 06:27.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

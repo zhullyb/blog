@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Fan speed control - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Fan_speed_control rootpage-Fan_speed_control skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Fan speed control</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Lm_sensors.html" title="Lm sensors">Lm_sensors</a></li>
+<li><a href="../en/Undervolting_CPU.html" title="Undervolting CPU">Undervolting CPU</a></li>
+<li><a href="../en/PHC.html" title="PHC">PHC</a></li>
+<li><a href="../en/CPU_frequency_scaling.html" title="CPU frequency scaling">CPU frequency scaling</a></li>
+</ul>
+</div>
+<p>Fan control can bring various benefits to your system, such as quieter working system and power saving by completely stopping fans on low CPU load.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Configuring or completely stopping fans on high system load might result in permanently damaged hardware.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Overview"><span class="tocnumber">1</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Fancontrol_(lm-sensors)"><span class="tocnumber">2</span> <span class="toctext">Fancontrol (lm-sensors)</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#lm-sensors"><span class="tocnumber">2.1</span> <span class="toctext">lm-sensors</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Configuration"><span class="tocnumber">2.2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Tweaking"><span class="tocnumber">2.2.1</span> <span class="toctext">Tweaking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Running_Fancontrol"><span class="tocnumber">2.3</span> <span class="toctext">Running Fancontrol</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Fancontrol_stops_working_after_suspend%E2%80%93wake_cycles"><span class="tocnumber">2.4</span> <span class="toctext">Fancontrol stops working after suspend–wake cycles</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#NBFC"><span class="tocnumber">3</span> <span class="toctext">NBFC</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Installation"><span class="tocnumber">3.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Configuration_2"><span class="tocnumber">3.2</span> <span class="toctext">Configuration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Dell_laptops"><span class="tocnumber">4</span> <span class="toctext">Dell laptops</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Installation_2"><span class="tocnumber">4.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Configuration_3"><span class="tocnumber">4.2</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Installation_as_a_service"><span class="tocnumber">4.3</span> <span class="toctext">Installation as a service</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#BIOS_overriding_fan_control"><span class="tocnumber">4.4</span> <span class="toctext">BIOS overriding fan control</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#ThinkPad_laptops"><span class="tocnumber">5</span> <span class="toctext">ThinkPad laptops</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#Installation_3"><span class="tocnumber">5.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Running"><span class="tocnumber">5.2</span> <span class="toctext">Running</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#ASUS_laptops"><span class="tocnumber">6</span> <span class="toctext">ASUS laptops</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20">
+<a href="#Kernel_modules"><span class="tocnumber">6.1</span> <span class="toctext">Kernel modules</span></a>
+<ul>
+<li class="toclevel-3 tocsection-21"><a href="#asus-nb-wmi"><span class="tocnumber">6.1.1</span> <span class="toctext">asus-nb-wmi</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#asus_fan"><span class="tocnumber">6.1.2</span> <span class="toctext">asus_fan</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-23"><a href="#Generate_config_file_with_pwmconfig"><span class="tocnumber">6.2</span> <span class="toctext">Generate config file with pwmconfig</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Alternative_method_using_EC_registers"><span class="tocnumber">6.3</span> <span class="toctext">Alternative method using EC registers</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25">
+<a href="#AMDGPU_sysfs_fan_control"><span class="tocnumber">7</span> <span class="toctext">AMDGPU sysfs fan control</span></a>
+<ul>
+<li class="toclevel-2 tocsection-26"><a href="#Configuration_of_manual_control"><span class="tocnumber">7.1</span> <span class="toctext">Configuration of manual control</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#amdgpu-fan"><span class="tocnumber">7.2</span> <span class="toctext">amdgpu-fan</span></a></li>
+<li class="toclevel-2 tocsection-28">
+<a href="#fancurve_script"><span class="tocnumber">7.3</span> <span class="toctext">fancurve script</span></a>
+<ul>
+<li class="toclevel-3 tocsection-29"><a href="#Setting_up_fancurve_script"><span class="tocnumber">7.3.1</span> <span class="toctext">Setting up fancurve script</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-30">
+<a href="#Troubleshooting"><span class="tocnumber">8</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-31"><a href="#Increase_the_fan_divisor_for_sensors"><span class="tocnumber">8.1</span> <span class="toctext">Increase the fan divisor for sensors</span></a></li>
+<li class="toclevel-2 tocsection-32">
+<a href="#Device_Paths_have_Changed_in_/etc/fancontrol"><span class="tocnumber">8.2</span> <span class="toctext">Device Paths have Changed in /etc/fancontrol</span></a>
+<ul>
+<li class="toclevel-3 tocsection-33"><a href="#Solution"><span class="tocnumber">8.2.1</span> <span class="toctext">Solution</span></a></li>
+<li class="toclevel-3 tocsection-34"><a href="#Alternative_Solution:_Absolute_paths"><span class="tocnumber">8.2.2</span> <span class="toctext">Alternative Solution: Absolute paths</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Overview">Overview</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Laptop users should be aware about how cooling system works in their hardware. Some laptops have single fan for both CPU and GPU and cools both at the same time. Some laptops have two fans for CPU and GPU, but the first fan cools down CPU and GPU at the same time, while the other one cools CPU only. In some cases, you will not be able to use <a href="#Fancontrol_(lm-sensors)">Fancontrol</a> script due to incompatible cooling architecture (e.g. one fan for both GPU and CPU). <a rel="nofollow" class="external text" href="https://github.com/daringer/asus-fan/issues/47#issue-232063547">Here</a> is some more information about this topic.</div>
+<p>There are multiple working solutions for fan control for both desktops and notebooks. Depending on your needs:
+</p>
+<ul>
+<li>
+<a href="#Fancontrol_(lm-sensors)">Fancontrol (lm-sensors)</a> - Script (written in Bash) to configure fan speeds. Most suitable for desktops and laptops, where fan controls are available via sysfs.</li>
+<li>
+<a href="#NBFC">NoteBook Fan Control (NBFC)</a> - Cross-platform solution for laptop fan control, written in C# and works under <a href="../en/Mono.html" title="Mono">Mono</a> runtime. Most suitable for latest, unsupported by <a href="#Fancontrol_(lm-sensors)">Fancontrol</a> laptops.</li>
+<li>
+<a href="#Dell_laptops">Dell laptops</a> - Alternative fan control daemon for some Dell laptops.</li>
+<li>
+<a href="#ThinkPad_laptops">ThinkPad laptops</a> - Fan configuration for some ThinkPad laptops.</li>
+<li>
+<a href="#Asus_laptops">Asus laptops</a> - Configure some Asus laptops for <a href="#Fancontrol_(lm-sensors)">Fancontrol</a> or manual control.</li>
+</ul>
+<h2>
+<span id="Fancontrol_.28lm-sensors.29"></span><span class="mw-headline" id="Fancontrol_(lm-sensors)">Fancontrol (lm-sensors)</span>
+</h2>
+<p><code>fancontrol</code> is a part of <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lm_sensors">lm_sensors</a></span>, which can be used to control the speed of CPU/case fans.
+</p>
+<p>Support for newer motherboards may not yet be in the Linux kernel. Check the official <a rel="nofollow" class="external text" href="https://hwmon.wiki.kernel.org/device_support_status">lm-sensors devices</a> table to see if experimental drivers are available for such motherboards.
+</p>
+<h3><span class="mw-headline" id="lm-sensors">lm-sensors</span></h3>
+<p>The first thing to do is to run
+</p>
+<pre># sensors-detect
+</pre>
+<p>This will detect all of the sensors present and they will be used for fancontrol. After that, run the following to check if it detected the sensors correctly:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ sensors</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">coretemp-isa-0000
+Adapter: ISA adapter
+Core 0:      +29.0°C  (high = +76.0°C, crit = +100.0°C)  
+...
+it8718-isa-0290
+Adapter: ISA adapter
+Vcc:         +1.14 V  (min =  +0.00 V, max =  +4.08 V)   
+VTT:         +2.08 V  (min =  +0.00 V, max =  +4.08 V)   
++3.3V:       +3.33 V  (min =  +0.00 V, max =  +4.08 V)   
+NB Vcore:    +0.03 V  (min =  +0.00 V, max =  +4.08 V)   
+VDRAM:       +2.13 V  (min =  +0.00 V, max =  +4.08 V)   
+fan1:        690 RPM  (min =   10 RPM)
+temp1:       +37.5°C  (low  = +129.5°C, high = +129.5°C)  sensor = thermistor
+temp2:       +25.0°C  (low  = +127.0°C, high = +127.0°C)  sensor = thermal diode</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the output does not display an RPM value for the CPU fan, one may need to <a href="#Increase_the_fan_divisor_for_sensors">#Increase the fan divisor for sensors</a>. If the fan speed is shown and higher than 0, this is fine.</div>
+<h3><span class="mw-headline" id="Configuration">Configuration</span></h3>
+<p>Once the sensors are properly configured, use <code>pwmconfig</code> to test and configure fan speed control. Following the guide should create /etc/fancontrol a customized configuration file. In the guide, the default answers are in parenthesis if you press enter without typing anything. Enter "y" for yes, "n" for no.
+</p>
+<pre># pwmconfig
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Some users may experience issues when using /sys/class/hwmon/ paths for their configuration file. hwmon class device symlinks points to the absolute paths, and are used to group all of the hwmon sensors together into one folder for easier access. Sometimes, the order of the hwmon devices change from a reboot, causing fancontrol to stop working. Go to <a href="#Device_Paths_have_Changed_in_/etc/fancontrol">#Device Paths have Changed in /etc/fancontrol</a> for more information on how to fix this.</div>
+<h4><span class="mw-headline" id="Tweaking">Tweaking</span></h4>
+<p>Some users may want to manually tweak the config file after running pwmconfig, usually to fix something. For manually tweaking the <code>/etc/fancontrol</code> configuration file, see the <span class="plainlinks archwiki-template-man" title="$ man 8 fancontrol"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/fancontrol.8">fancontrol(8)</a></span> manual page for the definitions of the variables.
+</p>
+<p>Users will probably encounter the hwmon path issues as noted above in <a href="#Fancontrol_(lm-sensors)">#Fancontrol (lm-sensors)</a>. Look at <a href="#Device_Paths_have_Changed_in_/etc/fancontrol">#Device Paths have Changed in /etc/fancontrol</a> for more information.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Use <code>MAXPWM</code> and <code>MINPWM</code> options that limit fan speed range. See the <span class="plainlinks archwiki-template-man" title="$ man 8 fancontrol"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/fancontrol.8">fancontrol(8)</a></span> manual page for details.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Temperature and fan sensor paths could change as well (usually on a kernel update) (e.g. <code>hwmon0/device/temp1_input</code> becomes <code>hwmon0/temp1_input</code>). Check the system log to find out which path is the troublemaker:
+<pre># systemctl status fancontrol.service 
+</pre>
+and correct your config file accordingly.</div>
+<h3><span class="mw-headline" id="Running_Fancontrol">Running Fancontrol</span></h3>
+<p>Try to run <i>fancontrol</i>:
+</p>
+<pre># fancontrol
+</pre>
+<p>A properly configured setup will not output errors and will take control of the system fans. Users should hear system fans starting shortly after executing this command.
+</p>
+<p>To enable starting <i>fancontrol</i> automatically on every boot, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>fancontrol.service</code>:
+</p>
+<pre># systemctl enable fancontrol.service
+</pre>
+<p>To start it in the background, run
+</p>
+<pre># systemctl start fancontrol.service
+</pre>
+<p>For an unofficial GUI <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/fancontrol-gui/">fancontrol-gui</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/fancontrol-kcm/">fancontrol-kcm</a></span><sup><small>AUR</small></sup>.
+</p>
+<h3>
+<span id="Fancontrol_stops_working_after_suspend.E2.80.93wake_cycles"></span><span class="mw-headline" id="Fancontrol_stops_working_after_suspend–wake_cycles">Fancontrol stops working after suspend–wake cycles</span>
+</h3>
+<p>Unfortunately, fancontrol does not work after suspending. As per the <a rel="nofollow" class="external text" href="https://github.com/lm-sensors/lm-sensors/issues/172">filed bug</a>, you will have to restart fancontrol after suspending. This can be achieved automatically by a <a href="../en/Power_management.html#Hooks_in_/usr/lib/systemd/system-sleep" title="Power management">systemd hook</a>.
+</p>
+<h2><span class="mw-headline" id="NBFC">NBFC</span></h2>
+<p>NBFC is a cross-platform fan control solution for notebooks. It comes with a powerful configuration system, which allows to adjust it to many different notebook models, including some of the latest ones.
+</p>
+<h3><span class="mw-headline" id="Installation">Installation</span></h3>
+<p>NBFC can be installed as <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nbfc/">nbfc</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nbfc-git/">nbfc-git</a></span><sup><small>AUR</small></sup>. Also start and enable <code>nbfc.service</code>.
+</p>
+<h3><span class="mw-headline" id="Configuration_2">Configuration</span></h3>
+<p>NBFC comes with pre-made profiles. You can find them in <code>/opt/nbfc/Configs/</code> directory. When applying them, use exact profile name without extension (e.g. <code>some profile.xml</code> becomes <code>"some profile"</code>).
+</p>
+<p>Check if there is anything NBFC can recommend:
+</p>
+<pre>$ nbfc config -r
+</pre>
+<p>If there is at least one model, try to apply this profile and see how fan speeds are being handled. For example:
+</p>
+<pre>$ nbfc config -a "Asus Zenbook UX430UA"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are getting <code>File Descriptor does not support writing</code>, delete <code>StagWare.Plugins.ECSysLinux.dll</code> <a rel="nofollow" class="external autonumber" href="https://github.com/hirschmann/nbfc/issues/439">[1]</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>nbfc.service</code>:
+<pre># mv /opt/nbfc/Plugins/StagWare.Plugins.ECSysLinux.dll /opt/nbfc/Plugins/StagWare.Plugins.ECSysLinux.dll.old
+</pre>
+<p>If above solution did not help, try appending <code>ec_sys.write_support=1</code> to <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>.
+</p>
+</div>
+<p>If there are no recommended models, go to <a rel="nofollow" class="external text" href="https://github.com/hirschmann/nbfc/tree/master/Configs">NBFC git repository</a> or <code>/opt/nbfc/Configs/</code> and check if there are any similar models available from the same manufacturer. For example, on <b>Asus Zenbook UX430UQ</b>, the configuration <b>Asus Zenbook UX430UA</b> did not work well (fans completelly stopped all the time), but <b>Asus Zenbook UX410UQ</b> worked fantastically.
+</p>
+<p>Run <code>nbfc</code> to see all options. More information about configuration is available at <a rel="nofollow" class="external text" href="https://github.com/hirschmann/nbfc/wiki/">upstream wiki</a>.
+</p>
+<h2><span class="mw-headline" id="Dell_laptops">Dell laptops</span></h2>
+<p><code>i8kutils</code> is a daemon to configure fan speed according to CPU temperatures on some Dell Inspiron and Latitude laptops. It uses the <code>/proc/i8k</code> interface provided by the <code>dell_smm_hwmon</code> driver (formerly <code>i8k</code>). Results will vary depending on the exact model of laptop.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> i8kutils BIOS system calls stop the kernel for a moment on some systems (confirmed on Dell 9560), this can lead to side effects like audio dropouts, see <a rel="nofollow" class="external free" href="https://bugzilla.kernel.org/show_bug.cgi?id=201097">https://bugzilla.kernel.org/show_bug.cgi?id=201097</a>
+</div>
+<h3><span class="mw-headline" id="Installation_2">Installation</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/i8kutils/">i8kutils</a></span><sup><small>AUR</small></sup> is the main package to control fan speed. Additionally, you might want to install these:
+</p>
+<ul>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acpi">acpi</a></span> - must be installed to use <code>i8kmon</code>.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tcl">tcl</a></span> - must be installed in order to run <code>i8kmon</code> as a background service (using the <code>--daemon</code> option).</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tk">tk</a></span> - must be installed together with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tcl">tcl</a></span> to run as X11 desktop applet.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dell-bios-fan-control-git/">dell-bios-fan-control-git</a></span><sup><small>AUR</small></sup> - recommended if your BIOS overrides fan control</li>
+</ul>
+<h3><span class="mw-headline" id="Configuration_3">Configuration</span></h3>
+<p>By default, <code>i8kmon</code> only monitors the CPU temperature and fan speed passively.  To enable its fan speed control, either run it with the <code>--auto</code> option or enable the option permanently in <code>/etc/i8kutils/i8kmon.conf</code>:
+</p>
+<pre>set config(auto)       1
+</pre>
+<p>The temperature points at which the fan changes speed can be adjusted in the same configuration file.  Only three fans speeds are supported (high, low, and off).  Look for a section similar to the following:
+</p>
+<pre>set config(0)  {{0 0}  -1  55  -1  55}
+set config(1)  {{1 1}  45  75  45  75}
+set config(2)  {{2 2}  65 128  65 128}
+</pre>
+<p>This example starts the fan at low speed when the CPU temperature reaches 55 °C, switching to high speed at 75 °C.  The fan will switch back to low speed once the temperature drops to 65 °C, and turns off completely at 45 °C.
+</p>
+<h3><span class="mw-headline" id="Installation_as_a_service">Installation as a service</span></h3>
+<p><code>i8kmon</code> can be started automatically as a <a href="../en/Systemd.html" title="Systemd">systemd</a> service:
+</p>
+<pre> # systemctl enable i8kmon
+ # systemctl start i8kmon
+</pre>
+<h3><span class="mw-headline" id="BIOS_overriding_fan_control">BIOS overriding fan control</span></h3>
+<p>Some newer laptops have BIOS fan control in place which will override the OS level fan control. To test if this the case, run <code>i8kmon</code> with verbose mode in a command line, make sure the CPU is idle, then see if the fan is turned off or turned down accordingly.
+</p>
+<p>If the BIOS fan control is in place, you can try using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dell-bios-fan-control-git/">dell-bios-fan-control-git</a></span><sup><small>AUR</small></sup>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> turning off BIOS fan control could result in damage to your hardware. Make sure you have i8kmon properly set up beforehand, or leave the CPU idle while you test this program</div>
+<p>To enable BIOS fan control:
+</p>
+<pre> # dell-bios-fan-control 1
+</pre>
+<p>To disable BIOS fan control:
+</p>
+<pre> # dell-bios-fan-control 0
+</pre>
+<p>To automatically disable BIOS fan control via <a href="../en/Systemd.html" title="Systemd">systemd</a>:
+</p>
+<pre> # systemctl enable dell-bios-fan-control
+ # systemctl start dell-bios-fan-control
+</pre>
+<h2><span class="mw-headline" id="ThinkPad_laptops">ThinkPad laptops</span></h2>
+<p>Current fan control daemons available in the <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> are <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/simpfand-git/">simpfand-git</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/thinkfan/">thinkfan</a></span><sup><small>AUR</small></sup> (recommended).
+</p>
+<h3><span class="mw-headline" id="Installation_3">Installation</span></h3>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/thinkfan/">thinkfan</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/thinkfan-git/">thinkfan-git</a></span><sup><small>AUR</small></sup>. Optionally, but recommended, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lm_sensors">lm_sensors</a></span>. Then have a look at the files:
+</p>
+<pre># pacman -Ql thinkfan
+</pre>
+<p>Note that the thinkfan package installs <code>/usr/lib/modprobe.d/thinkpad_acpi.conf</code>, which contains
+</p>
+<pre>options thinkpad_acpi fan_control=1
+</pre>
+<p>So fan control is enabled by default.
+</p>
+<p>Now, load the module: 
+</p>
+<pre># modprobe thinkpad_acpi
+# cat /proc/acpi/ibm/fan
+</pre>
+<p>You should see that the fan level is "auto" by default, but you can echo a level command to the same file to control the fan speed manually: 
+</p>
+<pre># echo level 1 &gt; /proc/acpi/ibm/fan
+</pre>
+<table class="wikitable">
+<caption>Fan Levels
+</caption>
+<tbody>
+<tr>
+<th>Level</th>
+<th>Effect
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>off
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>low speed
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>medium speed
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>maximum speed
+</td>
+</tr>
+<tr>
+<td>auto</td>
+<td>default - automatic
+</td>
+</tr>
+<tr>
+<td>full-speed</td>
+<td>real maximum speed
+</td>
+</tr>
+</tbody>
+</table>
+<p>The thinkfan daemon will do this automatically.
+</p>
+<p>"7" is not the same as "full-speed". "7" is the maximum regulated speed. full-speed is the maximum unregulated speed.
+</p>
+<p>Finally, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> the <code>thinkfan.service</code>.
+</p>
+<p>To configure the temperature thresholds, you will need to copy the example config file (<code>/usr/share/doc/thinkfan/examples/thinkfan.yaml</code>) to <code>/etc/thinkfan.conf</code>, and modify to taste. This file specifies which sensors to read, and which interface to use to control the fan.  Some systems have <code>/proc/acpi/ibm/fan</code> and <code>/proc/acpi/ibm/thermal</code> available; on others, you will need to specify something like:
+</p>
+<pre>hwmon /sys/devices/virtual/thermal/thermal_zone0/temp
+</pre>
+<p>to use generic hwmon sensors instead of thinkpad-specific ones.
+</p>
+<h3><span class="mw-headline" id="Running">Running</span></h3>
+<p>You can test your configuration first by running thinkfan manually (as root):
+</p>
+<pre># thinkfan -n
+</pre>
+<p>and see how it reacts to the load level of whatever other programs you have running.
+</p>
+<p>When you have it configured correctly, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>thinkfan.service</code>.
+</p>
+<h2><span class="mw-headline" id="ASUS_laptops">ASUS laptops</span></h2>
+<p>This topic will cover drivers configuration on ASUS laptops for <a href="#Fancontrol_.28lm-sensors.29">Fancontrol (lm-sensors)</a>.
+</p>
+<h3><span class="mw-headline" id="Kernel_modules">Kernel modules</span></h3>
+<p>In configuration files, we are going to use full paths to sysfs files (e.g. <code>/sys/devices/platform/asus-nb-wmi/hwmon/hwmon[[:print:]]*/pwm1</code>). This is because hwmon<b>1</b> might change to any other number after reboot. <a href="#Fancontrol_.28lm-sensors.29">Fancontrol (lm-sensors)</a> is written in <a href="../en/Bash.html" title="Bash">Bash</a>, so using these paths in configuration file is completely acceptable. You can find complete <code>/etc/fancontrol</code> configuration file examples at <a href="../en/ASUS_N550JV.html#Fan_control" title="ASUS N550JV">ASUS N550JV#Fan control</a>.
+</p>
+<h4><span class="mw-headline" id="asus-nb-wmi">asus-nb-wmi</span></h4>
+<p><i>asus-nb-wmi</i> is a kernel module, which is included in the Linux kernel and is loaded automatically on Asus laptops. It will only allow to control a single fan and if there is a second fan you will not have any controls over it. Note that blacklisting this module will prevent keyboard backlight to work.
+</p>
+<p>Below are the commands to control it. Check if you have any controls over your fan:
+</p>
+<pre># echo 255 &gt; /sys/devices/platform/asus-nb-wmi/hwmon/hwmon[[:print:]]*/pwm1           # Full fan speed (Value: 255)
+# echo 0 &gt; /sys/devices/platform/asus-nb-wmi/hwmon/hwmon[[:print:]]*/pwm1             # Fan is stopped (Value: 0)
+# echo 2 &gt; /sys/devices/platform/asus-nb-wmi/hwmon/hwmon[[[:print:]]*/pwm1_enable     # Change fan mode to automatic
+# echo 1 &gt; /sys/devices/platform/asus-nb-wmi/hwmon/hwmon[[:print:]]*/pwm1_enable      # Change fan mode to manual
+</pre>
+<p>If you were able to modify fan speed with above commands, then continue with <a href="#Generate_config_file_with_pwmconfig">#Generate config file with pwmconfig</a>.
+</p>
+<h4><span class="mw-headline" id="asus_fan">asus_fan</span></h4>
+<p><i>asus_fan</i> is a kernel module, which allows to control both fans on some older Asus laptops. It does not work with the most recent models.
+</p>
+<p>Install the <a href="../en/Dynamic_Kernel_Module_Support.html" class="mw-redirect" title="DKMS">DKMS</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/asus-fan-dkms-git/">asus-fan-dkms-git</a></span><sup><small>AUR</small></sup> <a href="../en/Kernel_module.html" title="Kernel module">kernel module</a>, providing <code>asus_fan</code>:
+</p>
+<pre># modprobe asus_fan
+</pre>
+<p>Check if you have any control over both fans:
+</p>
+<pre># echo 255 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm1          # Full CPU fan speed (Value: 255)
+# echo 0 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm1            # CPU fan is stopped (Value: 0)
+# echo 255 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm2          # Full GFX fan speed (Value: 255)
+# echo 0 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm2            # GFX fan is stopped (Value: 0)
+# echo 2 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm1_enable     # Change CPU fan mode to automatic
+# echo 1 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm1_enable     # Change CPU fan mode to manual
+# echo 2 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm2_enable     # Change GFX fan mode to automatic
+# echo 1 &gt; /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/pwm2_enable     # Change GFX fan mode to manual
+# cat /sys/devices/platform/asus_fan/hwmon/hwmon[[:print:]]*/temp1_input          # Display GFX temperature (will always be 0 when GFX is disabled/unused)
+</pre>
+<p>If everything works, you might want to load this kernel module <a href="../en/Kernel_module.html#Automatic_module_loading_with_systemd" title="Kernel module">on boot</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modules-load.d/asus_fan.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">asus_fan
+</pre>
+<p>Continue with <a href="#Generate_config_file_with_pwmconfig">#Generate config file with pwmconfig</a>.
+</p>
+<h3><span class="mw-headline" id="Generate_config_file_with_pwmconfig">Generate config file with pwmconfig</span></h3>
+<p>If you get an error <code>There are no working fan sensors, all readings are 0</code> while generating config file with <code>pwmconfig</code>, open first console and execute:
+</p>
+<pre># watch -n 1 "echo 2 &gt; /sys/devices/platform/<b>&lt;kernel_module&gt;</b>/hwmon/hwmon[[:print:]]*/pwm<b>1</b>_enable"
+</pre>
+<p>If you use <code>asus_fan</code> kernel module and have 2nd fan, in second console:
+</p>
+<pre># watch -n 1 "echo 2 &gt; /sys/devices/platform/<b>&lt;kernel_module&gt;</b>/hwmon/hwmon[[:print:]]*/pwm<b>2</b>_enable"
+</pre>
+<p>And finally, in the third console:
+</p>
+<pre># pwmconfig
+</pre>
+<p>Once you are done and the configuration file is generated, you should stop the first and second consoles. Continue with <a href="#Fancontrol_.28lm-sensors.29">Fancontrol (lm-sensors)</a>. After config file is generated, you might need to manually replace PWM values with full sysfs paths as they are used in these steps, because hwmon number values might change after reboot.
+</p>
+<h3><span class="mw-headline" id="Alternative_method_using_EC_registers">Alternative method using EC registers</span></h3>
+<p>If the above methods do not work for you, an alternative method is to directly write to certain registers in the embedded controller (EC). Using the <a rel="nofollow" class="external text" href="https://github.com/hirschmann/nbfc/wiki/EC-probing-tool">EC-Probe tool</a>, you can set the fan mode to one of the three fan speed modes, provided your model offers such feature in Windows.
+</p>
+<p>In ASUS FX504GD model setting the fan speed to one of the three modes uses these register values:
+</p>
+<pre># ec-probe write 0x5e 0x80 # silent mode
+# ec-probe write 0x5e 0x40 # balance mode
+# ec-probe write 0x5e 0xC0 # performance mode
+</pre>
+<p>Here we write to register 0x5e that is responsible in setting the fan speed mode. 
+</p>
+<p>If these values do not work for you, run the ec-probe tool in monitor mode in Windows and try to identify which register in the EC changes value when switching through fan speed modes.
+</p>
+<h2><span class="mw-headline" id="AMDGPU_sysfs_fan_control">AMDGPU sysfs fan control</span></h2>
+<p><a href="../en/AMDGPU.html" title="AMDGPU">AMDGPU</a> kernel driver offers fan control for graphics cards via hwmon in sysfs.
+</p>
+<h3><span class="mw-headline" id="Configuration_of_manual_control">Configuration of manual control</span></h3>
+<p>To switch to manual fan control from automatic, run
+</p>
+<pre># echo "1" &gt; /sys/class/drm/card0/device/hwmon/hwmon0/pwm1_enable
+</pre>
+<p>Set up fan speed to e.g. 50% (100% are 255 PWM cycles, thus calculate desired fan speed percentage by multiplying its value by 2.55):
+</p>
+<pre># echo "128" &gt; /sys/class/drm/card0/device/hwmon/hwmon0/pwm1
+</pre>
+<p>To reset to automatic fan control, run
+</p>
+<pre># echo "2" &gt; /sys/class/drm/card0/device/hwmon/hwmon0/pwm1_enable
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Resetting fan speed to auto may not work due to a driver bug and instead a restart of the driver may be required as a workaround.</div>
+<h3><span class="mw-headline" id="amdgpu-fan">amdgpu-fan</span></h3>
+<p>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/amdgpu-fan/">amdgpu-fan</a></span><sup><small>AUR</small></sup> package is an automated fan controller for AMDGPU-enabled video cards written in Python. It uses a "speed-matrix" to match the frequency of the fans with the temperature of the GPU, for example:
+</p>
+<pre>speed_matrix:  # -[temp(*C), speed(0-100%)]
+- [0, 0]
+- [40, 30]
+- [60, 50]
+- [80, 100]</pre>
+<p>Once the package is installed, it can be run as a service, so you can either run it for the current session:
+</p>
+<pre># systemctl start amdgpu-fan.service
+</pre>
+<p>or executed at boot
+</p>
+<pre># systemctl enable amdgpu-fan.service
+</pre>
+<h3><span class="mw-headline" id="fancurve_script">fancurve script</span></h3>
+<p>Not just fan controls are offered via hwmon in sysfs, but also GPU temperature reading:
+</p>
+<pre>cat /sys/class/drm/card0/device/hwmon/hwmon0/temp1_input
+</pre>
+<p>This outputs GPU temperature in °C + three zeroes, e.g. <code>33000</code> for 33°C.
+</p>
+<p>The bash script <a rel="nofollow" class="external text" href="https://github.com/grmat/amdgpu-fancontrol">amdgpu-fancontrol</a> by grmat offers a fully automatic fan control by using the described sysfs hwmon functionality.
+It also allows to comfortably adjust the fancurve's temperature/PWM cycles assignments and a hysteresis by offering abstracted configuration fields at the top of the script.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong>  In order to function correctly, the script needs at least three defined temperature/PWM cycles assignments.</div>
+<p>For safety reasons, the script sets fan control again to auto when shutting down. This may cause spinning up of fans, which can be worked around at cost of security by setting <code>set_fanmode 1</code> in the section <code>function reset_on_fail</code>.
+</p>
+<h4><span class="mw-headline" id="Setting_up_fancurve_script">Setting up fancurve script</span></h4>
+<p>To start the script, it is recommend to do so via <a href="../en/Systemd.html" title="Systemd">systemd</a> init system. This way the script's verbose output can be read via <a href="../en/Systemd/Journal.html" class="mw-redirect" title="Journalctl">journalctl</a>/systemctl status. For this purpose, a .service configuration file is already included in the GitHub repository.
+</p>
+<p>It may also be required to restart the script via a <a href="../en/Power_management.html#Sleep_hooks" title="Power management">root-resume.service</a> after hibernation in order to make it automatically function properly again:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/root-resume.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Local system resume actions
+After=suspend.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/systemctl restart amdgpu-fancontrol.service
+
+[Install]
+WantedBy=suspend.target</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Increase_the_fan_divisor_for_sensors">Increase the fan divisor for sensors</span></h3>
+<p>If <i>sensors</i> does not output the CPU fan RPM, it may be necessary to change the fan divisor.
+</p>
+<p>The first line of the <i>sensors</i> output is the chipset used by the motherboard for readings of temperatures and voltages. 
+</p>
+<p>Create a file in <code>/etc/sensors.d/</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sensors.d/fan-speed-control.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">chip "<i>coretemp-isa-</i>*"
+set fan<i>X</i>_div 4</pre>
+<p>Replacing <i>coretemp-isa-</i> with name of the chipset and <i>X</i> with the number of the CPU fan to change.
+</p>
+<p>Save the file, and run as root:
+</p>
+<pre># sensors -s
+</pre>
+<p>which will reload the configuration files.
+</p>
+<p>Run <code>sensors</code> again, and check if there is an RPM readout. If not, increase the divisor to 8, 16, or 32. YMMV!
+</p>
+<h3>
+<span id="Device_Paths_have_Changed_in_.2Fetc.2Ffancontrol"></span><span class="mw-headline" id="Device_Paths_have_Changed_in_/etc/fancontrol">Device Paths have Changed in /etc/fancontrol</span>
+</h3>
+<p>The enumerated hwmon symlinks located in /sys/class/hwmon/ might vary in order because the kernel modules do not load in a consistent order per boot. Because of this, it may cause fancontrol to not function correctly.  The error is "Configuration appears to be outdated, please run pwmconfig again".  <a rel="nofollow" class="external text" href="https://github.com/lm-sensors/lm-sensors/issues/227">Upstream bug</a>.
+</p>
+<h4><span class="mw-headline" id="Solution">Solution</span></h4>
+<p>In <code>/etc/conf.d/lm_sensors</code>, there are 2 arrays that lists all of the modules detected when you execute <code>sensors-detect</code>. These get loaded in by fancontrol. If the file does not exist, run <code>sensors-detect</code> as root, accepting the defaults. Open (or create) <code>/etc/modules-load.d/modules.conf</code>. Get all of the modules listed from the 2 variables in <code>/etc/conf.d/lm_sensors/</code> and place them into the <code>/etc/modules-load.d/modules.conf</code> file, one module per line. Specifying them like this should make a defined order for the modules to load in, which should make the hwmon paths stay where they are and not change orders for every boot. If this doesnt work, I highly recommend finding another program to control your fans. If you cannot find any, then you could try using the alternative solution below.
+</p>
+<h4><span class="mw-headline" id="Alternative_Solution:_Absolute_paths">Alternative Solution: Absolute paths</span></h4>
+<p>Using absolute file paths in fancontrol does not work by default, as its helper script <code>pwmconfig</code> is programmed to only use the hwmon paths to get the files. The way it does this is that it detects whether the hwmon path that is provided in its config file <code>/etc/fancontrol</code> did not change, and uses the variables <code>DEVNAME</code> and <code>DEVPATH</code> to determine such change. If your hwmon paths keep changing, this will prevent fancontrol from running no matter what you do. However, one can circumvent this problem. Open <code>/usr/bin/fancontrol</code>, and comment out this part of the script:
+</p>
+<pre>if ! ValidateDevices "$DEVPATH" "$DEVNAME"
+ then
+     echo "Configuration appears to be outdated, please run pwmconfig again" &gt;&amp;2
+     exit 1
+ fi
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Doing this may make fancontrol write into files you gave it in the config file, no matter what the file is. This can corrupt files if you provide the wrong path. Be sure that you are using the correct path for your files.
+<p>Another thing to note is that while doing this workaround, using <code>pwmconfig</code> to create your script again will overwrite all of your absolute paths that you have configured. Therefore, it is better to manually change the old paths to the new paths if it is needed instead of using pwmconfig.
+</p>
+</div>
+<p>Commenting this out should effectively ignore the hwmon validation checks. You can also ignore the variables <code>DEVNAME</code> and <code>DEVPATH</code> in the config file as well. After this, replace all of the hwmon paths in the other variables with its absolute path. To make it easier, rerun <code>pwmconfig</code> to refresh the hwmon devices. The hwmon paths in the config file should now point to the correct absolute paths. For each hwmon path, run the following command:
+</p>
+<pre>"#" is the enumeration of the hwmon path
+$ readlink -f /sys/class/hwmon/hwmon#/device
+</pre>
+<p>This will give you the absolute path of the device.
+</p>
+<p>For example, a /etc/fancontrol file lists FCTEMPS as this:
+</p>
+<pre>FCTEMPS=hwmon2/pwm1=hwmon3/temp1_input
+</pre>
+<p>Executing <code>readlink -f /sys/class/hwmon/hwmon3/device</code> can, for example, output <code>/sys/devices/platform/coretemp.0/</code>. <code>cd</code> into this directory. If you see a <code>/hwmon/hwmon#/</code> directory, you have to do this in your fancontrol config file to replace the hwmon# path. From the previous example:
+</p>
+<pre># BEFORE
+FCTEMPS=hwmon2/pwm1=hwmon3/temp1_input
+# AFTER
+FCTEMPS=hwmon2/pwm1=/sys/devices/platform/coretemp.0/hwmon/[[:print:]]*/temp1_input
+</pre>
+<p>Essentially, you must replace the hwmon path with the absolute path, concatenated with {{ic|/hwmon/[[:print:]]*/} so that bash can catch the random enumerated hwmon name.
+</p>
+<p>If you do not see the <code>/hwmon/hwmon#/</code> directory, then you do not have to worry about this. This means that the temperature files are in the root of the device folder. Just replace <code>hwmon#/</code> with the absolute file path. For example:
+</p>
+<pre>#BEFORE
+FCTEMPS=hwmon2/pwm1=hwmon3/temp1_input
+#AFTER
+FCTEMPS=hwmon2/pwm1=/sys/devices/platform/coretemp.0/temp1_input
+</pre>
+<p>After replacing all of paths, fancontrol should work fine.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:CPU.html" title="Category:CPU">CPU</a></li>
+<li><a href="../en/Category:Graphics.html" title="Category:Graphics">Graphics</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Fan_speed_control&amp;oldid=649163">https://wiki.archlinux.org/index.php?title=Fan_speed_control&amp;oldid=649163</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 17 January 2021, at 21:09.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

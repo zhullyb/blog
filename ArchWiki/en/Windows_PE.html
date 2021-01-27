@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Windows PE - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Windows_PE rootpage-Windows_PE skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Windows PE</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://technet.microsoft.com/en-us/library/cc766093(v=ws.10).aspx">Windows PE</a> is a lightweight version of Windows intended to be used for installation of Windows Vista and later versions of Windows, as well as for system maintenance.  It runs entirely from memory and can be booted from the network.  This page describes how customized Windows PE images can be created, and optionally published on the network, using only free software packages on an Arch Linux machine along with Microsoft's Windows Automated Installation Kit (WAIK).  The WAIK can be downloaded at no cost and is only needed to extract the <code>boot.wim</code> file that contains the initial copy of Windows PE, along with a couple boot files.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> By downloading the Windows Automated Installation Kit, you may be bound by its license, which prevents you from, among other things, using Windows PE as a general-purpose operating system.
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Use_cases"><span class="tocnumber">1</span> <span class="toctext">Use cases</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Creating_a_bootable_Windows_PE_image"><span class="tocnumber">2</span> <span class="toctext">Creating a bootable Windows PE image</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Configure_the_Windows_PE_image"><span class="tocnumber">2.1</span> <span class="toctext">Configure the Windows PE image</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Obtain_a_Windows_ISO_or_WAIK_image"><span class="tocnumber">2.2</span> <span class="toctext">Obtain a Windows ISO or WAIK image</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Prepare_a_bootable_Windows_PE_ISO"><span class="tocnumber">2.3</span> <span class="toctext">Prepare a bootable Windows PE ISO</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Prepare_a_bootable_Windows_PE_USB_key_for_UEFI_systems"><span class="tocnumber">2.4</span> <span class="toctext">Prepare a bootable Windows PE USB key for UEFI systems</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Booting_Windows_PE"><span class="tocnumber">3</span> <span class="toctext">Booting Windows PE</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#In_virtual_machine"><span class="tocnumber">3.1</span> <span class="toctext">In virtual machine</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#From_USB_key"><span class="tocnumber">3.2</span> <span class="toctext">From USB key</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#From_CD"><span class="tocnumber">3.3</span> <span class="toctext">From CD</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#From_Network"><span class="tocnumber">3.4</span> <span class="toctext">From Network</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#Installing_Windows_from_Windows_PE"><span class="tocnumber">4</span> <span class="toctext">Installing Windows from Windows PE</span></a></li>
+<li class="toclevel-1 tocsection-13">
+<a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14"><a href="#System_error_58_has_occurred._The_specified_server_cannot_perform_the_requested_operation"><span class="tocnumber">5.1</span> <span class="toctext">System error 58 has occurred. The specified server cannot perform the requested operation</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Use_cases">Use cases</span></h2>
+<p>Normally, an image of Windows PE can only be created using the Windows Automated Installation Kit (WAIK) on a Windows machine.  However, it is also possible to create and modify images of Windows PE using an (Arch) Linux machine, and optionally publish them on the network for PXE booting.  No Windows machine is necessary.  You may want to do this if:
+</p>
+<ul>
+<li>you need to install Windows from the network, or boot Windows PE from the network for system administration, using an Arch Linux-based server.  This may be because you do not have a Windows-based server, or you prefer using a Linux server because of its improved security and configurability, or you are already using a Linux server for other purposes.</li>
+<li>you need to run a Windows environment to run Win32 programs, you do not have a Windows machine available, and you do not want to use <a href="../en/Wine.html" title="Wine">Wine</a> or the programs will not run correctly with <a href="../en/Wine.html" title="Wine">Wine</a>.</li>
+</ul>
+<h2><span class="mw-headline" id="Creating_a_bootable_Windows_PE_image">Creating a bootable Windows PE image</span></h2>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=wimlib">wimlib</a></span>.
+</p>
+<h3><span class="mw-headline" id="Configure_the_Windows_PE_image">Configure the Windows PE image</span></h3>
+<p>To boot into a command prompt, create a startup script, which will be included into the bootable image in the next step:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">start.cmd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">cmd.exe
+pause
+</pre>
+<p>The <code>mkwinpeimg</code> script supports making further modifications to Windows PE using <code>--overlay</code> option.  See the manual page for <code>mkwinpeimg</code> for more information. You may want to do this to add additional Windows applications that you want to run in Windows PE, or to add any additional drivers that Windows PE needs (drivers can be loaded using the <code>drvload</code> command within Windows PE).
+</p>
+<h3><span class="mw-headline" id="Obtain_a_Windows_ISO_or_WAIK_image">Obtain a Windows ISO or WAIK image</span></h3>
+<p><code>mkwinpeimg</code> can create a bootable Windows PE ISO from a variety of sources. You first need to obtain either:
+</p>
+<ul>
+<li>
+<b>Option A</b> for Windows 7 and later: a Windows installation ISO / disk image. It can be downloaded freely on Microsoft website: <a rel="nofollow" class="external text" href="https://www.microsoft.com/en-us/software-download/windows10ISO">Windows 10 ISO</a>. This is the simplest way.</li>
+<li>
+<b>Option B</b>: a Windows Automated Installation Kit (WAIK) image. For up to Windows Vista/7, it can be obtained as <a rel="nofollow" class="external text" href="https://www.microsoft.com/en-us/download/details.aspx?id=5753">a standalone WAIK distribution from Microsoft</a>. Since Windows 8, WAIK has been renamed to WADK and is distributed via <code>adksetup.exe</code>.</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make sure to select the correct architecture depending on your target usage: either x86 (32-bit) or x64 (64-bit). Compatibility of 32-bit programs on Windows x64 is generally good, but your mileage may vary.</div>
+<p>Different versions of Windows installation media contains different versions of Windows PE. For the relationship between Windows versions and Windows PE versions, refer to <a href="https://en.wikipedia.org/wiki/Windows_Preinstallation_Environment#Versions" class="extiw" title="wikipedia:Windows Preinstallation Environment">Wikipedia</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> It may be possible to use <a rel="nofollow" class="external text" href="http://httpfs.sourceforge.net/">httpfs</a> to avoid downloading the entire image file. Windows PE occupies only around 118MB of the image.
+</div>
+<h3><span class="mw-headline" id="Prepare_a_bootable_Windows_PE_ISO">Prepare a bootable Windows PE ISO</span></h3>
+<p>Once you have obtained a Windows installation image or WAIK/WADK image, you need to mount it. Assuming it's called <code>winimg.iso</code>:
+</p>
+<pre># mkdir /media/winimg
+# mount winimg.iso /media/winimg
+</pre>
+<p>Use the <code>mkwinpeimg</code> script provided with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=wimlib">wimlib</a></span> to create a bootable Windows PE ISO <code>winpe.iso</code>, with the startup script created in the previous section:
+</p>
+<p><b>Option A</b>: source image is Windows installation media 
+</p>
+<pre>$ mkwinpeimg --iso --windows-dir=/media/winimg --start-script=start.cmd winpe.iso
+</pre>
+<p><b>Option B</b>: source image is WAIK/WADK:
+</p>
+<pre>$ mkwinpeimg --iso --waik-dir=/media/winimg --start-script=start.cmd winpe.iso
+</pre>
+<p>See the <span class="plainlinks archwiki-template-man" title="$ man 1 mkwinpeimg"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mkwinpeimg.1">mkwinpeimg(1)</a></span> for more information, including the <code>--overlay</code> option to copy files into the image.
+</p>
+<p>Unmount the source ISO:
+</p>
+<pre># umount /media/winimg
+</pre>
+<h3><span class="mw-headline" id="Prepare_a_bootable_Windows_PE_USB_key_for_UEFI_systems">Prepare a bootable Windows PE USB key for UEFI systems</span></h3>
+<p>Unfortunately, as of version 1.13.1-1 of <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=wimlib">wimlib</a></span>, <code>mkwinpeimg</code> cannot build a bootable UEFI system.  But we can build such a UEFI system easily: Windows 10 installation ISO already contain the necessary UEFI boot files.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make sure you selected an appropriate architecture for your Windows ISO image (x86 or x64).  This guide has only been tested with x64, i.e. it boots using <code>/efi/boot/bootx64.efi</code>. It is unknown whether an UEFI system would boot a x86 image of Windows this way. Please update this page if you can test.</div>
+<p>On a USB key, create a GPT partition table with a single FAT32 partition of type "EFI System". This can be done interactively with <code>cfdisk</code> or through fdisk:
+</p>
+<pre># fdisk /dev/sdX
+(fdisk) g  # Create a new GPT partition table
+(fdisk) n  # Create new partition, leave all parameters as default
+(fdisk) t  # Change type of partition
+(fdisk) 1  # Type 1 is "EFI System Partition"
+(fdisk) w  # Save and quit
+</pre>
+<p>Then format the partition as FAT32:
+</p>
+<pre># mkfs.vfat /dev/sdX1
+</pre>
+<p>Mount the <code>winpe.iso</code> file created by <code>mkwinpeimg</code>, mount your USB key, and copy everything:
+</p>
+<pre># mkdir /media/{winpe,usb}
+# mount winpe.iso /media/winpe
+# mount /dev/sdX1 /media/usb
+# cp -r /media/winpe/* /media/usb/
+</pre>
+<p>Finally, mount the original Windows ISO image and copy all boot files in <code>efi</code>:
+</p>
+<pre># mount winimg.iso /media/winimg
+# cp -r /media/winimg/efi /media/usb/
+</pre>
+<p>You can now umount all ISO and the USB key, your USB key is ready to boot.
+</p>
+<p>That's right: no syslinux or grub magic needed. The UEFI firmware should find the FAT partition and load the <code>/efi/boot/bootx64.efi</code> boot file provided by Windows to boot from the USB key.
+</p>
+<h2><span class="mw-headline" id="Booting_Windows_PE">Booting Windows PE</span></h2>
+<p>After creating a bootable ISO of Windows PE (<code>winpe.iso</code>) as described in the previous section, you may want to boot Windows PE in the following ways:
+</p>
+<h3><span class="mw-headline" id="In_virtual_machine">In virtual machine</span></h3>
+<p>Run a virtual machine with <code>winpe.iso</code> attached as a CD-ROM.  Be sure to give it adequate memory, definitely more than the size of the ISO, since Windows PE runs from memory.  See <a href="../en/Category:Hypervisors.html" title="Category:Hypervisors">Category:Hypervisors</a> for a list of available virtualization software.
+</p>
+<h3><span class="mw-headline" id="From_USB_key">From USB key</span></h3>
+<p>If you have prepared a USB key for UEFI systems according to the guide above, it should just boot. It may take some time to boot (10 to 20 seconds is not uncommon, depending on your USB key) because the loader seems to copy some/all data to RAM.
+</p>
+<h3><span class="mw-headline" id="From_CD">From CD</span></h3>
+<p>Simply <a href="../en/Optical_disc_drive.html#Burning" title="Optical disc drive">burn</a> <code>winpe.iso</code> onto a CD, and you can boot from it.
+</p>
+<h3><span class="mw-headline" id="From_Network">From Network</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Preboot_Execution_Environment.html" class="mw-redirect" title="PXE">PXE</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> The PXE article already describes most of this stuff, no need for duplication.  Also rc.d?  Just make sure that configuration file is not lost if it's necessary for windows.  Besides that everything is dupe. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Windows_PE">Talk:Windows PE#</a>)</div>
+</div>
+<p>Windows PE can be booted from the network using <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/PXELINUX">PXELINUX</a> and its <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/MEMDISK">MEMDISK</a> module on BIOS systems. For UEFI systems, <a rel="nofollow" class="external text" href="http://ipxe.org/wimboot">wimboot</a> and <a rel="nofollow" class="external text" href="http://ipxe.org">iPXE</a> can be used.
+</p>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tftp-hpa">tftp-hpa</a></span>.
+</p>
+<p>Copy needed PXELINUX files to the <a href="../en/TFTP.html" class="mw-redirect" title="Tftpd server">TFTP server</a> root directory.
+</p>
+<pre># rsync -aq /usr/lib/syslinux/bios/ /var/tftpboot/
+</pre>
+<p>Put <code>winpe.iso</code> in the <a href="../en/TFTP.html" class="mw-redirect" title="Tftpd server">TFTP server</a> root directory.
+</p>
+<pre># mv winpe.iso /var/tftpboot
+</pre>
+<p>Create a <a href="../en/Syslinux.html#Configuration" title="Syslinux">configuration file</a> for PXELINUX similar to the following:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/var/tftpboot/pxelinux.cfg/default</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">UI         menu.c32
+MENU TITLE Network Boot
+TIMEOUT    50
+
+LABEL      winpe
+MENU LABEL Boot Windows PE from network
+KERNEL     /memdisk
+INITRD     winpe.iso
+APPEND     iso raw
+
+LABEL      localboot
+MENU LABEL Boot from local disk
+LOCALBOOT  0
+</pre>
+<p>Start the <a href="../en/TFTP.html" class="mw-redirect" title="Tftpd server">TFTP server</a>.
+</p>
+<p>Configure your DHCP server (such as <a href="../en/Dhcpd.html" title="Dhcpd">Dhcpd</a> or <a href="../en/Dnsmasq.html" title="Dnsmasq">Dnsmasq</a>) to point to <code>pxelinux.0</code> as the boot file, with the Linux server's IP address.  Beware: if your DHCP server is on a router, it may not be possible to do this without installing custom firmware.
+</p>
+<p>After completing the above steps, you should be able to boot Windows PE from the network.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> With the given PXELINUX configuration file, Windows PE will start by default after 5 seconds.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> TFTP is not designed to be used to transfer large files, such as <code>winpe.iso</code>, which may be 118MB or more and take about 30 seconds to load.  Performance may be improved by using the <code>gpxelinux.0</code> bootloader instead of <code>pxelinux.0</code> and loading <code>winpe.iso</code> using HTTP rather than TFTP.</div>
+<h2><span class="mw-headline" id="Installing_Windows_from_Windows_PE">Installing Windows from Windows PE</span></h2>
+<p>Once booted into Windows PE, you can install Windows from an installation media.
+</p>
+<p>The installation media can be a network share (Samba). See <a href="../en/Samba.html" title="Samba">Samba</a> for seting up a Samba server on another machine on the LAN. To share the installation image mounted at <code>/media/winimg</code>, add the following share definition to <code>/etc/samba/smb.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[REMINST]
+browsable = true
+read only = no
+guest ok = yes
+path = /media/winimg
+</pre>
+<p>Once booted into Windows PE command prompt, run the following command to initialize the network interface, obtain the IP of the Samba server (assuming Windows PE was booted over PXE from a machine that runs the DHCP, TFTP, and Samba server, the server IP will usually be the Gateway IP), mount the share, and launch the GUI setup:
+</p>
+<pre> &gt; wpeinit
+ &gt; ipconfig
+ &gt; net use I: \\IP.ADDRESS.OF.SAMBA.SERVER\REMINST
+ &gt; I:\setup.exe
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="System_error_58_has_occurred._The_specified_server_cannot_perform_the_requested_operation">System error 58 has occurred. The specified server cannot perform the requested operation</span></h3>
+<p>If you are getting the following error when using the <code>net use</code> command:
+</p>
+<pre>System error 58 has occurred.
+
+The specified server cannot perform the requested operation.
+</pre>
+<p>1. Make sure you have not accidentally unmounted the <code>/media/winimg</code> directory.
+</p>
+<p>2. Add a <code>map to guest</code> to <code>/etc/samba/smb.conf</code>. Add the following at the top of the file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[global]
+map to guest = Bad User
+...
+</pre>
+<p>3. Restart the <code>smbd.service</code>.
+</p>
+<p>4. Specify any username/password in the net use command:
+</p>
+<pre>net use I: \\IP.ADDRESS.OF.SAMBA.SERVER\REMINST /user:user pass
+</pre>
+<p>This is happening because Windows 10 connects to anonymous shares by checking some username and password to see if it is able to log in, and if so it allows an anonymous connection.
+Apparently whatever part hides this from the user did not make it into the PE build.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://technet.microsoft.com/en-us/library/cc766093(v=ws.10).aspx">Microsoft's documentation for Windows PE</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.thinkwiki.org/wiki/Windows_PE">Another article about making Windows PE images on Linux</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.ultimatedeployment.org/win7pxelinux1.html">A guide with scripts for unattended installation of Windows 7 from Linux using Windows PE</a></li>
+<li><a rel="nofollow" class="external text" href="https://serverfault.com/a/858269">Windows 10 PE Unable to map network drive anonymously</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:System_administration.html" title="Category:System administration">System administration</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Windows_PE&amp;oldid=647088">https://wiki.archlinux.org/index.php?title=Windows_PE&amp;oldid=647088</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:29.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

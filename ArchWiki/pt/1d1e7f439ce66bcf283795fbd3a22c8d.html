@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch package guidelines (Português)/Security (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_package_guidelines_Português_Security_Português rootpage-Arch_package_guidelines_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch package guidelines (Português)/Security (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../pt/Arch_package_guidelines.html" title="Arch package guidelines (Português)">Arch package guidelines (Português)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Arch_package_guidelines/Security.html" title="Arch package guidelines/Security">Arch package guidelines/Security</a>. Data da última tradução: 2020-06-15. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Arch_package_guidelines/Security&amp;diff=0&amp;oldid=620213">alterações</a> na versão em inglês.</div>
+<p>Esta página descreve as diretrizes de empacotamento de segurança para pacotes do Arch Linux. Para projetos C/C++, o compilador e o vinculador podem aplicar opções de proteção de segurança. O Arch Linux, por padrão, aplica PIE, fonte Fortify, protetor de pilha, nx e relro. As proteções <i>hardening</i> podem ser revisadas executando <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=checksec">checksec</a></span>.
+</p>
+<pre>$ checksec --file=/usr/bin/cat
+</pre>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#RELRO"><span class="tocnumber">1</span> <span class="toctext">RELRO</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Haskell"><span class="tocnumber">1.1</span> <span class="toctext">Haskell</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#Stack_Canary"><span class="tocnumber">2</span> <span class="toctext">Stack Canary</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#NX"><span class="tocnumber">3</span> <span class="toctext">NX</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#C/C++"><span class="tocnumber">3.1</span> <span class="toctext">C/C++</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#PIE"><span class="tocnumber">4</span> <span class="toctext">PIE</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#C/C++_2"><span class="tocnumber">4.1</span> <span class="toctext">C/C++</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Golang"><span class="tocnumber">4.2</span> <span class="toctext">Golang</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Haskell_2"><span class="tocnumber">4.3</span> <span class="toctext">Haskell</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#RPATH/RUNPATH"><span class="tocnumber">5</span> <span class="toctext">RPATH/RUNPATH</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#FORTIFY"><span class="tocnumber">6</span> <span class="toctext">FORTIFY</span></a></li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Servi%C3%A7os_systemd"><span class="tocnumber">7</span> <span class="toctext">Serviços systemd</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#Acesso_de_arquivos"><span class="tocnumber">7.1</span> <span class="toctext">Acesso de arquivos</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Usu%C3%A1rio"><span class="tocnumber">7.2</span> <span class="toctext">Usuário</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Mem%C3%B3ria"><span class="tocnumber">7.3</span> <span class="toctext">Memória</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Chamadas_de_sistema"><span class="tocnumber">7.4</span> <span class="toctext">Chamadas de sistema</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Rede"><span class="tocnumber">7.5</span> <span class="toctext">Rede</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#V%C3%A1rias"><span class="tocnumber">7.6</span> <span class="toctext">Várias</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="RELRO">RELRO</span></h2>
+<p>O RELRO é uma técnica genérica de mitigação para proteger as seções de dados de um processo/binário ELF. Quando um programa é carregado, várias seções da memória ELF precisam ser gravadas pelo vinculador. mas pode ser ativado como somente leitura antes de passar o controle para o programa. Isso evita que os invasores substituam algumas seções da ELF. Existem dois modos RELRO diferentes:
+</p>
+<ul><li>Partial RELRO (<code>-Wl,-z,relro</code>): algumas seções são marcadas como somente leitura após o carregamento do programa, exceto que o GOT (.got.plt) ainda pode ser gravado.</li></ul>
+<ul><li>Full RELRO (<code>-Wl,-z,now</code>) durante o carregamento do programa, todos os símbolos dinâmicos são resolvidos, permitindo que o GOT completo seja marcado como somente leitura.</li></ul>
+<p>Se um aplicativo relatar relro parcial, investigue se a cadeia de ferramentas de compilação passa nossos LDFLAGS ou permite substituir LDFLAGS. Para os pacotes Go, investigue se o método de compilação usa "build.go" como uma substituição pura do Makefile golang, que não permite a passagem de LDFLAGS.
+</p>
+<h3><span class="mw-headline" id="Haskell">Haskell</span></h3>
+<p>Para Haskell, não está claro como alcançar o Full RELRO no momento.
+</p>
+<h2><span class="mw-headline" id="Stack_Canary">Stack Canary</span></h2>
+<p>Um <a href="https://en.wikipedia.org/wiki/pt:Stack_canary" class="extiw" title="wikipedia:pt:Stack canary">stack canary</a> é adicionado pelo compilador entre o buffer e os dados de controle na pilha. Se esse valor conhecido estiver corrompido, ocorreu um estouro de buffer e o programa em execução é segmentado para impedir uma possível execução arbitrária do código.
+</p>
+<p>O pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gcc">gcc</a></span> ativou a proteção de pilha por padrão com o <a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages/blob/packages/gcc/trunk/PKGBUILD#L120">--enable-default-ssp</a> opção de compilação.
+</p>
+<h2><span class="mw-headline" id="NX">NX</span></h2>
+<h3>
+<span id="C.2FC.2B.2B"></span><span class="mw-headline" id="C/C++">C/C++</span>
+</h3>
+<p>A proteção do espaço executável marca as regiões da memória como não executáveis, de modo que uma tentativa de executar o código da máquina nessas regiões causará uma exceção. Ele utiliza recursos de hardware como o bit NX (bit sem execução) ou, em alguns casos, emulação de software desses recursos.
+</p>
+<h2><span class="mw-headline" id="PIE">PIE</span></h2>
+<h3>
+<span id="C.2FC.2B.2B_2"></span><span class="mw-headline" id="C/C++_2">C/C++</span>
+</h3>
+<p>O pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gcc">gcc</a></span> o tem habilitado por padrão para C/C++ com <a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages/blob/packages/gcc/trunk/PKGBUILD#L119">--enable-default-pie</a>.
+</p>
+<h3><span class="mw-headline" id="Golang">Golang</span></h3>
+<p>Passe os seguintes sinalizadores para <i>go build</i>
+</p>
+<pre>export GOFLAGS='-buildmode=pie'
+export CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2"
+export CGO_LDFLAGS="-Wl,-z,relro,-z,now"
+</pre>
+<h3><span class="mw-headline" id="Haskell_2">Haskell</span></h3>
+<p>Passe o seguinte sinalizador para a configuração de <i>runhaskell</i> Setup:
+</p>
+<pre>--ghc-option='-pie'
+</pre>
+<h2>
+<span id="RPATH.2FRUNPATH"></span><span class="mw-headline" id="RPATH/RUNPATH">RPATH/RUNPATH</span>
+</h2>
+<p>RUNPATH/RPATH fornece outros caminhos de pesquisa para o objeto em que está listado (pode ser usado para objetos executáveis e compartilhados).
+</p>
+<pre>$ objdump -x /usr/bin/perl | egrep 'RPATH|RUNPATH'
+</pre>
+<p>Se o valor RPATH contiver um caminho dentro do controle de um invasor, ele poderá executar o código instalando uma biblioteca maliciosa nesse diretório. Por exemplo, <a rel="nofollow" class="external text" href="https://nvd.nist.gov/vuln/detail/CVE-2006-1566">CVE-2006-1566</a> e <a rel="nofollow" class="external text" href="https://www.cvedetails.com/cve/CVE-2005-4280/">CVE-2005-4280</a>.
+</p>
+<p>A entrada RPATH é configurada pelo vinculador, passando, por exemplo, a seguinte string para LDFLAGS <code>-Wl, -rpath -Wl,/usr/local/lib</code>. Para fazer uma entrada de RUNPATH, anexe <code>--enable-new-dtags</code> aos sinalizadores do vinculador.
+</p>
+<h2><span class="mw-headline" id="FORTIFY">FORTIFY</span></h2>
+<p>A fonte Fortify é uma macro que adiciona proteção contra estouro de buffer <i>(buffer overflow)</i> em várias funções que executam operações na memória e nas strings. Ele verifica se um invasor tenta copiar mais bytes para estourar um buffer e interrompe a execução do programa. Essa proteção é ativada com o CPPFLAGS padrão em <code>makepkg.conf</code>:
+</p>
+<pre>CPPFLAGS="-D_FORTIFY_SOURCE=2"
+</pre>
+<h2>
+<span id="Servi.C3.A7os_systemd"></span><span class="mw-headline" id="Serviços_systemd">Serviços systemd</span>
+</h2>
+<p>Se um arquivo de serviço do <a href="../pt/Systemd.html" title="Systemd (Português)">systemd</a> for enviado com o pacote devido à falta de fornecimento do upstream, aplique os seguintes recursos de proteção de serviço do systemd. O systemd fornece uma maneira de analisar os recursos de segurança habilitados para um serviço.
+</p>
+<pre>$ systemd-analyze security pacman.service
+</pre>
+<h3><span class="mw-headline" id="Acesso_de_arquivos">Acesso de arquivos</span></h3>
+<p>Um serviço pode ser protegido restringindo o acesso ao sistema de arquivos.
+</p>
+<p>Configure um novo espaço de nomes do sistema fiel para o processo executado e que monta os diretórios <code>/tmp</code> e <code>/var/tmp</code> privados dentro dele que não são compartilhados pelos processos
+</p>
+<pre>PrivateTmp=true
+</pre>
+<p>O <code>ProtectSystem</code> possui três variedades diferentes de diretórios de montagem como somente leitura para o processo executado. A opção <code>full</code> monta <code>/usr</code>, <code>/boot</code> e <code>/etc</code> como somente leitura. O <code>ProtectHome</code> torna <code>/home</code>, <code>/root</code> e <code>/run/user</code>\ inacessíveis ao processo executado.
+</p>
+<pre>ProtectSystem=strict
+ProtectHome=true
+</pre>
+<p>Configure um novo espaço de nomes <code>/dev</code> para o processo executado e adiciona apenas pseudodispositivos API como <code>/dev/null</code>, <code>/dev/zero</code> ou <code>/dev/random</code>, mas não para dispositivos físicos ou memória do sistema, portas do sistema e outros. Isso é útil para impedir que o processo de execução seja gravado diretamente em dispositivos físicos, o systemd também adiciona um filtro de chamadas do sistema para chamadas dentro do conjunto <code>@raw-io</code>.
+</p>
+<pre>PrivateDevices=true
+</pre>
+<p>Essas opções impendem o processo executado de alterar as variáveis do kernel acessíveis por meio de <code>/proc/sys</code>, <code>/sys</code> etc. <code>ProtectControlGroups</code> torna a hierarquia de <code>/sys/fs/cgroup</code> somente leitura.
+</p>
+<pre>ProtectKernelTunables=true
+ProtectControlGroups=true
+</pre>
+<p>Informações mais detalhadas podem ser encontradas em <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.exec"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.exec.5">systemd.exec(5)</a></span>.
+</p>
+<h3>
+<span id="Usu.C3.A1rio"></span><span class="mw-headline" id="Usuário">Usuário</span>
+</h3>
+<p>Certifique-se que o processo executado e seus filhos nunca possam obter novos privilégios por meio do <code>execve()</code>.
+</p>
+<pre>NoNewPrivileges=true
+</pre>
+<h3>
+<span id="Mem.C3.B3ria"></span><span class="mw-headline" id="Memória">Memória</span>
+</h3>
+<p>Proíba tentativas de criar mapeamentos de memória que sejam graváveis e executáveis, alterar os mapeamentos para executáveis ou criar memória compartilhada executável. Isso protege um processo contra a permissão de um invasor na memória, que também é executada. Observe que ativar isso não é compatível com todos os aplicativos que dependem de <a href="https://en.wikipedia.org/wiki/pt:JIT" class="extiw" title="wikipedia:pt:JIT">JIT</a>.
+</p>
+<pre>MemoryDenyWriteExecute=true
+</pre>
+<h3><span class="mw-headline" id="Chamadas_de_sistema">Chamadas de sistema</span></h3>
+<p>Bloqueia a chamada de sistema <span class="plainlinks archwiki-template-man" title="$ man 2 personality"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/personality.2">personality(2)</a></span> para que o domínio de execução do kernel não possa ser alterado.
+</p>
+<pre>LockPersonality=true
+</pre>
+<p>As chamadas de sistema também podem ser restritas em um serviço, o systemd pode exibir chamadas de sistema para filtrar:
+</p>
+<pre>$ systemd-analyze syscall-filter
+</pre>
+<p>Grupos predefinidos estão disponíveis, por exemplo, para usar o ponto de partida recomendado para chamadas de sistema na lista de permissões para serviços do sistema:
+</p>
+<pre>SystemCallFilter=@system-service
+</pre>
+<h3><span class="mw-headline" id="Rede">Rede</span></h3>
+<p>Se o processo em execução não exigir acesso à rede, este acesso pode ser totalmente desativado, configurando um novo espaço de nomes de rede para o processo e configurando apenas uma interface de loopback.
+</p>
+<pre>PrivateNetwork=true
+</pre>
+<p>Se a rede for necessária, o tipo de família de endereços usado pode ser restrito para a chamada de sistema <span class="plainlinks archwiki-template-man" title="$ man 2 socket"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/socket.2">socket(2)</a></span>, permitindo, por exemplo, apenas soquetes UNIX.
+</p>
+<pre>RestrictAddressFamilies=AF_UNIX
+</pre>
+<p>Quando é necessária apenas a rede para o localhost ou intervalos de IP específicos, um processo pode ser restringido, permitindo apenas o acesso da rede ao localhost.
+</p>
+<pre>IPAddressAllow=localhost
+IPAddressDeny=any
+</pre>
+<p>Mais informações sobre filtragem de rede pode ser encontrada em <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.resource-control"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.resource-control.5">systemd.resource-control(5)</a></span>.
+</p>
+<h3>
+<span id="V.C3.A1rias"></span><span class="mw-headline" id="Várias">Várias</span>
+</h3>
+<p>Configura um novo espaço de nomes UTS para o processo de execução e não permite alterar o nome de host ou o nome de domínio.
+</p>
+<pre>ProtectHostname=true
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../pt/Category:Arch_package_guidelines.html" title="Category:Arch package guidelines (Português)">Arch package guidelines (Português)</a></li>
+<li><a href="../pt/Category:Security.html" title="Category:Security (Português)">Security (Português)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_package_guidelines_(Portugu%C3%AAs)/Security_(Portugu%C3%AAs)&amp;oldid=626469">https://wiki.archlinux.org/index.php?title=Arch_package_guidelines_(Português)/Security_(Português)&amp;oldid=626469</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 July 2020, at 21:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

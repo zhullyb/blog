@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Install Arch Linux via SSH - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Install_Arch_Linux_via_SSH rootpage-Install_Arch_Linux_via_SSH skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Install Arch Linux via SSH</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article is intended to show users how to install Arch remotely via an <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a> connection. Consider this approach when the host is located remotely or you wish to use the copy/paste ability of an SSH client to do the Arch install.
+</p>
+<h2>
+<span id="On_the_remote_.28target.29_machine"></span><span class="mw-headline" id="On_the_remote_(target)_machine">On the remote (target) machine</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> These steps require physical access to the machine. If the host is physically located elsewhere, this may need to be coordinated with another person.</div>
+<p>Boot the target machine into a live Arch environment via the <a href="../en/Installation_guide.html" class="mw-redirect" title="Getting and installing Arch">Live CD/USB image</a>: this will log the user in as root.
+</p>
+<p>At this point, setup the network on the target machine as for example suggested in <a href="../en/Installation_guide.html#Connect_to_the_internet" title="Installation guide">Installation guide#Connect to the internet</a>.
+</p>
+<p>Secondly, setup a root password which is needed for an SSH connection, since the default Arch password for root is empty:
+</p>
+<pre># passwd
+</pre>
+<p>Now check that <code>PermitRootLogin yes</code> is present (and uncommented) in <code>/etc/ssh/sshd_config</code>. This setting allows root login with password authentication on the SSH server.
+</p>
+<p>Finally, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> the openssh daemon with <code>sshd.service</code>, which is included by default on the live CD.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Unless required, after installation it is recommended to remove <code>PermitRootLogin yes</code> from <code>/etc/ssh/sshd_config</code>.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If the target machine is behind a NAT router, and you require external access, the SSH port (22 by default) will need to be forwarded to the target machine's LAN IP address.</div>
+<h2><span class="mw-headline" id="On_the_local_machine">On the local machine</span></h2>
+<p>On the local machine, connect to the target machine via SSH with the following command:
+</p>
+<pre>$ ssh root@<i>ip.address.of.target</i>
+</pre>
+<p>From here one is presented with the live environment's welcome message and is able to administer the target machine as if sitting at the physical keyboard. At this point, if the intent is to simply install Arch from the live media, follow the guide at <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a>. If the intent is to edit an existing Linux install that got broken, follow the <a href="../en/Install_Arch_Linux_from_existing_Linux.html" class="mw-redirect" title="Install from existing Linux">Install from existing Linux</a> wiki article.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Consider using <a href="../en/GNU_Screen.html" title="GNU Screen">GNU Screen</a> or <a href="../en/Tmux.html" title="Tmux">tmux</a> on the target machine (both are available in the live environment), so that if you are disconnected you can reattach to your multiplexer's session.</div>
+<h2><span class="mw-headline" id="Installation_on_a_headless_server">Installation on a headless server</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> These steps may require physical access to the headless machine. Somebody has to insert the installation medium and power up the headless server.</div>
+<p>This section describes installation of Arch Linux on a headless server without a keyboard, mouse or display. It involves three steps:
+</p>
+<p>Create a modified Arch Linux live image using <a href="../en/Archiso.html" title="Archiso">Archiso</a>. The modification is designed to do two (or optionally three) things:
+</p>
+<ol>
+<li>Run the SSH daemon at boot time.</li>
+<li>Create an <code>/root/.ssh/authorized_keys</code> file for root containing your public key.</li>
+<li>If a  Wi-FI connection is required, automatically connect to it at boot time using <a href="../en/Iwd.html" title="Iwd">iwd</a>.</li>
+</ol>
+<p>To create a custom installation ISO, setup <a href="../en/Archiso.html" title="Archiso">Archiso</a> and follow the instructions in <a href="../en/Archiso.html#Prepare_an_ISO_for_an_installation_via_SSH" title="Archiso">Archiso#Prepare an ISO for an installation via SSH</a>. If the headless machine requires a Wi-Fi connection, additionally configure iwd as described in <a href="../en/Archiso.html#Automatically_connect_to_a_Wi-Fi_network_using_iwd" title="Archiso">Archiso#Automatically connect to a Wi-Fi network using iwd</a>. When all customization is done, build the ISO.
+</p>
+<p>Deploy the ISO to the headless machine using a <a href="../en/USB_flash_installation_medium.html" title="USB flash installation medium">USB flash installation medium</a>, optical disc, <a href="../en/Preboot_Execution_Environment.html" class="mw-redirect" title="PXE">PXE</a> or any other available means. Power up the headless machine and boot into a live Arch environment from the installation medium.
+</p>
+<p>Wait for a minute or so to allow the headless machine time to boot up and connect to the network. From your existing machine (with keyboard and display) <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a> into the live Arch environment on the headless server and complete the installation as described in the <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a>. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>It is recommended to use a <a href="../en/List_of_applications/Utilities.html#Terminal_multiplexers" title="List of applications/Utilities">terminal multiplexer</a> in the live environment, so that if you are disconnected you can reattach to your session. The live environment should have <a href="../en/GNU_Screen.html" title="GNU Screen">GNU Screen</a> already installed.</li>
+<li>To belabor the obvious, all the Wi-Fi and SSH configuration that was carried out in the boot image needs to be done again in the actual Arch Linux installation to allow WiFi SSH access to the headless machine after installation.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Installation_process.html" title="Category:Installation process">Installation process</a></li>
+<li><a href="../en/Category:Secure_Shell.html" title="Category:Secure Shell">Secure Shell</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_via_SSH&amp;oldid=643471">https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_via_SSH&amp;oldid=643471</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 December 2020, at 12:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

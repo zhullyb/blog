@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>mkinitcpio (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Mkinitcpio_Português rootpage-Mkinitcpio_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">mkinitcpio (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Mkinitcpio.html" title="Mkinitcpio">Mkinitcpio</a>. Data da última tradução: 2020-05-23. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Mkinitcpio&amp;diff=0&amp;oldid=607496">alterações</a> na versão em inglês.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artigos relacionados</p>
+<ul>
+<li><a href="../pt/Systemd.html" title="Systemd (Português)">systemd</a></li>
+<li><a href="../pt/Kernel_module.html" class="mw-redirect" title="Módulos de kernel">Módulos de kernel</a></li>
+<li><a href="../en/Minimal_initramfs.html" title="Minimal initramfs">Minimal initramfs</a></li>
+<li><a href="../en/General_troubleshooting.html#Boot_problems" class="mw-redirect" title="Boot debugging">Boot debugging</a></li>
+<li><a href="../pt/Dracut.html" title="Dracut (Português)">dracut</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://projects.archlinux.org/mkinitcpio.git/">mkinitcpio</a> é um script bash usado para criar um ambiente <a href="https://en.wikipedia.org/wiki/Initial_ramdisk" class="extiw" title="wikipedia:Initial ramdisk">disco RAM inicial</a> (initial ramdisk, initrd). Da página man do <span class="plainlinks archwiki-template-man" title="$ man 8 mkinitcpio"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mkinitcpio.8">mkinitcpio(8)</a></span> (traduzido):
+</p>
+<dl><dd>o disco RAM inicial é em essência um ambiente muito pequeno (early userspace) que carrega vários módulos do kernel e configura coisas necessárias antes de passar o controle para <code>init</code>. Isto faz possível ter, por exemplo, sistemas de arquivos raiz criptografados e no arranjo RAID de software. <i>mkinitcpio</i> permite uma extensão simples com hooks customizados, têm autodetecção na execução, e muitas outras funcionalidades.</dd></dl>
+<p>Tradicionalmente, o kernel era responsável por toda detecção de hardware e inicialização de tarefas iniciais no <a href="../pt/Arch_boot_process.html" class="mw-redirect" title="Processo de inicialização">processo de inicialização</a> antes de montar o sistema de arquivos raiz e passar o controle para <code>init</code>. No entanto, com avanços da tecnologia, estas tarefas se tornaram cada vez mais complexas.
+</p>
+<p>Atualmente, o sistema de arquivos raiz pode estar em uma ampla gama de hardware, como por exemplo: SCSI, SATA e dispositivos USB, controlados por uma variedade de controladores de drivers de diferentes fabricantes. Adicionalmente, o sistema de arquivos raiz pode estar criptografado ou compresso; dentro de um arranjo RAID de software ou um grupo de volumes lógico. A maneira simples de lidar com essa complexidade é passar o gerenciamento para o userspace: um disco RAM inicial. Veja também: <a rel="nofollow" class="external text" href="https://web.archive.org/web/20150430223035/http://archlinux.me/brain0/2010/02/13/early-userspace-in-arch-linux/">/dev/brain0 » Blog Archive » Early Userspace in Arch Linux</a>.
+</p>
+<p><i>mkinitcpio</i> foi desenvolvido pelos desenvolvedores do Arch Linux e de contribuições da comunidade. Veja o <a rel="nofollow" class="external text" href="https://projects.archlinux.org/mkinitcpio.git/">repositório Git público</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Instala%C3%A7%C3%A3o"><span class="tocnumber">1</span> <span class="toctext">Instalação</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Cria%C3%A7%C3%A3o_e_ativa%C3%A7%C3%A3o_de_imagem"><span class="tocnumber">2</span> <span class="toctext">Criação e ativação de imagem</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Gerar_initcpio_customizado_manualmente"><span class="tocnumber">2.1</span> <span class="toctext">Gerar initcpio customizado manualmente</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Configura%C3%A7%C3%A3o"><span class="tocnumber">3</span> <span class="toctext">Configuração</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#MODULES"><span class="tocnumber">3.1</span> <span class="toctext">MODULES</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#BINARIES_e_FILES"><span class="tocnumber">3.2</span> <span class="toctext">BINARIES e FILES</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#HOOKS"><span class="tocnumber">3.3</span> <span class="toctext">HOOKS</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Hooks_de_compila%C3%A7%C3%A3o"><span class="tocnumber">3.3.1</span> <span class="toctext">Hooks de compilação</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Hooks_de_tempo_de_execu%C3%A7%C3%A3o"><span class="tocnumber">3.3.2</span> <span class="toctext">Hooks de tempo de execução</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Hooks_comuns"><span class="tocnumber">3.3.3</span> <span class="toctext">Hooks comuns</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#COMPRESSION"><span class="tocnumber">3.4</span> <span class="toctext">COMPRESSION</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#COMPRESSION_OPTIONS"><span class="tocnumber">3.5</span> <span class="toctext">COMPRESSION_OPTIONS</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13">
+<a href="#Customiza%C3%A7%C3%A3o_do_tempo_de_execu%C3%A7%C3%A3o"><span class="tocnumber">4</span> <span class="toctext">Customização do tempo de execução</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14"><a href="#init_do_hook_base"><span class="tocnumber">4.1</span> <span class="toctext">init do hook base</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Usando_RAID"><span class="tocnumber">4.2</span> <span class="toctext">Usando RAID</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Usando_net"><span class="tocnumber">4.3</span> <span class="toctext">Usando net</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Usando_LVM"><span class="tocnumber">4.4</span> <span class="toctext">Usando LVM</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Usando_raiz_criptografada"><span class="tocnumber">4.5</span> <span class="toctext">Usando raiz criptografada</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#/usr_como_uma_parti%C3%A7%C3%A3o_separada"><span class="tocnumber">4.6</span> <span class="toctext">/usr como uma partição separada</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20">
+<a href="#Resolu%C3%A7%C3%A3o_de_problemas"><span class="tocnumber">5</span> <span class="toctext">Resolução de problemas</span></a>
+<ul>
+<li class="toclevel-2 tocsection-21"><a href="#Extraindo_a_imagem"><span class="tocnumber">5.1</span> <span class="toctext">Extraindo a imagem</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#Comprimindo_novamente_uma_imagem_extra%C3%ADda_e_modificada"><span class="tocnumber">5.2</span> <span class="toctext">Comprimindo novamente uma imagem extraída e modificada</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#%22/dev_must_be_mounted%22_quando_/dev_j%C3%A1_est%C3%A1_montado"><span class="tocnumber">5.3</span> <span class="toctext">"/dev must be mounted" quando /dev já está montado</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Possivelmente_faltando_firmware_para_m%C3%B3dulo_XXXX"><span class="tocnumber">5.4</span> <span class="toctext">Possivelmente faltando firmware para módulo XXXX</span></a></li>
+<li class="toclevel-2 tocsection-25">
+<a href="#Procedimentos_de_recupera%C3%A7%C3%A3o_padr%C3%A3o"><span class="tocnumber">5.5</span> <span class="toctext">Procedimentos de recuperação padrão</span></a>
+<ul>
+<li class="toclevel-3 tocsection-26"><a href="#Inicializa_com_sucesso_em_uma_m%C3%A1quina_mas_em_outra_falha"><span class="tocnumber">5.5.1</span> <span class="toctext">Inicializa com sucesso em uma máquina mas em outra falha</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-27"><a href="#Veja_tamb%C3%A9m"><span class="tocnumber">6</span> <span class="toctext">Veja também</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Instala.C3.A7.C3.A3o"></span><span class="mw-headline" id="Instalação">Instalação</span>
+</h2>
+<p><a href="../pt/Help:Reading.html#Instala%C3%A7%C3%A3o_de_pacotes" class="mw-redirect" title="Instale">Instale</a> o pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio">mkinitcpio</a></span>, que é uma dependência do pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>, então a maioria dos usuários têm ele instalado.
+</p>
+<p>Usuários avançados podem querer instalar a versão de desenvolvimento mais recente do <i>mkinitcpio</i> do Git com o pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mkinitcpio-git/">mkinitcpio-git</a></span><sup><small>AUR</small></sup>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> É <b>altamente</b> recomendado que você siga a <a rel="nofollow" class="external text" href="https://mailman.archlinux.org/mailman/listinfo/arch-projects">lista de e-mail arch-projects</a> se usa <i>mkinitcpio</i> do Git!</div>
+<h2>
+<span id="Cria.C3.A7.C3.A3o_e_ativa.C3.A7.C3.A3o_de_imagem"></span><span class="mw-headline" id="Criação_e_ativação_de_imagem">Criação e ativação de imagem</span>
+</h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Os presets serão removidos dos pacotes de kernel. mkinitcpio 27 usa um hook do pacman que cria os presets de um modelo (<code>/usr/share/mkinitcpio/hook.preset</code>). (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Mkinitcpio">talk:mkinitcpio</a>)</div>
+</div>
+<p>Por padrão, o script <i>mkinitcpio</i> gera duas imagens depois da instalação ou atualização do kernel: uma imagem <i>default</i>, e uma imagem <i>fallback</i> que pula o hook <i>autodetect</i> assim incluindo diversos módulos majoritariamente desnecessários. Isto é alcançado pela directiva PRESETS dos arquivos <i>.preset</i> que a maioria dos pacotes de kernel instalam no <code>/etc/mkinitcpio.d/</code> (ex., <code>/etc/mkinitcpio.d/linux.preset</code> para o <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> contém <code>PRESETS=('default' 'fallback')</code>). Um preset é uma definição predefinida de como criar uma imagem initramfs ao invés de especificar o arquivo de configuração e saída toda vez. A opção <code>-p</code>/<code>--preset</code> especifica um <i>preset</i> a ser utilizado. Por exemplo, o seguinte irá (re)gerar o preset provido pelo pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>:
+</p>
+<pre># mkinitcpio -p linux
+</pre>
+<p>Um arquivo de configuração adicional é o <code>/etc/mkinitcpio.conf</code>, usado para especificar opções globais para todos os presets. A opção <code>-P</code>/<code>--allpresets</code> especifica que todos os presets devem ser utilizados quando gerar o initramfs depois de modificação no <code>mkinitcpio.conf</code>.
+</p>
+<p>Usuários podem criar qualquer número de imagens initramfs com uma variedade de diferentes configurações. A imagem desejada deve ser especificada no respectivo arquivo de configuração do seu <a href="../pt/Arch_boot_process.html#Gerenciador_de_boot" class="mw-redirect" title="Gerenciador de boot">gerenciador de boot</a>. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> Arquivos <i>.preset</i> são usados para automaticamente gerar o initramfs depois de uma atualização do kernel; tenha cuidado quando editar eles.</div>
+<h3><span class="mw-headline" id="Gerar_initcpio_customizado_manualmente">Gerar initcpio customizado manualmente</span></h3>
+<p>Usuários podem gerar uma imagem usando um arquivo de configuração alternativo. Por exemplo, o seguinte vai gerar uma imagem initramfs de acordo com as direções em <code>/etc/mkinitcpio-custom.conf</code> e salvar isto em <code>/boot/linux-custom.img</code>.
+</p>
+<pre># mkinitcpio -c /etc/mkinitcpio-custom.conf -g /boot/linux-custom.img
+</pre>
+<p>Se gerar uma imagem para um kernel que não seja o que está em execução, adicione a versão do kernel para a linha de comando. Você pode ver as versões disponíveis de kernel em <code>/usr/lib/modules/</code>.
+</p>
+<pre># mkinitcpio -g /boot/linux-custom2.img -k 3.3.0-ARCH
+</pre>
+<h2>
+<span id="Configura.C3.A7.C3.A3o"></span><span class="mw-headline" id="Configuração">Configuração</span>
+</h2>
+<p>O arquivo de configuração primário do <i>mkinitcpio</i> é o <code>/etc/mkinitcpio.conf</code>. Adicionalmente, definições de preset são providos pelos pacotes de kernel no diretório <code>/etc/mkinitcpio.d</code> (e.x. <code>/etc/mkinitcpio.d/linux.preset</code>).
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> <b>lvm2</b>, <b>mdadm</b>, e <b>encrypt</b>  <b>NÃO</b> são habilitados por padrão. Leia esta seção cuidadosamente para instruções se precisar deles.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Usuários com múltiplos controladores de discos de hardware que usam o mesmo nome de nó mas diferentes módulos de kernel (e.x. dois SCSI/SATA ou dois controladores IDE) devem usar <a href="../pt/Persistent_block_device_naming.html" class="mw-redirect" title="Nomeação persistente de dispositivo de bloco">nomeação persistente de dispositivo de bloco</a> para garantir que os dispositivos certos são montados. Senão, a localização do dispositivo raiz pode mudar entre inicializações, resultando em falhas do kernel.</li>
+<li>
+<b>Usuários de teclado PS/2</b>: para conseguir resposta do teclado durante o init inicial, se ainda não ter, adicione o hook <b>keyboard</b> para o <code>HOOKS</code>. Em algumas placas-mãe (majoritariamente as mais antigas, mas também algumas novas), o controlador i8042 não pode ser automaticamente detectado. É raro, mas algumas pessoas vão ainda estar sem o teclado. Você pode detectar esta situação antecipadamente. Se você tem uma porta PS/2 e receber a mensagem <code>i8042: PNP: No PS/2 controller found. Probing ports directly</code>, adicione <b>atkbd</b> para o <code>MODULES</code>.</li>
+</ul>
+</div>
+<p>Usuários podem modificar seis variáveis dentro do arquivo de configuração:
+</p>
+<dl>
+<dt><code>MODULES</code></dt>
+<dd>módulos de kernel a serem carregados antes de que qualquer hooks de inicialização são executados.</dd>
+<dt><code>BINARIES</code></dt>
+<dd>Binários adicionais a serem incluídos na imagem initramfs.</dd>
+<dt><code>FILES</code></dt>
+<dd>Arquivos adicionais a serem incluídos na imagem initramfs.</dd>
+<dt><code>HOOKS</code></dt>
+<dd>Hooks são scripts executados no disco RAM inicial.</dd>
+<dt><code>COMPRESSION</code></dt>
+<dd>Usado para compactar a imagem initramfs.</dd>
+<dt><code>COMPRESSION_OPTIONS</code></dt>
+<dd>Argumentos extras para passar para o programa <code>COMPRESSION</code>. O uso desta configuração é fortemente desencorajado. <i>mkinitcpio</i> vai cuidar de necessidades especiais para os compressores (ex., passar <code>--check=crc32</code> para xz), e mau uso pode facilmente levar a um sistema não inicializável.</dd>
+</dl>
+<h3><span class="mw-headline" id="MODULES">MODULES</span></h3>
+<p>O vetor <code>MODULES</code> é usado para especificar módulos a serem carregados antes que qualquer coisa seja feita.
+</p>
+<p>Módulos sufixados com um <code>?</code> não vão retornar erros se não forem encontrados. Isto pode ser útil para kernels customizados que compilam com módulos que são listados explicitamente em um hook ou arquivo de configuração.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Se usar <b>reiser4</b>, ele <i>deve</i> ser adicionado para a lista de módulos.</li>
+<li>Se precisar de qualquer sistema de arquivos durante o processo de inicialização que não está em execução quando o <i>mkinitcpio</i> é executado —  por exemplo, se seu keyfile do LUKS está em um sistema de arquivos <b>ext2</b> mas nenhum dispositivo desse tipo está montado quando o <i>mkinitcpio</i> é executado, o módulo do sistema de arquivos deve também ser adicionado para a lista MODULES. Veja <a href="../pt/5e279fa7d75b32c0232ab38e4294ae71.html#cryptkey" class="mw-redirect" title="Dm-crypt/Configuração do sistema">Dm-crypt/Configuração do sistema#cryptkey</a> para mais detalhes.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="BINARIES_e_FILES">BINARIES e FILES</span></h3>
+<p>Estas opções permitem que usuários adicionem arquivos para a imagem. Ambos <code>BINARIES</code> e <code>FILES</code> são adicionados antes da execução dos hooks, e podem ser usados para sobrescrever arquivos usados ou providos por um hook. <code>BINARIES</code> são localizados automaticamente dentro de um <code>PATH</code> padrão e suas dependências são tratadas, isto significa que qualquer biblioteca necessária será adicionada. <code>FILES</code> são adicionados <i>do jeito que estão</i>. Por exemplo:
+</p>
+<pre>FILES=(/etc/modprobe.d/modprobe.conf)
+</pre>
+<pre>BINARIES=(kexec)
+</pre>
+<p>Note que em ambos <code>BINARIES</code> e <code>FILES</code>, múltiplas entradas podem ser adicionadas delimitadas com espaços.
+</p>
+<h3><span class="mw-headline" id="HOOKS">HOOKS</span></h3>
+<p>O vetor <code>HOOKS</code> é a configuração mais importante no arquivo. Hooks são pequenos scripts que descrevem o que será adicionado para a imagem. Para alguns hooks, eles também vão conter componentes executados durante a execução da imagem que oferecem comportamento adicional, tais como iniciar um serviço, ou reunir um dispositivo de bloco empilhado. Hooks são referidos pelo seu nome, e executados na ordem que eles estão organizados no arranjo <code>HOOKS</code> do arquivo de configuração.
+</p>
+<p>A configuração padrão do <code>HOOKS</code> deve ser suficiente para as configurações mais simples de disco único. Para dispositivos raiz que são empilhados ou de múltiplos dispositivos de bloco tais como <a href="../pt/LVM.html" title="LVM (Português)">LVM</a>, <a href="../en/LVM_on_software_RAID.html" class="mw-redirect" title="Software RAID and LVM">mdadm</a>, ou <a href="../pt/Dm-crypt.html" title="Dm-crypt (Português)">dm-crypt</a>, veja as páginas respectivas da wiki para mais configurações necessárias.
+</p>
+<h4>
+<span id="Hooks_de_compila.C3.A7.C3.A3o"></span><span class="mw-headline" id="Hooks_de_compilação">Hooks de compilação</span>
+</h4>
+<p>Hooks de compilação são encontrados em <code>/usr/lib/initcpio/install/</code>, hooks de compilação customizados podem ser colocados em <code>/etc/initcpio/install/</code>. Estes arquivos são executados pelo shell bash durante a execução do <i>mkinitcpio</i> e devem conter duas funções: <code>build</code> e <code>help</code>. A função <code>build</code> descreve os módulos, arquivos e binários que serão adicionados para a imagem. Uma API, documentada pelo <span class="plainlinks archwiki-template-man" title="$ man 8 mkinitcpio"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mkinitcpio.8">mkinitcpio(8)</a></span>, serve para facilitar a adição destes itens. A função <code>help</code> mostra a descrição do que o hook faz.
+</p>
+<p>Para uma lista de todos os hooks disponíveis:
+</p>
+<pre>$ mkinitcpio -L
+</pre>
+<p>Use a opção <code>-H</code>/<code>--hookhelp</code> do <i>mkinitcpio</i> para a saída de ajuda de um hook específico, por exemplo:
+</p>
+<pre>$ mkinitcpio -H udev
+</pre>
+<h4>
+<span id="Hooks_de_tempo_de_execu.C3.A7.C3.A3o"></span><span class="mw-headline" id="Hooks_de_tempo_de_execução">Hooks de tempo de execução</span>
+</h4>
+<p>Hooks de tempo de execução são encontrados em <code>/usr/lib/initcpio/hooks/</code>, hooks de tempo de execução customizados podem ser colocados em <code>/etc/initcpio/hooks/</code>. Para qualquer hook desse tipo, deve sempre ter um hook de compilação com o mesmo nome, que chama <code>add_runscript</code> para adicioná-lo à imagem. Estes arquivos são lidos pelo shell ash do busybox durante o early userspace. Com a exceção de hooks de limpeza, eles sempre serão executados na ordem listada na configuração <code>HOOKS</code>. Hooks de tempo de execução podem conter algumas funções:
+</p>
+<p><code>run_earlyhook</code>: Funções deste nome serão executados uma vez que a API dos sistemas de arquivos forem montadas e a linha de comando do kernel for tratada. Isto é geralmente onde daemons adicionais, tais como udev, que são necessários para o início do processo de inicialização são iniciados.
+</p>
+<p><code>run_hook</code>: Funções deste nome são executadas logo depois dos hooks anteriores. Este é o ponto mais comum de um hook, e operações tais como a reunião dos dispositivos de bloco devem tomar lugar aqui.
+</p>
+<p><code>run_latehook</code>: Funções deste nome são executadas depois que o dispositivo raiz for montado. Isto deve ser usado, com moderação, para mais configurações do dispositivo raiz, ou para montar outros sistemas de arquivos, tais como <code>/usr</code>.
+</p>
+<p><code>run_cleanuphook</code>: Funções deste nome são executadas o mais tarde possível, e na ordem reversa de como eles foram listados em <code>HOOKS</code> no arquivo de configuração. Estes hooks devem ser usados para a limpeza de último minuto, tais como desativar qualquer daemon iniciado em um hook anterior.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Hooks de tempo de execução são somente usados pelo init do busybox. O hook <b>systemd</b> ativa um init baseado no systemd, que não executa nenhum hook de tempo de execução, e ao invés disso, usa units do systemd.</div>
+<h4><span class="mw-headline" id="Hooks_comuns">Hooks comuns</span></h4>
+<p>Uma tabela de hooks comuns e como eles afetam a criação e execução da imagem a seguir. Note que esta tabela não está completa, já que pacotes oferecem hooks customizados.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Adicionar informação sobre <code>hostdata</code>, <code>memdisk</code>, <code>sleep</code> e <code>strip</code>, descobrir se <code>dmraid</code>, etc. funciona/é necessário para o initramfs baseado no systemd. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Mkinitcpio#Improvements_for_the_Common_hooks_table_and_section_about_systemd_hook">talk:mkinitcpio#Improvements for the Common hooks table and section about systemd hook</a>)</div>
+</div>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>init do busybox</th>
+<th>init do systemd</th>
+<th><a href="#Hooks_de_compila%C3%A7%C3%A3o">Hook de compilação</a></th>
+<th>
+<a href="#Hooks_de_tempo_de_execu%C3%A7%C3%A3o">Hook de tempo de execução</a> (init somente do busybox)
+</th>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>base</b></td>
+<td>Configura todos os diretórios iniciais e instala utilitários e bibliotecas básicas. Sempre mantenha este hook como o primeiro a menos que saiba o que está fazendo, já que isto causa um erro crítico no init do busybox quando o hook <b>systemd</b> não é utilizado.
+<p>Provê um shell de recuperação do busybox  quando o hook <b>systemd</b> é usado.
+</p>
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>udev</b></td>
+<td rowspan="3" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>systemd</b></td>
+<td>Adiciona udevd, udevadm, e um pequeno subconjunto de regras udev para sua imagem.</td>
+<td>Inicia o daemon do udev e processa uevents do kernel; criando nós de dispositivos. Já que simplifica o processo de inicialização ao não precisar que o usuário explicitamente especifique os módulos necessários, usar isto é recomendado.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>usr</b></td>
+<td>Adiciona suporte para ter o <code>/usr</code> como uma partição separada. Veja <a href="#/usr_como_uma_parti%C3%A7%C3%A3o_separada">#/usr como uma partição separada</a> para detalhes.</td>
+<td>Monta a partição <code>/usr</code> depois que a raiz for montada.
+</td>
+</tr>
+
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>resume</b></td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td>Tenta resumir do estado "suspender para o disco" (suspend to disk). Veja <a href="../en/Power_management/Suspend_and_hibernate.html#Hibernation" class="mw-redirect" title="Hibernation">Hibernation</a> para configuração adicional.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>btrfs</b></td>
+<td style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">--</td>
+<td>Define os módulos necessários para habilitar o <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> para usar múltiplos dispositivos com Btrfs. Você precisa ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=btrfs-progs">btrfs-progs</a></span> instalado para usá-lo. Este hook não é necessário para usar o Btrfs em um único dispositivo.</td>
+<td>Executa <code>btrfs device scan</code> para reunir o sistema de arquivos raiz Btrfs de múltiplos dispositivos quando o hook <b>udev</b> ou <b>systemd</b> não está presente. O pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=btrfs-progs">btrfs-progs</a></span> é necessário para este hook.
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>autodetect</b></td>
+<td>Deixa seu initramfs com um tamanho menor ao criar uma whitelist de módulos por um escaneamento sysfs. Tenha certeza de verificar os módulos incluídos estão corretos e nenhum está faltando. Este hook deve ser executado antes dos hooks de outros subsistemas para tirar vantagem da detecção automática. Qualquer hook colocado antes do 'autodetect' será totalmente instalado.</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>modconf</b></td>
+<td>Inclui arquivos de configuração do modprobe em <code>/etc/modprobe.d/</code> e <code>/usr/lib/modprobe.d/</code>.</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>block</b></td>
+<td>Adiciona todos os módulos de dispositivos de bloco, antes providos separadamente pelos hooks <i>fw</i>, <i>mmc</i>, <i>pata</i>, <i>sata</i>, <i>scsi</i>, <i>usb</i> e <i>virtio</i>.</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>net</b></td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;"><i>não implementado</i></td>
+<td>Adiciona os módulos necessários para um dispositivo de rede. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio-nfs-utils">mkinitcpio-nfs-utils</a></span> instalado para usá-lo, veja <a href="#Usando_net">#Usando net</a> para detalhes.</td>
+<td>Provê gerenciamento para sistemas de arquivos baseados no NFS.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>dmraid</b></td>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><i>?</i></td>
+<td>Oferece suporte para dispositivos raiz fakeRAID. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dmraid">dmraid</a></span> instalado para usar isto. Note que é recomendado usar <code>mdadm</code> com o hook <b>mdadm_udev</b> com fakeRAID se seu controlador suporta. Veja <a href="#Usando_RAID">#Usando RAID</a> para detalhes.</td>
+<td>Localiza e reúne dispositivos de bloco fakeRAID usando <code>dmraid</code>.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>mdadm</b></td>
+<td style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">--</td>
+<td>Oferece suporte a reunião de arranjos RAID do <code>/etc/mdadm.conf</code>, ou detecção automática durante a inicialização. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mdadm">mdadm</a></span> instalado para usá-lo. O hook <b>mdadm_udev</b> é recomendado ao invês desse hook. Veja <a href="#Usando_RAID">#Usando RAID</a> para detalhes.</td>
+<td>Localiza e reune dispositivos de bloco do RAID de software usando <code>mdassemble</code>.
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>mdadm_udev</b></td>
+<td>Oferece suporte a reunião de arranjos RAID pelo udev. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mdadm">mdadm</a></span> instalado. Se você usa este hook com um arranjo FakeRAID, é recomendado incluir <code>mdmon</code> em <code>BINARIES</code>. Veja <a href="#Usando_RAID">#Usando RAID</a> para detalhes.</td>
+<td>Localiza e reune dispositivos de bloco do RAID de software usando <code>udev</code> e reunião incremental <code>mdadm</code>. Este é o método recomendado de reunião mdadm (mais do que usar o hook <i>mdadm</i> acima).
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>keyboard</b></td>
+<td>Adiciona os módulos necessários para teclados. Use isto se você tem um teclado USB ou serial e precisa dele no early userspace (para entrar com as senhas da criptografia ou usar em um shell interativo). Como efeito colateral, módulos para dispositivos de entrada que não são teclado podem ser adicionados também, mas não dependa disto. Superconjunto do antigo hook <i>usbinput</i>.
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Para sistemas que são inicializados com diferentes configurações de hardware (ex., notebooks com teclado externo vs. interno ou <a href="https://en.wikipedia.org/wiki/Headless_computer" class="extiw" title="wikipedia:Headless computer">sistemas headless</a>), é útil colocar este hook antes do <b>autodetect</b> para sempre incluir todos os drivers de teclado. Senão, o teclado externo somente funciona no early userspace se ele estava conectado na criação da imagem.</div>
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>keymap</b></td>
+<td rowspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>sd-vconsole</b></td>
+<td>Adiciona o <a href="../pt/6fb8afc91a56605ff4ff89503a29bd82.html#Configura%C3%A7%C3%A3o_persistente" class="mw-redirect" title="Console do Linux/Configuração de teclado">keymap(s)</a> especificado(s) em <code>/etc/vconsole.conf</code> para o initramfs. Se você usa <a href="../pt/bd347841f13524ba6da3458e094be74d.html" class="mw-redirect" title="Dm-crypt/Criptografando todo um sistema">encriptação de sistema</a>, especialmente encriptação total de disco, tenha certeza de adicioná-la antes do hook <code>encrypt</code>.</td>
+<td>Carrega o(s) keymap(s) especificado(s) em <code>/etc/vconsole.conf</code> durante o early userspace.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>consolefont</b></td>
+<td>Adiciona a <a href="../pt/Linux_console.html#Configura%C3%A7%C3%A3o_persistente" class="mw-redirect" title="Console do Linux">fonte do console</a> especificada no <code>/etc/vconsole.conf</code> para o initramfs.</td>
+<td>Carrega a fonte do console especificada no <code>/etc/vconsole.conf</code> durante o early userspace.
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>encrypt</b></td>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>sd-encrypt</b></td>
+<td>Adiciona o módulo do kernel <code>dm_crypt</code> e a ferramenta <code>cryptsetup</code> para a imagem. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cryptsetup">cryptsetup</a></span> instalado para usar isto.</td>
+<td>Detecta e abre uma partição raiz criptografada. Veja <a href="#Customiza%C3%A7%C3%A3o_do_tempo_de_execu%C3%A7%C3%A3o">#Customização do tempo de execução</a> para mais configurações.
+<p>Para <b>sd-encrypt</b> veja <a href="../pt/5e279fa7d75b32c0232ab38e4294ae71.html#Usando_o_hook_sd-encrypt" class="mw-redirect" title="Sd-encrypt (Português)">sd-encrypt</a>.
+</p>
+</td>
+</tr>
+<tr>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>lvm2</b></td>
+<td style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>sd-lvm2</b></td>
+<td>Adiciona o módulo do mapeador de dispositivos do kernel e a ferramenta <code>lvm</code> para a imagem. Você deve ter <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lvm2">lvm2</a></span> instalado para usar isto.</td>
+<td>Habilita todos os grupos de volume LVM2. Isto é necessário se tem seu sistema de arquivos raiz no <a href="../pt/LVM.html" title="LVM (Português)">LVM</a>.
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>fsck</b></td>
+<td>Adiciona o binário fsck e auxiliares de sistemas de arquivos. Se adicionado depois do hook <b>autodetect</b>, somente o auxiliar específico para seu sistema de arquivos raiz será adicionado. O uso deste hook é <b>fortemente</b> recomendado, e é necessário com uma partição <code>/usr</code>.</td>
+<td>Executa fsck em seu dispositivo raiz (e <code>/usr</code> se separado) antes de montar. Necessita que o parâmetro rw esteja definido na linha de comando do kernel (<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1307895#p1307895">discussão em inglês</a>).
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;"><b>filesystems</b></td>
+<td>Inclui módulos de sistemas de arquivos necessários em sua imagem. Este hook é <b>necessário</b> a menos que você especifique o módulo de seu sistema de arquivos em <code>MODULES</code>.</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+</tr>
+</tbody>
+</table>
+<h3><span class="mw-headline" id="COMPRESSION">COMPRESSION</span></h3>
+<p>O kernel suporta vários formatos de compressão do initramfs: —<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gzip">gzip</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bzip2">bzip2</a></span>, lzma, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xz">xz</a></span> (também conhecido como lzma2), <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lzo">lzo</a></span>, e <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lz4">lz4</a></span>. Para a maioria dos casos, gzip, lzop, e lz4 oferecem o melhor balanço de tamanho de imagem compactada e velocidade de descompressão. A <code>mkinitcpio.conf</code> tem várias opções <code>COMPRESSION</code> comentadas. Descomente uma para escolher qual formato de compressão você deseja.
+</p>
+<p>Não especificar <code>COMPRESSION</code> vai resultar em um arquivo initramfs compactado com gzip. Para criar uma imagem sem compressão, especifique <code>COMPRESSION=cat</code> na configuração ou use <code>-z cat</code> na linha de comando.
+</p>
+<p>Tenha certeza de ter o utilitário de compressão de arquivos instalado para o método que você deseja usar.
+</p>
+<h3><span class="mw-headline" id="COMPRESSION_OPTIONS">COMPRESSION_OPTIONS</span></h3>
+<p>Estas são as opções adicionais passadas para o programa especificado em <code>COMPRESSION</code>, tal como:
+</p>
+<pre>COMPRESSION_OPTIONS=(-9)
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> No geral estas opções nunca devem ser necessárias para o <i>mkinitcpio</i>, pois ele já garante que qualquer método de compressão suportado tem as opções necessárias para produzir uma imagem funcional. Adicionalmente, mau uso pode levar a um <b>sistema não inicializável</b> se o kernel não conseguir descompactar o arquivo resultante.</div>
+<h2>
+<span id="Customiza.C3.A7.C3.A3o_do_tempo_de_execu.C3.A7.C3.A3o"></span><span class="mw-headline" id="Customização_do_tempo_de_execução">Customização do tempo de execução</span>
+</h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Que opções funcionam com o hook do <code>systemd</code> e quais funcionam somente com <code>base</code>? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Mkinitcpio">talk:mkinitcpio</a>)</div>
+</div>
+<p>Opções de configuração do tempo de execução podem ser passadas para <code>init</code> e certos hooks pela linha de comando do kernel. Parâmetros da linha de comando do kernel são geralmente fornecidos pelo gerenciador de boot. As opções discutidas abaixo podem ser adicionadas a linha de comando do kernel para alterar o comportamento padrão. Veja <a href="../pt/Kernel_parameters.html" class="mw-redirect" title="Parâmetros do kernel">parâmetros do kernel</a> e <a href="../pt/Arch_boot_process.html" class="mw-redirect" title="Processo de inicialização do Arch">processo de inicialização do Arch</a> para mais informação.
+</p>
+<h3><span class="mw-headline" id="init_do_hook_base">init do hook base</span></h3>
+<dl>
+<dt><code>root</code></dt>
+<dd>Este é o parâmetro mais importante especificado na linha de comando do kernel, já que determina que dispositivo será montado como raiz. <i>mkinitcpio</i> é flexível o bastante para permitir uma ampla variedade de formatos, por exemplo:</dd>
+</dl>
+<pre>root=/dev/sda1                                                # nó /dev
+root=LABEL=CorsairF80                                         # etiqueta
+root=UUID=ea1c4959-406c-45d0-a144-912f4e86b207                # UUID
+root=PARTUUID=14420948-2cea-4de7-b042-40f67c618660            # UUID da partição GPT
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Os seguintes parâmetros de inicialização alteram o comportamento padrão do <code>init</code> no ambiente initramfs. Veja <code>/usr/lib/initcpio/init</code> para detalhes. Eles não funcionarão quando o hook <code>systemd</code> é usado, já que o <code>init</code> do hook <code>base</code> é substituido.</div>
+<dl>
+<dt><code>break</code></dt>
+<dd>Se <code>break</code> ou <code>break=premount</code> é especificado, <code>init</code> pausa o processo de inicialização (depois de carregar os hooks, mas antes de montar o sistema de arquivos raiz) e lança um shell interativo que pode ser usado para resolução de problemas. Este shell pode ser lançado depois que a raiz for montada ao especificar <code>break=postmount</code>. A inicialização normal continua depois de sair do shell.</dd>
+</dl>
+<dl>
+<dt><code>disablehooks</code></dt>
+<dd>Desabilita hooks no tempo de execução ao adicionar <code>disablehooks=hook1[,hook2,...]</code>. Por exemplo: <pre>disablehooks=resume</pre>
+</dd>
+</dl>
+<dl>
+<dt><code>earlymodules</code></dt>
+<dd>Altera a ordem que os módulos são carregados, ao especificá-los estes serão carregados mais cedo com <code>earlymodules=mod1[,mod2,...]</code>. (Isto pode ser usado, por exemplo, para garantir o ordenamento correto de múltiplas interfaces de rede.)</dd>
+</dl>
+<p>Veja <a href="../en/General_troubleshooting.html#Boot_problems" class="mw-redirect" title="Boot debugging">Boot debugging</a> e <span class="plainlinks archwiki-template-man" title="$ man 8 mkinitcpio"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mkinitcpio.8">mkinitcpio(8)</a></span> para outros parâmetros.
+</p>
+<h3><span class="mw-headline" id="Usando_RAID">Usando RAID</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> <code>mdadm</code> foi descontinuado. Se está usando ele você vai ver <code>==&gt; WARNING: Hook 'mdadm' is deprecated. Replace it with 'mdadm_udev' in your config</code> (Hook 'mdadm' está descontinuado. Troque-o por mdadm_udev em sua configuração) quando fazer uma atualização.</div>
+<p>Primeiro, adicione o hook <code>mdadm_udev</code> ou <code>mdadm</code> para o arranjo <code>HOOKS</code> e qualquer módulo RAID necessário (e.x. raid456, ext4) para o arranjo <code>MODULES</code> no <code>/etc/mkinitcpio.conf</code>.
+</p>
+<p>Usando o hook <code>mdadm</code>, você não precisa mais configurar seu arranjo RAID nos <a href="../pt/Kernel_parameters.html" class="mw-redirect" title="Parâmetros do kernel">parâmetros do kernel</a>. o hook <code>mdadm</code> vai usar ou seu arquivo <code>/etc/mdadm.conf</code> ou vai detectar automaticamente o arranjo(s) durante a fase init da inicialização.
+</p>
+<p>Reunir dispositivos com o udev também é possível usando o hook <code>mdadm_udev</code>. Os desenvolvedores preferem este método. <code>/etc/mdadm.conf</code> vai ainda ser lida com o propósito de nomear os dispositivos reunidos.
+</p>
+<h3><span class="mw-headline" id="Usando_net">Usando net</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> NFSv4 não é suportado ainda <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/28287">FS#28287</a>.</div>
+<p><b>Pacotes necessários</b>
+</p>
+<p><code>net</code> precisa do pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio-nfs-utils">mkinitcpio-nfs-utils</a></span>.
+</p>
+<p><b>Parâmetros do kernel</b> 
+</p>
+<p>Informação compreensiva e atualizada pode ser encontrada na <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/nfs/nfsroot.html">documentação do kernel</a>.
+</p>
+<p><b>ip=</b>
+</p>
+<p>Este parâmetro fala para o kernel como configurar os endereços IP dos dispositivos e também como configurar a tabela de roteamento IP. Pode ter 9 argumentos separados por dois pontos: <code>ip=&lt;ip-do-cliente&gt;:&lt;ip-do-servidor&gt;:&lt;ip-gw&gt;:&lt;máscara de rede&gt;:&lt;nome do host&gt;:&lt;dispositivo&gt;:&lt;autoconf&gt;:&lt;ip-dns0&gt;:&lt;ip-dns1&gt;</code>.
+</p>
+<p>Se não ter este parâmetro na linha de comando do kernel, todos os campos são assumidos como vazios, e o padrão mencionado na <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/nfs/nfsroot.html">documentação do kernel</a> são aplicadas. Em geral isto significa que o kernel tenta configurar tudo usando autoconfiguração.
+</p>
+<p>O parâmetro <code>&lt;autoconf&gt;</code> pode aparecer sozinho, como valor para o parâmetro 'ip' (sem todos os ':' antes). Se o valor é <code>ip=off</code> ou <code>ip=none</code>, nenhuma autoconfiguração vai executada, de outro modo, ela será executada. A maneira mais comum de usar isto é <code>ip=dhcp</code>.
+</p>
+<p>Para explicação dos parâmetros, veja a <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/nfs/nfsroot.html">documentação do kernel</a>.
+</p>
+<p>Exemplos:
+</p>
+<pre> ip=127.0.0.1:::::lo:none  --&gt; Habilita a interface do dispositivo de loop.
+ ip=192.168.1.1:::::eth2:none --&gt; Habilita a interface eth2 estática.
+ ip=:::::eth0:dhcp --&gt; Habilita o protocolo dhcp para configuração eth0.
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Tenha a certeza de usar os nomes de dispositivo do kernel (e.x. <code>eth0</code>) para o parâmetro <code>&lt;dispositivo&gt;</code>, os nomes persistentes (e.x. <code>enp2s0</code>) não funcionarão. Veja <a href="../pt/Network_configuration.html#Interfaces_de_rede" class="mw-redirect" title="Configuração de rede">Configuração de rede#Interfaces de rede</a> para detalhes.</div>
+<p><b>BOOTIF=</b>
+</p>
+<p>Se você tem múltiplas placas de rede, este parâmetro pode incluir o endereço MAC da interface que está inicializando. Isto é geralmente útil já que a numeração da interface pode mudar, ou em conjunção com a opção pxelinux IPAPPEND 2 ou IPAPPEND 3.
+Se não for dado, eth0 será usado.
+</p>
+<p>Exemplo:
+</p>
+<pre> BOOTIF=01-A1-B2-C3-D4-E5-F6  # Note o "01-" prefixado e letras maiúsculas.
+</pre>
+<p><b>nfsroot=</b>
+</p>
+<p>Se o parâmetro <code>nfsroot</code> não é dado na linha de comando, o padrão <code>/tftpboot/%s</code> será usado.
+</p>
+<pre> nfsroot=[&lt;ip-do-servidor&gt;:]&lt;diretório-raiz&gt;[,&lt;opções-nfs&gt;]
+</pre>
+<p>Execute <code>mkinitcpio -H net</code> para explicação do parâmetro.
+</p>
+<h3><span class="mw-headline" id="Usando_LVM">Usando LVM</span></h3>
+<p>Se seu dispositivo raiz está em <a href="../pt/LVM.html" title="LVM (Português)">LVM</a>, veja <a href="../pt/Install_Arch_Linux_on_LVM.html#Adicionando_hooks_do_mkinitcpio" class="mw-redirect" title="Instalar Arch Linux no LVM">Instalar Arch Linux no LVM#Adicionando hooks do mkinitcpio</a>.
+</p>
+<h3><span class="mw-headline" id="Usando_raiz_criptografada">Usando raiz criptografada</span></h3>
+<p>Se você está usando uma <a href="../pt/bd347841f13524ba6da3458e094be74d.html" class="mw-redirect" title="Dm-crypt/Criptografando todo um sistema">raiz criptografada</a> veja <a href="../pt/5e279fa7d75b32c0232ab38e4294ae71.html#mkinitcpio" class="mw-redirect" title="Dm-crypt/Configuração do sistema">Dm-crypt/Configuração do sistema#mkinitcpio</a> para informação detalhada de quais hooks incluir.
+</p>
+<h3>
+<span id=".2Fusr_como_uma_parti.C3.A7.C3.A3o_separada"></span><span class="mw-headline" id="/usr_como_uma_partição_separada">/usr como uma partição separada</span>
+</h3>
+<p>Se você mantém o <code>/usr</code> como uma partição separada, você deve aderir ao seguintes requisitos:
+</p>
+<ul>
+<li>Adicionar o hook <code>fsck</code>, marcar <code>/usr</code> com um <code>passno</code> de <code>2</code> no <code>/etc/fstab</code> para executar a checagem da partição na inicialização. Enquanto recomendado para todo mundo, é mandatório se você quer que o fsck seja executado em sua partição <code>/usr</code> durante a inicialização. Sem este hook, fsck nunca será executado no <code>/usr</code>.</li>
+<li>Se não está usando o hook do systemd, adicione o hook <code>usr</code>. Isto vai montar a partição <code>/usr</code> depois da raiz a ser montada.</li>
+</ul>
+<h2>
+<span id="Resolu.C3.A7.C3.A3o_de_problemas"></span><span class="mw-headline" id="Resolução_de_problemas">Resolução de problemas</span>
+</h2>
+<h3><span class="mw-headline" id="Extraindo_a_imagem">Extraindo a imagem</span></h3>
+<p>Se está curioso sobre o que está dentro da imagem initramfs, você pode extrai-la e ver os arquivos dentro dela.
+</p>
+<p>A imagem initramfs é um arquivo CPIO SVR4, gerado pelos comandos <code>find</code> e <code>bsdcpio</code>, opcionalmente compactados com uma compressão que o kernel entende. Para mais informação sobre a compressão, veja <a href="#COMPRESSION">#COMPRESSION</a>.
+</p>
+<p><i>mkinitcpio</i> inclui um utilitário chamado <code>lsinitcpio</code> que listará e/ou extrairá o conteúdo das imagems initramfs.
+</p>
+<p>Você pode listar os arquivos na imagem com:
+</p>
+<pre>$ lsinitcpio /boot/initramfs-linux.img
+</pre>
+<p>E para extrair todos eles no diretório atual:
+</p>
+<pre>$ lsinitcpio -x /boot/initramfs-linux.img
+</pre>
+<p>Você pode conseguir uma lista das partes importantes na imagem de forma mais legível com:
+</p>
+<pre>$ lsinitcpio -a /boot/initramfs-linux.img
+</pre>
+<h3>
+<span id="Comprimindo_novamente_uma_imagem_extra.C3.ADda_e_modificada"></span><span class="mw-headline" id="Comprimindo_novamente_uma_imagem_extraída_e_modificada">Comprimindo novamente uma imagem extraída e modificada</span>
+</h3>
+<p>Depois de extrair uma imagem como explicado acima, depois de modificá-la, você pode encontrar o comando necessário para comprimí-la. Edite o <code>/usr/bin/mkinitcpio</code> e mude a linha como mostrado abaixo (linha 531 no <i>mkinitcpio</i> v20-1.)
+</p>
+<pre>#MKINITCPIO_PROCESS_PRESET=1 "$0" "${preset_cmd[@]}"
+MKINITCPIO_PROCESS_PRESET=1 /usr/bin/bash -x "$0" "${preset_cmd[@]}"
+</pre>
+<p>Então execute o <code>mkinitcpio</code> com sua opções comuns (tipicamente <code>mkinitcpio -p linux</code>), nas últimas 20 linhas ou mais você vai encontrar algo que parece com isto:
+</p>
+<pre>+ find -mindepth 1 -printf '%P\0'
++ LANG=C
++ bsdcpio -0 -o -H newc --quiet
++ gzip
+</pre>
+<p>Que corresponde ao comando que você precisa executar, que pode ser:
+</p>
+<pre># find -mindepth 1 -printf '%P\0' | LANG=C bsdcpio -0 -o -H newc --quiet | gzip &gt; /boot/initramfs-linux.img
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> É uma boa ideia renomear o <code>/boot/initramfs-linux.img</code> automaticamente gerado antes de sobrescrevé-lo, para você poder facilmente desfazer sua mudanças. Esteja preparado caso realize um erro que impeça seu sistema de inicializar. Se isto acontecer, você vai precisar inicializar pelo fallback, ou inicializar pelo CD, para restaurar seu original, execute mkinitcpio para sobrescrever suas mudanças, ou conserte elas você mesmo e compacte a imagem.</div>
+<h3>
+<span id=".22.2Fdev_must_be_mounted.22_quando_.2Fdev_j.C3.A1_est.C3.A1_montado"></span><span class="mw-headline" id='"/dev_must_be_mounted"_quando_/dev_já_está_montado'>"/dev must be mounted" quando /dev já está montado</span>
+</h3>
+<p>O teste usado pelo <i>mkinitcpio</i> para determinar se <code>/dev</code> está montado é verficar se <code>/dev/fd/</code> existe. Se todo o resto parecer ok, esse diretório pode ser "criado" manualmente com:
+</p>
+<pre># ln -s /proc/self/fd /dev/
+</pre>
+<p>(Obviamente, <code>/proc</code> deve ser montado também. <i>mkinitcpio</i> precisa dele, e esta é a próxima coisa a ser verificada.)
+</p>
+<h3>
+<span id="Possivelmente_faltando_firmware_para_m.C3.B3dulo_XXXX"></span><span class="mw-headline" id="Possivelmente_faltando_firmware_para_módulo_XXXX">Possivelmente faltando firmware para módulo XXXX</span>
+</h3>
+<p>Quando o initramfs está sendo gerado depois de uma atualização do kernel, você pode receber estes avisos ou similares:
+</p>
+<pre>==&gt; WARNING: Possibly missing firmware for module: aic94xx
+==&gt; WARNING: Possibly missing firmware for module: wd719x 
+</pre>
+<p>Eles aparecem para qualquer usuário do Arch Linux, especialmente para os que não tem instalado estes módulos de firmware. Se não tem hardware que usa eles você pode ignorar esta mensagem.
+</p>
+<p>Os arquivos mais comuns de firmware podem ser adquiridos ao <a href="../pt/Help:Reading.html#Instala%C3%A7%C3%A3o_de_pacotes" class="mw-redirect" title="Instala">instalar</a> o pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-firmware">linux-firmware</a></span>. Para outros pacotes que oferecem firmware, tente pesquisar pelo nome do módulo nos <a href="../pt/Official_repositories.html" class="mw-redirect" title="Repositórios oficiais">repositórios oficiais</a> ou <a href="../pt/Arch_User_Repository.html" class="mw-redirect" title="AUR (Português)">AUR</a>.
+</p>
+<h3>
+<span id="Procedimentos_de_recupera.C3.A7.C3.A3o_padr.C3.A3o"></span><span class="mw-headline" id="Procedimentos_de_recuperação_padrão">Procedimentos de recuperação padrão</span>
+</h3>
+<p>Com um disco RAM inicial impróprio um sistema normalmente não é inicializável. Então siga um procedimento de recuperação de sistema como o abaixo:
+</p>
+<h4>
+<span id="Inicializa_com_sucesso_em_uma_m.C3.A1quina_mas_em_outra_falha"></span><span class="mw-headline" id="Inicializa_com_sucesso_em_uma_máquina_mas_em_outra_falha">Inicializa com sucesso em uma máquina mas em outra falha</span>
+</h4>
+<p>O hook <code>autodetect</code> do <i>mkinitcpio</i> filtra <a href="../pt/Kernel_module.html" class="mw-redirect" title="Módulos de kernel">módulos de kernel</a> não necessários no escaneamento primário do <code>/sys</code> para o initramfs e módulos carregados no tempo de execução. Se transferir seu diretório <code>/boot</code> para outra máquina e a sequência de inicialização falhar durante o early userspace, pode ser devido ao novo hardware não detectado por causa da falta de determinados módulos de kernel. Note que USB 2.0 e 3.0 precisam de diferentes módulos de kernel. 
+</p>
+<p>Para consertar isto, primeiro tente escolher a imagem de <a href="#Cria%C3%A7%C3%A3o_e_ativa%C3%A7%C3%A3o_de_imagem">fallback</a> no seu <a href="../pt/Arch_boot_process.html#Gerenciador_de_boot" class="mw-redirect" title="Gerenciador de boot">gerenciador de boot</a>, já que esta não é filtrada pelo <code>autodetect</code>. Uma vez inicializado o sistema, execute <i>mkinitcpio</i> na nova máquina para gerar novamente a imagem primária com os módulos corretos. Se a imagem de fallback falhar, tente inicializar por um live CD/USB do Arch Linux, execute chroot na instalação, e execute <i>mkinitcpio</i> na nova máquina. Como última alternativa, tente adicionar módulos <a href="#MODULES">manualmente</a> para o initramfs.
+</p>
+<h2>
+<span id="Veja_tamb.C3.A9m"></span><span class="mw-headline" id="Veja_também">Veja também</span>
+</h2>
+<ul>
+<li>Documentação do kernel Linux sobre <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/filesystems/ramfs-rootfs-initramfs.html#what-is-rootfs">initramfs "What is rootfs"</a>
+</li>
+<li>Documentação do kernel Linux sobre <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/initrd.html">initrd</a> (inglês)</li>
+<li>Artigo do Wikipédia sobre <a href="https://en.wikipedia.org/wiki/initrd" class="extiw" title="wikipedia:initrd">initrd</a> (inglês)</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../pt/Category:Boot_process.html" title="Category:Boot process (Português)">Boot process (Português)</a></li>
+<li><a href="../pt/Category:Kernel.html" title="Category:Kernel (Português)">Kernel (Português)</a></li>
+<li><a href="../pt/Category:Arch_projects.html" title="Category:Arch projects (Português)">Arch projects (Português)</a></li>
+<li><a href="../pt/Category:Commands.html" title="Category:Commands (Português)">Commands (Português)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Mkinitcpio_(Portugu%C3%AAs)&amp;oldid=615307">https://wiki.archlinux.org/index.php?title=Mkinitcpio_(Português)&amp;oldid=615307</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 24 May 2020, at 02:14.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

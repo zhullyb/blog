@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Xtrabackup - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Xtrabackup rootpage-Xtrabackup skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Xtrabackup</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Percona XtraBackup is an high performance, low-profile and non-blocking  open-source backup utility for InnoDB and XtraDB databases.
+</p>
+<p>Currently is the only open-source tool that performs backups on <a href="../en/MySQL.html" title="MySQL">MySQL</a> servers that does not lock your database during it. Backups are online, and queries and transactions continue to run without interruption ('hot backups').
+</p>
+<p>It can back up data from InnoDB, XtraDB, and MyISAM tables on MySQL 5.0 and 5.1 servers, and it has many advanced features like partial, remote, compressed and incremental backups, multi-threaded file copying for performance and Point-in-time recovery.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  MyISAM tables are read-only while they are being backed up.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Usage_Examples"><span class="tocnumber">2</span> <span class="toctext">Usage Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#xtrabackup"><span class="tocnumber">2.1</span> <span class="toctext">xtrabackup</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#innobackupex"><span class="tocnumber">2.2</span> <span class="toctext">innobackupex</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#tar4ibd"><span class="tocnumber">2.3</span> <span class="toctext">tar4ibd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Tips"><span class="tocnumber">3</span> <span class="toctext">Tips</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Setting_up_a_slave_with_Xtrabackup"><span class="tocnumber">3.1</span> <span class="toctext">Setting up a slave with Xtrabackup</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#More_Resources"><span class="tocnumber">4</span> <span class="toctext">More Resources</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Install the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xtrabackup">xtrabackup</a></span> from community.
+</p>
+<h2><span class="mw-headline" id="Usage_Examples">Usage Examples</span></h2>
+<p>XtraBackup is really a set of three tools:
+</p>
+<dl>
+<dt>xtrabackup</dt>
+<dd>A compiled C binary, which copies only InnoDB and XtraDB data</dd>
+<dt>innobackupex</dt>
+<dd>A wrapper script that provides functionality to backup a whole MySQL database instance with MyISAM, InnoDB, and XtraDB tables.</dd>
+<dt>tar4ibd</dt>
+<dd>A patched version of <a href="../en/Archiving_and_compression.html" class="mw-redirect" title="Tar">tar</a> for handling InnoDB data safely.</dd>
+</dl>
+<p>In all of the below examples, the following is assumed:
+</p>
+<ul>
+<li>You are backing up a server whose data is stored in <code>/var/lib/mysql/</code>, which is the standard location for Archlinux</li>
+<li>You are storing the backups in <code>/data/backups/mysql</code>
+</li>
+<li>You have a my.cnf file in a standard location, such as <code>/etc/my.cnf</code>, with at least the following contents:</li>
+</ul>
+<pre>[mysqld]
+datadir=/var/lib/mysql/
+[xtrabackup]
+target_dir=/data/backups/mysql/
+</pre>
+<h3><span class="mw-headline" id="xtrabackup">xtrabackup</span></h3>
+<p>Making the backup copies the InnoDB data and log files to the destination and preparing the backup makes the data files consistent and ready to use.
+</p>
+<ul><li>Make a backup:</li></ul>
+<pre># xtrabackup --backup
+</pre>
+<p>Prepare the backup:
+</p>
+<pre># xtrabackup --prepare
+</pre>
+<p>Prepare again, to create fresh InnoDB log files:
+</p>
+<pre># xtrabackup --prepare
+</pre>
+<p>The exit status of a successful xtrabackup is 0. In the second --prepare step, you should see InnoDB print messages similar to “Log file ./ib_logfile0 did not exist: new to be created”, followed by a line indicating the log file was created.
+</p>
+<p>You might want to set the --use-memory option to something similar to the size of your buffer pool, if you are on a dedicated server that has enough free memory. The complete documentation of the tool is <a rel="nofollow" class="external text" href="http://www.percona.com/docs/wiki/percona-xtrabackup:xtrabackup:start">here</a>.
+</p>
+<h3><span class="mw-headline" id="innobackupex">innobackupex</span></h3>
+<ul><li>Copying all your MySQL data from the specified directory in your my.cnf.</li></ul>
+<p>It will put the backup in a timestamped subdirectory of /data/backups/ by default (in this example, /data/backups/2010-03-13_02-42-44).
+</p>
+<pre># innobackupex /data/backups
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  There is a lot of output, but you need to make sure you see this at the end of the backup. If you do not see this output, then your backup failed:
+<pre># 100313 02:43:07  innobackupex: completed OK!
+</pre>
+</div>
+<ul><li>If you take the backup from a replica (“slave”), then you might need to see the position relative to the primary (“master”) at the point of the backup:</li></ul>
+<pre># innobackupex --slave-info /data/backups
+</pre>
+<p>See the full documentation of this tool <a rel="nofollow" class="external text" href="http://www.percona.com/docs/wiki/percona-xtrabackup:innobackupex:start">here</a>.
+</p>
+<h3><span class="mw-headline" id="tar4ibd">tar4ibd</span></h3>
+<p>The tar4ibd binary is a specially patched version of tar that understands how to handle InnoDB/XtraDB data files correctly.
+</p>
+<p>The syntax is the same as <a href="../en/Archiving_and_compression.html" class="mw-redirect" title="Tar">tar</a>. The only consideration you must have is including the -i option if you are extracting a file with GNU tar. If not, only a part of your data will be extracted.
+</p>
+<h2><span class="mw-headline" id="Tips">Tips</span></h2>
+<h3><span class="mw-headline" id="Setting_up_a_slave_with_Xtrabackup">Setting up a slave with Xtrabackup</span></h3>
+<p>Xtrabackup is also can be used to clone one slave to another, or just setup new slave from the master. And it is done in a non-blocking way (almost for MyISAM setups) for the cloned server.
+</p>
+<p>Assuming the previous scenario, first execute
+</p>
+<pre># innobackupex --stream=tar /tmp/ --slave-info | ssh user@DESTSERVER "tar xfi - -C /var/lib/mysql"
+</pre>
+<p>When it finishes, on your destination server run
+</p>
+<pre># innobackupex --apply-log --use-memory=2G  /var/lib/mysql
+</pre>
+<p>and you will have ready the database directory.
+</p>
+<p>Copy my.cnf from the original server and start mysqld on the new slave.
+</p>
+<p>Look at the content of the file xtrabackup_slave_info that will be created on the slave:
+</p>
+<pre># cat /var/lib/mysql/xtrabackup_slave_info
+CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000834', MASTER_LOG_POS=50743116
+</pre>
+<p>and execute that statement on a mysql console and start the slave:
+</p>
+<pre>mysql&gt; CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000834', MASTER_LOG_POS=50743116;
+mysql&gt; START SLAVE;
+</pre>
+<p>You should check that everything went OK with:
+</p>
+<pre>mysql&gt; SHOW SLAVE STATUS \G
+...
+Slave_IO_Running: Yes
+Slave_SQL_Running: Yes
+...
+Seconds_Behind_Master: 1643
+...
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  You can use this procedure to add new slaves to a master. Use the same commands to clone an instance already configured as a slave. Just before setting the master for the slave ('CHANGE MASTER TO') run:
+<pre>mysql&gt; STOP SLAVE;
+</pre>
+</div>
+<h2><span class="mw-headline" id="More_Resources">More Resources</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.percona.com/docs/wiki/percona-xtrabackup:start">Percona's documentation of Xtrabackup</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.percona.com/docs/wiki/percona-xtrabackup:start">XtraBackup in Launchpad</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.percona.com/software/percona-xtrabackup/">Xtrabackup's Home page</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Backup.html" title="Category:Backup">Backup</a></li>
+<li><a href="../en/Category:Database_management_systems.html" title="Category:Database management systems">Database management systems</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Xtrabackup&amp;oldid=621640">https://wiki.archlinux.org/index.php?title=Xtrabackup&amp;oldid=621640</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 June 2020, at 15:06.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Bus pirate - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Bus_pirate rootpage-Bus_pirate skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Bus pirate</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>The <a rel="nofollow" class="external text" href="http://code.google.com/p/the-bus-pirate/">Bus Pirate</a> is a versatile tool for communicating with various hardware.
+</p>
+<p>Interfacing a new microchip can be a hassle. Breadboarding a circuit, writing code, hauling out the programmer, or maybe even prototyping a PCB. We never seem to get it right on the first try.
+</p>
+<p>The ‘Bus Pirate’ is a universal bus interface that talks to most chips from a PC serial terminal, eliminating a ton of early prototyping effort when working with new or unknown chips. Many serial protocols are supported at 0-5.5volts, more can be added. See more at the google code site for the <a rel="nofollow" class="external text" href="http://code.google.com/p/the-bus-pirate/">Bus Pirate</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#udev"><span class="tocnumber">1.1</span> <span class="toctext">udev</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Product/Vendor_ID"><span class="tocnumber">1.2</span> <span class="toctext">Product/Vendor ID</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Serial_Number"><span class="tocnumber">1.3</span> <span class="toctext">Serial Number</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5"><a href="#Communication"><span class="tocnumber">2</span> <span class="toctext">Communication</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> All scripts will assume that there is a '<code>/dev/buspirate</code>'.</div>
+<p>The drivers for the FTDI chip is included in the kernel, so it should be detected as soon as it's plugged in, and assigned to device <code>/dev/ttyUSB[0-9]</code>.
+To check where it got assigned, run:
+</p>
+<pre># dmesg | tail
+</pre>
+<p>The output will contain a line that looks something like this:
+</p>
+<pre># usb 1-4.4: FTDI USB Serial Device converter now attached to ttyUSB0
+</pre>
+<h3><span class="mw-headline" id="udev">udev</span></h3>
+<p>It can be annoying to have to look up what <code>/dev/ttyUSB[0-9]</code> the device gets assigned, so it's a good idea to add a simple udev rule that creates the symlink '<code>/dev/buspirate</code> -&gt; <code>/dev/ttyUSB*</code>' when it is plugged in.
+</p>
+<h3>
+<span id="Product.2FVendor_ID"></span><span class="mw-headline" id="Product/Vendor_ID">Product/Vendor ID</span>
+</h3>
+<p>There are several ways to do this, the way I personally prefer is to use it by vender/product ID so the bus pirate can be replaced without needing to modify the line.  To use this method, add the following line to /etc/udev/rules.d/98-buspirate
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/98-buspirate.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Bus pirate v3
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", GROUP="users", MODE="0666", SYMLINK+="buspirate"
+# Bus pirate v4
+SUBSYSTEM=="tty", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="fb00", GROUP="users", MODE="0666", SYMLINK+="buspirate"</pre>
+<h3><span class="mw-headline" id="Serial_Number">Serial Number</span></h3>
+<p>You can also do it by serial number, to do this, you will need to find out the serial number of FTDI chip on the bus pirate. This can be achieved by running the following, assuming your device is plugged in and was assigned to <code>/dev/ttyUSB0</code>:
+</p>
+<pre># udevadm info --attribute-walk -n /dev/ttyUSB0  | sed -n '/FTDI/,/serial/p'
+</pre>
+<p>Now add/create the following file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/98-buspirate.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SUBSYSTEM=="tty", ATTRS{serial}=="XXXXXXXX", GROUP="users", MODE="0660", SYMLINK+="buspirate"
+</pre>
+<p>Change 'ATTRS{serial}=="XXXXXXXX"' to the serial on your device and force udev to load the new rule:
+</p>
+<pre># udevadm control --reload-rules
+</pre>
+<p>At this point, whenever you plug in the device, the symlink should be created.
+</p>
+<h2><span class="mw-headline" id="Communication">Communication</span></h2>
+<p>To communicate with the device, you can use any of the following, to name a few:
+</p>
+<ul><li><code>minicom</code></li></ul>
+<pre># minicom -b 115200 -8 -D /dev/buspirate
+</pre>
+<ul><li><code>screen</code></li></ul>
+<pre># screen /dev/buspirate 115200 8N1
+</pre>
+<ul><li><code>picocom</code></li></ul>
+<pre># picocom -b 115200 /dev/buspirate
+</pre>
+<ul><li>
+<code>cu</code> from the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=uucp">uucp</a></span> package</li></ul>
+<pre># cu -l /dev/buspirate
+</pre>
+<p>Type '?' and press enter and the device should reply with a list of possible commands.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting">Hardware detection and troubleshooting</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Bus_pirate&amp;oldid=598665">https://wiki.archlinux.org/index.php?title=Bus_pirate&amp;oldid=598665</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 February 2020, at 20:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

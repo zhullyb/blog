@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Network Time Protocol daemon - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Network_Time_Protocol_daemon rootpage-Network_Time_Protocol_daemon skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Network Time Protocol daemon</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/NTPsec.html" class="mw-redirect" title="NTPSec">NTPSec</a></li>
+<li><a href="../en/Chrony.html" title="Chrony">Chrony</a></li>
+<li><a href="../en/System_time.html#Time_synchronization" class="mw-redirect" title="Time synchronization">Time synchronization</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Network_Time_Protocol" class="extiw" title="wikipedia:Network Time Protocol">Network Time Protocol</a> is the most common method to synchronize the <a href="../en/System_time.html" title="System time">software clock</a> of a GNU/Linux system with internet time servers. It is designed to mitigate the effects of variable network latency and can usually maintain time to within tens of milliseconds over the public Internet. The accuracy on local area networks is even better, up to one millisecond.
+</p>
+<p><a rel="nofollow" class="external text" href="http://support.ntp.org/bin/view/Main/WebHome#The_NTP_Project">The NTP Project</a> provides a reference implementation of the protocol called simply NTP. This article further describes how to set up and run the NTP daemon, both as a client and as a server.
+</p>
+<p>See <a href="../en/System_time.html#Time_synchronization" title="System time">System time#Time synchronization</a> for other NTP implementations.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Connection_to_NTP_servers"><span class="tocnumber">2.1</span> <span class="toctext">Connection to NTP servers</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#NTP_server_mode"><span class="tocnumber">2.2</span> <span class="toctext">NTP server mode</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Usage"><span class="tocnumber">3</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Start_ntpd_at_boot"><span class="tocnumber">3.1</span> <span class="toctext">Start ntpd at boot</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Synchronize_time_once_per_boot"><span class="tocnumber">3.2</span> <span class="toctext">Synchronize time once per boot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Tips_and_tricks"><span class="tocnumber">4</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Start_ntpd_on_network_connection"><span class="tocnumber">4.1</span> <span class="toctext">Start ntpd on network connection</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Using_ntpd_with_GPS"><span class="tocnumber">4.2</span> <span class="toctext">Using ntpd with GPS</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Running_in_a_chroot"><span class="tocnumber">4.3</span> <span class="toctext">Running in a chroot</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Restrict_listening_sockets"><span class="tocnumber">4.4</span> <span class="toctext">Restrict listening sockets</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntp">ntp</a></span> package. By default, <i>ntpd</i> works in client mode without further configuration. You can skip to <a href="#Usage">#Usage</a>, if you want to use the Arch Linux default configuration file for it. For server configuration, see <a href="#NTP_server_mode">#NTP server mode</a>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>The main daemon is <i>ntpd</i>, which is configured in <code>/etc/ntp.conf</code>. Refer to <span class="plainlinks archwiki-template-man" title="$ man 5 ntp.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ntp.conf.5">ntp.conf(5)</a></span> for detail.
+</p>
+<h3><span class="mw-headline" id="Connection_to_NTP_servers">Connection to NTP servers</span></h3>
+<p>NTP servers are classified in a hierarchical system with many levels called <i>strata</i>: the devices which are considered independent time sources are classified as <i>stratum 0</i> sources; the servers directly connected to <i>stratum 0</i> devices are classified as <i>stratum 1</i> sources; servers connected to <i>stratum 1</i> sources are then classified as <i>stratum 2</i> sources and so on.
+</p>
+<p>It has to be understood that a server's stratum cannot be taken as an indication of its accuracy or reliability. Typically, stratum 2 servers are used for general synchronization purposes: if you do not already know the servers you are going to connect to, you should choose a server pool close to your location from the <a rel="nofollow" class="external text" href="http://www.pool.ntp.org/">pool.ntp.org</a> servers (<a rel="nofollow" class="external text" href="http://support.ntp.org/bin/view/Servers/NTPPoolServers">alternative link</a>).
+</p>
+<p>Since <i>ntp</i> version 4.2.7.p465-2, Arch Linux uses its own default vendor pool of NTP servers provided by <a rel="nofollow" class="external text" href="http://www.pool.ntp.org">the NTP Pool Project</a> (see <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/41700">FS#41700</a>). Modify those to suit your needs, e.g. if you want to use your country's servers with an option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server 0.fr.pool.ntp.org iburst
+server 1.fr.pool.ntp.org iburst
+server 2.fr.pool.ntp.org iburst
+server 3.fr.pool.ntp.org iburst
+</pre>
+<p>The <code>iburst</code> option is recommended, and sends a burst of packets only if it cannot obtain a connection with the first attempt. The <code>burst</code> option always does this, even on the first attempt, and should never be used without explicit permission and may result in blacklisting.
+</p>
+<h3><span class="mw-headline" id="NTP_server_mode">NTP server mode</span></h3>
+<p>If setting up an NTP server, check that you have <a rel="nofollow" class="external text" href="http://doc.ntp.org/current-stable/orphan.html">orphan mode</a> enabled, so that, in case it loses internet access, it will continue serving time to the network; enable orphan mode using the <code>tos</code> configuration parameter (you can set up to <a rel="nofollow" class="external text" href="http://www.ntp.org/ntpfaq/NTP-s-algo.htm#Q-ALGO-BASIC-STRATUM">stratum 15</a>) so that it will never be used unless internet access is lost:
+</p>
+<pre>tos orphan 15
+</pre>
+<p>Next, define the rules that will allow clients to connect to your service (<i>localhost</i> is considered a client too) using the <i>restrict</i> command; you should already have a line like this in your file:
+</p>
+<pre>restrict default nomodify nopeer noquery
+</pre>
+<p>This restricts everyone from modifying anything and prevents everyone from querying the status of your time server: <code>nomodify</code> prevents reconfiguring <i>ntpd</i> (with <i>ntpq</i> or <i>ntpdc</i>), and <code>noquery</code> is important to <a rel="nofollow" class="external text" href="https://mailman.archlinux.org/pipermail/arch-dev-public/2014-February/025872.html">prevent</a> dumping status data from <i>ntpd</i> (also with <i>ntpq</i> or <i>ntpdc</i>).
+</p>
+<p>You can also add other options:
+</p>
+<pre>restrict default kod nomodify notrap nopeer noquery
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This still allows other people to query your time server. You need to add <code>noserve</code> to stop serving time. It will also block time synchronization since it blocks all packets except <i>ntpq</i> and <i>ntpdc</i> queries.</div>
+<p>If you want to change any of these, see the full docs for the "restrict" option in <span class="plainlinks archwiki-template-man" title="$ man 5 ntp.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ntp.conf.5">ntp.conf(5)</a></span>, the detailed ntp <a rel="nofollow" class="external text" href="https://support.ntp.org/bin/view/Support/AccessRestrictions">instructions</a> and <a href="#Usage">#Usage</a>.
+</p>
+<p>Following this line, you need to tell <i>ntpd</i> what to allow through into your server; the following line is enough if you are not configuring an NTP server:
+</p>
+<pre>restrict 127.0.0.1
+</pre>
+<p>If you want to force DNS resolution to the IPv6 namespace, write <code>-6</code> before the IP address or host name (<code>-4</code> forces IPv4 instead), for example:
+</p>
+<pre>restrict -6 default kod nomodify notrap nopeer noquery
+restrict -6 ::1    # ::1 is the IPv6 equivalent for 127.0.0.1
+</pre>
+<p>Lastly, specify the drift file (which keeps track of your clock's time deviation) and optionally the log file location:
+</p>
+<pre>driftfile /var/lib/ntp/ntp.drift
+logfile /var/log/ntp.log
+</pre>
+<p>A very basic configuration file will look like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+server 2.pool.ntp.org iburst
+server 3.pool.ntp.org iburst
+tos orphan 15
+
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+restrict 127.0.0.1
+restrict -6 ::1  
+
+driftfile /var/lib/ntp/ntp.drift
+logfile /var/log/ntp.log
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Defining the log file is not mandatory, but it is always a good idea to have feedback for <i>ntpd</i> operations.</div>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>The package has a default client-mode configuration and its own user and group to drop root privileges after starting. If you start it from the console, you should always do so with the <code>-u</code> option:
+</p>
+<pre># ntpd -u ntp:ntp
+</pre>
+<p>The <code>-u</code> option is employed by the two included systemd services. These services also use the <code>-g</code> option, which disables a threshold (so-called <i>panic-gate</i>). Hence, they will synchonize time even in case the ntp-server's time exceeds the threshold deviation from the system clock.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> One reason the panic-gate was introduced is that background jobs/services may be susceptible to time-jumps. If the system's clock was never synchronized before, consider stopping them before running <i>ntpd</i> for the first time.</div>
+<p>Both services are tied to the system's resolver, and will start synchronizing when an active network connection is detected.
+</p>
+<h3><span class="mw-headline" id="Start_ntpd_at_boot">Start ntpd at boot</span></h3>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">Enable</a> the daemon with <code>ntpd.service</code>. See also <a href="#Running_in_a_chroot">#Running in a chroot</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The systemd command <i>timedatectl</i> can only be used to control <a href="../en/Systemd-timesyncd.html" title="Systemd-timesyncd">systemd-timesyncd</a>. Executing <code>timedatectl set-ntp 1</code> as root will inadvertedly stop a running <code>ntpd.service</code>.<a rel="nofollow" class="external autonumber" href="https://lists.freedesktop.org/archives/systemd-devel/2015-April/030277.html">[1]</a>
+</div>
+<p>Use <i>ntpq</i> to see the list of configured peers and status of synchronization:
+</p>
+<pre>$ ntpq -p
+</pre>
+<p>The delay, offset and jitter columns should be non-zero. The servers <i>ntpd</i> is synchronizing with are prefixed by an asterisk. It can take several minutes before <i>ntpd</i> selects a server to synchronize with; try checking after 17 minutes (1024 seconds).
+</p>
+<h3><span class="mw-headline" id="Synchronize_time_once_per_boot">Synchronize time once per boot</span></h3>
+<p>Alternatively, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>ntpdate.service</code> to synchronize time once (option <code>-q</code>) and non-forking (option <code>-n</code>) per boot, instead of running the daemon in the background. This method is discouraged on servers, and in general on machines that run without rebooting for more than a few days.
+</p>
+<p>If the synchronized time should be written to the hardware clock as well, configure the provided unit as described in <a href="../en/Systemd.html#Editing_provided_units" title="Systemd">systemd#Editing provided units</a> before starting it:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/ntpdate.service.d/hwclock.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+ExecStart=/usr/bin/hwclock -w</pre>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Start_ntpd_on_network_connection">Start ntpd on network connection</span></h3>
+<p><i>ntpd</i> can be started by your network manager, so that the daemon only runs when the computer is online.
+</p>
+<dl><dt>Netctl</dt></dl>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> add <code>-u</code> and optionally refer to <a href="#Usage">#Usage</a>, or use systemctl if possible (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Network_Time_Protocol_daemon">Talk:Network Time Protocol daemon#</a>)</div>
+</div>
+<p>Append the following lines to your <a href="../en/Netctl.html" title="Netctl">netctl</a> profile:
+</p>
+<pre>ExecUpPost='/usr/bin/ntpd || true'
+ExecDownPre='killall ntpd || true'
+</pre>
+<dl><dt>NetworkManager</dt></dl>
+<p>The <i>ntpd</i> daemon can be brought up/down along with a network connection through the use of NetworkManager's <a href="../en/NetworkManager.html#Network_services_with_NetworkManager_dispatcher" title="NetworkManager">dispatcher</a> scripts. The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/networkmanager-dispatcher-ntpd/">networkmanager-dispatcher-ntpd</a></span><sup><small>AUR</small></sup> package installs one, pre-configured to start and stop the <a href="#Start_ntpd_at_boot">ntpd service</a> with a connection.
+</p>
+<dl><dt>Wicd</dt></dl>
+<p>For <a href="../en/Wicd.html" title="Wicd">Wicd</a>, create a start script in the <code>postconnect</code> directory and a stop script in the <code>predisconnect</code> directory. Remember to make them executable:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/wicd/scripts/postconnect/ntpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+systemctl start ntpd &amp;
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/wicd/scripts/predisconnect/ntpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+systemctl stop ntpd &amp;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You are advised to customize the options for the <i>ntpd</i> command as explained in <a href="#Usage">#Usage</a>.</div>
+<p>See also <a href="../en/Wicd.html#Scripts" title="Wicd">Wicd#Scripts</a>.
+</p>
+<dl><dt>KDE</dt></dl>
+<p>KDE can use NTP (ntp must be installed) by right clicking the clock and selecting <i>Adjust date/time</i>. However, this requires the ntp daemon to be <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Disable">disabled</a> before configuring KDE to use NTP. <a rel="nofollow" class="external autonumber" href="https://bugs.kde.org/show_bug.cgi?id=178968">[2]</a>
+</p>
+<h3><span class="mw-headline" id="Using_ntpd_with_GPS">Using ntpd with GPS</span></h3>
+<p>Most of the articles online about configuring <i>ntpd</i> to receive time from a GPS suggest to use the SHM (shared memory) method. However, at least since <i>ntpd</i> version 4.2.8 a <i>much better</i> method is available. It connects directly to <i>gpsd</i>, so <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gpsd">gpsd</a></span> needs to be installed.
+</p>
+<p>Add these lines to your <code>/etc/ntp.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#=========================================================
+#  GPSD native ntpd driver
+#=========================================================
+# This driver exists from at least ntp version 4.2.8
+# Details at
+#   <a rel="nofollow" class="external free" href="https://www.eecis.udel.edu/~mills/ntp/html/drivers/driver46.html">https://www.eecis.udel.edu/~mills/ntp/html/drivers/driver46.html</a>
+server 127.127.46.0 
+fudge 127.127.46.0 time1 0.0 time2 0.0 refid GPS</pre>
+<p>This will work as long as you have <i>gpsd</i> working. It connects to <i>gpsd</i> via the local socket and queries the "gpsd_json" object that is returned.
+</p>
+<p>To test the setup, first ensure that <i>gpsd</i> is working by running:
+</p>
+<pre> $ cgps -s 
+</pre>
+<p>Then wait a few minutes and run <code>ntpq -p</code>. This will show if <i>ntpd</i> is talking to <i>gpsd</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ntpq -p</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">remote           refid            st t when poll reach   delay   offset  jitter
+ ==================================================================================
+*GPSD_JSON(0)    .GPS.            0 l   55   64  377    0.000    2.556  14.109</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If the <i>reach</i> column is 0, it means <i>ntpd</i> has not been able to talk to <i>gpsd</i>. Wait a few minutes and try again. Sometimes it takes <i>ntpd</i> a while.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <i>ntpd</i> expects that your GPS device is called e.g. <code>/dev/gps0</code>. If your GPS device is connected via USB, it may appear as <code>/dev/ttyUSB0</code> instead, and you may have to create a symlink <code>ln -s /dev/ttyUSB0 /dev/gps0</code> and run <i>gpsd</i> on that linked <code>/dev/gps0</code> so that the <code>GPSD_JSON</code> line appears as expected. <i>gpsd</i> should be run with the <code>-n</code> flag on the <code>GPSD_OPTIONS</code> line and use <code>/dev/gps0</code> on the <code>DEVICES</code> line in the <code>/etc/default/gpsd</code> config file.</div>
+<h3><span class="mw-headline" id="Running_in_a_chroot">Running in a chroot</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <i>ntpd</i> should be started as non-root (default in the Arch Linux package) before attempting to jail it in a chroot, since chroots are relatively useless at securing processes running as root.</div>
+<p>Create a new directory <code>/etc/systemd/system/ntpd.service.d/</code> if it does not exist and a file named <code>customexec.conf</code> inside with the following content:
+</p>
+<pre>[Service]
+ExecStart=
+ExecStart=/usr/bin/ntpd -g -u ntp:ntp <b>-i /var/lib/ntp</b>
+</pre>
+<p>Then, edit <code>/etc/ntp.conf</code> to change the driftfile path such that it is relative to the chroot directory, rather than to the real system root. Change:
+</p>
+<pre>driftfile       /var/lib/ntp/ntp.drift
+</pre>
+<p>to
+</p>
+<pre>driftfile       /ntp.drift
+</pre>
+<p>Create a suitable chroot environment so that getaddrinfo() will work by creating pertinent directories and files (as root):
+</p>
+<pre># mkdir /var/lib/ntp/etc /var/lib/ntp/lib /var/lib/ntp/proc
+# mkdir /var/lib/ntp/usr /var/lib/ntp/usr/lib
+# touch /var/lib/ntp/etc/resolv.conf /var/lib/ntp/etc/services
+</pre>
+<p>and by bind-mounting the aformentioned files:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+#ntpd chroot mounts
+/etc/resolv.conf  /var/lib/ntp/etc/resolv.conf none bind 0 0
+/etc/services	  /var/lib/ntp/etc/services none bind 0 0
+/lib		  /var/lib/ntp/lib none bind 0 0
+/usr/lib	  /var/lib/ntp/usr/lib none bind 0 0
+/proc		  /var/lib/ntp/proc none bind 0 0
+</pre>
+<pre># mount -a
+</pre>
+<p>Finally, restart <code>ntpd</code> daemon again. Once it restarted you can verify that the daemon process is chrooted by checking where <code>/proc/{PID}/root</code> symlinks to: 
+</p>
+<pre># ps -C ntpd | awk '{print $1}' | sed 1d | while read -r PID; do ls -l /proc/$PID/root; done
+</pre>
+<p>should now link to <code>/var/lib/ntp</code> instead of <code>/</code>.
+</p>
+<p>It is relatively difficult to be sure that your driftfile configuration is actually working without waiting a while, as <i>ntpd</i> does not read or write it very often. If you get it wrong, it will log an error; if you get it right, it will update the timestamp. If you do not see any errors about it after a full day of running, and the timestamp is updated, you should be confident of success.
+</p>
+<h3><span class="mw-headline" id="Restrict_listening_sockets">Restrict listening sockets</span></h3>
+<p>You can limit sockets <i>ntpd</i> is listening to using the <i>interface</i> option:
+</p>
+<pre>interface [listen | ignore | drop] [all | ipv4 | ipv6 | wildcard | name | address[/prefixlen]]
+</pre>
+<p>like
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">interface listen lo
+interface listen enp3s0
+interface ignore enp5s0</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://www.ntp.org/">http://www.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="https://support.ntp.org/">https://support.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="http://www.pool.ntp.org/">http://www.pool.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="https://www.eecis.udel.edu/~mills/ntp/html/index.html">https://www.eecis.udel.edu/~mills/ntp/html/index.html</a></li>
+<li><a rel="nofollow" class="external free" href="http://www.akadia.com/services/ntp_synchronize.html">http://www.akadia.com/services/ntp_synchronize.html</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Network_Time_Protocol.html" title="Category:Network Time Protocol">Network Time Protocol</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Network_Time_Protocol_daemon&amp;oldid=629321">https://wiki.archlinux.org/index.php?title=Network_Time_Protocol_daemon&amp;oldid=629321</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 14:05.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

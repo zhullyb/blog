@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd (简体中文)/User (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd_简体中文_User_简体中文 rootpage-Systemd_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd (简体中文)/User (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">Systemd (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd (简体中文)</a></li>
+<li><a href="../en/Getty.html#Automatic_login_to_virtual_console" class="mw-redirect" title="Automatic login to virtual console">Automatic login to virtual console</a></li>
+<li><a href="../en/Xinit.html#Autostart_X_at_login" class="mw-redirect" title="Start X at login">Start X at login</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Systemd/User.html" title="Systemd/User">Systemd/User</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2015-09-25。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Systemd/User&amp;diff=0&amp;oldid=401745">更改</a>，则您可以帮助同步翻译。</div>
+<p><a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd</a> 会给每个用户生成一个 systemd 实例，用户可以在这个实例下管理服务，启动、停止、启用以及禁用他们自己的单元。
+这个能力大大方便了那些通常在特定用户下运行的守护进程和服务，比如 <a href="../en/Music_Player_Daemon.html" class="mw-redirect" title="Mpd">mpd</a>, 还有像拉取邮件等需要自动执行的任务。
+在某些场景下，它甚至可以在指定用户下运行 xorg 以及整个窗口管理系统。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="tocnumber">1</span> <span class="toctext">工作原理</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%E5%9F%BA%E7%A1%80%E8%AE%BE%E7%BD%AE"><span class="tocnumber">2</span> <span class="toctext">基础设置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#D-Bus"><span class="tocnumber">2.1</span> <span class="toctext">D-Bus</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="tocnumber">2.2</span> <span class="toctext">环境变量</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#DISPLAY_%E5%92%8C_XAUTHORITY"><span class="tocnumber">2.2.1</span> <span class="toctext">DISPLAY 和 XAUTHORITY</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#PATH"><span class="tocnumber">2.2.2</span> <span class="toctext">PATH</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#%E9%9A%8F%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%8A%A8%E5%90%AF%E5%8A%A8_systemd_%E7%94%A8%E6%88%B7%E5%AE%9E%E4%BE%8B"><span class="tocnumber">2.3</span> <span class="toctext">随系统自动启动 systemd 用户实例</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Xorg_%E5%92%8C_systemd"><span class="tocnumber">3</span> <span class="toctext">Xorg 和 systemd</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Automatic_login_into_Xorg_without_display_manager"><span class="tocnumber">3.1</span> <span class="toctext">Automatic login into Xorg without display manager</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Xorg_as_a_systemd_user_service"><span class="tocnumber">3.2</span> <span class="toctext">Xorg as a systemd user service</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%E5%BC%80%E5%8F%91%E7%94%A8%E6%88%B7%E5%8D%95%E5%85%83"><span class="tocnumber">4</span> <span class="toctext">开发用户单元</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#%E4%BE%8B%E5%AD%90"><span class="tocnumber">4.1</span> <span class="toctext">例子</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#%E4%BD%BF%E7%94%A8%E5%8F%98%E9%87%8F%E7%9A%84%E4%BE%8B%E5%AD%90"><span class="tocnumber">4.2</span> <span class="toctext">使用变量的例子</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#X_%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E9%A1%BB%E7%9F%A5"><span class="tocnumber">4.3</span> <span class="toctext">X 应用程序须知</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#Some_use_cases"><span class="tocnumber">5</span> <span class="toctext">Some use cases</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#Persistent_terminal_multiplexer"><span class="tocnumber">5.1</span> <span class="toctext">Persistent terminal multiplexer</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Window_manager"><span class="tocnumber">5.2</span> <span class="toctext">Window manager</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-18"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.B7.A5.E4.BD.9C.E5.8E.9F.E7.90.86"></span><span class="mw-headline" id="工作原理">工作原理</span>
+</h2>
+<p>从 systemd 226 版本开始，<code>/etc/pam.d/system-login</code> 默认配置中的 <code>pam_systemd</code> 模块会在用户首次登陆的时候, 自动运行一个 <code>systemd --user</code> 实例。 只要用户还有会话存在，这个进程就不会退出；用户所有会话退出时，进程将会被销毁。当<a href="#%E9%9A%8F%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%8A%A8%E5%90%AF%E5%8A%A8_systemd_%E7%94%A8%E6%88%B7%E5%AE%9E%E4%BE%8B">#随系统自动启动 systemd 用户实例</a>启用时, 这个用户实例将在系统启动时加载，并且不会被销毁。systemd 用户实例负责管理用户服务，用户服务可以使用systemd提供的各种便捷机制来运行守护进程或自动化任务，如 socket 激活、定时器、依赖体系以及通过 cgroup 限制进程等。
+</p>
+<p>和系统单元类似，用户单元可以在以下目录找到(按优先级从低到高排序）：
+</p>
+<ul>
+<li>
+<code>/usr/lib/systemd/user/</code> 这里存放的是各个软件包安装的服务。</li>
+<li>
+<code>/etc/systemd/user/</code> 这里存放的是由系统管理员维护的系统范围的用户服务。</li>
+<li>
+<code>~/.config/systemd/user/</code> 这里存放的是用户自身的服务。</li>
+</ul>
+<p>当 systemd 用户实例启动时，它会将 <code>default.target</code> 带起来。其他用户单元可以通过<code>systemctl --user</code>来管理。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>从 systemd 206 版本开始，<code>systemd --user</code> 实例是针对每个用户处理的，而不是针对会话。这样做的原理是用户服务处理的大部分资源，像 socket 或状态文件是针对每个用户的（存活于用户的主目录下）而不是会话。这意味着所有的用户服务是独立于会话之外运行的。最终，我们得出结论：基于会话运行的程序可能会导致用户服务中断。systemd 处理用户会话的方式是非常生硬的（pretty much in flux）。 单会话支持的进展参考 <a rel="nofollow" class="external autonumber" href="https://mail.gnome.org/archives/desktop-devel-list/2014-January/msg00079.html">[1]</a> 和 <a rel="nofollow" class="external autonumber" href="https://lists.freedesktop.org/archives/systemd-devel/2014-March/017552.html">[2]</a> 。</li>
+<li>
+<code>systemd --user</code> 和 <code>systemd --system</code> 运行于不同的进程里面，所以用户单元不能引用或依赖于系统单元。</li>
+</ul>
+</div>
+<h2>
+<span id=".E5.9F.BA.E7.A1.80.E8.AE.BE.E7.BD.AE"></span><span class="mw-headline" id="基础设置">基础设置</span>
+</h2>
+<p>所有的用户服务都位于 <code>~/.config/systemd/user</code> 路径下。 如果你想在首次用户登陆时运行服务，对想要自动启动的服务执行 <code>systemctl --user enable <i>service</i></code> 即可。
+</p>
+<h3><span class="mw-headline" id="D-Bus">D-Bus</span></h3>
+<p>有些程序会使用到 <a href="../zh-CN/D-Bus.html" title="D-Bus (简体中文)">D-Bus</a> 用户消息总线。 传统的方式是由桌面环境调用 <code>dbus-launch</code> 来启动dbus。但从systemd 226版本开始，将由 systemd 管理用户消息总线。<a rel="nofollow" class="external autonumber" href="https://archlinux.org/news/d-bus-now-launches-user-buses/">[3]</a> systemd会为每个用户启动一个<i>dbus-daemon</i>，提供<code>dbus.socket</code> 和 <code>dbus.service</code>用户单元，供用户下的所有会话使用。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果你之前在 <code>/etc/systemd/user/</code> 或 <code>~/.config/systemd/user/</code> 下创建过这两个单元，现在可以删掉了。</div>
+<h3>
+<span id=".E7.8E.AF.E5.A2.83.E5.8F.98.E9.87.8F"></span><span class="mw-headline" id="环境变量">环境变量</span>
+</h3>
+<p>systemd 用户实例不会继承类似 <code>.bashrc</code> 中定义的 <a href="../en/Environment_variables.html" title="Environment variables">环境变量</a>。systemd 用户实例有三种设置环境变量的方式：
+</p>
+<ol><li>对于有 <code>$HOME</code> 目录的用户，可以在 <code>~/.config/systemd/user.conf</code> 文件中使用 <code>DefaultEnvironment</code> 选项，</li></ol>
+<p>这些设置只对当前用户的用户单元有效。
+</p>
+<ol>
+<li>在 <code>/etc/systemd/user.conf</code> 文件中使用 <code>DefaultEnvironment</code> 选项。这个配置在所有的用户单元中可见。</li>
+<li>在 <code>/etc/systemd/system/user@.service.d/</code> 下增加配置文件设置。 这个配置在所有的用户单元中可见。</li>
+<li>在任何时候， 使用 <code>systemctl --user set-environment</code> 或 <code>systemctl --user import-environment</code>. 对设置之后启动的所有用户单元有效，但已经启动的用户单元不会生效。</li>
+</ol>
+<dl><dd><dl><dd><div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果想一次设置多个环境变量，可以写一个配置文件，文件里面每一行定义一个环境变量，用 "key=value" 的键值对表示，然后在你的启动脚本里添加<code>xargs systemctl --user set-environment &lt; /path/to/file.conf</code>。</div></dd></dl></dd></dl>
+<p>一般情况下，你需要设置 <code>PATH</code> 这个环境变量。
+</p>
+<h4>
+<span id="DISPLAY_.E5.92.8C_XAUTHORITY"></span><span class="mw-headline" id="DISPLAY_和_XAUTHORITY">DISPLAY 和 XAUTHORITY</span>
+</h4>
+<p>任何一个 X 应用程序都需要使用 <code>DISPLAY</code> 来指示使用哪个显示器，而 <code>XAUTHORITY</code> 则是保存了用户授权文件 <code>.Xauthority</code> 的路径，X 应用需要用户授权文件中的 cookie 信息才能访问 X Server。如果你想通过 systemd 单元启动一个 X 应用，必须先设置这两个环境变量。systemd 从 <a rel="nofollow" class="external text" href="https://cgit.freedesktop.org/systemd/systemd/tree/NEWS?id=v219#n194">219 版本</a>开始提供了一个脚本 <code>/etc/X11/xinit/xinitrc.d/50-systemd-user.sh</code>，在 X 启动的时候，将这些环境变量导入到 systemd 用户会话中。所以除非你不是通过正常的途径启动X，systemd用户服务应该已经包含了这两个变量。
+</p>
+<h4><span class="mw-headline" id="PATH">PATH</span></h4>
+<p>通过 <code>.bashrc</code> 或者 <code>.bash_profile</code> 设置的环境变量，对 systemd 都是不可见的。 如果你改变了你的 <code>PATH</code> 变量，并且准备在 systemd 单元运行的应用中使用这个环境变量，你必须在 systemd 的环境中设置 <code>PATH</code>。假设你在 <code>.bash_profile</code> 中设置了 <code>PATH</code>，让 systemd 感知到这个变化的最好方法是在修改 <code>PATH</code> 之后，加入以下行通知 systemd：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.bash_profile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">systemctl --user import-environment PATH
+</pre>
+<h3>
+<span id=".E9.9A.8F.E7.B3.BB.E7.BB.9F.E8.87.AA.E5.8A.A8.E5.90.AF.E5.8A.A8_systemd_.E7.94.A8.E6.88.B7.E5.AE.9E.E4.BE.8B"></span><span class="mw-headline" id="随系统自动启动_systemd_用户实例">随系统自动启动 systemd 用户实例</span>
+</h3>
+<p>systemd 用户实例在用户首次登陆时启动，并在最后一个会话退出时终止。 但有时候，对于一些不依赖于会话的用户进程，在系统启动时加载用户实例，在会话全部结束时，也不停止用户实例是比较有用的。Lingering 就是用来实现这个的。 使用以下命令来启用驻留指定用户：
+</p>
+<pre># loginctl enable-linger <i>username</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> systemd 服务是 <b>没有</b> 会话的， 它们在 <i>logind</i> 状态之外运行， 所以不要在 lingering 中启用自动登陆的功能，这会导致 <a href="../en/General_troubleshooting.html#Session_permissions" title="General troubleshooting">会话中断</a>。</div>
+<h2>
+<span id="Xorg_.E5.92.8C_systemd"></span><span class="mw-headline" id="Xorg_和_systemd">Xorg 和 systemd</span>
+</h2>
+<p>使用 systemd 单元来运行 Xorg 有好几种方法，下面介绍其中两种，一种是启动一个新的用户会话，在里面运行 Xorg 服务，另外一种是用 systemd 用户服务启动 Xorg。
+</p>
+<h3><span class="mw-headline" id="Automatic_login_into_Xorg_without_display_manager">Automatic login into Xorg without display manager</span></h3>
+<p>这种方法通过一个系统单元将用户会话带起来，并在用户会话里面启动一个 xorg 服务，并运行 <code>~/.xinitrc</code> 将窗口管理器等启动起来。
+</p>
+<p>你需要配置好 <a href="#D-Bus">#D-Bus</a> 并安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/xlogin-git/">xlogin-git</a></span><sup><small>AUR</small></sup>。
+</p>
+<p>配置你的 <a href="../en/Xinit.html#xinitrc" class="mw-redirect" title="Xinitrc">xinitrc</a> 文件, 让它 source <code>/etc/X11/xinit/xinitrc.d/</code> 目录下的所有文件。<code>~/.xinitrc</code> 在运行的时候不要返回(返回意味着会话结束)。你可以通过在 xinitrc 的最后加上 <code>wait</code>命令，或使用 <code>exec</code> 来运行最后一条命令，最后一条命令应该在整个用户会话都不会退出(如你的窗口管理器)。
+</p>
+<p>会话会使用它自己的 dbus 守护，而需要用到 <code>dbus.service</code> 的 systemd 工具会自动连接到会话的 dbus 实例上。
+</p>
+<p>最后，在 (<b>root</b>) 用户下，启用<i>xlogin</i>服务，使其开机自启动：
+</p>
+<pre># systemctl enable xlogin@<i>username</i>
+</pre>
+<p>整个用户会话都在 systemd 的作用域下运行，会话内的一切都能正常工作。
+</p>
+<h3><span class="mw-headline" id="Xorg_as_a_systemd_user_service">Xorg as a systemd user service</span></h3>
+<p>另外一种选择是将 <a href="../en/Xorg.html" title="Xorg">xorg</a> 作为一个 systemd 用户服务。这是一种不错的方案，因为其他的 X-related units 可以依赖于 xorg 服务。 但另一方面，这个方案存在某些倒退，这在下面会提到。
+</p>
+<p>从 1.16 版本开始，<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xorg-server">xorg-server</a></span> 提供了两种更好的整合到 systemd 的方法:
+</p>
+<ul>
+<li>可以在无特权模式下运行，设备管理由 logind 代为管理(参考 Hans de Goede 的<a rel="nofollow" class="external text" href="https://cgit.freedesktop.org/xorg/xserver/commit/?id=82863656ec449644cd34a86388ba40f36cea11e9">这个提交</a>).</li>
+<li>可以实现通过 socket 激活服务 (参考<a rel="nofollow" class="external text" href="https://cgit.freedesktop.org/xorg/xserver/commit/?id=b3d3ffd19937827bcbdb833a628f9b1814a6e189">这个提交</a>). 这点使得我们不再需要依赖于 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-xorg-launch-helper-git/">systemd-xorg-launch-helper-git</a></span><sup><small>AUR</small></sup>.</li>
+</ul>
+<p>但非常不幸，xorg 的无特权模式需要在用户会话里面运行。所以，xorg 的用户服务只能在 root 权限下运行(和 1.16 版本之前一样)，而不能使用 1.16 版本提供的无特权模式。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 这并不是 logind 强加的限制，而是 xorg 需要知道它将要接管的是哪个会话，而现在它通过调用 <a rel="nofollow" class="external text" href="https://www.freedesktop.org/wiki/Software/systemd/logind">logind</a>'s <code>GetSessionByPID</code> 来获取这个信息(使用 xorg 自身的 pid 作为参数)。参见<a rel="nofollow" class="external text" href="http://lists.x.org/archives/xorg-devel/2014-February/040476.html">这个话题</a> 和 <a rel="nofollow" class="external text" href="https://cgit.freedesktop.org/xorg/xserver/tree/hw/xfree86/os-support/linux/systemd-logind.c">xorg 源码</a>. 看上去如果 xorg 通过其依附的 tty 来获取会话信息的话，这个问题将得到解决。</div>
+<p>下面是从用户服务运行 xorg 的步骤：
+</p>
+<p>1. 通过编辑<code>/etc/X11/Xwrapper.config</code>文件，允许所有用户使用root权限运行xorg：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/X11/Xwrapper.config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">allowed_users=anybody
+needs_root_rights=yes
+</pre>
+<p>2. 把下面 systemd 单元加到 <code>~/.config/systemd/user</code> 目录下：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/xorg@.socket</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Socket for xorg at display %i
+
+[Socket]
+ListenStream=/tmp/.X11-unix/X%i
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/xorg@.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Xorg server at display %i
+
+Requires=xorg@%i.socket
+After=xorg@%i.socket
+
+[Service]
+Type=simple
+SuccessExitStatus=0 1
+
+ExecStart=/usr/bin/Xorg :%i -nolisten tcp -noreset -verbose 2 "vt${XDG_VTNR}"
+</pre>
+<p>这里 <code>${XDG_VTNR} </code> 表示 xorg 将要运行的虚拟终端，可以在服务单元文件里面硬编码，也可像下面那样在环境变量里指定：
+</p>
+<pre>$ systemctl --user set-environment XDG_VTNR=1
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> xorg应该在用户登录的虚拟终端上运行，否则 logind 会认为会话没有激活。</div>
+<p>3. 确保 <code>DISPLAY</code> 环境变量已经配置，参考 <a href="#DISPLAY">这里</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+<p>4. 接下来，执行以下命令，使得 xorg 在 display 0 和 tty 2 上可以通过 socket 激活：
+</p>
+<pre>$ systemctl --user set-environment XDG_VTNR=2     # So that xorg@.service knows which vt use
+$ systemctl --user start xorg@0.socket            # Start listening on the socket for display 0
+</pre>
+<p>现在，在 tty 2上运行任意的X应用，xorg 都会自动启动。
+</p>
+<p>可以在 <code>.bash_profile</code> 里面把环境变量 <code>XDG_VTNR</code> 设置到 systemd 环境里面。在这之后，你可以使用 systemd 单元启动任意的X应用，包括窗口管理器。当然，这些 systemd 单元必须依赖于 <code>xorg@0.socket</code>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 当前，通过用户服务启动窗口管理器意味着它是在会话之外运行的，这将带来以下问题: <a href="../en/General_troubleshooting.html#Session_permissions" title="General troubleshooting">break the session</a>. 但是，systemd 的开发者看上去更倾向于这样(?)。参见 <a rel="nofollow" class="external autonumber" href="https://mail.gnome.org/archives/desktop-devel-list/2014-January/msg00079.html">[4]</a> 和 <a rel="nofollow" class="external autonumber" href="https://lists.freedesktop.org/archives/systemd-devel/2014-March/017552.html">[5]</a>
+</div>
+<h2>
+<span id=".E5.BC.80.E5.8F.91.E7.94.A8.E6.88.B7.E5.8D.95.E5.85.83"></span><span class="mw-headline" id="开发用户单元">开发用户单元</span>
+</h2>
+<h3>
+<span id=".E4.BE.8B.E5.AD.90"></span><span class="mw-headline" id="例子">例子</span>
+</h3>
+<p>下面是 mpd 服务用户版本的例子:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/mpd.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Music Player Daemon
+
+[Service]
+ExecStart=/usr/bin/mpd --no-daemon
+
+[Install]
+WantedBy=default.target
+</pre>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8.E5.8F.98.E9.87.8F.E7.9A.84.E4.BE.8B.E5.AD.90"></span><span class="mw-headline" id="使用变量的例子">使用变量的例子</span>
+</h3>
+<p>下面是 <code>sickbeard.service</code> 用户版本的例子, 在配置中，使用了主目录变量(%h):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/sickbeard.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=SickBeard Daemon
+
+[Service]
+ExecStart=/usr/bin/env python2 /opt/sickbeard/SickBeard.py --config %h/.sickbeard/config.ini --datadir %h/.sickbeard
+
+[Install]
+WantedBy=default.target
+</pre>
+<p>在<span class="plainlinks archwiki-template-man" title="$ man 5 systemd.unit"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.unit.5">systemd.unit(5)</a></span>的SPECIFIERS章节中，详细介绍了各种变量,  <code>%h</code> 指示符将使用运行该服务的用户的主目录替代。更多的变量参考 <a href="../en/Systemd.html" title="Systemd">systemd</a> 的 manpages。
+</p>
+<h3>
+<span id="X_.E5.BA.94.E7.94.A8.E7.A8.8B.E5.BA.8F.E9.A1.BB.E7.9F.A5"></span><span class="mw-headline" id="X_应用程序须知">X 应用程序须知</span>
+</h3>
+<p>大多数X 应用运行都需要 <code>DISPLAY</code> 变量。如何让所有systemd用户实例看到这个环境变量，参考 <a href="#DISPLAY_%E5%92%8C_XAUTHORITY">#DISPLAY 和 XAUTHORITY</a>。
+</p>
+<h2><span class="mw-headline" id="Some_use_cases">Some use cases</span></h2>
+<h3><span class="mw-headline" id="Persistent_terminal_multiplexer">Persistent terminal multiplexer</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> References <code>user-session@.service</code> instead of <code>user@.service</code>; the latter does not contain <code>Conflicts=getty@tty1.service</code>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/User_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Systemd (简体中文)/User (简体中文)#</a>)</div>
+</div>
+<p>You may wish your user session to default to running a terminal multiplexer, such as <a href="../en/GNU_Screen.html" title="GNU Screen">GNU Screen</a> or <a href="../en/Tmux.html" title="Tmux">Tmux</a>, in the background rather than logging you into a window manager session. Separating login from X login is most likely only useful for those who boot to a TTY instead of to a display manager (in which case you can simply bundle everything you start in with myStuff.target). 
+</p>
+<p>To create this type of user session, procede as above, but instead of creating wm.target, create multiplexer.target:
+</p>
+<pre>[Unit]
+Description=Terminal multiplexer
+Documentation=info:screen man:screen(1) man:tmux(1)
+After=cruft.target
+Wants=cruft.target
+
+[Install]
+Alias=default.target</pre>
+<p><code>cruft.target</code>, like <code>mystuff.target</code> above, should start anything you think should run before tmux or screen starts (or which you want started at boot regardless of timing), such as a GnuPG daemon session.
+</p>
+<p>You then need to create a service for your multiplexer session. Here is a sample service, using tmux as an example and sourcing a gpg-agent session which wrote its information to <code>/tmp/gpg-agent-info</code>. This sample session, when you start X, will also be able to run X programs, since DISPLAY is set.
+</p>
+<pre>[Unit]
+Description=tmux: A terminal multiplixer 
+Documentation=man:tmux(1)
+After=gpg-agent.service
+Wants=gpg-agent.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/tmux start
+ExecStop=/usr/bin/tmux kill-server
+Environment=DISPLAY=:0
+EnvironmentFile=/tmp/gpg-agent-info
+
+[Install]
+WantedBy=multiplexer.target</pre>
+<p>Once this is done, <code>systemctl --user enable</code> <code>tmux.service</code>, <code>multiplexer.target</code> and any services you created to be run by <code>cruft.target</code> and you should be set to go! Activated <code>user-session@.service</code> as described above, but be sure to remove the <code>Conflicts=getty@tty1.service</code> from <code>user-session@.service</code>, since your user session will not be taking over a TTY. Congratulations! You have a running terminal multiplexer and some other useful programs ready to start at boot!
+</p>
+<h3><span class="mw-headline" id="Window_manager">Window manager</span></h3>
+<p>To run a window manager as a systemd service, you first need to run <a href="#Xorg_as_a_systemd_user_service">#Xorg as a systemd user service</a>. In the following we will use awesome as an example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/awesome.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Awesome window manager
+After=xorg.target
+Requires=xorg.target
+
+[Service]
+ExecStart=/usr/bin/awesome
+Restart=always
+RestartSec=10
+ 
+[Install]
+WantedBy=wm.target
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>[Install]</code> section includes a <code>WantedBy</code> part. When using <code>systemctl --user enable</code> it will link this as <code>~/.config/systemd/user/wm.target.wants/<i>window_manager</i>.service</code>, allowing it to be started at login. Is recommended to enable this service, not to link it manually.</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://bitbucket.org/KaiSforza/systemd-user-units/wiki/Home">KaiSforza's Bitbucket wiki</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/zoqaeski/systemd-user-units">Zoqaeski's units on GitHub</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/grawity/systemd-user-units">Collection of useful systemd user units</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-06 ⓘ]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=167115">Arch forum thread about changes in systemd 206 user instances</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:System_administration.html" title="Category:System administration (简体中文)">System administration (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/User_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=647066">https://wiki.archlinux.org/index.php?title=Systemd_(简体中文)/User_(简体中文)&amp;oldid=647066</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:26.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

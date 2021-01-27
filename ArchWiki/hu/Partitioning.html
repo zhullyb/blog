@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Partitioning (Magyar) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Partitioning_Magyar rootpage-Partitioning_Magyar skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Partitioning (Magyar)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Fstab.html" title="Fstab">fstab</a></li>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+<li><a href="../en/Swap.html" title="Swap">Swap</a></li>
+<li><a href="../hu/File_systems.html" class="mw-redirect" title="File Systems (Magyar)">File Systems_(Magyar)</a></li>
+</ul>
+</div>
+<p>Egy merevlemez <i>particionálása</i> lehetővé teszi a felhasználható hely logikai szakaszokra történő felosztását, melyek ezáltal egymástól függetlenül is kezelhetők lesznek.
+</p>
+<p>Egy merevlemez egyetlen partícióvá is alakítható, vagy a felhasználható tárhely akár több partícióra is osztható. Bizonyos helyzetek megkövetelik több partíció létrehozását: a kettős-, vagy multiboot, vagy épp a <a href="../hu/Swap.html" title="Swap (Magyar)">cserehely</a> partíció használata. Más esetekben a particionálás egyszerűen csak az adatok logikai "elszigetelésének" eszköze, mint például amikor különböző partíciókat készítünk hang-, és videó állományainknak. Alább részletesen beszélünk majd a leggyakoribb partíciós sémákról.
+</p>
+<p>Minden partíciót valamilyen típusú <a href="../hu/File_systems.html" title="File systems (Magyar)">fájlrendszerre</a> kell formázni, mielőtt használni lehet.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Part%C3%ADci%C3%B3s_t%C3%A1bla"><span class="tocnumber">1</span> <span class="toctext">Partíciós tábla</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Master_Boot_Record"><span class="tocnumber">1.1</span> <span class="toctext">Master Boot Record</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#GUID_Part%C3%ADci%C3%B3s_T%C3%A1bla"><span class="tocnumber">1.2</span> <span class="toctext">GUID Partíciós Tábla</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Btrfs_Particion%C3%A1l%C3%A1s"><span class="tocnumber">1.3</span> <span class="toctext">Btrfs Particionálás</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#V%C3%A1lasszunk_GPT_%C3%A9s_MBR_k%C3%B6z%C3%BCl"><span class="tocnumber">1.4</span> <span class="toctext">Válasszunk GPT és MBR közül</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Part%C3%ADci%C3%B3s_s%C3%A9ma"><span class="tocnumber">2</span> <span class="toctext">Partíciós séma</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Egy_root_part%C3%ADci%C3%B3"><span class="tocnumber">2.1</span> <span class="toctext">Egy root partíció</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#K%C3%BCl%C3%B6n%C3%A1ll%C3%B3_part%C3%ADci%C3%B3k"><span class="tocnumber">2.2</span> <span class="toctext">Különálló partíciók</span></a></li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Csatol%C3%A1si_pontok"><span class="tocnumber">2.3</span> <span class="toctext">Csatolási pontok</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#Root_part%C3%ADci%C3%B3"><span class="tocnumber">2.3.1</span> <span class="toctext">Root partíció</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#/boot"><span class="tocnumber">2.3.2</span> <span class="toctext">/boot</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#/home"><span class="tocnumber">2.3.3</span> <span class="toctext">/home</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#/var"><span class="tocnumber">2.3.4</span> <span class="toctext">/var</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#/tmp"><span class="tocnumber">2.3.5</span> <span class="toctext">/tmp</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Cserehely_(Swap)"><span class="tocnumber">2.3.6</span> <span class="toctext">Cserehely (Swap)</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Milyen_m%C3%A9ret%C5%B1ek_legyenek_a_part%C3%ADci%C3%B3k?"><span class="tocnumber">2.3.7</span> <span class="toctext">Milyen méretűek legyenek a partíciók?</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17"><a href="#Particion%C3%A1l%C3%B3_eszk%C3%B6z%C3%B6k"><span class="tocnumber">3</span> <span class="toctext">Particionáló eszközök</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#SSD_par%C3%ADci%C3%B3_eltol%C3%A1sa"><span class="tocnumber">4</span> <span class="toctext">SSD paríció eltolása</span></a></li>
+<li class="toclevel-1 tocsection-19">
+<a href="#GPT_haszn%C3%A1lata-_a_modernebb_m%C3%B3dszer"><span class="tocnumber">5</span> <span class="toctext">GPT használata- a modernebb módszer</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#A_gdisk_haszn%C3%A1lat%C3%A1nak_%C3%B6sszefoglal%C3%A1sa"><span class="tocnumber">5.1</span> <span class="toctext">A gdisk használatának összefoglalása</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21">
+<a href="#MBR_haszn%C3%A1lata_-_r%C3%A9gi_m%C3%B3dszer"><span class="tocnumber">6</span> <span class="toctext">MBR használata - régi módszer</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#Az_fdisk_haszn%C3%A1lat%C3%A1nak_%C3%B6sszefoglal%C3%B3ja"><span class="tocnumber">6.1</span> <span class="toctext">Az fdisk használatának összefoglalója</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23"><a href="#L%C3%A1sd_m%C3%A9g"><span class="tocnumber">7</span> <span class="toctext">Lásd még</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Part.C3.ADci.C3.B3s_t.C3.A1bla"></span><span class="mw-headline" id="Partíciós_tábla">Partíciós tábla</span>
+</h2>
+<p>A partíciókról minden információ a partíciós táblában tárolódik; ezeknek két manapság leginkább használatos fő formájuk van: a klasszikus <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a> (vagy MBR) és a modern <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partíciós tábla</a>. Utóbbi fejlettebbnek számít, mert "túlnő" az MBR számos korlátján.
+</p>
+<h3><span class="mw-headline" id="Master_Boot_Record">Master Boot Record</span></h3>
+<p><a href="https://en.wikipedia.org/wiki/Master_boot_record" class="extiw" title="wikipedia:Master boot record">Wikipedia:Master boot record</a>
+</p>
+<p>Az MBR eredetileg legfeljebb 4 partíció létrehozását támogatta. Később - e limitációt megkerülendő - bevezették a kiterjesztett és logikai partíciók használatát.
+</p>
+<p>3 partíciótípus létezik: 
+</p>
+<ul>
+<li>Elsődleges</li>
+<li>Kiterjesztett
+<ul><li>Logikai</li></ul>
+</li>
+</ul>
+<p>Az <b>elsődleges</b> partíciók indíthatók, és lemezenként vagy RAID tömbönként legfeljebb 4 lehet belőlük. Ha a particionálási séma négynél több partíciót igényelne, <b>kiterjesztett</b> partíciót használunk, mely <b>logikai</b> partíciókat tartalmaz. A kiterjesztett partíciókra egyfajta, a logikai partíciók számára létrehozott tárolóként kell gondolni. Egy merevlemez legfeljebb egy ilyen kiterjesztett partíciót tartalmazhat. EZ a kiterjesztett partíció a maximális partíciószám szempontjából elsődleges partíciónak számít, így, ha a merevlemezen már van egy kiterjesztett partíció, legfeljebb három elsődleges hozható még létre mellette (tehát három elsődleges és egy kiterjesztett partíciót kaphatunk). Azonban a kiterjesztett partícióban helyet foglaló logikai partíciók számának nincs határa. Az olyan rendszereken, melyeknek Windows-szal közös kettős boot-ot használnak, a Windowst elsődleges partícióra kell telepítenünk.
+</p>
+<p>A hagyományos számozási séma szerint elsődleges partícióink <i>sda1</i>-től <i>sda3</i>-ig tartanak, majd a kiterjeszett <i>sda4</i> partíció következik. Az <i>sda4</i>-ben foglat logikai partíciók számozása <i>sda5</i>, <i>sda6</i>, stb. lesz.
+</p>
+<h3>
+<span id="GUID_Part.C3.ADci.C3.B3s_T.C3.A1bla"></span><span class="mw-headline" id="GUID_Partíciós_Tábla">GUID Partíciós Tábla</span>
+</h3>
+<p><a href="https://en.wikipedia.org/wiki/GUID_Partition_Table" class="extiw" title="wikipedia:GUID Partition Table">Wikipedia:GUID Partition Table</a>
+</p>
+<p>Csak egyetlen partíciótípus létezik, az <b>elsődleges</b>. A lemezenkénti vagy RAID tömbönkénti partíciók száma nem korlátozott.
+</p>
+<h3>
+<span id="Btrfs_Particion.C3.A1l.C3.A1s"></span><span class="mw-headline" id="Btrfs_Particionálás">Btrfs Particionálás</span>
+</h3>
+<p><a href="https://en.wikipedia.org/wiki/Btrfs" class="extiw" title="wikipedia:Btrfs">Wikipedia:Btrfs</a>
+</p>
+<p>A Btrfs a teljes adattárolót képes használni és felváltani az <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="MBR">MBR</a> vagy <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a> particionálási sémákat. Lásd a <a href="../en/Btrfs.html#Partitioning" title="Btrfs">Btrfs particionálás</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> szócikket további részletekért.
+</p>
+<h3>
+<span id="V.C3.A1lasszunk_GPT_.C3.A9s_MBR_k.C3.B6z.C3.BCl"></span><span class="mw-headline" id="Válasszunk_GPT_és_MBR_közül">Válasszunk GPT és MBR közül</span>
+</h3>
+<p>A <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partíciós tábla</a> (GPT) egy alternatív, modern particiónálási típus. A régi <a href="../en/Partitioning.html#Master_Boot_Record" class="mw-redirect" title="Master Boot Record">Master Boot Record</a> (MBR) rendszer felváltására készült. A GPT-nek számos előnye van az MBR-rel szemben, melynek az MS-DOS-os időkből datálódó sallangjai vannak. Az <i>fdisk</i> (MBR) és <i>gdisk</i> (GPT) formázóeszközök legutóbbi fejlesztéseinek hála, egyenlőképp könnyűvé vált a GPT or MBR használata, s emellett a maximális teljesítmény elérése. 
+</p>
+<p>Nos, a választásnak az alábbiak alapján illene eldőlnie:
+</p>
+<ul>
+<li>Ha a GRUB legacy rendszerbetöltőt használjuk, MBR-t kell használnunk.</li>
+<li>A Windows-szal közös kettős boot (32 vagy 64 bit), ha régi típusú BIOS-t használunk, MBR-t kell használnunk.</li>
+<li>64 bites Windowssal közös kettős boot és BIOS helyett <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> használatakor GPT-t használunk.</li>
+<li>Ha a fentiek egyike sem illik esetünkre, szabadon választhatunk GPT és MBR közt. Mivel a GPT modernebb, ez a javasolt.</li>
+<li>Tanácsos mindig GPT-t használnunk <a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">UEFI</a> boot esetén, mivel egyes UEFI firmware-k nem engedélyezik az UEFI-MBR indítást.</li>
+</ul>
+<h2>
+<span id="Part.C3.ADci.C3.B3s_s.C3.A9ma"></span><span class="mw-headline" id="Partíciós_séma">Partíciós séma</span>
+</h2>
+<p>Nincsenek szigorú szabályok arra nézve, hogy hogyan particionáljunk, de az alábbi tanácsokat érdemes fontolóra venni. Egy lemez logikai felosztása olyan tényezőktől függ, mint a megfelelő rugalmasság, sebesség, biztonság, vagy épp a szabad tárolókapacitás határa. Elsősorban azonban személyes ízlés kérdése. Ha kettős boot-ot akarsz használni Arch Linux-szal és Windows-szal, kérjük, olvasd át a <a href="../en/Dual_boot_with_Windows.html" class="mw-redirect" title="Windows and Arch Dual Boot">Windows and Arch Dual Boot</a> cikket.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Figyelem:</strong> Ne felejts helyet hagyni a rendszerbetöltőnek. Ez nem merült fel az MBR és a GRUB-Legacy használatakor, de a moldernebb partíciós sémák számára már szükséges egy speciális, apró partíció.</div>
+<h3>
+<span id="Egy_root_part.C3.ADci.C3.B3"></span><span class="mw-headline" id="Egy_root_partíció">Egy root partíció</span>
+</h3>
+<p>Ez a séma a legegyszerűbb és a legtöbb esetben elegendő is. Egy <a href="../en/Swap.html#Swap_file" class="mw-redirect" title="Swapfile">cserefájl</a> is létrehozható és könnyen át is méretezető. Legtöbbször a különálló <code>/</code> partícióból szokás elindulni, majd másokat a felhasználásuk módja alapján leválasztani róla, úgymint RAID, titkosítás, megosztott média partíciók, stb.  Ne feledjuk, ha GRUB-ot telepítünk GPT-vel felosztott BIOS rendszerre, szükségünk lesz egy további BIOS partícióra. 
+</p>
+<h3>
+<span id="K.C3.BCl.C3.B6n.C3.A1ll.C3.B3_part.C3.ADci.C3.B3k"></span><span class="mw-headline" id="Különálló_partíciók">Különálló partíciók</span>
+</h3>
+<p>Egy útvonal partícióként történő elhatárolása lehetővé teszi a különböző fájlrendszerek és csatolási opciók használatát. Egyes esetekben, mint például egy média partíciónál, így megoszthatóvá válhatnak operációs rendszerek között.
+</p>
+<h3>
+<span id="Csatol.C3.A1si_pontok"></span><span class="mw-headline" id="Csatolási_pontok">Csatolási pontok</span>
+</h3>
+<p>A következő csatolási pontok választhatók különálló partíciók használatakor, szükségeid szerint dönthetsz.
+</p>
+<h4>
+<span id="Root_part.C3.ADci.C3.B3"></span><span class="mw-headline" id="Root_partíció">Root partíció</span>
+</h4>
+<p>A root könyvtár a hierarchia csúcsán áll, ez az a pont, ahova az elsődleges fájlrendszert csatoljuk, s ahova az összes többi fájlrendszer fog kapcsolódni. Minden állomány és könyvtár a root <code>/</code> könyvtár alatt jelenik meg, még akkor is, ha fizikailag nem ugyanazon a tárolóeszközön találhatók. A root fájlrendszer tartalmának megfelelőnek kell lennie, hogy a rendszer indítható, helyreállítható, és/vagy javítható legyen. Ezért bizonyos könyvtárak a <code>/</code> alatt nem helyezhetők át más partíciókra.
+</p>
+<p>A <code>/</code> partíció vagy root partíció is szükséges és mind közül a legfontosabb. Minden más partíciót helyettesíthet.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Figyelem:</strong> Az indításhoz szükséges könyvtáraknak (kivéve <code>/boot</code>) ugyanazon a partíción <b>kell</b> lenniük, mint a <code>/</code>, vagy korai userspace-ben kell felcsatolni őket az <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> által. Ezek a következők könyvtárak: <code>/etc</code> és <code>/usr</code> <a rel="nofollow" class="external autonumber" href="https://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken">[1]</a>.</div>
+<h4>
+<span id=".2Fboot"></span><span class="mw-headline" id="/boot">/boot</span>
+</h4>
+<p>A <code>/boot</code> könyvtárban helyezkedik el a kernel és a ramdisk image-k, éppúgy, mint a rendszerbetöltő konfigurációja és különböző szakaszai. Olyan adatokat is tárol, melyek a kernel által indított user-space programok előtt használhatók. A külön <code>/boot</code> partíció nem feltétlenül szükséges a rendszer normális működéséhez, csak a rendszer indításakor és a rendszermag frissítésekor (amikor a kezdeti ramdisk-et hozzuk létre).
+</p>
+<p>Külön <code>/boot</code> partíció szükséges, ha szoftveres RAID0 (összefűzés) rendszert telepítünk.
+</p>
+<h4>
+<span id=".2Fhome"></span><span class="mw-headline" id="/home">/home</span>
+</h4>
+<p>A <code>/home</code> könyvtár tartalmazza az egyes felhasználók egyéni beállításait, gyorsítótárait, programadatait és médiáját.
+</p>
+<p>A külön <code>/home</code> partíció létrehozása lehetővé teszi a <code>/</code> tőle független újraparticionálását, de jegyezzük meg, hogy az Arch újratelepíthető akkor is, ha a <code>/home</code> érintetlen, még ha nincs is külön partíción - a többi vele egyenrangú könyvtárat kell csak eltávolítani, majd a pacstrap-et futtatni.
+</p>
+<p>Nem szabad megosztani a home könyvtárakat különböző disztribúciók használói között, mivel jó eséllyel nem kompatibilis szoftver-verziókat és javításokat használnak. Ehelyett jobb megoldás lehet egy közös média partíció létrehozása vagy legalábbis külön home könyvtárak használata ugyanazon a <code>/home</code> partíción.
+</p>
+<h4>
+<span id=".2Fvar"></span><span class="mw-headline" id="/var">/var</span>
+</h4>
+<p>A <code>/var</code> könyvtár olyan gyakran változó adatokat tárol, mint a puffer könyvtárak és állományok, adminisztratív és naplózott adatok a <a href="../en/Pacman.html" title="Pacman">pacman</a> gyorsítótár, az <a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a> fa, stb. Gyorsítótárazásra és naplózásra használatos, épp ezért nagyon gyakran olvassuk vagy írjuk tartalmát. Ha külön partíción tároljuk, nem a teljes rendszerünk tárolókapacitása telik fel túlontúl bőbeszédű naplók és hasonlók miatt.
+</p>
+<p>Azért létezik, hogy a <code>/usr</code> útvonalat csak olvashatóként is csatolhassuk. Mindennek, ami régebben a <code>/usr</code>-be került és írhatónak kell lennie a rendszer működéséhez, (a telepítéssel és a szoftverkezeléssel ellentétben) a <code>/var</code> alatt kell helyet foglalnia.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> A <code>/var</code> rengeteg kisméretű állományt tartalmaz. A megfelelő fájlrendszer-típus kiválasztásakor ezt vegyük figyelembe, ha külön partícióra költöztetjük.</div>
+<h4>
+<span id=".2Ftmp"></span><span class="mw-headline" id="/tmp">/tmp</span>
+</h4>
+<p>Ez egy eleve különálló partíció, hiszen a systemd <i>tmpfs</i>-ként fűzi be.
+</p>
+<h4>
+<span id="Cserehely_.28Swap.29"></span><span class="mw-headline" id="Cserehely_(Swap)">Cserehely (Swap)</span>
+</h4>
+<p>A <a href="../en/Swap.html" title="Swap">cserehely (swap)</a> partíció virtuális RAM-ként használható memóriát szolgáltat. A <a href="../en/Swap.html#Swap_file" title="Swap">cserefájl</a> használata is megfontolandó lehet, mivel szinte semmiben nem más a teljesítménye, de szükség esetén sokkal könnyebben átméretezhető. A cserehely partítió <i>elvben</i> megosztható operációs rendszereink között, de semmiképpen sem, ha hibernációra használjuk.
+</p>
+<h4>
+<span id="Milyen_m.C3.A9ret.C5.B1ek_legyenek_a_part.C3.ADci.C3.B3k.3F"></span><span class="mw-headline" id="Milyen_méretűek_legyenek_a_partíciók?">Milyen méretűek legyenek a partíciók?</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> Az alábbiak egyszerű irányvonalak; nincs aranyszabály a partíciók méretére vonatkozólag.</div>
+<p>A partíciók mérete egyéni ízlésünk és szükségleteink szerint alakul, de a következő információk hasznosak lehetnek:
+</p>
+<dl>
+<dt>/boot - 200 MB</dt>
+<dd>Mindössze 100 MB-ra van szüksége, de ha több rendszermagot is használnánk, 200 vagy 300 MB jobb döntés lehet.</dd>
+<dt>/ - 15-20 GB</dt>
+<dd>Hagyományosan tartalmazza a <code>/usr</code> könyvtárt, melynek mérete jelentősen megnövekedhet  a telepített szoftver mennyiségének függvényében. 15-20 GB elegendő lehet a legtöbb modern merevlemezzel rendelkező asztali rendszer számára.</dd>
+<dt>/var - 8-12 GB</dt>
+<dd>Más adatok mellet az <a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a> fát és a <a href="../en/Pacman.html" title="Pacman">pacman</a> gyorsítótárat tartalmazza. A gyorsítótárazott csomagok megtartása hasznos és rugalmas megoldás lehet, hiszen képessé válunk korábbi szoftververziókhoz való visszatérésre. Ennek eredményeképp a <code>/var</code> mérete ugrásszerűen megnövekedhet. A pacman gyorsítótár egyre csak hízik, ahogy a rendszert bővítjük és frissítjük. Mindazonáltal biztonságosan tisztítható, ha helyszűkébe kerülnénk. 8-12 GB-nak elegendőnek kell lennie egy asztali rendszeren a <code>/var</code> számára, attól függően, hogy mennyi szoftvert telepítünk.</dd>
+<dt>/home - [változó]</dt>
+<dd>Rendszerint ezen a helyen tároljuk a felhasználók állományait, a letöltéseket, a multimédiás fájlokat. Egy asztali rendszeren a <code>/home</code> tipikusan a legnagyobb méretű fájlrendszer.</dd>
+<dt>swap (cserehely) - [változó]</dt>
+<dd>Régebben az a szokás uralkodott, hogy mérete a rendelkezésre álló fizikai RAM kétszerese legyen. Ahogy a számítógépek egyre több RAM befogadására váltak képessé, ez a szabály egyre elhanyagolhatóbbá vált. Ha legfeljebb 512MB RAM-mal rendelkezünk, a kétszeres szabályt még érdemes betartanunk. Ha elegendő (több mint 1024MB) a RAM-unk, kisebb, vagy akár semmiféle cserehely használata is lehetséges. Ha már több mint 2GB fizikai RAM-unk van, jó teljesítményre számíthatunk akár cserehely nélkül is.</dd>
+<dd><div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> Ha azt tervezzük, hogy cserehelyre, vagy -fájlra hibernálunk, olvassuk át a <a href="../en/Power_management/Suspend_and_hibernate.html#About_swap_partition/file_size" class="mw-redirect" title="Suspend and hibernate">Felfüggesztés és Hibernálás#A cserehely/cserefájl méretéről</a> cikket.</div></dd>
+<dt>/data - [változó]</dt>
+<dd>Megfontolásra kerülhet egy "data" partíció befűzése, melyeken több felhasználó számára megosztott állományokat helyezünk el. Ugyancsak megfelelő, ha a <code>/home</code> partíciót használjuk erre a célra.</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> Ha szükséges, 25% extra (szabad) hely a partícióinkon lehetővé teszi, hogy később könnyedén bővítsük őket, illetve védelmet nyújt a töredezettségtől.</div>
+<h2>
+<span id="Particion.C3.A1l.C3.B3_eszk.C3.B6z.C3.B6k"></span><span class="mw-headline" id="Particionáló_eszközök">Particionáló eszközök</span>
+</h2>
+<ul><li>
+<b>fdisk</b> — A Linux-ban foglalt particionáló, terminálban.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<ul><li>
+<b>cfdisk</b> — Ncurses alapú particionáló, terminálban.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.kernel.org/">https://www.kernel.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd></dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Figyelem:</strong> A <i>cfdisk</i> által létrehozott első partíció a 63-ik szektornál kezdődik, a megszokott 2048-ik helyett. Ez csökkent teljesítményhez vezethet fejlettebb (4k szektoros formátumú) SSD meghajtók esetében. Problémákhoz vezethet a <a href="../en/GRUB.html#msdos-style_error_message" class="mw-redirect" title="GRUB2">GRUB2</a> használatakor. A legacy GRUB és a Syslinux azonban így is működőképes.</div>
+<ul><li>
+<b>gdisk</b> —  Az fdisk <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a> változata.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b>cgdisk</b> —  A cfdisk GPT változata.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.rodsbooks.com/gdisk/">http://www.rodsbooks.com/gdisk/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span>
+</dd></dl>
+<ul><li>
+<b>GNU Parted</b> — Particionáló terminálban.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.gnu.org/software/parted/parted.html">https://www.gnu.org/software/parted/parted.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=parted">parted</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Parted.html" class="mw-redirect" title="GParted">GParted</a></b> — GTK-ban írt grafikus particionáló.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://gparted.sourceforge.net/">http://gparted.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gparted">gparted</a></span>
+</dd></dl>
+<ul><li>
+<b>Partitionmanager</b> — QT-ban írt grafikus particionáló.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://sourceforge.net/projects/partitionman/">https://sourceforge.net/projects/partitionman/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=partitionmanager">partitionmanager</a></span>
+</dd></dl>
+<ul><li>
+<b>QtParted</b> — Hasonló a Partitionmanager-hez, az <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a>-ból telepíthető.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://qtparted.sourceforge.net/">http://qtparted.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/qtparted/">qtparted</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup>
+</dd></dl>
+<h2>
+<span id="SSD_par.C3.ADci.C3.B3_eltol.C3.A1sa"></span><span class="mw-headline" id="SSD_paríció_eltolása">SSD paríció eltolása</span>
+</h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> A manuális SSD eltolás nem mindig szükséges. Lásd az következő cikket: (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Partitioning#SSD_Alignment?">Talk:Partitioning#SSD Alignment?</a>)</div>
+</div>
+<p><b>A megfelelő partíció eltolás szükséges az optimális teljesítmény eléréséhez és a hosszú élettartam megőrzéséhez.</b> Az eltolás kulcsa a legalább az SSD EBS (erase block size, törlési blokkméret) értékéhez igazított particionálás.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> Az EBS nagyban a gyártótól függ.</div>
+<p>Ha a partíciók nincsenek úgy eltolva, hogy az EBS többszöröseinél (pl. 512 KiB-nál) kezdődjenek, a fájlrendszer eltolása teljesen felesleges, mert minden a partíció eltolásának "résével" megegyező módon tolódik rossz helyre. Hagyományosan a merevlemezeket a <i>cilinder</i>, <i>fej</i> és <i>szektor</i> szerint címezték, melyeken aztán az adat olvasásra vagy írásra került. Ezek a sugárirányú helyzetet jelölték, a meghajtó fejének (  = lemez és oldal ), valamint az adatnak az axiális helyzetét. Az LBA (logical block addressing, logika blokk címzés) bevezetésével mindez már nem szükséges. Ehelyett az egész merevlemez egyetlen adatfolyamként címezhető.
+</p>
+<h2>
+<span id="GPT_haszn.C3.A1lata-_a_modernebb_m.C3.B3dszer"></span><span class="mw-headline" id="GPT_használata-_a_modernebb_módszer">GPT használata- a modernebb módszer</span>
+</h2>
+<h3>
+<span id="A_gdisk_haszn.C3.A1lat.C3.A1nak_.C3.B6sszefoglal.C3.A1sa"></span><span class="mw-headline" id="A_gdisk_használatának_összefoglalása">A gdisk használatának összefoglalása</span>
+</h3>
+<p>Ha GPT-t használunk, a megfelelő partíció-szerkesztő eszközünk a <i>gdisk</i> lesz. Ez az eszköz képes a partíciók automatikus, 2048 szektormérethez igazított eltolására (ez 1024 KiB-ot jelent), aminek kompatibilisnek kell lennie az SSD-k túlnyomó többségével, ha nem minddel. A GNU parted program is támogatja a GPT-t, de <a rel="nofollow" class="external text" href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=601813">kevésbé felhasználóbarát</a>, ha partíciók eltolására kerül sor. Az Arch ISO telepítőkörnyezete magában foglalja a <i>gdisk</i> parancsot. Ha a későbbiekben a telepített rendszeren is szükség van rá, a <i>gdisk</i> a <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span> csomagból elérhető.
+</p>
+<p>Összefoglaló a <i>gdisk</i> általános felhasználásáról:
+</p>
+<ul><li>A <i>gdisk</i>-et indítsuk egy bizonyos lemezen mint root felhasználó (a <i>merevlemez</i> lehet pl. <code>/dev/sda</code>):</li></ul>
+<pre># gdisk <i>merevlemez</i>
+</pre>
+<ul>
+<li>Ha a lemez vadonatúj, vagy épp mindent újra akarunk rajta kezdeni, nyissunk új GUID partíciós táblát az  <code>o</code> paranccsal.</li>
+<li>Hozzunk létre új partíciót az <code>n</code> paranccsal (elsődleges típusú/első partíció).</li>
+<li>Feltételezve, hogy a partíció új, <i>gdisk</i> a lehető legmagasabb eltolást fogja használni. Más esetben a kettő hatványa, ahol a kitevő a partíciók réseinek legnagyobb közös osztója.</li>
+<li>Ha egy partíciónak a 2048-ik szektor előtti kezdetet adunk meg, a <i>gdisk</i> automatikusan 2048-ra váltja ezt az értéket. Ezzel biztossá válik a 2048 szektoros eltolás (mivel egy szektor 512B, ez 1024KiB-os eltolás, mely minden SSD NAND törlési blokkhoz illeszkedni fog).</li>
+<li>Ezután a <code>+<i>x</i>{M,G}</code> formátumban adjuk meg, hogy a partíció <i>x</i> mebibyte vagy gibibyte méretig terjeszkedjen; valamint, ha ez a méret nem az eltolási méret (1024 KiB) többszöröse lenne, a <i>gdisk</i> összehúzza a partíciót a legkisebb többszörösig. Ha tehát 15 Gib-os partíciót akarunk létrehozni, <code>+15G</code>-t kell beütnünk.</li>
+<li>A következő lépés a partíció típusának megjelölése, az alapértelmezett a <code>Linux filesystem</code> azaz a Linux fájlrendszer (a kódja <code>8300</code>), megfelelő a legtöbb esetben. A kódok listája az <code>L</code> billentyűvel hívható elő. Ha LVM-et akarnánk használni, válasszuk ki a <code>Linux LVM</code>-et (<code>8e00</code>).</li>
+<li>Ugyanilyen módon folytassuk a többi partícióval.</li>
+<li>Ha végeztünk, a tábát a <code>w</code> paranccsal írjuk a lemezre és kilépünk.</li>
+<li>Formázzuk le a partíciókat valamely <a href="../en/File_systems.html" title="File systems">fájlrendszerre</a>.</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Megjegyzés:</strong> 
+<ul>
+<li>A GPT partíciós táblát használó lemezről történő rendszerindításhoz létre kell hozni (lehetőleg a lemez elején) egy <a href="../en/GRUB.html#GUID_Partition_Table_(GPT)_specific_instructions" class="mw-redirect" title="GRUB2">BIOS boot partíciót</a>, melyen nincs fájlrendszer, s melynek partíció típusa <code>BIOS boot</code> vagy <code>bios_grub</code> (<i>gdisk</i> a kódja <code>EF02</code>) ha a lemez <a href="../en/GRUB.html" title="GRUB">GRUB</a>-ot használva indul. A <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a>-hoz nincs szükség ennek a <code>bios_grub</code> partíciónak létrehozására, de szükség lesz különálló <code>/boot</code> partícióra és engedélyezzük a <code>Legacy BIOS Bootable partition</code> attrbútumot ezen a partíción a (a <i>gdisk</i> használatával).</li>
+<li>A <a href="../en/GRUB_Legacy.html" title="GRUB Legacy">GRUB Legacy</a> nem támogatja a GPT-t, a felhsználóknak a <a href="../en/GRUB.html" class="mw-redirect" title="BURG">BURG</a>, a GRUB vagy a Syslinux közül kell választania.</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Figyelem:</strong> Ha kettős bootolást tervezünk Windows-szal BIOS módban (ez az egyetlen lehetőség 32 bites Windows verziókkal, illetve 64 bites Windows XP-vel), <b>semmiképp se</b> használjunk GPT-t mivel a Windows <b>nem</b> támogatja a GPT lemezről való indítást BIOS rendszeren. Ilyenkor kénytelenek vagyunk MBR particionálást használni és BIOS módban indítani a rendszert, az alábbi leírás szerint. Ez a korlátozás nem érvényes a modernebb 64 bites Windows rendszerek UEFI módú indítására.</div>
+<h2>
+<span id="MBR_haszn.C3.A1lata_-_r.C3.A9gi_m.C3.B3dszer"></span><span class="mw-headline" id="MBR_használata_-_régi_módszer">MBR használata - régi módszer</span>
+</h2>
+<p>Ha MBR-t használunk, a használandó particionáló eszköz az <i>fdisk</i> lesz. Az <i>fdisk</i> újabb verziói már elvetették az elavult cilinderekben történő számítást és kijelzést, akárcsak az MS-DOS kompatibilitást. A legutóbbi <i>fdisk</i> automatikusan tolja el az összes partíciót 2048 szektorral, avagy 1024 Kib-tal, amely az összes mai SSD gyártó által használt EBS méretnél megfelelő. Ez annyit tesz, hogy az alapértelmezett beállításokkal megfelelő lesz a partíciók eltolása.
+</p>
+<p>Jegyezzük meg, hogy régebben az <i>fdisk</i> cilinderekben számolt, és olyan MS-DOS kompatibilitási módot tartalmazott, ami teljesen felborította az SSD eltolást. Épp ezért az interneten még mindig számos olyan, 2008-2009 környéki anyag található, melyek mélyre menően taglalják, hogy mi a particionálás megfelelő menete. A legutóbbi <i>fdisk</i>-kel jóval egyszerűbb a dolgunk, miként ez ebből az útmutatóból is kiderül.
+</p>
+<h3>
+<span id="Az_fdisk_haszn.C3.A1lat.C3.A1nak_.C3.B6sszefoglal.C3.B3ja"></span><span class="mw-headline" id="Az_fdisk_használatának_összefoglalója">Az fdisk használatának összefoglalója</span>
+</h3>
+<ul><li>Indítsuk root-ként az <i>fdisk</i>-et valamely eszközünkön (a <i>merevlemez</i> lehet például <code>/dev/sda</code>):</li></ul>
+<pre># fdisk <i>merevlemez</i>
+</pre>
+<ul>
+<li>Ha a lemez vadonatúj, vagy mindent újra akarunk kezdeni rajta, készítsünk egy új és üres DOS partíciós táblát az <code>o</code> paranccsal.</li>
+<li>Az <code>n</code> paranccsal készítsünk egy új partíciót (elsődleges típusú/első partíció).</li>
+<li>Használjuk a <code>+<i>x</i>G</code> formátumú parancsot, hogy a partíciót <i>x</i> gibibájtig terjesszük ki. Ha tehát 15GiB méretű partíciót szeretnénk, a parancs <code>+15G</code> lesz.</li>
+<li>Változtassuk a partíció azonosítóját az alapértelmezett Linux-ról (<code>a kódja 83</code>) valami másra, ha szükséges, a <code>t</code> paranccsal. Ez nem kötelező, csak akkor szükséges, ha valami más partíciótípust akarunk létrehozni, mint például a cserehely, az NTFS vagy az LVM. A partíciótípusok listáját a <code>l</code> paranccsal bármikor lekérdezhetjük.</li>
+<li>Ugyanilyen módon folytassuk a többi partícióval.</li>
+<li>A <code>w</code> paranccsal írjuk a lemezre a partíciós táblát.</li>
+<li>Formázzuk új partícióinkat valamilyen <a href="../en/File_systems.html" title="File systems">fájrendszerre</a>.</li>
+</ul>
+<h2>
+<span id="L.C3.A1sd_m.C3.A9g"></span><span class="mw-headline" id="Lásd_még">Lásd még</span>
+</h2>
+<ul>
+<li>
+<a href="../en/Ext4.html#Creating_ext4_partitions_from_scratch" title="Ext4">Creating ext4 partitions from scratch</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>
+</li>
+<li><a href="https://en.wikipedia.org/wiki/Disk_partitioning" class="extiw" title="wikipedia:Disk partitioning">Wikipedia:Disk partitioning</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.novell.com/coolsolutions/feature/19350.html">Manually Partitioning Your Hard Drive with fdisk</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../hu/Category:File_systems.html" title="Category:File systems (Magyar)">File systems (Magyar)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Partitioning_(Magyar)&amp;oldid=638560">https://wiki.archlinux.org/index.php?title=Partitioning_(Magyar)&amp;oldid=638560</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:16.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

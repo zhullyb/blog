@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Sendmail (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Sendmail_简体中文 rootpage-Sendmail_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Sendmail (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Sendmail.html" title="Sendmail">Sendmail</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2016-08-26。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Sendmail&amp;diff=0&amp;oldid=435685">更改</a>，则您可以帮助同步翻译。</div>
+<p>Sendmail 是来自 UNIX 世界的经典 SMTP 服务器。Arch Linux 还提供了 <a href="../en/Postfix.html" title="Postfix">Postfix</a>。
+</p>
+<p>本文的目的是为本地用户账户设置 Sendmail，<b>不使用 mysql 或者其它数据库</b>，同时允许建立所谓 <i>mail-only 账户</i>。
+</p>
+<p>本文仅描述了配置 Sendmail 的必需步骤；要添加 IMAP 与 POP3 服务，您可以考虑阅读 <a href="../en/Dovecot.html" title="Dovecot">Dovecot</a> 的内容。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#DNS_%E8%AE%B0%E5%BD%95"><span class="tocnumber">2</span> <span class="toctext">DNS 记录</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#%E6%B7%BB%E5%8A%A0%E7%94%A8%E6%88%B7"><span class="tocnumber">3</span> <span class="toctext">添加用户</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">4</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#%E5%88%9B%E5%BB%BA_SSL_%E8%AF%81%E4%B9%A6"><span class="tocnumber">4.1</span> <span class="toctext">创建 SSL 证书</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#sendmail.cf"><span class="tocnumber">4.2</span> <span class="toctext">sendmail.cf</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#sendmail.conf"><span class="tocnumber">4.3</span> <span class="toctext">sendmail.conf</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#local-host-names"><span class="tocnumber">4.4</span> <span class="toctext">local-host-names</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#access.db"><span class="tocnumber">4.5</span> <span class="toctext">access.db</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#aliases.db"><span class="tocnumber">4.6</span> <span class="toctext">aliases.db</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#virtusertable.db"><span class="tocnumber">4.7</span> <span class="toctext">virtusertable.db</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E5%90%AF%E5%8A%A8"><span class="tocnumber">4.8</span> <span class="toctext">开机自动启动</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#SASL_%E9%AA%8C%E8%AF%81"><span class="tocnumber">4.9</span> <span class="toctext">SASL 验证</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#%E5%B0%8F%E7%AA%8D%E9%97%A8"><span class="tocnumber">5</span> <span class="toctext">小窍门</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#%E5%B0%86%E6%9F%90%E4%B8%AA%E5%9F%9F%E5%90%8D%E7%9A%84%E5%85%A8%E9%83%A8%E9%82%AE%E4%BB%B6%E8%BD%AC%E5%8F%91%E8%87%B3%E7%89%B9%E5%AE%9A%E9%82%AE%E7%AE%B1"><span class="tocnumber">5.1</span> <span class="toctext">将某个域名的全部邮件转发至特定邮箱</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a> 软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/sendmail/">sendmail</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=procmail">procmail</a></span> 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=m4">m4</a></span>
+</p>
+<h2>
+<span id="DNS_.E8.AE.B0.E5.BD.95"></span><span class="mw-headline" id="DNS_记录">DNS 记录</span>
+</h2>
+<p>您应当拥有一个域名，并且编辑所拥有域名的 MX 记录指向你的服务器。请注意一些服务器在处理指向 CNAMEs 的 MX 记录时会出现问题，所以你应当考虑将 MX 记录指向一个 A 记录。
+</p>
+<h2>
+<span id=".E6.B7.BB.E5.8A.A0.E7.94.A8.E6.88.B7"></span><span class="mw-headline" id="添加用户">添加用户</span>
+</h2>
+<p>为每个需要接收邮件的用户创建  <a href="../en/Users_and_groups.html" title="Users and groups">Linux 用户</a>，每个用户会拥有类似 username@your-domain.com 的电子邮件地址。但是如果你想要添加 <i>mail-only 账户</i>，即仅能处理电子邮件，但不能使用 shell 或 X 进行登录的账户，您可以按如下步骤添加该类账户：
+</p>
+<pre># useradd -m -s /usr/bin/nologin <i>username</i>
+</pre>
+<p>注：在此之后，您可以随时通过修改 <code>/etc/passwd</code> 等方式更改账户类型与属性。
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<h3>
+<span id=".E5.88.9B.E5.BB.BA_SSL_.E8.AF.81.E4.B9.A6"></span><span class="mw-headline" id="创建_SSL_证书">创建 SSL 证书</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you plan on implementing SSL/TLS, know that some variations and implementations are <a rel="nofollow" class="external text" href="https://weakdh.org/#affected">still</a> <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#Attacks_against_TLS.2FSSL" class="extiw" title="wikipedia:Transport Layer Security">vulnerable to attack</a>. For details on these current vulnerabilities within SSL/TLS and how to apply appropriate changes to Sendmail, visit <a rel="nofollow" class="external free" href="http://disablessl3.com/">http://disablessl3.com/</a> and <a rel="nofollow" class="external free" href="https://weakdh.org/sysadmin.html">https://weakdh.org/sysadmin.html</a>
+</div>
+<p>生成一个 key 并对其签名，请阅读 <a href="../en/OpenSSL.html#Generating_keys" title="OpenSSL">OpenSSL</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 以了解更多信息，<a href="../en/Certbot.html" class="mw-redirect" title="Let's Encrypt">Let's Encrypt</a> 提供了免费认证。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 使用经过口令加密（具有 passphrase）的服务器的密钥文件可能导致 Sendmail 启用 TLS 失败。如果出现问题，请参考 <a rel="nofollow" class="external text" href="https://mnx.io/blog/removing-a-passphrase-from-an-ssl-key/">这里</a> 移除已有密钥文件的口令。</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 建议将服务器密钥与证书统一放在 <code> /etc/mail/certs/ </code> 目录下，并移除服务器密钥文件的组可读与其它可读权限。之后 <code> sendmailconfig </code> 工具可能会自动更改该文件夹下文件的属主、属组与权限。</div>
+<h3><span class="mw-headline" id="sendmail.cf">sendmail.cf</span></h3>
+<p>创建文件 <code>/etc/mail/sendmail.mc</code>，并以此为基础使用 <a rel="nofollow" class="external text" href="https://zh.wikipedia.org/wiki/M4_(%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80)">m4</a> 工具生成 <code> sendmail.cf </code> 文件。
+</p>
+<p>您可以由 <code>/usr/share/sendmail-cf/README</code> 文件了解配置 sendmail 的全部选项。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 无论是从头创建自己的 <code>sendmail.mc</code> 文件，还是在已有的 <code> sendmail.mc</code> 文件基础上进行修改，请时刻牢记，在<b>非 TLS </b>情况下使用明文验证是十分危险的行为。除非您明确了解自己行为的意义，请使用以下示例中的方法强制进行 TLS 验证以确保安全性。</div>
+<p>下面是在 <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security" class="extiw" title="wikipedia:Transport Layer Security">TLS</a> 之上进行身份验证的配置文件示例。例子包含了解释工作原理的注释，这些注释以 <code> dnl </code> 这个单词起始。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/sendmail.mc</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">include(`/usr/share/sendmail-cf/m4/cf.m4')
+define(`confDOMAIN_NAME', `your-domain.com')dnl
+FEATURE(use_cw_file)
+dnl  The following allows relaying if the user authenticates,
+dnl  and disallows plaintext authentication (PLAIN/LOGIN) on
+dnl  non-TLS links:
+define(`confAUTH_OPTIONS', `A p y')dnl
+dnl
+dnl  Accept PLAIN and LOGIN authentications:
+TRUST_AUTH_MECH(`LOGIN PLAIN')dnl
+define(`confAUTH_MECHANISMS', `LOGIN PLAIN')dnl
+dnl
+dnl Make sure this paths correctly point to your SSL cert files:
+define(`confCACERT_PATH',`/etc/ssl/certs')
+define(`confCACERT',`/etc/ssl/cacert.pem')
+define(`confSERVER_CERT',`/etc/ssl/certs/server.crt')
+define(`confSERVER_KEY',`/etc/ssl/private/server.key')
+dnl
+FEATURE(`virtusertable', `hash /etc/mail/virtusertable.db')dnl
+OSTYPE(linux)dnl
+MAILER(local)dnl
+MAILER(smtp)dnl
+</pre>
+<p>然后使用使用
+</p>
+<pre># m4 /etc/mail/sendmail.mc &gt; /etc/mail/sendmail.cf
+</pre>
+<p>命令生成 <code> sendmail.cf</code> 文件。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果您对 <code>sendmail.cf </code> 语法感兴趣，请参阅 <a rel="nofollow" class="external text" href="http://www.sendmail.org/~ca/email/doc8.12/op-sh-5.html">这篇文章</a> 了解详情。</div>
+<h3><span class="mw-headline" id="sendmail.conf">sendmail.conf</span></h3>
+<p><code> sendmail.conf </code> 文件，如果存在，则也是配置 Sendmail 并最终生成 <code> sendmail.cf </code> 的一个配置文件。请阅读文件内含的注释了解详细信息。
+</p>
+<h3><span class="mw-headline" id="local-host-names">local-host-names</span></h3>
+<p>请将您的域名写入 <code>local-host-names</code> 文件:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/local-host-names</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">localhost
+your-domain.com
+mail.your-domain.com
+localhost.localdomain
+</pre>
+<p>请确保您的域名可以被 <code> /etc/hosts</code> 文件解析。
+</p>
+<h3><span class="mw-headline" id="access.db">access.db</span></h3>
+<p>创建文件 <code>/etc/mail/access</code> 然后写入规则以配置邮件转发、允许收信与拒信。假设你在 <code>10.5.0.0/24</code> 有一个 VPN，而且你希望转发来自该 IP 段的所有邮件：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/access</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">10.5.0 RELAY
+127.0.0 RELAY
+</pre>
+<p>然后使用
+</p>
+<pre># makemap hash /etc/mail/access.db &lt; /etc/mail/access
+</pre>
+<p>命令处理生成 sendmail 可以使用的配置数据库。
+</p>
+<h3><span class="mw-headline" id="aliases.db">aliases.db</span></h3>
+<p>编辑文件 <code>/etc/mail/aliases</code> ，反注释这一行： <code>#root:         human being here</code> 并将其修改如下：
+</p>
+<pre>root:         your-username</pre>
+<p>你可以在此添加用户的别名。例如：
+</p>
+<pre>coolguy:      your-username
+somedude:     your-username</pre>
+<p>然后使用
+</p>
+<pre># newaliases
+</pre>
+<p>命令进行处理。
+</p>
+<h3><span class="mw-headline" id="virtusertable.db">virtusertable.db</span></h3>
+<p>创建 <code>virtusertable</code> 文件并在其中写入含有域名的别名：（这项功能在您的服务器绑定多域名时十分有用）
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/virtusertable</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">your-username@your-domain.com         your-username
+joe@my-other.tk                       joenobody
+</pre>
+<p>然后使用
+</p>
+<pre># makemap hash /etc/mail/virtusertable.db &lt; /etc/mail/virtusertable
+</pre>
+<p>命令进行处理。
+</p>
+<h3>
+<span id=".E5.BC.80.E6.9C.BA.E8.87.AA.E5.8A.A8.E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="开机自动启动">开机自动启动</span>
+</h3>
+<p>启用并启动下列服务。请阅读 <a href="../zh-CN/Daemons.html" class="mw-redirect" title="Daemon (简体中文)">守护进程</a> 了解详情。
+</p>
+<ul>
+<li><code>saslauthd.service</code></li>
+<li><code>sendmail.service</code></li>
+<li><code>sm-client.service</code></li>
+</ul>
+<h3>
+<span id="SASL_.E9.AA.8C.E8.AF.81"></span><span class="mw-headline" id="SASL_验证">SASL 验证</span>
+</h3>
+<p>将用户添加至 SASL 数据库并设置用于 SMTP 身份验证的密码。
+</p>
+<pre># saslpasswd2 -c your-username
+</pre>
+<p>注：您可以设置使用异于 SASL 的身份验证途径。这需要进一步修改配置文件，这里不赘述。
+</p>
+<h2>
+<span id=".E5.B0.8F.E7.AA.8D.E9.97.A8"></span><span class="mw-headline" id="小窍门">小窍门</span>
+</h2>
+<h3>
+<span id=".E5.B0.86.E6.9F.90.E4.B8.AA.E5.9F.9F.E5.90.8D.E7.9A.84.E5.85.A8.E9.83.A8.E9.82.AE.E4.BB.B6.E8.BD.AC.E5.8F.91.E8.87.B3.E7.89.B9.E5.AE.9A.E9.82.AE.E7.AE.B1"></span><span class="mw-headline" id="将某个域名的全部邮件转发至特定邮箱">将某个域名的全部邮件转发至特定邮箱</span>
+</h3>
+<p>若需将 <b>my-other.tk</b> 域名下所有用户的电子邮件转发到 <b>your-username@your-domain.com</b>，请在 <code>/etc/mail/virtusertable</code> 文件中添加以下一行：
+</p>
+<pre>@my-other.tk        your-username@your-domain.com</pre>
+<p>不要忘记再次使用如下命令更新配置数据库：	
+</p>
+<pre># makemap hash /etc/mail/virtusertable.db &lt; /etc/mail/virtusertable
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Mail_server.html" title="Category:Mail server (简体中文)">Mail server (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Sendmail_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=628020">https://wiki.archlinux.org/index.php?title=Sendmail_(简体中文)&amp;oldid=628020</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 1 August 2020, at 19:38.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

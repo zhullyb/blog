@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Flashing BIOS from Linux - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Flashing_BIOS_from_Linux rootpage-Flashing_BIOS_from_Linux skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Flashing BIOS from Linux</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article aims on providing information on flashing your system BIOS under Linux. Most manufacturers provide a Windows executable or a BIOS executable that can only be run under Windows. However, there are a few utilities that allow you to upgrade your system BIOS under Linux.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Flashing motherboard BIOS is a dangerous activity that can render your motherboard inoperable! While the author of this article has successfully run this procedure many times, your mileage may vary. Be careful! You may want to consider updating <a href="../en/Microcode.html" title="Microcode">microcode</a> instead if it is supported by your system.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>HP users may download Windows BIOS updater from HP website, extract *.exe file and locate ISO image for burning to a CD. Using CD, upgrade is possible from BIOS menu using 'Firmware Upgrade' without using below tools. See <a rel="nofollow" class="external text" href="https://h30434.www3.hp.com/t5/Notebook-Operating-System-and-Recovery/How-to-update-BIOS-on-Linux/td-p/4869835">this</a> thread for details.</li>
+<li>For users with Dell computers, Dell recommends Linux users flash their BIOS following information located <a rel="nofollow" class="external text" href="https://www.dell.com/support/article/us/en/19/sln171755/updating-the-dell-bios-in-linux-and-ubuntu-environments">here</a> (in short, put the .EXE on a USB stick and use the F12 boot menu to access the firmware's flash utility).</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#fwupd"><span class="tocnumber">1</span> <span class="toctext">fwupd</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#BiosDisk"><span class="tocnumber">2</span> <span class="toctext">BiosDisk</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Installation"><span class="tocnumber">2.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Usage"><span class="tocnumber">2.2</span> <span class="toctext">Usage</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Flashrom"><span class="tocnumber">3</span> <span class="toctext">Flashrom</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Installation_2"><span class="tocnumber">3.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Usage_2"><span class="tocnumber">3.2</span> <span class="toctext">Usage</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#FreeDOS"><span class="tocnumber">4</span> <span class="toctext">FreeDOS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Unetbootin"><span class="tocnumber">4.1</span> <span class="toctext">Unetbootin</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#dosemu"><span class="tocnumber">4.2</span> <span class="toctext">dosemu</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Pre-built_images"><span class="tocnumber">4.3</span> <span class="toctext">Pre-built images</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Using_a_FreeDOS-provided_Disk_Image_+_USB_stick_on_Linux"><span class="tocnumber">4.4</span> <span class="toctext">Using a FreeDOS-provided Disk Image + USB stick on Linux</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Using_a_FreeDOS-provided_Disk_Image_+_USB_stick_with_Windows"><span class="tocnumber">4.5</span> <span class="toctext">Using a FreeDOS-provided Disk Image + USB stick with Windows</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Images_that_are_too_large_for_a_floppy"><span class="tocnumber">4.6</span> <span class="toctext">Images that are too large for a floppy</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Usage_3"><span class="tocnumber">4.7</span> <span class="toctext">Usage</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Bootable_optical_disk_emulation"><span class="tocnumber">5</span> <span class="toctext">Bootable optical disk emulation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#Installation_3"><span class="tocnumber">5.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Usage_4"><span class="tocnumber">5.2</span> <span class="toctext">Usage</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#Using_a_Windows_PE"><span class="tocnumber">6</span> <span class="toctext">Using a Windows PE</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#Usage_5"><span class="tocnumber">6.1</span> <span class="toctext">Usage</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="fwupd">fwupd</span></h2>
+<p>fwupd is a simple daemon to allow session software to update device firmware on your local machine.
+</p>
+<p>Large vendors including Dell and Logitech use this way to distribute firmware updates to Linux.
+</p>
+<p>fwupd only supports flashing BIOS updates in UEFI mode.
+</p>
+<p>See <a href="../en/Fwupd.html" title="Fwupd">fwupd</a> for further information about installation and usage.
+</p>
+<h2><span class="mw-headline" id="BiosDisk">BiosDisk</span></h2>
+<p><a rel="nofollow" class="external text" href="https://github.com/dell/biosdisk">BiosDisk</a> simplifies the process of flashing your system BIOS under Linux.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This is only supported on systems when booted in "Legacy mode". In UEFI mode you will need to use a different method.</div>
+<h3><span class="mw-headline" id="Installation">Installation</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/biosdisk-git/">biosdisk-git</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h3><span class="mw-headline" id="Usage">Usage</span></h3>
+<p>To use the biosdisk utility to create a BIOS flash image, first download the latest raw BIOS image for your system from your manufacturer's website. Make sure however, that you always get the BIOS executable and NOT the Windows executable. You then have one of two options: create a ISO or install the image for your bootloader.
+</p>
+<ul><li>The mkimage action will create a ISO image on the user's hard drive. Usage is the following:</li></ul>
+<pre># biosdisk mkimage [-o option] [-i destination] /path/to/.exe 
+</pre>
+<ul><li>The install action will create the biosdisk image, copy the image file to /boot, and then update the bootloader with an entry for the image. Then all the user has to do is boot the system and select the image to flash the BIOS; this will load the biosdisk image directly from the hard drive and flash the BIOS.</li></ul>
+<pre># biosdisk install [-o option] [--name=] /path/to/.exe
+</pre>
+<h2><span class="mw-headline" id="Flashrom">Flashrom</span></h2>
+<p><a rel="nofollow" class="external text" href="http://www.flashrom.org/Flashrom">Flashrom</a> is a utility for identifying, reading, writing, verifying and erasing flash chips. It is designed to flash BIOS/EFI/coreboot/firmware/optionROM images on mainboards, network/graphics/storage controller cards, and various programmer devices.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you have a laptop/notebook/netbook, please do NOT try flashrom because interactions with the EC on these machines might crash your machine during flashing. flashrom tries to detect if a machine is a laptop, but not all laptops follow the standard, so this is not 100% reliable.<a rel="nofollow" class="external autonumber" href="https://www.flashrom.org/Board_Testing_HOWTO">[1]</a>
+</div>
+<h3><span class="mw-headline" id="Installation_2">Installation</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=flashrom">flashrom</a></span> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/flashrom-git/">flashrom-git</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h3><span class="mw-headline" id="Usage_2">Usage</span></h3>
+<p>Find out if your motherboard and chipset (internal) is supported by flashrom at this website. <a rel="nofollow" class="external text" href="http://www.flashrom.org/Supported_hardware">Supported Hardware</a>
+You can also find out if your hardware is supported by issuing the following command
+</p>
+<pre># flashrom --programmer internal
+</pre>
+<p>The above command will tell you your motherboard and chipset. You can then find out if yours is supported by issuing this command:
+</p>
+<pre># flashrom --programmer internal -L | grep CHIPNAMEfrompreviouscommand
+</pre>
+<p>On modern mainboards you probably get more than one rom chip listed. You have to select the chipname you get from the upper command. Then you use the <code>-c</code> option to select which rom is affected by the command
+</p>
+<pre># flashrom --programmer internal -c "CHIPNAME" -r backup_CHIPNAME.bin
+</pre>
+<p>Write and verify the new BIOS image (proprietary or Coreboot) on the ROM chip:
+</p>
+<pre># flashrom --programmer internal internal -c "CHIPNAME" -w newbios.bin
+</pre>
+<p>If you want to flash other flash chips on your mainboard, you will find all options with
+</p>
+<pre># flashrom
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> With Linux kernel versions greater than 4.4, <code>CONFIG_IO_STRICT_DEVMEM</code> a new kernel security measure can make flashrom stop working, in that case you can try adding <code>iomem=relaxed</code> to your kernel parameters. <a rel="nofollow" class="external text" href="https://www.flashrom.org/FAQ">FAQ</a>.</div>
+<h2><span class="mw-headline" id="FreeDOS">FreeDOS</span></h2>
+<p><a rel="nofollow" class="external text" href="http://www.freedos.org/">FreeDOS</a> a free DOS-compatible operating system, is up to the challenge, no need for proprietary DOS versions. So, all you need is a bootable floppy disk image with FreeDOS kernel on it.
+</p>
+<h3><span class="mw-headline" id="Unetbootin">Unetbootin</span></h3>
+<p>By far the easiest way to make a bootable FreeDOS USB Stick is using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/unetbootin/">unetbootin</a></span><sup><small>AUR</small></sup>.
+</p>
+<p>You should format a pendrive with FAT16 and flag it as "boot" (you may do this through a GUI with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gparted">gparted</a></span> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=partitionmanager">partitionmanager</a></span>). Then, after mounting the flash drive, select under distribution <b>FreeDOS</b> and your mounted stick. The app will automatically download the image for you and copy it to the drive. Finally, you may copy everything you want to flash there (BIOS, firmwares, etc).
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Unetbootin may not function properly on some Lenovo systems. It may be necessary to create the bootable stick on a different device. See <a rel="nofollow" class="external text" href="http://reboot.pro/topic/9849-blinking-cursor-at-boot/">here</a>.</div>
+<h3><span class="mw-headline" id="dosemu">dosemu</span></h3>
+<p>The problem with the official FreeDOS images is the lack of extra space for holding firmware and BIOS update files and programs. The easiest way to create a DOS, bootable FAT drive of arbitrary size under Linux is to <a rel="nofollow" class="external text" href="https://wiki.gentoo.org/wiki/Bootable_DOS_USB_stick">mount a FAT drive under dosemu then make it bootable with the FreeDOS sys command.</a>
+</p>
+<p>For an alternative method, see <a href="https://wiki.gentoo.org/wiki/BIOS_Update#FreeDOS_environment" class="extiw" title="gentoo:BIOS Update">FreeDOS Flash Drive</a>, also on the Gentoo Wiki.
+</p>
+<h3><span class="mw-headline" id="Pre-built_images">Pre-built images</span></h3>
+<p>Yet another simple solution: <a rel="nofollow" class="external text" href="http://myhq.it/sites/myhq.it/files/FreeDOS-1.1-memstick-2-2048M.img.bz2">FreeDOS pre-built bootable USB flash drive image by Christian Taube</a>. Instructions can be found <a rel="nofollow" class="external text" href="https://web.archive.org/web/20160224081331/http://www.chtaube.eu/computers/freedos/bootable-usb/">here</a>.
+</p>
+<h3>
+<span id="Using_a_FreeDOS-provided_Disk_Image_.2B_USB_stick_on_Linux"></span><span class="mw-headline" id="Using_a_FreeDOS-provided_Disk_Image_+_USB_stick_on_Linux">Using a FreeDOS-provided Disk Image + USB stick on Linux</span>
+</h3>
+<p>As of writing (2017-07-11), <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/unetbootin/">unetbootin</a></span><sup><small>AUR</small></sup> doesn't support versions of FreeDOS more recent than 1.0 (current version is 1.2). The following procedure worked to upgrade an Inspiron 17-3737 to the A09 BIOS. (Dell offers this as a possibility <a rel="nofollow" class="external text" href="http://www.dell.com/support/article/ca/en/cabsdt1/SLN171755/updating-the-dell-bios-in-linux-and-ubuntu-environments?lang=EN#Creating%20a%20USB%20Bootable%20Storage%20Device">on their site</a>)
+</p>
+<p>Some notes before starting:
+</p>
+<ul>
+<li>You can check your current BIOS version with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dmidecode">dmidecode</a></span>. You might already be at the latest version.</li>
+<li>Ensure that your hardware vendor has verified this method works (use of FreeDOS to run BIOS update <code>.exe</code>)</li>
+<li>Laptop users should not attempt this without AC power</li>
+<li>This is dangerous, and you assume all risk for following this procedure.</li>
+</ul>
+<p>Procedure:
+</p>
+<ol>
+<li>Grab the latest USB installer from the <a rel="nofollow" class="external text" href="http://www.freedos.org/download/">FreeDOS Download Page</a>
+<ul><li>author note: used the "Full" version on suspicion that it might include more drivers, etc (pure speculation)</li></ul>
+</li>
+<li>Extract the archive, you get a <i>.img</i> file</li>
+<li>Determine which of <code>/dev/sdX</code> is your USB stick (use <code>fdisk -l</code>)</li>
+<li>Write the image directly to the block device:
+<ul><li>
+<code>dd if=FD12FULL.img of=/dev/sdX status=progress</code> (where <code>X</code> is the letter representing your USB stick as a block device, don't write the image to a partition)</li></ul>
+</li>
+<li>Double-check that the image copying worked:
+<ul><li>
+<code>fdisk -l</code> (you should see a single partition on a DOS disk with the bootable ("boot") flag set)</li></ul>
+</li>
+<li>Mount the partition, and copy over the <i>.exe</i> used to update your firmware
+<ul>
+<li>Stay on the safe side and limit the filename to 8 characters (without extension), upper case</li>
+<li>Ensure that you verified any checksums provided by your hardware vendor</li>
+</ul>
+</li>
+<li>Unmount and reboot. Do whatever is needed to boot from the USB drive</li>
+</ol>
+<p>Now you will find yourself in the FreeDOS live installation environment.
+</p>
+<ol>
+<li>Select your language</li>
+<li>You will be prompted to install FreeDOS
+<ul><li>Select "No - Return to DOS"</li></ul>
+</li>
+<li>You should see a prompt (<code>C:\&gt;</code>)</li>
+<li>Run <code>dir /w</code> and verify that your firmware upgrade tool is present</li>
+<li>Run the executable
+<ul><li>author note: in the case of the Dell tool, the machine displayed a spash screen and then rebooted. Upon reboot, it started the firmware upgrade automatically, and ran for about 2 minutes with the fan at full speed)</li></ul>
+</li>
+<li>Once the process specific to your vendor completes, optionally verify through the BIOS setup screen, as well as by running <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dmidecode">dmidecode</a></span> when you're back in linux</li>
+</ol>
+<h3>
+<span id="Using_a_FreeDOS-provided_Disk_Image_.2B_USB_stick_with_Windows"></span><span class="mw-headline" id="Using_a_FreeDOS-provided_Disk_Image_+_USB_stick_with_Windows">Using a FreeDOS-provided Disk Image + USB stick with Windows</span>
+</h3>
+<p>The author for this procedure encountered several issues related to mounting the FAT partition type of the USB using the previous method on Linux with dd. This procedure seeks to outline a method to flash the BIOS with FreeDOS, a USB stick and Ruckus on Windows 7/8/8.1/10. This procedure was performed on 4 JULY 2019 on a Dell Inspiron 5547 Laptop to upgrade from BIOS A10 to A12.
+</p>
+<p>Prerequisites:
+</p>
+<ul>
+<li>Download and install Rufus for Windows. This can be either the full installation or the portable version.</li>
+<li>Download the latest Full USB installer for FreeDOS (v1.2 as of the time of writing).</li>
+<li>Download the latest BIOS update from the vendors' website</li>
+<li>It is assumed that <i>dmidecode</i> is installed on the system</li>
+</ul>
+<p>Procedure:
+</p>
+<ol>
+<li>Extract the contents of the <i>FD12FULL.zip</i> archive, noting the <i>.img</i> file</li>
+<li>Insert a flash drive and flash the <i>FD12FULL.img</i> file using Rufus, leaving all default options
+<ul><li>Detailed use of Rufus is not covered in this guide. Refer to Rufus' manual or documentation for detailed usage</li></ul>
+</li>
+<li>Once flashed with Rufus, rename the BIOS file with 8 uppercase characters (not including the extension) and copy it over to the flash drive</li>
+<li>Eject the flash drive and plug it into the laptop.</li>
+<li>Perform whatever steps are necessary to boot from the USB with LEGACY BOOT
+<ul><li>Author note: For my Dell Laptop, I press F12 for boot options and select 'USB Storage Device' under 'Legacy Options'. I have explicitly enabled legacy boot from within my BIOS, but this option may not be present if the system is only configured to boot with UEFI</li></ul>
+</li>
+<li>You will be presented with the FreeDOS Installation environment
+<ul>
+<li>Select preferred language</li>
+<li>Select 'No - Return to DOS' on the next screen</li>
+<li>Type <i>dir</i> to view the contents of the USB flash drive</li>
+<li>To execute the BIOS upgrade file, simply type the filename and press enter</li>
+<li>Note: My upgrade took &lt;2 minutes with the fans at full speed. The system reboot 3 times total.</li>
+</ul>
+</li>
+<li>Once the upgrade completes and the system boots back into the OS, issue <i>sudo dmidecode | grep -E 'BIOS|Version' </i> and validate the BIOS version has been upgraded</li>
+</ol>
+<h3><span class="mw-headline" id="Images_that_are_too_large_for_a_floppy">Images that are too large for a floppy</span></h3>
+<p>If your flash image is too large for a floppy, go to the <a rel="nofollow" class="external text" href="http://www.fdos.org/bootdisks/">FreeDos bootdisk website</a>, and download the 10Mb hard-disk image.  This image is a full disk image, including partitions, so adding your flash utility will be a little trickier:
+</p>
+<p>First find the first partition (at time of writing, the first partition starts at block 63; this means that the partitions starts at offset <code>512 * 63 = 32256</code>).
+You can either use:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># file -sk <i>&lt;image-file&gt;</i> | sed -r 's/.*startsector ([0-9]+).*/\1/'</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"><b>63</b>
+</pre>
+<p>Or:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l <i>&lt;image-file&gt;</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">…
+Units = sectors of 1 * <b>512</b> = 512 bytes
+…
+      Device  Boot  Start    End  Blocks  Id  System
+              *        <b>63</b>  19151   9544+   1  FAT12</pre>
+<p>Now you can mount the image:
+</p>
+<pre># mount -oloop,offset=$((63 * 512)) <i>&lt;image-file&gt;</i> /mnt
+</pre>
+<p>Then you can copy your flash utility onto the filesystem as normal.
+Once you're done:
+</p>
+<pre># umount /mnt
+</pre>
+<p>The image can now be copied to a USB stick for booting, or booted as a memdisk as per normal instructions.
+</p>
+<h3><span class="mw-headline" id="Usage_3">Usage</span></h3>
+<p>The OEM Bootdisk version is recommended, as it only includes <code>kernel</code> and <code>command.com</code> thus leaving more space for the flash utility and new BIOS image. Download the <a rel="nofollow" class="external text" href="http://www.fdos.org/bootdisks/autogen/FDOEM.144.gz">FreeDOS image</a> and <a href="../en/Archiving_and_compression.html" class="mw-redirect" title="Decompress">decompress</a> it.
+</p>
+<p>Copy your BIOS flash utility and new BIOS image to the mounted floppy disk image. Load the necessary modules:
+</p>
+<pre># modprobe vfat
+# modprobe loop
+</pre>
+<p><code>/proc/fileystems</code> shows if the needed file systems are supported. "loop mount" the floppy disk image to a temporary path:
+</p>
+<pre>$ mkdir /tmp/floppy
+$ mount -t vfat -o loop FDOEM.144 /tmp/floppy
+</pre>
+<p>If the mount went without errors, copy the BIOS flash utility and new BIOS image to the mounted floppy disk image. You will probably have to unzip the archive you downloaded from your motherboard vendor site, to get to those two files. For example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># unzip 775Dual-VSTA\(2.60\).zip</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Archive: 775Dual-VSTA(2.60).zip
+ inflating: 75DVSTA2.60
+ inflating: ASRflash.exe
+</pre>
+<pre># cp 75DVSTA2.60 ASRflash.exe /tmp/floppy
+</pre>
+<p>Check that the two files were not too big for the floppy:
+</p>
+<pre>Filesystem           1K-blocks      Used Available Use% Mounted on
+ /tmp/FDOEM.144
+                          1424       990       434  70% /tmp/floppy
+</pre>
+<p>Unmount the floppy disk image:
+</p>
+<pre># umount /tmp/floppy
+</pre>
+<p>The next step is to burn the floppy image to a CD/DVD-RW media, but in a way that it can be booted afterwards. First create a bootable CD image, and then burn it.
+</p>
+<pre># genisoimage -o bootcd.iso -b FDOEM.144 FDOEM.144
+# wodim -v bootcd.iso
+</pre>
+<p>You may alternatively add your image to the <a href="../en/GRUB.html" title="GRUB">GRUB</a> menu. Install <a href="../en/Syslinux.html" title="Syslinux">syslinux</a> and copy <code>memdisk</code> and your image to <code>/boot</code>:
+</p>
+<pre># cp /usr/lib/syslinux/memdisk /boot
+# cp FDOEM.144 /boot/flashbios.img
+</pre>
+<p>Now add an entry to <code>/boot/grub/menu.lst</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/grub/menu.lst</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">title Flash BIOS
+kernel /memdisk
+initrd /flashbios.img
+</pre>
+<p>Or for GRUB2 in <code>/boot/grub/grub.cfg</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/grub/grub.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">menuentry "Flash BIOS" {
+ linux16 /boot/memdisk
+ initrd16 /boot/flashbios.img
+}
+</pre>
+<p>Or for syslinux in <code>/boot/syslinux/syslinux.cfg</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">LABEL flashbios
+	MENU LABEL Flash BIOS
+	LINUX ../memdisk
+	INITRD ../fdboot.img
+</pre>
+<p>Finally reboot your machine, making sure the CD drive is first in the boot sequence, and run the BIOS upgrade procedure when the CD boots. If using the GRUB method, choose the new entry on the list, and it should boot into FreeDOS.
+</p>
+<h2><span class="mw-headline" id="Bootable_optical_disk_emulation">Bootable optical disk emulation</span></h2>
+<p>The script Geteltorito.pl will extract the <a href="https://en.wikipedia.org/wiki/El_Torito_(CD-ROM_standard)" class="extiw" title="wikipedia:El Torito (CD-ROM standard)">El Torito</a> boot image. It has worked with Lenovo laptops like the X1 Carbon, X220, X230, X260, X395, W540, T450, T450s and P50. It may work for other vendors as well.
+</p>
+<h3><span class="mw-headline" id="Installation_3">Installation</span></h3>
+<p>Install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/geteltorito/">geteltorito</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h3><span class="mw-headline" id="Usage_4">Usage</span></h3>
+<p>Get the bios update iso from the vendor support site. Run the <i>geteltorito</i> image extraction:
+</p>
+<pre>$ geteltorito.pl -o &lt;image&gt;.img &lt;image&gt;.iso
+</pre>
+<p>Copy the image to the usb thumbdrive:
+</p>
+<pre># dd if=&lt;image&gt;.img of=&lt;destination&gt; bs=512K
+</pre>
+<p>Reboot and boot from the USB drive, follow vendor directions.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you get the message "Secure Flash Authentication failed!", it means that some security check did not allow the flash to happen. It can help to go to the BIOS options page "Security" &gt; "UEFI BIOS Update Option" and disable "Secure RollBack Prevention" and enable "Flash BIOS Updating by End-Users". You can set them to what you want after flashing.</div>
+<h2><span class="mw-headline" id="Using_a_Windows_PE">Using a Windows PE</span></h2>
+<p>If your manufacturer only provides an exe file and you were not successful following the prior advice , you can update your bios creating a Windows PE flash drive and from there flash the bios update as normally.
+</p>
+<h3><span class="mw-headline" id="Usage_5">Usage</span></h3>
+<p>Download a ISO <a href="../en/Windows_PE.html" title="Windows PE">Windows PE</a> to create a bootable drive.
+</p>
+<p>Boot the usb and go to your manufacturer website and download the respective update, and execute normally.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This method was tested on an Acer Laptop, you mileage may vary </div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Mainboards_and_BIOS.html" title="Category:Mainboards and BIOS">Mainboards and BIOS</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Flashing_BIOS_from_Linux&amp;oldid=639373">https://wiki.archlinux.org/index.php?title=Flashing_BIOS_from_Linux&amp;oldid=639373</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 22 October 2020, at 07:11.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

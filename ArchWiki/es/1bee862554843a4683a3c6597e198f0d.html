@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt (Español)/Mounting at login (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_Español_Mounting_at_login_Español rootpage-Dm-crypt_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt (Español)/Mounting at login (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Dm-crypt.html" title="Dm-crypt (Español)">Dm-crypt (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Dm-crypt/Mounting_at_login.html" title="Dm-crypt/Mounting at login">Dm-crypt/Mounting at login</a> revisada por última vez el <b>2018-11-22</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Dm-crypt/Mounting_at_login&amp;diff=0&amp;oldid=543817">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../en/Pam_mount.html" title="Pam mount">pam_mount</a></li>
+</ul>
+</div>
+<p>Es posible configurar <a href="../es/PAM.html" title="PAM (Español)">PAM</a> y <a href="../es/Systemd.html" title="Systemd (Español)">systemd (Español)</a> para montar automáticamente una partición «home» cifrada con <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a> cuando su propietario inicie sesión y desmontarla cuando la cierre.
+</p>
+<p>Este tutorial supone que ya ha creado su partición cifrada, como se describe en <a href="../es/eacc46d0af36777c554adb967e9bcbd1.html" class="mw-redirect" title="Dm-crypt/Encrypting a non-root file system (Español)">Dm-crypt/Encrypting a non-root file system (Español)</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Debe usar la misma contraseña para su cuenta de usuario y para LUKS.</li>
+<li>En todos los ejemplos, reemplace <code><i>SUNOMBRE</i></code> con su nombre de usuario, <code><i>1000</i></code> con su ID de usuario y <code><i>PARTICIÓN</i></code> con el nombre del dispositivo de la partición cifrada.</li>
+</ul>
+</div>
+<h2>
+<span id="Montar_al_iniciar_sesi.C3.B3n"></span><span class="mw-headline" id="Montar_al_iniciar_sesión">Montar al iniciar sesión</span>
+</h2>
+<p><i>pam_exec</i> se puede usar para desbloquear el dispositivo al iniciar sesión. Edite <code>/etc/pam.d/system-login</code> y añada la línea siguiente resaltada en negrita después de <code>auth include system-auth</code>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> GDM, LightDM, y tal vez otros administradores de inicio de sesión podrían requerir <code>pam_exec</code> para <code>session</code> también, vea <a href="../en/Talk:Dm-crypt/Mounting_at_login.html#pam_exec_required_for_session_&amp;_using_script" title="Talk:Dm-crypt/Mounting at login">Talk:Dm-crypt/Mounting at login#pam_exec required for session &amp; using script</a>.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pam.d/system-login</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+
+auth       include    system-auth
+<b>auth       optional   pam_exec.so expose_authtok quiet /usr/bin/cryptsetup open /dev/<i>PARTICIÓN</i> home-<i>SUNOMBRE</i></b>
+
+...</pre>
+<p>Ahora edite <code>/etc/fstab</code> para montar el dispositivo desbloqueado utilizando <a href="../en/Fstab.html#Automount_with_systemd" title="Fstab">systemd.automount</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+
+/dev/mapper/home-<i>SUNOMBRE</i>  /home/<i>SUNOMBRE</i>     ext4            rw,noatime,noauto,x-systemd.automount 0 2
+
+...</pre>
+<p>Su directorio «home» se montará automáticamente en el primer acceso realizado por su entorno de escritorio o intérprete de órdenes.
+</p>
+<h2>
+<span id="Desmontar_al_cerrar_sesi.C3.B3n"></span><span class="mw-headline" id="Desmontar_al_cerrar_sesión">Desmontar al cerrar sesión</span>
+</h2>
+<p>Después de cerrar todas sus sesiones, <i>systemd-logind</i> cierra automáticamente <code>user@<i>1000</i>.service</code>. Por lo tanto, puede especificar qué punto de montaje se requerirá y <i>systemd</i> lo desmontará automáticamente:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/home-<i>SUNOMBRE</i>.mount.d/logout.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Requires=user@<i>1000</i>.service</pre>
+<p>Sin embargo, esto creará un bucle de dependencia circular que no puede resolverse automáticamente por <i> systemd </i>, por lo que debe describir las dependencias y ordenarlas de forma explícita:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/user@<i>1000</i>.service.d/homedir.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Requires=home-<i>SUNOMBRE</i>.mount
+After=home-<i>SUNOMBRE</i>.mount</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Si su entorno de escritorio o alguna otra aplicación no cancela todos sus procesos al cerrar la sesión, es posible que deba establecer <code>KillUserProcesses=yes</code> en <code>/etc/systemd/logind.conf</code>.</div>
+<h3><span class="mw-headline" id="Bloquear">Bloquear</span></h3>
+<p>Después de desmontar, el dispositivo seguirá desbloqueado, y será posible montarlo sin volver a ingresar la contraseña. Puede configurar y <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">activar</a> un servicio que se inicie cuando el dispositivo se desbloquea (<code>BindsTo=dev-mapper-home\x2d<i>SUNOMBRE</i>.device</code>) y expire después de que el dispositivo se desmonta (<code>Requires,Before=home-<i>SUNOMBRE</i>.mount</code>),  bloqueando el dispositivo en el proceso (<code>ExecStop=cryptsetup close</code>):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/cryptsetup-<i>SUNOMBRE</i>.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+DefaultDependencies=no
+BindsTo=dev-<i>PARTICIÓN</i>.device
+After=dev-<i>PARTICIÓN</i>.device
+BindsTo=dev-mapper-home\x2d<i>SUNOMBRE</i>.device
+Requires=home-<i>SUNOMBRE</i>.mount
+Before=home-<i>SUNOMBRE</i>.mount
+Conflicts=umount.target
+Before=umount.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutSec=0
+ExecStop=/usr/bin/cryptsetup close home-<i>SUNOMBRE</i>
+
+[Install]
+RequiredBy=dev-mapper-home\x2d<i>SUNOMBRE</i>.device</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> <code>dev-<i>PARTICIÓN</i></code> es el resultado de <code>systemd-escape -p /dev/<i>PARTICIÓN</i></code>
+</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption (Español)">Data-at-rest encryption (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt_(Espa%C3%B1ol)/Mounting_at_login_(Espa%C3%B1ol)&amp;oldid=615519">https://wiki.archlinux.org/index.php?title=Dm-crypt_(Español)/Mounting_at_login_(Español)&amp;oldid=615519</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 24 May 2020, at 15:09.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

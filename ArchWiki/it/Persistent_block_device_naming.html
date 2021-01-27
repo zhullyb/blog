@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Persistent block device naming (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Persistent_block_device_naming_Italiano rootpage-Persistent_block_device_naming_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Persistent block device naming (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Articoli correlati</p>
+<ul>
+<li><a href="../it/Fstab.html" title="Fstab (Italiano)">fstab (Italiano)</a></li>
+<li><a href="../it/LVM.html" title="LVM (Italiano)">LVM (Italiano)</a></li>
+</ul>
+</div>
+<p>Questo articolo descrive come utilizzare dei nomi univoci e non modificabili per l'identificazione delle periferiche(o partizioni). Questo è stato reso possibile con l'introduzione di udev, e risulta vantaggioso anche rispetto ai nomi basati sul bus di connessione. Se la macchina ha più di un controller per i dischi SATA, SCSI o IDE, può succedere che l'ordine dei file nodo creati sia casuale. Questo può comportare ad esempio che le periferiche <code>/dev/<b>sda</b></code> ed <code>/dev/<b>sdb</b></code> siano invertite in modo casuale ad ogni avvio, impedendo al sistema di avviarsi, oppure determinando la scomparsa dei dispositivi a blocchi che vengono erroneamente rilevati. L'uso di nomi univoci risolve quindi il problema.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Non è necessario seguire questa guida nel caso in cui si stia utilizzando <a href="../it/LVM.html" title="LVM (Italiano)">LVM2</a>, dato che LVM2 si occupa anche di questo automaticamente.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Metodi_di_nomenclatura_univoca"><span class="tocnumber">1</span> <span class="toctext">Metodi di nomenclatura univoca</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#By-label"><span class="tocnumber">1.1</span> <span class="toctext">By-label</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#By-uuid"><span class="tocnumber">1.2</span> <span class="toctext">By-uuid</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#By-id_e_by-path"><span class="tocnumber">1.3</span> <span class="toctext">By-id e by-path</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Utilizzare_i_nomi_univoci"><span class="tocnumber">2</span> <span class="toctext">Utilizzare i nomi univoci</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#fstab"><span class="tocnumber">2.1</span> <span class="toctext">fstab</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Boot_manager"><span class="tocnumber">2.2</span> <span class="toctext">Boot manager</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Metodi_di_nomenclatura_univoca">Metodi di nomenclatura univoca</span></h2>
+<p>Ci sono quattro differenti modi per assegnare dei nomi univoci alle periferiche:by-label,by-uuid,by-id e by-path. Nei paragrafi successivi verranno descritte le differenze tra i vari metodi e come vengono utilizzati.
+</p>
+<h3><span class="mw-headline" id="By-label">By-label</span></h3>
+<p>Quasi tutti i filesystem supportano le etichette. Tutte le partizioni che ne hanno una sono elencate nella cartella <code>/dev/disk/by-label</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  Questa cartella viene creata (e rimossa) dinamicamente, a seconda delle partizioni presenti ed aventi una etichetta.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -lF /dev/disk/by-label</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 data -&gt; ../../sdb2
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 data2 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 fat -&gt; ../../sda6
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 home -&gt; ../../sda7
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 root -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 swap -&gt; ../../sda5
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 windows -&gt; ../../sdb1
+</pre>
+<p>Le etichette possono essere cambiate utilizzando i seguenti comandi:
+</p>
+<dl>
+<dt>swap</dt>
+<dd></dd>
+</dl>
+<pre># mkswap -L &lt;label&gt; /dev/XXX
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Attenzione:</strong>  Questo comando cancellerà l'area di swap.</div>
+<p> Se la swap è montata, eseguire <code>swapoff /dev/XXX</code> prima e <code>swapon /dev/XXX</code> dopo.
+</p>
+<dl>
+<dt>ext2/ext3/ext4</dt>
+<dd></dd>
+</dl>
+<pre># e2label /dev/XXX &lt;label&gt;
+</pre>
+<dl>
+<dt>btrfs</dt>
+<dd></dd>
+</dl>
+<pre># btrfs filesystem label /dev/XXX &lt;label&gt;
+</pre>
+<dl>
+<dt>reiserfs</dt>
+<dd></dd>
+</dl>
+<pre># reiserfstune -l &lt;label&gt; /dev/XXX
+</pre>
+<dl>
+<dt>jfs</dt>
+<dd></dd>
+</dl>
+<pre># jfs_tune -L &lt;label&gt; /dev/XXX
+</pre>
+<dl>
+<dt>xfs</dt>
+<dd></dd>
+</dl>
+<pre># xfs_admin -L &lt;label&gt; /dev/XXX
+</pre>
+<dl>
+<dt>fat/vfat (contenuto nel pacchetto mtools)</dt>
+<dd></dd>
+</dl>
+<pre># mlabel -i /dev/XXX ::&lt;label&gt;
+</pre>
+<dl>
+<dt>ntfs (contenuto nel pacchetto <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntfs-3g">ntfs-3g</a></span>)</dt>
+<dd></dd>
+</dl>
+<pre># ntfslabel /dev/XXX &lt;label&gt;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Attenzione:</strong> Le etichette dovranno essere uniche per rendere efficace questo metodo, e non superare i 16 caratteri.</div>
+<h3><span class="mw-headline" id="By-uuid">By-uuid</span></h3>
+<p>Gli <a href="https://en.wikipedia.org/wiki/UUID" class="extiw" title="wikipedia:UUID">UUID</a>, ovvero <i>Universally Unique Identifier(identificatore unico universale)</i>, è un meccanismo che assegna ad ogni filesystem un identificatore unico. Esso è studiato in modo da evitare conflitti. Tutti i filesystem GNU/Linux (inclusa l'area di swap) supportano gli UUID. I filesystem FAT ed NTFS non supportano gli UUID, ma sono comunque elencate in <code>/dev/disk/by-uuid</code> con un identificatore unico:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -lF /dev/disk/by-uuid/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 2d781b26-0285-421a-b9d0-d4a0d3b55680 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 31f8eb0d-612b-4805-835e-0e6d8b8c5591 -&gt; ../../sda7
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 3FC2-3DDB -&gt; ../../sda6
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 5090093f-e023-4a93-b2b6-8a9568dd23dc -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 912c7844-5430-4eea-b55c-e23f8959a8ee -&gt; ../../sda5
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 B0DC1977DC193954 -&gt; ../../sdb1
+lrwxrwxrwx 1 root root 10 Oct 16 10:27 bae98338-ec29-4beb-aacf-107e44599b2e -&gt; ../../sdb2
+</pre>
+<p>Come si può notare, le partizioni FAT ed NTFS (le partizioni aventi etichetta <i>fat</i> e <i>windows</i> nell'esempio precedente) hanno nomi più corti, ma vengono comunque elencate. Il vantaggio nell'uso degli UUID sta nel fatto che è molto meno probabile avere conflitti rispetto al metodo delle etichette. Uno svantaggio è invece che i nomi sono molto meno immediati da leggere o ricordare.
+</p>
+<h3><span class="mw-headline" id="By-id_e_by-path">By-id e by-path</span></h3>
+<p>In <code>by-id</code> viene creato un nome dipendente dal numero seriale dell'hardware. In <code>by-path</code> invece viene creato un nome unico dipendente dal più corto percorso fisico (secondo sysfs).
+In entrambi i percorsi sono contenute delle stringhe per indicare il tipo a cui appartengono(es. "-ide-" in 'by-path', ed "-ata-" in 'by-id'), comunque entrambi i  metodi non sono adatti alla risoluzione del problema menzionato all'inizio dell'articolo. Non saranno quindi approfonditi oltre.
+</p>
+<h2><span class="mw-headline" id="Utilizzare_i_nomi_univoci">Utilizzare i nomi univoci</span></h2>
+<p>A seconda del metodo scelto, ecco come abilitarlo sul proprio sistema:
+</p>
+<h3><span class="mw-headline" id="fstab">fstab</span></h3>
+<p>Per abilitare i nomi univoci in <code>/etc/fstab</code> sostituire il nome della periferica assegnata dal kernel nella prima colonna con il corrispondente percorso:
+</p>
+<pre>/dev/disk/by-label/home ...
+/dev/disk/by-uuid/31f8eb0d-612b-4805-835e-0e6d8b8c5591 ...
+</pre>
+<p>oppure specificare direttamente il nome univoco usando un prefisso:
+</p>
+<pre>LABEL=home ...
+UUID=1f8eb0d-612b-4805-835e-0e6d8b8c5591 ...
+</pre>
+<h3><span class="mw-headline" id="Boot_manager">Boot manager</span></h3>
+<p>Per usare i nomi univoci nel proprio boot manager, sarà necessario soddisfare i seguenti requisiti:
+</p>
+<ul>
+<li>Il sistema usa un initramfs creato mediante <a href="../it/Mkinitcpio.html" title="Mkinitcpio (Italiano)">mkinitcpio</a>
+</li>
+<li>Nel file <code>/etc/mkinitcpio.conf</code> sia abilitato l'hook udev</li>
+<li>L'immagine initramfs è stata generata, con una versione di <i>klibc-udev</i> superiore alla <b>101-3</b>(<b>con le versioni precedenti i nomi univoci non funzionano correttamente.</b>). Se si aggiorna <i>klibc-udev</i> da una versione precedente e si intende usare i nomi univoci, rigenerare l'immagine initramfs prima di riavviare.</li>
+</ul>
+<p>Nell'esempio precedente, <code>/dev/sda1</code> è la partizione di root. Nel file <code>/boot/grub/menu.lst</code> di <a href="../it/GRUB_Legacy.html" title="GRUB Legacy (Italiano)">GRUB Legacy</a>, la riga <i>kernel</i> sarà simile a questa:
+</p>
+<pre>kernel /boot/vmlinuz-linux root=/dev/sda1 ro quiet
+</pre>
+<p>A seconda del metodo che si intende utilizzare, cambiare la riga come una delle seguenti:
+</p>
+<pre>kernel /boot/vmlinuz-linux root=/dev/disk/by-label/root ro quiet
+</pre>
+<p>oppure
+</p>
+<pre>kernel /boot/vmlinuz-linux root=/dev/disk/by-uuid/2d781b26-0285-421a-b9d0-d4a0d3b55680 ro quiet
+</pre>
+<p>Se si usa <a href="../en/LILO.html" title="LILO">LILO</a>, non inserire il nome univoco nell'opzione <code>root=...</code>, non funzionerebbe. Sarà invece necessario usare le opzioni <code>append="root=..."</code> o <code>addappend="root=..."</code>. Consultare il manuale di LILO per maggiori informazioni riguardo alle opzioni <i>append</i> ed <i>addappend</i>.
+</p>
+<p>C'è un metodo alternativo per usare le etichette dei filesystem. Ad esempio se (come nell'esempio) il filesystem <code>/dev/sda1</code> ha l'etichetta "root", sarà possibile usare la seguente linea in GRUB:
+</p>
+<pre> kernel /boot/vmlinuz-linux root=LABEL=root ro quiet
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../it/Category:Boot_process.html" title="Category:Boot process (Italiano)">Boot process (Italiano)</a></li>
+<li><a href="../it/Category:File_systems.html" title="Category:File systems (Italiano)">File systems (Italiano)</a></li>
+<li><a href="../it/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting (Italiano)">Hardware detection and troubleshooting (Italiano)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Persistent_block_device_naming_(Italiano)&amp;oldid=612047">https://wiki.archlinux.org/index.php?title=Persistent_block_device_naming_(Italiano)&amp;oldid=612047</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 10 May 2020, at 09:12.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

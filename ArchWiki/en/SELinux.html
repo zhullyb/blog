@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>SELinux - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-SELinux rootpage-SELinux skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">SELinux</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Security.html" title="Security">Security</a></li>
+<li><a href="../en/AppArmor.html" title="AppArmor">AppArmor</a></li>
+<li><a href="../en/TOMOYO_Linux.html" title="TOMOYO Linux">TOMOYO Linux</a></li>
+</ul>
+</div>
+<p>Security-Enhanced Linux (SELinux) is a Linux feature that provides a variety of security policies, including U.S. Department of Defense style <a href="../en/Security.html#Mandatory_access_control" class="mw-redirect" title="Mandatory Access Control">Mandatory Access Control</a> (MAC), through the use of Linux Security Modules (LSM) in the Linux kernel. It is not a Linux distribution, but rather a set of modifications that can be applied to Unix-like operating systems, such as Linux and BSD.
+</p>
+<p>Running SELinux under a Linux distribution requires three things: An SELinux enabled kernel, SELinux Userspace tools and libraries, and SELinux Policies (mostly based on the Reference Policy). Some common Linux programs will also need to be patched/compiled with SELinux features.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Current_status_in_Arch_Linux"><span class="tocnumber">1</span> <span class="toctext">Current status in Arch Linux</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Concepts:_Mandatory_Access_Controls"><span class="tocnumber">2</span> <span class="toctext">Concepts: Mandatory Access Controls</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Installing_SELinux"><span class="tocnumber">3</span> <span class="toctext">Installing SELinux</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#Package_description"><span class="tocnumber">3.1</span> <span class="toctext">Package description</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#SELinux_aware_system_utilities"><span class="tocnumber">3.1.1</span> <span class="toctext">SELinux aware system utilities</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#SELinux_userspace_utilities"><span class="tocnumber">3.1.2</span> <span class="toctext">SELinux userspace utilities</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#SELinux_policy_packages"><span class="tocnumber">3.1.3</span> <span class="toctext">SELinux policy packages</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Other_SELinux_tools"><span class="tocnumber">3.1.4</span> <span class="toctext">Other SELinux tools</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Installation"><span class="tocnumber">3.2</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#Via_AUR"><span class="tocnumber">3.2.1</span> <span class="toctext">Via AUR</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#Using_the_GitHub_repository"><span class="tocnumber">3.2.2</span> <span class="toctext">Using the GitHub repository</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12">
+<a href="#Changing_boot_loader_configuration"><span class="tocnumber">3.3</span> <span class="toctext">Changing boot loader configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#GRUB"><span class="tocnumber">3.3.1</span> <span class="toctext">GRUB</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Syslinux"><span class="tocnumber">3.3.2</span> <span class="toctext">Syslinux</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#systemd-boot"><span class="tocnumber">3.3.3</span> <span class="toctext">systemd-boot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16"><a href="#Checking_PAM"><span class="tocnumber">3.4</span> <span class="toctext">Checking PAM</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Installing_a_policy"><span class="tocnumber">3.5</span> <span class="toctext">Installing a policy</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Testing_in_a_Vagrant_virtual_machine"><span class="tocnumber">3.6</span> <span class="toctext">Testing in a Vagrant virtual machine</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#Post-installation_steps"><span class="tocnumber">4</span> <span class="toctext">Post-installation steps</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#Swapfiles"><span class="tocnumber">4.1</span> <span class="toctext">Swapfiles</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21"><a href="#Working_with_SELinux"><span class="tocnumber">5</span> <span class="toctext">Working with SELinux</span></a></li>
+<li class="toclevel-1 tocsection-22">
+<a href="#Troubleshooting"><span class="tocnumber">6</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-23"><a href="#Useful_tools"><span class="tocnumber">6.1</span> <span class="toctext">Useful tools</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Reporting_issues"><span class="tocnumber">6.2</span> <span class="toctext">Reporting issues</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Current_status_in_Arch_Linux">Current status in Arch Linux</span></h2>
+<p>SELinux is not officially supported (see <a rel="nofollow" class="external autonumber" href="https://lists.archlinux.org/pipermail/arch-general/2013-October/034352.html">[1]</a><a rel="nofollow" class="external autonumber" href="https://lists.archlinux.org/pipermail/arch-general/2017-February/043149.html">[2]</a>). The status of unofficial support is:
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Name</th>
+<th>Status</th>
+<th>Available at
+</th>
+</tr>
+<tr>
+<td>SELinux enabled kernel</td>
+<td>Implemented for <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-zen">linux-zen</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-hardened">linux-hardened</a></span>
+</td>
+<td>Available in official repositories since <a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages/commit/c46609a4b0325c363455264844091b71de01eddc">4.18.8</a>.
+</td>
+</tr>
+<tr>
+<td>SELinux Userspace tools and libraries</td>
+<td>Implemented in AUR: <a rel="nofollow" class="external free" href="https://aur.archlinux.org/packages/?O=0&amp;K=selinux">https://aur.archlinux.org/packages/?O=0&amp;K=selinux</a>
+</td>
+<td>Work is done at <a rel="nofollow" class="external free" href="https://github.com/archlinuxhardened/selinux">https://github.com/archlinuxhardened/selinux</a>
+</td>
+</tr>
+<tr>
+<td>SELinux Policy</td>
+<td>Work in progress, using <a rel="nofollow" class="external text" href="https://github.com/SELinuxProject/refpolicy">Reference Policy</a> as upstream</td>
+<td>Upstream: <a rel="nofollow" class="external free" href="https://github.com/SELinuxProject/refpolicy">https://github.com/SELinuxProject/refpolicy</a> (since release 20170805 the policy has integrated support for systemd and single-/usr/bin directory)
+</td>
+</tr>
+</tbody>
+</table>
+<p>Summary of changes in AUR as compared to official core packages:
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Name</th>
+<th>Status and comments
+</th>
+</tr>
+<tr>
+<td>linux</td>
+<td>Need following <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a> at boot: <code>selinux=1 security=selinux</code>
+</td>
+</tr>
+<tr>
+<td>linux-hardened</td>
+<td>Need following <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a> at boot: <code>selinux=1 security=selinux</code>
+</td>
+</tr>
+<tr>
+<td>coreutils</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag to link with libselinux
+</td>
+</tr>
+<tr>
+<td>cronie</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>dbus</td>
+<td>Need a rebuild with <code>--enable-libaudit</code> and <code>--enable-selinux</code> flags
+</td>
+</tr>
+<tr>
+<td>findutils</td>
+<td>Need a rebuild with libselinux installed to enable SELinux-specific options
+</td>
+</tr>
+<tr>
+<td>iproute2</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>logrotate</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>openssh</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>pam</td>
+<td>Need a rebuild with <code>--enable-selinux</code> flag for Linux-PAM ; Need a patch for pam_unix2, which only removes a function already implemented in a recent versions of libselinux
+</td>
+</tr>
+<tr>
+<td>pambase</td>
+<td>Configuration changes to add pam_selinux.so to <code>/etc/pam.d/system-login</code>
+</td>
+</tr>
+<tr>
+<td>psmisc</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>shadow</td>
+<td>Need a rebuild with <code>--with-selinux</code> flags
+</td>
+</tr>
+<tr>
+<td>sudo</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+<tr>
+<td>systemd</td>
+<td>Need a rebuild with <code>--enable-audit</code> and <code>--enable-selinux</code> flags
+</td>
+</tr>
+<tr>
+<td>util-linux</td>
+<td>Need a rebuild with <code>--with-selinux</code> flag
+</td>
+</tr>
+</tbody>
+</table>
+<p>All of the other SELinux-related packages may be included without changes nor risks.
+</p>
+<h2><span class="mw-headline" id="Concepts:_Mandatory_Access_Controls">Concepts: Mandatory Access Controls</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This section is meant for beginners. If you know what SELinux does and how it works, feel free to skip ahead to the installation.</div>
+<p>Before you enable SELinux, it is worth understanding what it does. Simply and succinctly, SELinux enforces <i>Mandatory Access Controls (MACs)</i> on Linux. In contrast to SELinux, the traditional user/group/rwx permissions are a form of <i>Discretionary Access Control (DAC)</i>. MACs are different from DACs because security policy and its execution are completely separated.
+</p>
+<p>An example would be the use of the <i>sudo</i> command. When DACs are enforced, sudo allows temporary privilege escalation to root, giving the process so spawned unrestricted systemwide access. However, when using MACs, if the security administrator deems the process to have access only to a certain set of files, then no matter what the kind of privilege escalation used, unless the security policy itself is changed, the process will remain constrained to simply that set of files. So if <i>sudo</i> is tried on a machine with SELinux running in order for a process to gain access to files its policy does not allow, it will fail.
+</p>
+<p>Another set of examples are the traditional (-rwxr-xr-x) type permissions given to files. When under DAC, these are user-modifiable. However, under MAC, a security administrator can choose to freeze the permissions of a certain file by which it would become impossible for any user to change these permissions until the policy regarding that file is changed.
+</p>
+<p>As you may imagine, this is particularly useful for processes which have the potential to be compromised, i.e. web servers and the like. If DACs are used, then there is a particularly good chance of havoc being wreaked by a compromised program which has access to privilege escalation.
+</p>
+<p>For further information, visit <a href="https://en.wikipedia.org/wiki/Mandatory_access_control" class="extiw" title="wikipedia:Mandatory access control">wikipedia:Mandatory access control</a>.
+</p>
+<h2><span class="mw-headline" id="Installing_SELinux">Installing SELinux</span></h2>
+<h3><span class="mw-headline" id="Package_description">Package description</span></h3>
+<p>All SELinux related packages belong to the <i>selinux</i> group in the AUR.
+</p>
+<h4><span class="mw-headline" id="SELinux_aware_system_utilities">SELinux aware system utilities</span></h4>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/coreutils-selinux/">coreutils-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Modified coreutils package compiled with SELinux support enabled. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=coreutils">coreutils</a></span> package</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cronie-selinux/">cronie-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Fedora fork of Vixie cron with SELinux enabled. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cronie">cronie</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dbus-selinux/">dbus-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>An SELinux aware version of <a href="../en/D-Bus.html" title="D-Bus">D-Bus</a>. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dbus">dbus</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/findutils-selinux/">findutils-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Patched findutils package compiled with SELinux support to make searching of files with specified security context possible. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=findutils">findutils</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/iproute2-selinux/">iproute2-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>iproute2 package compiled with SELinux support; for example, it adds the <code>-Z</code> option to <code>ss</code>. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iproute2">iproute2</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/logrotate-selinux/">logrotate-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Logrotate package compiled with SELinux support. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=logrotate">logrotate</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/openssh-selinux/">openssh-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>
+<a href="../en/OpenSSH.html" title="OpenSSH">OpenSSH</a> package compiled with SELinux support to set security context for user sessions. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openssh">openssh</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pam-selinux/">pam-selinux</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pambase-selinux/">pambase-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>PAM package with pam_selinux.so. and the underlying base package. They replace the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pam">pam</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pambase">pambase</a></span> packages respectively.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/psmisc-selinux/">psmisc-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Psmisc package compiled with SELinux support; for example, it adds the <code>-Z</code> option to <code>killall</code>. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=psmisc">psmisc</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/shadow-selinux/">shadow-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Shadow package compiled with SELinux support; contains a modified <code>/etc/pam.d/login</code> file to set correct security context for user after login. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=shadow">shadow</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/sudo-selinux/">sudo-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Modified <a href="../en/Sudo.html" title="Sudo">sudo</a> package compiled with SELinux support which sets the security context correctly. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sudo">sudo</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-selinux/">systemd-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>An SELinux aware version of <a href="../en/Systemd.html" title="Systemd">Systemd</a>. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> package.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/util-linux-selinux/">util-linux-selinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Modified util-linux package compiled with SELinux support enabled. It replaces the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span> package.</dd>
+</dl>
+<h4><span class="mw-headline" id="SELinux_userspace_utilities">SELinux userspace utilities</span></h4>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/checkpolicy/">checkpolicy</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Tools to build SELinux policy</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mcstrans/">mcstrans</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Daemon which is used by libselinux to translate MCS labels</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libselinux/">libselinux</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Library for security-aware applications. Python bindings needed for <i>semanage</i> and <i>setools</i> now included.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libsemanage/">libsemanage</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Library for policy management. Python bindings needed for <i>semanage</i> and <i>setools</i> now included.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libsepol/">libsepol</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Library for binary policy manipulation.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/policycoreutils/">policycoreutils</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>SELinux core utils such as newrole, setfiles, etc.</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/restorecond/">restorecond</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Daemon which maintains the label of some files</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/secilc/">secilc</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Compiler for SELinux policies written in CIL (Common Intermediate Language)</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-dbus-config/">selinux-dbus-config</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>DBus service which allows managing SELinux configuration</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-gui/">selinux-gui</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>SELinux GUI tools (system-config-selinux)</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-python/">selinux-python</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-python2/">selinux-python2</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>SELinux python tools and libraries (semanage, sepolgen, sepolicy, etc.)</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-sandbox/">selinux-sandbox</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Sandboxing tool for SELinux</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/semodule-utils/">semodule-utils</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Tools to handle SELinux modules when building a policy</dd>
+</dl>
+<h4><span class="mw-headline" id="SELinux_policy_packages">SELinux policy packages</span></h4>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-src/">selinux-refpolicy-src</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Reference policy sources</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-git/">selinux-refpolicy-git</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Reference policy git master (<a rel="nofollow" class="external free" href="https://github.com/SELinuxProject/refpolicy">https://github.com/SELinuxProject/refpolicy</a>) built with configuration specific for Arch Linux</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-arch/">selinux-refpolicy-arch</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>Precompiled modular Reference policy with headers and documentation but without sources. Development Arch Linux Refpolicy patches included, which fixes issues related to path labeling and systemd support. These patches are also sent to Reference Policy maintainers and their inclusion in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-arch/">selinux-refpolicy-arch</a></span><sup><small>AUR</small></sup> is mainly a way to perform updates between Refpolicy releases.</dd>
+</dl>
+<h4><span class="mw-headline" id="Other_SELinux_tools">Other SELinux tools</span></h4>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/setools/">setools</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>CLI and GUI tools to manage SELinux</dd>
+</dl>
+<dl>
+<dt>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-alpm-hook/">selinux-alpm-hook</a></span><sup><small>AUR</small></sup>
+</dt>
+<dd>pacman hook to label files accordingly to SELinux policy when installing and updating packages</dd>
+</dl>
+<h3><span class="mw-headline" id="Installation">Installation</span></h3>
+<p>There are two methods to install the requisite SELinux packages.
+</p>
+<h4><span class="mw-headline" id="Via_AUR">Via AUR</span></h4>
+<ul>
+<li>First, install SELinux userspace tools and libraries, in this order (because of the dependencies): <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libsepol/">libsepol</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libselinux/">libselinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/checkpolicy/">checkpolicy</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/secilc/">secilc</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/setools/">setools</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libsemanage/">libsemanage</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/semodule-utils/">semodule-utils</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/policycoreutils/">policycoreutils</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-python/">selinux-python</a></span><sup><small>AUR</small></sup> (which depends on <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-ipy">python-ipy</a></span>), <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mcstrans/">mcstrans</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/restorecond/">restorecond</a></span><sup><small>AUR</small></sup>.</li>
+<li>Then install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pambase-selinux/">pambase-selinux</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pam-selinux/">pam-selinux</a></span><sup><small>AUR</small></sup> and make sure you can login again after the installation completed, because files in <code>/etc/pam.d/</code> got removed and created when <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pambase">pambase</a></span> got replaced with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pambase-selinux/">pambase-selinux</a></span><sup><small>AUR</small></sup>.</li>
+<li>Next you can recompile some core packages by installing: <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/coreutils-selinux/">coreutils-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/findutils-selinux/">findutils-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/iproute2-selinux/">iproute2-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/logrotate-selinux/">logrotate-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/openssh-selinux/">openssh-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/psmisc-selinux/">psmisc-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/shadow-selinux/">shadow-selinux</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cronie-selinux/">cronie-selinux</a></span><sup><small>AUR</small></sup>
+</li>
+<li>Next, backup your <code>/etc/sudoers</code> file. Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/sudo-selinux/">sudo-selinux</a></span><sup><small>AUR</small></sup> and restore your <code>/etc/sudoers</code> (it is overridden when this package is installed as a replacement of <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sudo">sudo</a></span>).</li>
+<li>Next come util-linux and systemd. Because of a cyclic makedepends between these two packages which will not be fixed (<a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/39767">FS#39767</a>), you need to build the source package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-selinux/">systemd-selinux</a></span><sup><small>AUR</small></sup>, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-libs-selinux/">systemd-libs-selinux</a></span><sup><small>AUR</small></sup>, build and install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/util-linux-selinux/">util-linux-selinux</a></span><sup><small>AUR</small></sup> (with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libutil-linux-selinux/">libutil-linux-selinux</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup>) and rebuild and install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-selinux/">systemd-selinux</a></span><sup><small>AUR</small></sup>.</li>
+<li>Next, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dbus-selinux/">dbus-selinux</a></span><sup><small>AUR</small></sup>.</li>
+<li>Next, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-alpm-hook/">selinux-alpm-hook</a></span><sup><small>AUR</small></sup> in order to run restorecon every time pacman installs a package.</li>
+</ul>
+<p>After all these steps, you can install a SELinux kernel (like <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>) and a policy (like <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-arch/">selinux-refpolicy-arch</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-git/">selinux-refpolicy-git</a></span><sup><small>AUR</small></sup>).
+</p>
+<h4><span class="mw-headline" id="Using_the_GitHub_repository">Using the GitHub repository</span></h4>
+<p>All packages are maintained at <a rel="nofollow" class="external free" href="https://github.com/archlinuxhardened/selinux">https://github.com/archlinuxhardened/selinux</a> . This repository also contains a script named <code>build_and_install_all.sh</code> which builds and installs (or updates) all packages in the needed order. Here is an example of a way this script can be used in a user shell to install all packages (with downloading the GPG keys which are used to verify the source tarballs of the package):
+</p>
+<pre> git clone <a rel="nofollow" class="external free" href="https://github.com/archlinuxhardened/selinux">https://github.com/archlinuxhardened/selinux</a>
+ cd selinux
+ ./recv_gpg_keys.sh
+ ./build_and_install_all.sh
+</pre>
+<p>Of course, it is possible to modify the content of <code>build_and_install_all.sh</code> before running it, for example if you already have SELinux support in your kernel.
+</p>
+<h3><span class="mw-headline" id="Changing_boot_loader_configuration">Changing boot loader configuration</span></h3>
+<p>If you have installed a new kernel, make sure that you update your bootloader accordingly to boot on it. Moreover you may need to add <code>security=selinux selinux=1</code> to the kernel command line. More precisely, if the kernel configuration does not set <code>CONFIG_DEFAULT_SECURITY_SELINUX</code>, <code>security=selinux</code> is needed, and if it contains <code>CONFIG_SECURITY_SELINUX_BOOTPARAM=y</code> <code>CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0</code>, <code>selinux=1</code> is needed.
+</p>
+<h4><span class="mw-headline" id="GRUB">GRUB</span></h4>
+<p>Add <code>security=selinux selinux=1</code> to <code>GRUB_CMDLINE_LINUX_DEFAULT</code> variable in <code>/etc/default/grub</code>
+Run the following command:
+</p>
+<pre># grub-mkconfig -o /boot/grub/grub.cfg
+</pre>
+<h4><span class="mw-headline" id="Syslinux">Syslinux</span></h4>
+<p>Change your syslinux.cfg file by adding:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/syslinux/syslinux.cfg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">LABEL arch-selinux
+         LINUX ../vmlinuz-linux-selinux
+         APPEND root=/dev/sda2 ro security=selinux selinux=1
+         INITRD ../initramfs-linux-selinux.img</pre>
+<p>at the end. Change "linux-selinux" to whatever kernel you are using.
+</p>
+<h4><span class="mw-headline" id="systemd-boot">systemd-boot</span></h4>
+<p>Create a new loader entry, for example in <code>/boot/loader/entries/arch-selinux.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/loader/entries/arch-selinux.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">title Arch Linux SELinux
+linux /vmlinuz-linux-selinux
+initrd /initramfs-linux-selinux.img
+options root=/dev/sda2 ro selinux=1 security=selinux</pre>
+<h3><span class="mw-headline" id="Checking_PAM">Checking PAM</span></h3>
+<p>A correctly set-up <a href="../en/PAM.html" title="PAM">PAM</a> is important to get the proper security context after login. Check for the presence of the following lines in <code>/etc/pam.d/system-login</code>:
+</p>
+<pre># pam_selinux.so close should be the first session rule
+session         required        pam_selinux.so close</pre>
+<pre># pam_selinux.so open should only be followed by sessions to be executed in the user context
+session         required        pam_selinux.so open</pre>
+<h3><span class="mw-headline" id="Installing_a_policy">Installing a policy</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The reference policy as given by <a rel="nofollow" class="external text" href="https://github.com/SELinuxProject/refpolicy/wiki">SELinuxProject</a> is not very good for Arch Linux, as before release 20170805 almost no file were labelled correctly. The major problems were:
+<ul>
+<li>
+<code>/lib</code> and <code>/usr/lib</code> were considered different (and also <code>/bin</code>, <code>/sbin</code>, <code>/usr/bin</code> and <code>/usr/sbin</code>). This introduced some instability when applying labels to the whole system, as files in these folders might be seen with 2 (or 4) different labels.</li>
+<li>systemd was not yet supported (C. PeBenito, main developer of the refpolicy, announced its willingness to work on it in its github repository in October 2014, <a rel="nofollow" class="external free" href="http://oss.tresys.com/pipermail/refpolicy/2014-October/007430.html">http://oss.tresys.com/pipermail/refpolicy/2014-October/007430.html</a>)</li>
+</ul>
+Since refpolicy release 20170805 these two points have been addressed, but most people submitting patches to improve the policy use an other distribution (Debian, Gentoo, RHEL, etc.). Therefore the compatibility with Arch Linux packages is not perfect (for example the policy may not support the most recent features of a program). </div>
+<p>Policies are the mainstay of SELinux. They are what govern its behaviour. The only policy currently available in the AUR is the Reference Policy. In order to install it, you should use the source files, which may be got from the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/selinux-refpolicy-src/">selinux-refpolicy-src</a></span><sup><small>AUR</small></sup> or by downloading the latest release on <a rel="nofollow" class="external free" href="https://github.com/SELinuxProject/refpolicy/wiki/DownloadRelease#current-release">https://github.com/SELinuxProject/refpolicy/wiki/DownloadRelease#current-release</a>. When using the AUR package, navigate to <code>/etc/selinux/refpolicy/src/policy</code> and run the following commands:
+</p>
+<pre># make bare
+# make conf
+# make install</pre>
+<p>to install the reference policy as it is. Those who know how to write SELinux policies can tweak them to their heart's content before running the commands written above. The command takes a while to do its job and taxes one core of your system completely, so do not worry. Just sit back and let the command run for as long as it takes.
+</p>
+<p>To load the reference policy run:
+</p>
+<pre># make load</pre>
+<p>Then, make the file <code>/etc/selinux/config</code> with the following contents (Only works if you used the defaults as mentioned above. If you decided to change the name of the policy, you need to tweak the file):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/selinux/config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#       enforcing - SELinux security policy is enforced.
+#                   Set this value once you know for sure that SELinux is configured the way you like it and that your system is ready for deployment
+#       permissive - SELinux prints warnings instead of enforcing.
+#                    Use this to customise your SELinux policies and booleans prior to deployment. Recommended during policy development.
+#       disabled - No SELinux policy is loaded.
+#                  This is not a recommended setting, for it may cause problems with file labelling
+SELINUX=permissive
+# SELINUXTYPE= takes the name of SELinux policy to
+# be used. Current options are:
+#       refpolicy (vanilla reference policy)
+#       &lt;custompolicy&gt; - Substitute &lt;custompolicy&gt; with the name of any custom policy you choose to load
+SELINUXTYPE=refpolicy</pre>
+<p>Now, you may reboot. After rebooting, run:
+</p>
+<pre># restorecon -r /
+</pre>
+<p>to label your filesystem.
+</p>
+<p>Now, make a file <code>requiredmod.te</code> with the contents:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">requiredmod.te</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">module requiredmod 1.0;
+
+require {
+        type devpts_t;
+        type kernel_t;
+        type device_t;
+        type var_run_t;
+        type udev_t;
+        type hugetlbfs_t;
+        type udev_tbl_t;
+        type tmpfs_t;
+        class sock_file write;
+        class unix_stream_socket { read write ioctl };
+        class capability2 block_suspend;
+        class dir { write add_name };
+        class filesystem associate;
+}
+
+#============= devpts_t ==============
+allow devpts_t device_t:filesystem associate;
+
+#============= hugetlbfs_t ==============
+allow hugetlbfs_t device_t:filesystem associate;
+
+#============= kernel_t ==============
+allow kernel_t self:capability2 block_suspend;
+
+#============= tmpfs_t ==============
+allow tmpfs_t device_t:filesystem associate;
+
+#============= udev_t ==============
+allow udev_t kernel_t:unix_stream_socket { read write ioctl };
+allow udev_t udev_tbl_t:dir { write add_name };
+allow udev_t var_run_t:sock_file write;</pre>
+<p>and run the following commands:
+</p>
+<pre># checkmodule -m -o requiredmod.mod requiredmod.te
+# semodule_package -o requiredmod.pp -m requiredmod.mod
+# semodule -i requiredmod.pp</pre>
+<p>This is required to remove a few messages from <code>/var/log/audit/audit.log</code> which are a nuisance to deal with in the reference policy. This is an ugly hack and it should be made very clear that the policy so installed simply patches the reference policy in order to hide the effects of incorrect labelling.
+</p>
+<h3><span class="mw-headline" id="Testing_in_a_Vagrant_virtual_machine">Testing in a Vagrant virtual machine</span></h3>
+<p>It is possible to use <a href="../en/Vagrant.html" title="Vagrant">Vagrant</a> to provision a virtual Arch Linux machine with SELinux configured. This is a convenient way to test an Arch Linux system running SELinux without modifying a current system. Here are commands which can be used to achieve this:
+</p>
+<pre> git clone <a rel="nofollow" class="external free" href="https://github.com/archlinuxhardened/selinux">https://github.com/archlinuxhardened/selinux</a>
+ cd selinux/_vagrant
+ vagrant up
+ vagrant ssh
+</pre>
+<h2><span class="mw-headline" id="Post-installation_steps">Post-installation steps</span></h2>
+<p>You can check that SELinux is working with <code>sestatus</code>. You should get something like:
+</p>
+<pre>SELinux status:                 enabled
+SELinuxfs mount:                /sys/fs/selinux
+SELinux root directory:         /etc/selinux
+Loaded policy name:             refpolicy
+Current mode:                   permissive
+Mode from config file:          permissive
+Policy MLS status:              disabled
+Policy deny_unknown status:     allowed
+Max kernel policy version:      28</pre>
+<p>To maintain correct context, you can use <i>restorecond</i>:
+</p>
+<pre># systemctl enable restorecond
+</pre>
+<p>To switch to enforcing mode without rebooting, you can use:
+</p>
+<pre># echo 1 &gt; /sys/fs/selinux/enforce
+</pre>
+<h3><span class="mw-headline" id="Swapfiles">Swapfiles</span></h3>
+<p>If you have a swap file instead of a swap partition, issue the following commands in order to set the appropriate security context:
+</p>
+<pre># semanage fcontext -a -t swapfile_t "/path/to/swapfile"
+# restorecon /path/to/swapfile</pre>
+<h2><span class="mw-headline" id="Working_with_SELinux">Working with SELinux</span></h2>
+<p>SELinux defines security using a different mechanism than traditional Unix access controls. The best way to understand it is by example. For example, the SELinux security context of the apache homepage looks like the following:
+</p>
+<pre>$ls -lZ /var/www/html/index.html
+-rw-r--r--  username username system_u:object_r:httpd_sys_content_t /var/www/html/index.html
+</pre>
+<p>The first three and the last columns should be familiar to any (Arch) Linux user. The fourth column is new and has the format:
+</p>
+<pre>user:role:type[:level]
+</pre>
+<p>To explain:
+</p>
+<ol>
+<li>
+<b>User:</b> The SELinux user identity. This can be associated to one or more roles that the SELinux user is allowed to use.</li>
+<li>
+<b>Role:</b> The SELinux role. This can be associated to one or more types the SELinux user is allowed to access.</li>
+<li>
+<b>Type:</b> When a type is associated with a process, it defines what processes (or domains) the SELinux user (the subject) can access. When a type is associated with an object, it defines what access permissions the SELinux user has to that object.</li>
+<li>
+<b>Level:</b> This optional field can also be know as a range and is only present if the policy supports MCS or MLS.</li>
+</ol>
+<p>This is important in case you wish to understand how to build your own policies, for these are the basic building blocks of SELinux. However, for most purposes, there is no need to, for the reference policy is sufficiently mature. However, if you are a power user or someone with very specific needs, then it might be ideal for you to learn how to make your own SELinux policies.
+</p>
+<p><a rel="nofollow" class="external text" href="http://www.fosteringlinux.com/tag/selinux/">This</a> is a great series of articles for someone seeking to understand how to work with SELinux.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>The place to look for SELinux errors is the <a href="../en/Systemd/Journal.html" class="mw-redirect" title="Systemd journal">systemd journal</a>. In order to see SELinux messages related to the label <code>system_u:system_r:policykit_t:s0</code> (for example), you would need to run:
+</p>
+<pre># journalctl _SELINUX_CONTEXT=system_u:system_r:policykit_t:s0
+</pre>
+<h3><span class="mw-headline" id="Useful_tools">Useful tools</span></h3>
+<p>There are some tools/commands that can greatly help with SELinux. 
+</p>
+<dl>
+<dt>restorecon</dt>
+<dd>Restores the context of a file/directory (or recursively with <code>-R</code>) based on any policy rules</dd>
+<dt>chcon</dt>
+<dd>Change the context on a specific file</dd>
+</dl>
+<h3><span class="mw-headline" id="Reporting_issues">Reporting issues</span></h3>
+<p>Please report issues on GitHub: <a rel="nofollow" class="external free" href="https://github.com/archlinuxhardened/selinux/issues">https://github.com/archlinuxhardened/selinux/issues</a>
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Security-Enhanced_Linux" class="extiw" title="wikipedia:Security-Enhanced Linux">Security Enhanced Linux</a></li>
+<li><a rel="nofollow" class="external text" href="https://wiki.gentoo.org/wiki/SELinux">Gentoo SELinux Handbook</a></li>
+<li><a rel="nofollow" class="external text" href="https://fedoraproject.org/wiki/SELinux">Fedora Project's SELinux Wiki</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.nsa.gov/what-we-do/research/selinux/">NSA's Official SELinux Homepage</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/SELinuxProject">SELinux Project Homepage</a>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://github.com/SELinuxProject/refpolicy/wiki">Reference Policy Homepage</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/SELinuxProject/setools/wiki">SETools Homepage</a></li>
+</ul>
+</li>
+<li><a rel="nofollow" class="external text" href="https://web.archive.org/web/20140816115906/http://jamesthebard.net/archlinux-selinux-and-you-a-trip-down-the-rabbit-hole/">ArchLinux, SELinux and You (archived)</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Access_control.html" title="Category:Access control">Access control</a></li>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+<li><a href="../en/Category:Red_Hat.html" title="Category:Red Hat">Red Hat</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=SELinux&amp;oldid=635951">https://wiki.archlinux.org/index.php?title=SELinux&amp;oldid=635951</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 September 2020, at 07:16.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

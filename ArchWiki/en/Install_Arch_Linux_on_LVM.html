@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Install Arch Linux on LVM - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Install_Arch_Linux_on_LVM rootpage-Install_Arch_Linux_on_LVM skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Install Arch Linux on LVM</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+<li><a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a></li>
+</ul>
+</div>
+<p>You should create your LVM Volumes between the <a href="../en/Partitioning.html" title="Partitioning">partitioning</a> and <a href="../en/File_systems.html#Create_a_file_system" title="File systems">formatting</a> steps of the <a href="../en/Installation_guide.html" title="Installation guide">installation procedure</a>. Instead of directly formatting a partition to be your root file system, the file system will be created inside a logical volume (LV).
+</p>
+<p>Quick overview: 
+</p>
+<ul>
+<li>Install the required packages. (refer to <a href="../en/LVM.html#Getting_started" title="LVM">LVM#Getting started</a>)</li>
+<li>Create <a href="../en/Partitioning.html" title="Partitioning">partition(s)</a> where your PV(s) will reside.</li>
+<li>Create your physical volumes (PVs). If you have one disk it is best to just create one PV in one large partition. If you have multiple disks you can create partitions on each of them and create a PV on each partition.</li>
+<li>Create your volume group (VG) and add all PVs to it.</li>
+<li>Create logical volumes (LVs) inside that VG.</li>
+<li>Continue with <a href="../en/Installation_guide.html#Format_the_partitions" title="Installation guide">Installation guide#Format the partitions</a>.</li>
+<li>When you reach the “Create initial ramdisk environment” step in the Installation guide, add the <code>lvm2</code> hook to <code>/etc/mkinitcpio.conf</code> (see below for details).</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <code>/boot</code> cannot reside in LVM when using a boot loader which does not support LVM; you must create a separate <code>/boot</code> partition and format it directly. Only <a href="../en/GRUB.html" title="GRUB">GRUB</a> is known to support LVM.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Create_partitions"><span class="tocnumber">1.1</span> <span class="toctext">Create partitions</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Create_physical_volumes"><span class="tocnumber">1.2</span> <span class="toctext">Create physical volumes</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Create_and_extend_your_volume_group"><span class="tocnumber">1.3</span> <span class="toctext">Create and extend your volume group</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Combined_creation_of_physical_volumes_and_volume_groups"><span class="tocnumber">1.3.1</span> <span class="toctext">Combined creation of physical volumes and volume groups</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Create_logical_volumes"><span class="tocnumber">1.4</span> <span class="toctext">Create logical volumes</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Format_and_mount_logical_volumes"><span class="tocnumber">1.5</span> <span class="toctext">Format and mount logical volumes</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Configure_the_system"><span class="tocnumber">2</span> <span class="toctext">Configure the system</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9">
+<a href="#Adding_mkinitcpio_hooks"><span class="tocnumber">2.1</span> <span class="toctext">Adding mkinitcpio hooks</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#Configure_mkinitcpio_for_RAID"><span class="tocnumber">2.1.1</span> <span class="toctext">Configure mkinitcpio for RAID</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#Kernel_boot_options"><span class="tocnumber">2.2</span> <span class="toctext">Kernel boot options</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>You will follow along with the installation guide until you come to <a href="../en/Installation_guide.html#Partition_the_disks" title="Installation guide">Installation guide#Partition the disks</a>. At this point you will diverge and doing all your partitioning with LVM in mind.
+</p>
+<h3><span class="mw-headline" id="Create_partitions">Create partitions</span></h3>
+<p>First, <a href="../en/Partitioning.html" class="mw-redirect" title="Partition">partition</a> your disks as required before configuring LVM.
+</p>
+<p>Create the partitions:
+</p>
+<ul>
+<li>If you use Master Boot Record partition table, set the <a href="https://en.wikipedia.org/wiki/Partition_type" class="extiw" title="wikipedia:Partition type">partition type ID</a> to <code>8e</code> (partition type <code>Linux LVM</code> in <i>fdisk</i>).</li>
+<li>If you use GUID Partition Table, set the <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs" class="extiw" title="wikipedia:GUID Partition Table">partition type GUID</a> to <code>E6D6D379-F507-44C2-A23C-238F2A3DF928</code> (partition type <code>Linux LVM</code> in <i>fdisk</i> and <code>8e00</code> in <i>gdisk</i>).</li>
+</ul>
+<h3><span class="mw-headline" id="Create_physical_volumes">Create physical volumes</span></h3>
+<p>To list all your devices capable of being used as a physical volume:
+</p>
+<pre># lvmdiskscan
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make sure you target the correct device, or below commands will result in data loss!</div>
+<p>Create a physical volume on them:
+</p>
+<pre># pvcreate <i>DEVICE</i>
+</pre>
+<p>This command creates a header on each device so it can be used for LVM. As defined in <a href="../en/LVM.html#LVM_building_blocks" title="LVM">LVM#LVM building blocks</a>, <i>DEVICE</i> can be any <a href="../en/Device_file.html#Block_devices" class="mw-redirect" title="Block device">block device</a>, e.g. a disk <code>/dev/sda</code>, a partition <code>/dev/sda2</code> or a loop back device. For example: 
+</p>
+<pre># pvcreate /dev/sda2
+</pre>
+<p>You can track created physical volumes with:
+</p>
+<pre># pvdisplay
+</pre>
+<p>You can also get summary information on physical volumes with:
+</p>
+<pre># pvscan
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If you run into trouble with a pre-existing disk signature, you can delete it using <a href="../en/Device_file.html#wipefs" class="mw-redirect" title="Wipefs">wipefs</a>.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If using a SSD without partitioning it first, use <code>pvcreate --dataalignment 1m /dev/sda</code> (for erase block size &lt; 1 MiB), see e.g. <a rel="nofollow" class="external text" href="https://serverfault.com/questions/356534/ssd-erase-block-size-lvm-pv-on-raw-device-alignment">here</a>
+</div>
+<h3><span class="mw-headline" id="Create_and_extend_your_volume_group">Create and extend your volume group</span></h3>
+<p>First you need to create a volume group on any one of the physical volumes:
+</p>
+<pre># vgcreate &lt;<i>volume_group</i>&gt; &lt;<i>physical_volume</i>&gt;
+</pre>
+<p>For example:
+</p>
+<pre># vgcreate VolGroup00 /dev/sda2
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 8 lvm"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/lvm.8">lvm(8)</a></span> for a list of valid characters for volume group names.
+</p>
+<p>Extending the volume group is just as easy:
+</p>
+<pre># vgextend &lt;<i>volume_group</i>&gt; &lt;<i>physical_volume</i>&gt;
+</pre>
+<p>For example, to add both <code>sdb1</code> and <code>sdc</code> to your volume group:
+</p>
+<pre># vgextend VolGroup00 /dev/sdb1
+# vgextend VolGroup00 /dev/sdc
+</pre>
+<p>You can track how your volume group grows with:
+</p>
+<pre># vgdisplay
+</pre>
+<p>This is also what you would do if you wanted to add a disk to a RAID or mirror group with failed disks.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You can create more than one volume group if you need to, but then you will not have all your storage presented as a single disk.</div>
+<h4><span class="mw-headline" id="Combined_creation_of_physical_volumes_and_volume_groups">Combined creation of physical volumes and volume groups</span></h4>
+<p>LVM allows you to combine the creation of a volume group and the physical volumes in one easy step. For example, to create the group VolGroup00 with the three devices mentioned above, you can run:
+</p>
+<pre># vgcreate VolGroup00 /dev/sda2 /dev/sdb1 /dev/sdc
+</pre>
+<p>This command will first set up the three partitions as physical volumes (if necessary) and then create the volume group with the three volumes. The command will warn you if it detects an existing filesystem on any devices.
+</p>
+<h3><span class="mw-headline" id="Create_logical_volumes">Create logical volumes</span></h3>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If you wish to use snapshots, logical volume caching, thin provisioned logical volumes or RAID see <a href="../en/LVM.html#Logical_volume_types" title="LVM">LVM#Logical volume types</a>.</div>
+<p>Now we need to create logical volumes on this volume group. You create a logical volume with the next command by specifying the new volume's name and size, and the volume group it will reside on:
+</p>
+<pre># lvcreate -L &lt;<i>size</i>&gt; &lt;<i>volume_group</i>&gt; -n &lt;<i>logical_volume</i>&gt;
+</pre>
+<p>For example:
+</p>
+<pre># lvcreate -L 10G VolGroup00 -n lvolhome
+</pre>
+<p>This will create a logical volume that you can access later with <code>/dev/VolGroup00/lvolhome</code>. Just like volume groups, you can use any name you want for your logical volume when creating it besides a few exceptions listed in <span class="plainlinks archwiki-template-man" title="$ man 8 lvm"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/lvm.8#VALID_NAMES">lvm(8) § VALID_NAMES</a></span>.
+</p>
+<p>You can also specify one or more physical volumes to restrict where LVM allocates the data. For example, you may wish to create a logical volume for the root filesystem on your small SSD, and your home volume on a slower mechanical drive. Simply add the physical volume devices to the command line, for example:
+</p>
+<pre># lvcreate -L 10G VolGroup00 -n lvolhome /dev/sdc1
+</pre>
+<p>To use all the free space left in a volume group, use the next command:
+</p>
+<pre># lvcreate -l 100%FREE  &lt;<i>volume_group</i>&gt; -n &lt;<i>logical_volume</i>&gt;
+</pre>
+<p>You can track created logical volumes with:
+</p>
+<pre># lvdisplay
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You may need to load the <i>device-mapper</i> kernel module (<code>modprobe dm_mod</code>) for the above commands to succeed.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You can start out with relatively small logical volumes and expand them later if needed. For simplicity, leave some free space in the volume group so there is room for expansion.</div>
+<h3><span class="mw-headline" id="Format_and_mount_logical_volumes">Format and mount logical volumes</span></h3>
+<p>Your logical volumes should now be located in <code>/dev/<i>YourVolumeGroupName</i>/</code>. If you cannot find them, use the next commands to bring up the module for creating device nodes and to make volume groups available:
+</p>
+<pre># modprobe dm_mod
+# vgscan
+# vgchange -ay
+</pre>
+<p>Now you can format your logical volumes and mount them as normal partitions (see <a href="../en/File_systems.html#Mount_a_file_system" class="mw-redirect" title="Mount">mount a file system</a> for additional details):
+</p>
+<pre># mkfs.&lt;<i>fstype</i>&gt; /dev/&lt;<i>volume_group</i>&gt;/&lt;<i>logical_volume</i>&gt;
+# mount /dev/&lt;<i>volume_group</i>&gt;/&lt;<i>logical_volume</i>&gt; /&lt;<i>mountpoint</i>&gt;
+</pre>
+<p>For example:
+</p>
+<pre># mkfs.ext4 /dev/VolGroup00/lvolhome
+# mount /dev/VolGroup00/lvolhome /home
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> When choosing mountpoints, just select your newly created logical volumes (use: <code>/dev/Volgroup00/lvolhome</code>). Do <b>not</b> select the actual partitions on which logical volumes were created (do not use: <code>/dev/sda2</code>).</div>
+<h2><span class="mw-headline" id="Configure_the_system">Configure the system</span></h2>
+<h3><span class="mw-headline" id="Adding_mkinitcpio_hooks">Adding mkinitcpio hooks</span></h3>
+<p>In case your root filesystem is on LVM, you will need to enable the appropriate <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> hooks, otherwise your system might not boot. Enable:
+</p>
+<ul>
+<li>
+<code>udev</code> and <code>lvm2</code> for the default busybox-based initramfs</li>
+<li>
+<code>systemd</code> and <code>sd-lvm2</code> for systemd-based initramfs</li>
+</ul>
+<p><code>udev</code> is there by default. Edit the file and insert <code>lvm2</code> between <code>block</code> and <code>filesystems</code> like so:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">HOOKS=(base <b>udev</b> ... block <b>lvm2</b> filesystems)</pre>
+<p>For systemd based initramfs:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">HOOKS=(base <b>systemd</b> ... block <b>sd-lvm2</b> filesystems)</pre>
+<p>Afterwards, you can continue in normal installation instructions with the <a href="../en/Mkinitcpio.html#Image_creation_and_activation" title="Mkinitcpio">create an initial ramdisk</a> step.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 
+<ul>
+<li>The <code>lvm2</code> and <code>sd-lvm2</code> hooks are installed by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lvm2">lvm2</a></span>, not <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio">mkinitcpio</a></span>. If you are running <i>mkinitcpio</i> in an <i>arch-chroot</i> for a new installation, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lvm2">lvm2</a></span> must be installed inside the <i>arch-chroot</i> for <i>mkinitcpio</i> to find the <code>lvm2</code> or <code>sd-lvm2</code> hook. If <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lvm2">lvm2</a></span> only exists outside the <i>arch-chroot</i>, <i>mkinitcpio</i> will output <code>Error: Hook 'lvm2' cannot be found</code>.</li>
+<li>If your root filesystem is on LVM RAID see <a href="#Configure_mkinitcpio_for_RAID">#Configure mkinitcpio for RAID</a>.</li>
+</ul>
+</div>
+<h4><span class="mw-headline" id="Configure_mkinitcpio_for_RAID">Configure mkinitcpio for RAID</span></h4>
+<p>If your root filesystem is on LVM RAID additionally to <code>lvm2</code> or <code>sd-lvm2</code> hooks, you need to add <code>dm-raid</code> and the appropriate RAID modules (e.g. <code>raid0</code>, <code>raid1</code>, <code>raid10</code> and/or <code>raid456</code>) to the MODULES array in <code>mkinitcpio.conf</code>.
+</p>
+<p>For busybox based initramfs:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MODULES=(<b>dm-raid raid0 raid1 raid10 raid456</b>)
+HOOKS=(base <b>udev</b> ... block <b>lvm2</b> filesystems)</pre>
+<p>For systemd based initramfs:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MODULES=(<b>dm-raid raid0 raid1 raid10 raid456</b>)
+HOOKS=(base <b>systemd</b> ... block <b>sd-lvm2</b> filesystems)</pre>
+<h3><span class="mw-headline" id="Kernel_boot_options">Kernel boot options</span></h3>
+<p>If the root file system resides in a logical volume, the <code>root=</code> <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> must be pointed to the mapped device, e.g <code>/dev/<i>vg-name</i>/<i>lv-name</i></code>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Installation_process.html" title="Category:Installation process">Installation process</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_on_LVM&amp;oldid=631197">https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_on_LVM&amp;oldid=631197</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 11 August 2020, at 20:15.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>DSL SpeedTouch modem - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-DSL_SpeedTouch_modem rootpage-DSL_SpeedTouch_modem skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">DSL SpeedTouch modem</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Introduction"><span class="tocnumber">1</span> <span class="toctext">Introduction</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Kernel_config_and_ppp"><span class="tocnumber">2</span> <span class="toctext">Kernel config and ppp</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#The_manual_way"><span class="tocnumber">3</span> <span class="toctext">The manual way</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Configuring_pppd"><span class="tocnumber">3.1</span> <span class="toctext">Configuring pppd</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Configure_udev"><span class="tocnumber">3.2</span> <span class="toctext">Configure udev</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Firmware"><span class="tocnumber">4</span> <span class="toctext">Firmware</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Introduction">Introduction</span></h2>
+<p>This howto shows one way to get a working speedtouch USB modem. It uses the kernel driver, <b>not</b> the userspace driver. This howto assumes that your ISP uses PPPoA and not PPPoE. For info about PPPoE with these modems see first url below.
+</p>
+<p>Important sites where most info comes from:
+</p>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://www.linux-usb.org/SpeedTouch">http://www.linux-usb.org/SpeedTouch</a></li>
+<li><a rel="nofollow" class="external free" href="http://lkml.org/lkml/2004/12/27/63">http://lkml.org/lkml/2004/12/27/63</a></li>
+</ul>
+<p>If the below instructions are not enough to get it working, then read the above sites.
+</p>
+<p>The following steps are needed to get the modem working:
+</p>
+<h2><span class="mw-headline" id="Kernel_config_and_ppp">Kernel config and ppp</span></h2>
+<p>Make sure you have a kernel with the proper support (at least the modules ppp_generic, pppoatm, slhc, atm, usbatm and speedtch). The default Arch kernel should work.
+</p>
+<p>Otherwise make sure that your kernel supports firmware loading:
+</p>
+<pre>$ zgrep FW_LOADER /proc/config.gz 
+</pre>
+<p>Then <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ppp">ppp</a></span> package.
+</p>
+<h2><span class="mw-headline" id="The_manual_way">The manual way</span></h2>
+<h3><span class="mw-headline" id="Configuring_pppd">Configuring pppd</span></h3>
+<pre>###  /etc/ppp/peers/speedtch
+
+# To connect to using this configuration file, do
+#       pppd call speedtch
+
+lcp-echo-interval 10
+lcp-echo-failure 10
+noipdefault
+defaultroute
+user "username@ispname"
+noauth
+noaccomp
+nopcomp
+noccp
+novj
+holdoff 4
+persist
+maxfail 25
+updetach
+usepeerdns
+plugin pppoatm.so
+# Following entry is country/ISP dependent
+8.48
+</pre>
+<p>The last entry depends on your country/ISP and is created from the VPI and VCI setting in the format <code>VPI.VCI</code>. This page has a <a rel="nofollow" class="external text" href="http://www.linux-usb.org/SpeedTouch/faq/index.html#q12">VPI / VCI Setting List</a>.
+</p>
+<p>You also need to configure /etc/ppp/pap-secrets or chap-secrets, depending on your ISP.  pap-secrets files are of the format:
+</p>
+<pre># Secrets for authentication using PAP
+# client        server  secret		IP addresses
+"ISP-Username"	*	ISP-password	*
+</pre>
+<p>See <a rel="nofollow" class="external text" href="https://www.tldp.org/HOWTO/PPP-HOWTO/x1005.html">The PAP/CHAP secrets file</a> for more details.
+</p>
+<p>If you want to use the DNS servers provided by your ISP (you probably do!) then make a symlink /etc/resolv.conf pointing to /etc/ppp/resolv.conf:
+</p>
+<pre>cd etc
+rm resolv.conf
+ln -s ppp/resolv.conf resolv.conf
+</pre>
+<h3><span class="mw-headline" id="Configure_udev">Configure udev</span></h3>
+<p>Make a file <code>/etc/udev/rules.d/99-speedtouch.rules</code> and put something like the following in it:
+</p>
+<pre>ACTION=="add", SUBSYSTEM=="atm", KERNEL=="speedtch*", RUN="/usr/bin/pppd call speedtch"
+</pre>
+<p>With this Udev will start pppd automatically, if you do not want this you can simply bring up your modem using
+</p>
+<pre>pppd call speedtch
+</pre>
+<h2><span class="mw-headline" id="Firmware">Firmware</span></h2>
+<p>Now you have everything except the firmware loading. The easiest way is to let udev do it.  Download <a rel="nofollow" class="external text" href="http://steve-parker.org/speedtouchconf/rev4fw.zip">rev4fw.zip</a> (note disclaimer <a rel="nofollow" class="external text" href="http://speedtouchconf.sourceforge.net/">here</a>) and  unzip it. It contains two files, a small one and a big one. Copy the small file to <code>/usr/lib/firmware/speedtch-1.bin</code> and the big one to <code>/usr/lib/firmware/speedtch-2.bin</code>
+</p>
+<pre># mkdir -p /usr/lib/firmware
+# cp small_file /usr/lib/firmware/speedtch-1.bin
+# cp large_file /usr/lib/firmware/speedtch-2.bin
+</pre>
+<p>If you cannot download this file then follow the instructions of the second link above and use the firmware extractor (or download another firmware which has the two files).
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>If the modem is being detected correctly and the firmware is loading, you should see something like the following in dmesg:
+</p>
+<pre>usbcore: registered new driver speedtch
+usb 1-1: found stage 1 firmware speedtch-1.bin
+CSLIP: code copyright 1989 Regents of the University of California
+PPP generic driver version 2.4.2
+usb 1-1: found stage 2 firmware speedtch-2.bin
+ip_tables: (C) 2000-2002 Netfilter core team
+ADSL line is synchronising
+DSL line goes up
+ADSL line is up (800 Kib/s down || 256 Kib/s up)
+</pre>
+<p>pppd output in /var/log/messages should look something like:
+</p>
+<pre>Plugin pppoatm.so loaded.
+PPPoATM plugin_init
+PPPoATM setdevname - remove unwanted options
+PPPoATM setdevname_pppoatm - SUCCESS:8.48
+Using interface ppp0
+Connect: ppp0 &lt;--&gt; 8.48
+PAP authentication succeeded
+local  IP address 123.45.67.89
+remote IP address 195.190.249.10
+primary   DNS address 195.121.1.34
+secondary DNS address 195.121.1.66
+</pre>
+<p>If you are having problems you can check pppd debug messages by adding <b>debug</b> to /etc/ppp/peers/speedtch.  This can help identify authentication problems (e.g. pap vs chap auth), etc.  Otherwise make sure you check your VPI/VCI settings!
+</p>
+<hr>
+<p>For the origin of this doc, feedback or requests go to the <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?p=80638">Forum discussion</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-28 ⓘ]</sup>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Modems.html" title="Category:Modems">Modems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=DSL_SpeedTouch_modem&amp;oldid=631027">https://wiki.archlinux.org/index.php?title=DSL_SpeedTouch_modem&amp;oldid=631027</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 11 August 2020, at 18:42.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

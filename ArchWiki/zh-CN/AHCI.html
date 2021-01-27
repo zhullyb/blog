@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>AHCI (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-AHCI_简体中文 rootpage-AHCI_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">AHCI (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/AHCI.html" title="AHCI">AHCI</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2019-10-26。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=AHCI&amp;diff=0&amp;oldid=573461">更改</a>，则您可以帮助同步翻译。</div>
+<p><b>AHCI</b>, <i>A</i>dvanced <i>H</i>ost <i>C</i>ontroller <i>I</i>nterface 的缩写，意思是 高级主机控制器接口, 这是一种SATA设备特有的工作模式.通常AHCI需要通过BIOS来开启或关闭，通过BIOS启用AHCI有两大好处：热插拔SATA驱动器（模拟USB驱动器的行为）和NCQ。该特性在 Linux kernel 2.6.19 以后开始提供支持,现在的 Arch 内核会自动加载 ahci 模块.
+</p>
+<h2>
+<span id=".E8.AE.BE.E7.BD.AEBIOS"></span><span class="mw-headline" id="设置BIOS">设置BIOS</span>
+</h2>
+<p>进入BIOS的方法因主板的不同而不通; 通常, 在启动计算机时按<code>Del</code> 就可以进入BIOS，笔记本可能是<code>F2</code>。
+</p>
+<p>进入BIOS之后, 找到跟下面类似的选项:
+</p>
+<pre>Enable SATA as: IDE/AHCI
+</pre>
+<p>或者:
+</p>
+<pre>SATA: PATA Emulation/Native/Enhanced
+</pre>
+<p>选择 <code>AHCI</code> 或 <code>Native</code>， 保存并退出 BIOS. 如果你没有找到对应的选项请参考主板说明书，因为选项的名字可能不一样。
+</p>
+<p>BIOS修改完之后， Linux 下次启动将会加载 AHCI 驱动。 通过 <code>dmesg</code> 命令的输出可以确定是否正常加载:
+</p>
+<pre>SCSI subsystem initialized
+libata version 3.00 loaded.
+ahci 0000:00:1f.2: version 3.0
+ahci 0000:00:1f.2: PCI INT B -&gt; GSI 19 (level, low) -&gt; IRQ 19
+ahci 0000:00:1f.2: irq 764 for MSI/MSI-X
+ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA mode
+ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems 
+ahci 0000:00:1f.2: setting latency timer to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+scsi4 : ahci
+scsi5 : ahci
+</pre>
+<p>and for NCQ:
+</p>
+<pre>ata2.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 31/32)
+</pre>
+<h2>
+<span id=".E9.97.AE.E9.A2.98.E8.A7.A3.E5.86.B3"></span><span class="mw-headline" id="问题解决">问题解决</span>
+</h2>
+<p>如果安装 Arch 后 STAT 配置从 IDE 变为 AHCI, AHCI 模块可能无法正确加载。启动时会出现找不到根分区的错误提示。
+</p>
+<p>这时，应该可以用 <code>failsafe</code> 启动选项进行启动，启动后请执行 <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> 重新生成 initramfs 镜像。
+</p>
+<h2>
+<span id=".E5.8F.82.E9.98.85"></span><span class="mw-headline" id="参阅">参阅</span>
+</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/AHCI" class="extiw" title="wikipedia:AHCI">AHCI on Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/NCQ" class="extiw" title="wikipedia:NCQ">NCQ on Wikipedia</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Storage.html" title="Category:Storage (简体中文)">Storage (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=AHCI_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=587206">https://wiki.archlinux.org/index.php?title=AHCI_(简体中文)&amp;oldid=587206</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 October 2019, at 07:59.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

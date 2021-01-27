@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>DANE - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-DANE rootpage-DANE skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">DANE</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a href="https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities" class="extiw" title="wikipedia:DNS-based Authentication of Named Entities">DANE</a> (DNS-based Authentication of Named Entities) is a protocol to allow X.509 certificates, commonly used for Transport Layer Security (TLS), to be bound to DNS names using Domain Name System Security Extensions (DNSSEC). 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This is not a trivial article. Be aware that you make sure you know what you are doing. You better read <a rel="nofollow" class="external text" href="https://dane.sys4.de/common_mistakes">Common Mistakes</a> before.</div>
+<h2><span class="mw-headline" id="Resource_Record">Resource Record</span></h2>
+<p>TLSA resource record is an own type of DNS record. It consists of port number and protocol of the service secured by it.
+An example record for port 25 over tcp could look like <code>_25._tcp.example.com IN TLSA 3 0 1 $DATA</code>.
+The TLSA parameters <code>3 0 1</code> are explaining the data following it. The first number is the Certificate Usage Field, the second is the Selector Field and the third is named Matching Type Field.
+</p>
+<table class="wikitable">
+<caption>Certificate Usage Field
+</caption>
+<tbody>
+<tr>
+<th>Value</th>
+<th>Name</th>
+<th>Description
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>PKIX trust anchor</td>
+<td>Hash contains a public CA from the x509 tree by which your cert has to be signed
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PKIX end entity</td>
+<td>Hash contains your cert which also has to pass x509 validation
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DANE trust anchor</td>
+<td>Hash contains a private CA (unknown to the x509 tree) by which your cert has to be signed
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DANE end entity</td>
+<td>Hash contains your cert which is not matched against any other validation
+</td>
+</tr>
+</tbody>
+</table>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Certificate Usage 0 and 1 are not allowed for use with email servers (port 25). See <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc7672#section-3.1.3">RFC7672 3.1.3</a> for details.</div>
+<table class="wikitable">
+<caption>Selector Field
+</caption>
+<tbody>
+<tr>
+<th>Value</th>
+<th>Name</th>
+<th>Description
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>cert</td>
+<td>DATA is based on the full cert
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>SPKI</td>
+<td>DATA is based on public key only
+</td>
+</tr>
+</tbody>
+</table>
+<table class="wikitable">
+<caption>Matching Type Field
+</caption>
+<tbody>
+<tr>
+<th>Value</th>
+<th>Name</th>
+<th>Description
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>Full</td>
+<td>DATA is the full cert or SPKI
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>sha256</td>
+<td>DATA is the sha256 hash of the cert or SPKI
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>sha512</td>
+<td>DATA is the sha512 hash of the cert or SPKI
+</td>
+</tr>
+</tbody>
+</table>
+<p>The RR can also easily be generated with the tools <code>ldns-dane</code> from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ldns">ldns</a></span> and <code>dane</code> from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/sshfp/">sshfp</a></span><sup><small>AUR</small></sup>.
+</p>
+<h2><span class="mw-headline" id="DANE_supporting_software">DANE supporting software</span></h2>
+<ul>
+<li><a href="../en/Postfix.html#DANE_.28DNSSEC.29" title="Postfix">Postfix</a></li>
+<li>
+<a href="../en/Exim.html" title="Exim">Exim</a> &gt; 4.85</li>
+<li>
+<a href="../en/Prosody.html" title="Prosody">Prosody</a> (via <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/prosody-mod-s2s-auth-dane/">prosody-mod-s2s-auth-dane</a></span><sup><small>AUR</small></sup>)</li>
+</ul>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://danetools.com/dane">DANE Validator</a></li>
+<li><a rel="nofollow" class="external text" href="https://dane.sys4.de/common_mistakes">Common implementation mistakes</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.huque.com/bin/gen_tlsa">Generate TLSA records online</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Domain_Name_System.html" title="Category:Domain Name System">Domain Name System</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=DANE&amp;oldid=618914">https://wiki.archlinux.org/index.php?title=DANE&amp;oldid=618914</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 9 June 2020, at 05:21.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Resizing LVM-on-LUKS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Resizing_LVM-on-LUKS rootpage-Resizing_LVM-on-LUKS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Resizing LVM-on-LUKS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/LVM.html#Shrink_logical_volume" title="LVM">LVM#Shrink logical volume</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> This howto only aggregates information from other articles (thus duplicating it) for a too specific case: if some explanations are clearer here, they should be merged into <a href="../en/LVM.html#Shrink_logical_volume" title="LVM">LVM#Shrink logical volume</a>, and then the little remaining wrapping part about dm-crypt should be merged into <a href="../en/Dm-crypt/Specialties.html" title="Dm-crypt/Specialties">Dm-crypt/Specialties</a> with a link to <a href="../en/LVM.html#Shrink_logical_volume" title="LVM">LVM#Shrink logical volume</a> for the LVM resizing. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Resizing_LVM-on-LUKS">Talk:Resizing LVM-on-LUKS#</a>)</div>
+</div>
+<p>This article follows the process of resizing and shrinking an LVM-on-LUKS-on-GPT partition, such that an extra (plain) partition can be added in the unused space cleared up on the end of the hard drive. You can also use <a href="../en/Parted.html" class="mw-redirect" title="GParted">GParted</a> GUI tool to resize LUKS partition, which may be easier and quicker for beginners.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Method"><span class="tocnumber">1</span> <span class="toctext">Method</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Process"><span class="tocnumber">2</span> <span class="toctext">Process</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Shrink_LVM-on-LUKS"><span class="tocnumber">3</span> <span class="toctext">Shrink LVM-on-LUKS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Boot_and_setup"><span class="tocnumber">3.1</span> <span class="toctext">Boot and setup</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Resize_filesystem_and_LVM_logical_volume"><span class="tocnumber">3.2</span> <span class="toctext">Resize filesystem and LVM logical volume</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Resize_LVM_physical_Volume"><span class="tocnumber">3.3</span> <span class="toctext">Resize LVM physical Volume</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Resize_LUKS_volume"><span class="tocnumber">3.4</span> <span class="toctext">Resize LUKS volume</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Resize_the_partition"><span class="tocnumber">3.5</span> <span class="toctext">Resize the partition</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Enlarge_LVM_on_LUKS"><span class="tocnumber">4</span> <span class="toctext">Enlarge LVM on LUKS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Preparation"><span class="tocnumber">4.1</span> <span class="toctext">Preparation</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Extending_the_physical_segments_of_the_cryptdevice"><span class="tocnumber">4.2</span> <span class="toctext">Extending the physical segments of the cryptdevice</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Resizing_the_logical_volume"><span class="tocnumber">4.3</span> <span class="toctext">Resizing the logical volume</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Resizing_the_encrypted_volume"><span class="tocnumber">4.4</span> <span class="toctext">Resizing the encrypted volume</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Method">Method</span></h2>
+<p>We do all the resizes from the innermost partition to the outermost on, keeping 1G buffers along the way on each step. It is possible to keep smaller buffers, but that should be done carefully, especially where there are manual calculations.
+</p>
+<p>The filesystem we work on will have the following strucure:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lsblk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">NAME                MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+sda                   8:0    0 111.8G  0 disk
+├─sda1                8:1    0    99M  0 part  /boot
+└─sda2                8:2    0 111.7G  0 part
+  └─vgroup          254:0    0 111.7G  0 crypt
+    ├─vgroup-lvroot 254:1    0    30G  0 lvm   /
+    └─vgroup-lvhome 254:2    0  81.7G  0 lvm   /home
+</pre>
+<p>The goal is to clear up unused space and create a new partition, <code>sda3</code>, without any data loss. All filesystems are assumed to be <code>ext4</code>.
+</p>
+<p>The entire process should run from a live USB Arch system to avoid any filesystem corruption.
+</p>
+<h2><span class="mw-headline" id="Process">Process</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <b>Do not</b> run any of this code by copy-pasting, you need to adapt all these commands to your specific setup.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is highly recommended to check your work after each step by checking the filesystem, LVM, and/or LUKS volume integrity.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is highly recommended to write out the exact transition plan so that at each step you know exactly which partition size you're going to need.</div>
+<h2><span class="mw-headline" id="Shrink_LVM-on-LUKS">Shrink LVM-on-LUKS</span></h2>
+<h3><span class="mw-headline" id="Boot_and_setup">Boot and setup</span></h3>
+<p>Boot into your live <a href="../en/USB_flash_installation_medium.html" class="mw-redirect" title="USB flash installation media">USB flash installation media</a>.
+</p>
+<p>Decrypt the LUKS volume:
+</p>
+<pre># cryptsetup luksOpen /dev/sda2 cryptdisk
+</pre>
+<h3><span class="mw-headline" id="Resize_filesystem_and_LVM_logical_volume">Resize filesystem and LVM logical volume</span></h3>
+<p>Follow <a href="../en/LVM.html#Resizing_the_logical_volume_and_file_system_in_one_go" title="LVM">these instructions</a>.
+</p>
+<p>You can run a <code>fsck</code> just to make sure nothing broke:
+</p>
+<pre># e2fsck -f /dev/vgroup/lvhome
+</pre>
+<h3><span class="mw-headline" id="Resize_LVM_physical_Volume">Resize LVM physical Volume</span></h3>
+<p>To calculate the new LVM physical volume size, use a simple formula: <code>NEW_VOLUME_BYTES = PE_SIZE * PE_COUNT + UNUSABLE_SIZE</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">pvdisplay /dev/mapper/cryptdisk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+PV Size               950.05 GiB / not usable 4.00 MiB
+...
+PE Size               4.00 MiB
+...
+Allocated PE          116303
+...
+</pre>
+<p>Using the formula above: <code>(116303 * 4 MiB + 4 MiB) in Bytes = 487814332416</code>.
+</p>
+<p>Resize the volume. This command is safe since it will exit early if the new size wouldn't fit all the existing extents:
+</p>
+<pre># pvresize --setphysicalvolumesize 487814332416B /dev/mapper/cryptdisk
+</pre>
+<h3><span class="mw-headline" id="Resize_LUKS_volume">Resize LUKS volume</span></h3>
+<p>To calculate the new LUKS volume size, use a simple formula: <code>NEW_LUKS_SECTOR_COUNT = PV_EXTENT_COUNT * PV_EXTENT_SIZE / LUKS_SECTOR_SIZE</code>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pvdisplay /dev/mapper/cryptdisk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+PV Size               454.31 GiB / not usable 3.00 MiB
+...
+PE Size               4.00 MiB
+Total PE              116303
+...
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cryptsetup status cryptdisk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+sector size:  512
+...
+</pre>
+<pre>(116303 extents + 1 unusable extent) * 4 MiB/extent / 512 B/sector = 952762368 sectors
+</pre>
+<p>Resize the LUKS volume:
+</p>
+<pre># cryptsetup -b $NEW_LUKS_SECTOR_COUNT resize cryptdisk
+</pre>
+<h3><span class="mw-headline" id="Resize_the_partition">Resize the partition</span></h3>
+<p>To calculate the new partition size, use a simple formula: <code>NEW_PARTITION_SECTOR_END = PARTITION_SECTOR_START + (LUKS_SIZE_SECTORS + LUKS_OFFSET_SECTORS) - 1</code>. The <code>- 1</code> is because parted takes an inclusive sector end parameter.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cryptsetup status cryptdisk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+offset:  4096 sectors
+size:    952762368 sectors
+</pre>
+<p>Close the LUKS volume to resize offline. You'll probably need to deactive LVM volums on the cryptdisk or it won't close.
+</p>
+<pre># vgchange -a n vgroup
+# cryptsetup close cryptdisk
+</pre>
+<p>Use <code>parted</code> to resize the partition:
+</p>
+<pre># parted /dev/sda
+ (parted) unit
+ Unit?  [compact]? s
+ (parted) p
+ ...
+  2      8003584s  2000408575s  1992404992s
+</pre>
+<p>Using the formula above returns: <code>8003584 + (952762368 + 4096) - 1 = 960770047</code>
+</p>
+<pre>(parted) resizepart 2 960770047
+ Warning: Shrinking a partition can cause data loss, are you sure you want to continue?
+ Yes/No? y
+ (parted) q
+</pre>
+<p>At this point you can reopen the LUKS volume and remount partitions. You'll need to manually reactive the LVM partitions since if you manually deactivated them above.
+</p>
+<pre># cryptsetup luksOpen /dev/sda2 cryptdisk
+# vgchange -a y vgroup
+</pre>
+<h2><span class="mw-headline" id="Enlarge_LVM_on_LUKS">Enlarge LVM on LUKS</span></h2>
+<p>Enlarging a LVM-on-LUKS logical partition, for instance after migrating to a larger hard disk, is done in the opposite way - from the outermost to the innermost partition:
+</p>
+<pre>primary partition(LUKS device{volume group[(logical partition1)(logical partition2--&gt;)]})
+</pre>
+<h3><span class="mw-headline" id="Preparation">Preparation</span></h3>
+<p>Create a new partition on the new hard disk of wanted size, f.i. by using <a href="../en/Parted.html" class="mw-redirect" title="GNU Parted">GNU Parted</a>, and clone the old partition <code>sdX1</code>, containing your LUKS container, into the new partition <code>sdY1</code>:
+</p>
+<pre># dd if=/dev/sdX1 of=/dev/sdY1 bs=4M
+</pre>
+<h3><span class="mw-headline" id="Extending_the_physical_segments_of_the_cryptdevice">Extending the physical segments of the cryptdevice</span></h3>
+<p>Now, open the cryptdevice <code>CryptDisk</code> on the new hard disk:
+</p>
+<pre># cryptsetup open /dev/sdY1 CryptDisk
+</pre>
+<p>Take a look at your current physical volume. In this example, we have a cryptdevice <code>CryptDisk</code> containing a volume group <code>CryptVolumeGroup</code> of two partitions <code>root</code> and <code>home</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pvdisplay -m</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> --- Physical volume ---
+ PV Name               /dev/mapper/CryptDisk
+ VG Name               CryptVolumeGroup
+ PV Size               &lt;118.75 GiB / not usable 3.00 MiB
+ Allocatable           yes (but full)
+ PE Size               4.00 MiB
+ Total PE              30399
+ Free PE               0
+ Allocated PE          30399
+ PV UUID               hu0iA9-i8fv-2SC1-C6ys-LQCz-sptQ-RSOUE5
+
+ --- Physical Segments ---
+ Physical extent 0 to 6399:
+   Logical volume      /dev/CryptVolumeGroup/root
+   Logical extents     0 to 6399
+ Physical extent 6400 to 30398:
+   Logical volume      /dev/CryptVolumeGroup/home
+   Logical extents     0 to 23998
+</pre>
+<p>By taking the total physical extents (PE) times the PE's size, we get the total size of the physical volume (PV), in this case 118.75 GiB. Although pvdisplay does not show the free extents, we can enlarge the PV to use all the available remaining space of the partition:
+</p>
+<pre># pvresize /dev/mapper/CryptDisk
+</pre>
+<p>Now we get:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pvdisplay -m</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ --- Physical Segments ---
+ Physical extent 0 to 6399:
+   Logical volume      /dev/CryptVolumeGroup/root
+   Logical extents     0 to 6399
+ Physical extent 6400 to 30398:
+   Logical volume      /dev/CryptVolumeGroup/home
+   Logical extents     0 to 23998
+ Physical extent 30399 to 60922:
+   FREE
+</pre>
+<p>Note the free extents at the end of the PV. Calculate the size difference by taking the free physical extends times PE size - in that case (60922-30399)*4 MiB = 119.2 GiB.
+</p>
+<h3><span class="mw-headline" id="Resizing_the_logical_volume">Resizing the logical volume</span></h3>
+<p>Now we are going to resize the second logical volume (LV), in this case containing the /home partition, by the size of the free physical extents minus some safety space:
+</p>
+<pre># lvresize -L +119G /dev/CryptVolumeGroup/home
+</pre>
+<p>Note the new size of the second logical volume. Calculate its total size by taking the total logical extends time the PE size - in that case 53438 * 4 MiB = 208.7 GiB:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pvdisplay -m</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ --- Physical Segments ---
+ Physical extent 0 to 6399:
+   Logical volume      /dev/CryptVolumeGroup/root
+   Logical extents     0 to 6399
+ Physical extent 6400 to 59838:
+   Logical volume      /dev/CryptVolumeGroup/home
+   Logical extents     0 to 53438
+ Physical extent 59839 to 60922:
+   FREE
+</pre>
+<h3><span class="mw-headline" id="Resizing_the_encrypted_volume">Resizing the encrypted volume</span></h3>
+<p>Now we are going to resize the encrypted volume itself. By taking in account the total size of the logical volume minus some safety space:
+</p>
+<pre># resize2fs -p /dev/CryptVolumeGroup/Home 208G
+</pre>
+<p>Execute e2fsck, if asked. That's it.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Storage_virtualization.html" title="Category:Storage virtualization">Storage virtualization</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Resizing_LVM-on-LUKS&amp;oldid=641319">https://wiki.archlinux.org/index.php?title=Resizing_LVM-on-LUKS&amp;oldid=641319</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 10 November 2020, at 23:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

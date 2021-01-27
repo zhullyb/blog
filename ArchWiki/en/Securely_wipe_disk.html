@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Securely wipe disk - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Securely_wipe_disk rootpage-Securely_wipe_disk skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Securely wipe disk</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Securely_wipe_disk/Tips_and_tricks.html" title="Securely wipe disk/Tips and tricks">Securely wipe disk/Tips and tricks</a></li>
+<li><a href="../en/File_recovery.html" title="File recovery">File recovery</a></li>
+<li><a href="../en/Benchmarking.html" class="mw-redirect" title="Benchmarking/Data storage devices">Benchmarking/Data storage devices</a></li>
+<li><a href="../en/Frandom.html" title="Frandom">Frandom</a></li>
+<li><a href="../en/Data-at-rest_encryption.html#Preparing_the_disk" title="Data-at-rest encryption">Data-at-rest encryption#Preparing the disk</a></li>
+<li><a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a></li>
+</ul>
+</div>
+<p>Wiping a disk is done by writing new data over every single bit.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> References to "disks" in this article also apply to loopback devices.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Common_use_cases"><span class="tocnumber">1</span> <span class="toctext">Common use cases</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Wipe_all_data_left_on_the_device"><span class="tocnumber">1.1</span> <span class="toctext">Wipe all data left on the device</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Preparations_for_block_device_encryption"><span class="tocnumber">1.2</span> <span class="toctext">Preparations for block device encryption</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Data_remanence"><span class="tocnumber">2</span> <span class="toctext">Data remanence</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Operating_system,_programs_and_filesystem"><span class="tocnumber">2.1</span> <span class="toctext">Operating system, programs and filesystem</span></a></li>
+<li class="toclevel-2 tocsection-6">
+<a href="#Hardware-specific_issues"><span class="tocnumber">2.2</span> <span class="toctext">Hardware-specific issues</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7"><a href="#Flash_memory"><span class="tocnumber">2.2.1</span> <span class="toctext">Flash memory</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Marked_Bad_Sectors"><span class="tocnumber">2.2.2</span> <span class="toctext">Marked Bad Sectors</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Residual_magnetism"><span class="tocnumber">2.2.3</span> <span class="toctext">Residual magnetism</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Select_a_target"><span class="tocnumber">3</span> <span class="toctext">Select a target</span></a></li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Select_a_data_source"><span class="tocnumber">4</span> <span class="toctext">Select a data source</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Zeros"><span class="tocnumber">4.1</span> <span class="toctext">Zeros</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Random_data"><span class="tocnumber">4.2</span> <span class="toctext">Random data</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Select_a_block_size"><span class="tocnumber">5</span> <span class="toctext">Select a block size</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#Calculate_blocks_to_wipe_manually"><span class="tocnumber">5.1</span> <span class="toctext">Calculate blocks to wipe manually</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Overwrite_the_target"><span class="tocnumber">6</span> <span class="toctext">Overwrite the target</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#By_redirecting_output"><span class="tocnumber">6.1</span> <span class="toctext">By redirecting output</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#dd"><span class="tocnumber">6.2</span> <span class="toctext">dd</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#wipe"><span class="tocnumber">6.3</span> <span class="toctext">wipe</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#shred"><span class="tocnumber">6.4</span> <span class="toctext">shred</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Badblocks"><span class="tocnumber">6.5</span> <span class="toctext">Badblocks</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#hdparm"><span class="tocnumber">6.6</span> <span class="toctext">hdparm</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Common_use_cases">Common use cases</span></h2>
+<h3><span class="mw-headline" id="Wipe_all_data_left_on_the_device">Wipe all data left on the device</span></h3>
+<p>The most common usecase for completely and irrevocably wiping a device is when the device is going to be given away or sold. There may be (unencrypted) data left on the device and you want to protect against simple forensic investigation that is mere child's play with for example <a href="../en/File_recovery.html" title="File recovery">File recovery</a> software.
+</p>
+<p>If you want to quickly wipe everything from the disk, <code>/dev/zero</code> or simple patterns allow maximum performance while adequate randomness can be advantageous in some cases that should be covered up in <a href="#Data_remanence">#Data remanence</a>.
+</p>
+<p>Every overwritten bit means to provide a level of data erasure not allowing recovery with normal system functions (like standard ATA/SCSI commands) and hardware interfaces. Any file recovery software mentioned above then would need to be specialized on proprietary storage-hardware features.
+</p>
+<p>In case of a HDD, data recreation will not be possible without at least undocumented drive commands or tinkering with the device's controller or firmware to make them read out for example reallocated sectors (bad blocks that <a href="../en/S.M.A.R.T..html" title="S.M.A.R.T.">S.M.A.R.T.</a> retired from use).
+</p>
+<p>There are different wiping issues with different physical storage technologies. Most notably, all Flash memory based devices and older magnetic storage (old HDDs, floppy disks, tape).
+</p>
+<h3><span class="mw-headline" id="Preparations_for_block_device_encryption">Preparations for block device encryption</span></h3>
+<p>To prepare a drive for <a href="../en/Data-at-rest_encryption.html#Block_device_encryption" title="Data-at-rest encryption">block device encryption</a> inside the wiped area afterwards, it is recommended to use <a href="#Random_data">#Random data</a> generated by a cryptographically strong random number generator (referred to as RNG in this article from now on).
+</p>
+<p>See also <a href="https://en.wikipedia.org/wiki/Random_number_generation" class="extiw" title="wikipedia:Random number generation">Wikipedia:Random number generation</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If block device encryption is mapped on a partition that contains non-random or unencrypted data, the encryption is weakened and becomes comparable to filesystem-level encryption: disclosure of usage patterns on the encrypted drive becomes possible. Therefore, do not fill space with zeros, simple patterns (like badblocks) or other non-random data before setting up block device encryption if you are serious about it.</div>
+<h2><span class="mw-headline" id="Data_remanence">Data remanence</span></h2>
+<p>See also <a href="https://en.wikipedia.org/wiki/Data_remanence" class="extiw" title="wikipedia:Data remanence">Wikipedia:Data remanence</a>. The representation of data may remain even after attempts have been made to remove or erase the data.
+</p>
+<h3>
+<span id="Operating_system.2C_programs_and_filesystem"></span><span class="mw-headline" id="Operating_system,_programs_and_filesystem">Operating system, programs and filesystem</span>
+</h3>
+<p>The operating system, executed programs or <a href="https://en.wikipedia.org/wiki/Journaling_file_system" class="extiw" title="wikipedia:Journaling file system">journaling file systems</a> may copy your unencrypted data throughout the block device. When writing to plain disks, this should only be relevant in conjunction with one of the above.
+</p>
+<p>If the data can be exactly located on the disk and was never copied anywhere else, wiping with random data can be thoroughgoing and impressively quick as long there is enough entropy in the pool.
+</p>
+<p>A good example is cryptsetup using <code>/dev/urandom</code> for <a href="../en/Dm-crypt/Device_encryption.html#Key_management" title="Dm-crypt/Device encryption">wiping the LUKS keyslots</a>.
+</p>
+<h3><span class="mw-headline" id="Hardware-specific_issues">Hardware-specific issues</span></h3>
+<h4><span class="mw-headline" id="Flash_memory">Flash memory</span></h4>
+<p><a href="https://en.wikipedia.org/wiki/Write_amplification" class="extiw" title="wikipedia:Write amplification">Write amplification</a> and other characteristics make Flash memory, including SSDs, a stubborn target for reliable wiping.
+As there is a lot of transparent abstraction in between data as seen by a device's controller chip and the operating system, sight data is never overwritten in place and wiping particular blocks or files is not reliable.
+</p>
+<p>Other "features" like transparent compression (all SandForce SSDs) can compress your zeros or repetitive patterns, so if wiping is fast beyond belief this might be the cause.
+</p>
+<p>Disassembling Flash memory devices, unsoldering the chips and analyzing data content without the controller in between is feasible without difficulty using <a rel="nofollow" class="external text" href="http://www.flash-extractor.com/manual/reader_models/">simple hardware</a>. Data recovery companies do it for cheap money.
+</p>
+<p>For more information see:
+</p>
+<ul>
+<li><a href="../en/Solid_state_drive/Memory_cell_clearing.html" title="Solid state drive/Memory cell clearing">Solid state drive/Memory cell clearing</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://www.usenix.org/events/fast11/tech/full_papers/Wei.pdf">Reliably Erasing Data From Flash-Based Solid State Drives</a>.</li>
+<li><a href="#Select_a_target">#Select a target</a></li>
+</ul>
+<h4><span class="mw-headline" id="Marked_Bad_Sectors">Marked Bad Sectors</span></h4>
+<p>If a hard drive marks a sector as bad, it cordons it off, and the section becomes impossible to write to via software. Thus a full overwrite would not reach it. However because of block sizes, these sections would only amount to a few theoretically recoverable KiB.
+</p>
+<h4><span class="mw-headline" id="Residual_magnetism">Residual magnetism</span></h4>
+<p>A single, full overwrite with zeros or random data does not lead to any recoverable data on a modern high-density storage device. Note that repeating the operation should not be necessary nowadays. <a rel="nofollow" class="external autonumber" href="http://www.howtogeek.com/115573/htg-explains-why-you-only-have-to-wipe-a-disk-once-to-erase-it/">[1]</a> Indications otherwise refer to single residual bits; reconstruction of byte patterns is generally not feasible.<a rel="nofollow" class="external autonumber" href="https://web.archive.org/web/20120102004746/http://www.h-online.com/newsticker/news/item/Secure-deletion-a-single-overwrite-will-do-it-739699.html">[2]</a> See also <a rel="nofollow" class="external autonumber" href="https://www.google.com/search?tbs=bks:1&amp;q=isbn:9783540898610">[3]</a>, <a rel="nofollow" class="external autonumber" href="https://security.stackexchange.com/questions/26132/is-data-remanence-a-myth/26134#26134">[4]</a> and <a rel="nofollow" class="external autonumber" href="http://www.nber.org/sys-admin/overwritten-data-guttman.html">[5]</a>.
+</p>
+<h2><span class="mw-headline" id="Select_a_target">Select a target</span></h2>
+<p>Use <a href="../en/Fdisk.html" title="Fdisk">fdisk</a> to locate all read/write devices the user has read access to.
+</p>
+<p>Check the output for lines that start with devices such as <code>/dev/sd"X"</code>.
+</p>
+<p>This is an example for a HDD formatted to boot a linux system:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Disk /dev/sda: 250.1 GB, 250059350016 bytes, 488397168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00ff784a
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      206847      102400   83  Linux
+/dev/sda2          206848   488397167   244095160   83  Linux
+</pre>
+<p>Or another example with the Arch Linux image written to a 4GB USB thumb drive:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Disk /dev/sdb: 4075 MB, 4075290624 bytes, 7959552 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x526e236e
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1   *           0      802815      401408   17  Hidden HPFS/NTFS
+</pre>
+<p>If you are worried about unintentional damage of important data on the primary computer, consider using an isolated environment such as a virtual environment (VirtualBox, VMWare, QEMU, etc...) with direct connected disk drives to it or a single computer only with a storage disk(s) that need to be wiped booted from a <a href="../en/Archiso.html" title="Archiso">Live Media</a> (USB, CD, PXE, etc...) or use a script to <a href="../en/Securely_wipe_disk/Tips_and_tricks.html#Prevent_wiping_mounted_partitions" title="Securely wipe disk/Tips and tricks">prevent wiping mounted partitions by typo</a>.
+</p>
+<h2><span class="mw-headline" id="Select_a_data_source">Select a data source</span></h2>
+<p>To wipe sensitive data, one can use any data pattern matching the needs.
+</p>
+<h3><span class="mw-headline" id="Zeros">Zeros</span></h3>
+<p>Overwriting with <code>/dev/zero</code> or simple patterns is considered secure in most situations. With today's HDDs, it is deemed appropriate and fast for disk wiping.
+</p>
+<p>However, a drive that is abnormally fast in writing patterns or zeroing could be doing transparent compression. It is obviously presumable not all blocks get wiped this way. Some <a href="#Flash_memory">#Flash memory</a> devices do "feature" that.
+</p>
+<p>To setup block device encryption afterwards, one should wipe the area with random data (see next section) to avoid weakening the encryption.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Subject to compression and to be used carefully with flash memory and SSDs, to be avoided for block encryption preparation as stated above.</div>
+<h3><span class="mw-headline" id="Random_data">Random data</span></h3>
+<p>True random data source using <code>/dev/random</code> is impractical for wiping large capacities as it will take too long to wait for the entropy generation. <code>/dev/urandom</code> can be used as a reasonable source of pseudorandom data. For differences between random and pseudorandom data as source, please see <a href="../en/Random_number_generation.html" title="Random number generation">Random number generation</a>.
+</p>
+<p>Another alternative for pseudorandom data generation is to use an encrypted datastream. For example, if one wants to prepare a device for block encryption and will use AES for the encrypted partition, it is appropriate to wipe it with a similar cipher prior to creating the filesystem to make the empty space not distinguishable from the used space.
+</p>
+<h2><span class="mw-headline" id="Select_a_block_size">Select a block size</span></h2>
+<p>See also <a href="https://en.wikipedia.org/wiki/Dd_(Unix)#Block_size" class="extiw" title="wikipedia:Dd (Unix)">Wikipedia:Dd (Unix)#Block size</a>, <a rel="nofollow" class="external text" href="http://people.redhat.com/msnitzer/docs/io-limits.txt">blocksize io-limits</a>.
+</p>
+<p>If you have an <a href="../en/Advanced_Format.html" title="Advanced Format">Advanced Format</a> hard drive it is recommended that you specify a block size larger than the default 512 bytes. To speed up the overwriting process choose a block size matching your drive's physical geometry by appending the block size option to the <i>dd</i> command (i.e. <code>bs=4096</code> for 4 KiB).
+</p>
+<p><i>fdisk</i> prints physical and logical sector size for every disk.  Alternatively sysfs does expose information:
+</p>
+<pre>/sys/block/sdX/size
+/sys/block/sdX/queue/physical_block_size
+/sys/block/sdX/queue/logical_block_size
+/sys/block/sdX/sdXY/alignment_offset
+/sys/block/sdX/sdXY/start
+/sys/block/sdX/sdXY/size
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> These methods show the block size the drive reports to the kernel. However, many Advanced Format drives incorrectly understate the physical block size as 512.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> The script <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/genwipe.sh/">genwipe.sh</a></span><sup><small>AUR</small></sup> helps to calculate parameters to wipe a device/partition with <i>dd</i>, e.g.<code>genwipe.sh /dev/sd"XY"</code>.</div>
+<h3><span class="mw-headline" id="Calculate_blocks_to_wipe_manually">Calculate blocks to wipe manually</span></h3>
+<p>A block storage devices contains sectors and a size of a single sector that can be used to calculate the whole size of device in bytes. You can do it by multiplying sectors with size of the sector.
+</p>
+<p>As an example we use the parameters with the <i>dd</i> command to wipe a partition: 
+</p>
+<pre># dd if=<i>data_source</i> of=/dev/sdX bs=<i>sector_size</i> count=<i>sector_number</i> seek=<i>partitions_start_sector</i> status=progress
+</pre>
+<p>Here, to illustrate with a practical example, we will show the output of the <i>fdisk</i> command on the partition <code>/dev/sdX</code>: 
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># fdisk -l /dev/sdX</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Disk /dev/sdX: 1.8 TiB, <b>2000398934016</b> bytes, <b>3907029168</b> sectors
+Disk model: ST3500413AS
+Units: sectors of 1 * <b>512</b> = 512 bytes
+Sector size (logical/physical): 512 bytes / <b>4096</b> bytes
+...
+Device     Boot      Start        End         Sectors     Size  Id Type
+/dev/sdX1            2048         3839711231  3839709184  1,8T  83 Linux
+/dev/sdX2            3839711232   3907029167  67317936    32,1G  5 Extended</pre>
+<ul>
+<li>The first line of the <i>fdisk</i> output shows the disk size in bytes and in logical sectors.</li>
+<li>The size in bytes of the storage device or of the partition can also be obtained with the command <code>blockdev --getsize64 /dev/sdXY</code>.</li>
+<li>The <i>Units</i> line of the <i>fdisk</i> output shows the size of single logical sector; the logical sector size can also be derived from the number of bytes divided by the number of logical sectors, here use: <code>echo $((2000398934016 / 3907029168))</code>.</li>
+<li>To know the physical sector size in bytes (that will make it work faster), we can use the next line.</li>
+<li>To get the disk size in physical sectors, one can divide the disk size in bytes by the size of a single physical sector, here <code>echo $((2000398934016 / 4096))</code>,</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>In the examples below we will use the logical sector size.</li>
+<li>You can even wipe unallocated disk space with a <code>dd</code> command by calculating the difference between the end of one and start of the next partition.</li>
+</ul>
+</div>
+<p>To wipe partition <code>/dev/sdX1</code>, the example parameters with logical sectors would be used like follows. 
+</p>
+<ul><li>By using the starting address of the partition on the device using the <code>seek=</code> parameter:</li></ul>
+<pre># dd if=<i>data_source</i> of=/dev/sdX bs=${BytesInSector} count=${End - Start} seek=${Start} status=progress
+</pre>
+<p>with <code>Start=2048</code>, <code>End=3839711231</code> and <code>BytesInSector=512</code>.
+</p>
+<ul><li>Or by using the partitions size in logical sectors:</li></ul>
+<pre># dd if=<i>data_source</i> of=/dev/sdX1 bs=${BytesInSector} count=${LogicalSectors} status=progress
+</pre>
+<p>with <code>LogicalSectors=3839709184</code>.
+</p>
+<p>Or, to wipe the whole disk by using physical sectors:
+</p>
+<pre># dd if=<i>data_source</i> of=/dev/sdX bs=${PhysicalSectorSizeBytes} count=${AllDiskPhysicalSectors} seek=0 status=progress
+</pre>
+<p>with <code>AllDiskPhysicalSectors=488378646</code> and <code>PhysicalSectorSizeBytes=4096</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>count=</code> option is not necessary when wiping all the physical area e.g. <code>sdXY</code> or <code>sdX</code> from the start to the end but it shows an error about out of free space when it tries to write outside the limits.</div>
+<h2><span class="mw-headline" id="Overwrite_the_target">Overwrite the target</span></h2>
+<p>You can choose from several utilities to overwrite a drive. If you only want to wipe a single file, <a href="../en/Securely_wipe_disk/Tips_and_tricks.html#Wipe_a_single_file" title="Securely wipe disk/Tips and tricks">Securely wipe disk/Tips and tricks#Wipe a single file</a> has considerations in addition to the utilities mentioned below.
+</p>
+<h3><span class="mw-headline" id="By_redirecting_output">By redirecting output</span></h3>
+<p>The redirected output can be used to create files, rewrite free space on the partition, and to wipe the whole device or a single partition on it.
+</p>
+<p>The following examples show how to rewrite the partition or a block device by redirecting <a rel="nofollow" class="external text" href="https://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-3.html">stdout</a> from other utilities:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /dev/urandom &gt; /dev/sd"XY"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">cat: write error: No space left on device
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ xz -z0 /dev/urandom -c &gt; /dev/sd"XY"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">xz: (stdout): Write error: No space left on device
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ dd if=/dev/urandom &gt; /dev/sd"XY"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">dd: writing to ‘standard output’: No space left on device
+20481+0 records in
+20480+0 records out
+10485760 bytes (10 MB, 10 MiB) copied, 2.29914 s, 4.6 MB/s</pre>
+<p>The file copy command <code>cp</code> can also be used to rewrite the device, because it ignores the type of the destination:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cp /dev/urandom /dev/sd"XY"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> cp: error writing ‘/dev/sd"XY"’: No space left on device
+ cp: failed to extend ‘/dev/sd"XY"’: No space left on device
+</pre>
+<p>To show speed and time you can use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pv">pv</a></span>:
+</p>
+<pre># pv --timer --rate --stop-at-size -s "$(blockdev --getsize64 /dev/sd"XY" )" /dev/zero &gt; /dev/sd"XY"
+</pre>
+<h3><span class="mw-headline" id="dd">dd</span></h3>
+<p>See also <a href="../en/Dd.html" title="Dd">dd</a> and <a href="../en/Securely_wipe_disk/Tips_and_tricks.html#Wipe_a_single_file" title="Securely wipe disk/Tips and tricks">Securely wipe disk/Tips and tricks#Wipe a single file</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> There is no confirmation regarding the sanity of this command so <b>double-check</b> that the correct drive or partition has been targeted. Make certain that the <code>of=...</code> option points to the target drive and not to a system disk.</div>
+<p>Zero-fill the disk by writing a zero byte to every addressable location on the disk using the <a href="https://en.wikipedia.org/wiki//dev/zero" class="extiw" title="wikipedia:/dev/zero">/dev/zero</a> stream.
+</p>
+<pre># dd if=/dev/zero of=/dev/sdX bs=4096 status=progress
+</pre>
+<p>Or the <a href="https://en.wikipedia.org/wiki//dev/random" class="extiw" title="wikipedia:/dev/random">/dev/urandom</a> stream:
+</p>
+<pre># dd if=/dev/urandom of=/dev/sdX bs=4096 status=progress
+</pre>
+<p>The process is finished when dd reports <code>No space left on device</code> and returns control back:
+</p>
+<pre>dd: writing to ‘/dev/sdX’: No space left on device
+7959553+0 records in
+7959552+0 records out
+4075290624 bytes (4.1 GB, 3.8 GiB) copied, 1247.7 s, 3.3 MB/s
+</pre>
+<p>To speed up wiping a large drive, see also:
+</p>
+<ul>
+<li>
+<a href="../en/Securely_wipe_disk/Tips_and_tricks.html#dd_-_advanced_example" title="Securely wipe disk/Tips and tricks">Securely wipe disk/Tips and tricks#dd - advanced example</a> which uses OpenSSL,</li>
+<li>
+<a href="../en/Securely_wipe_disk/Tips_and_tricks.html#Using_a_template_file" title="Securely wipe disk/Tips and tricks">Securely wipe disk/Tips and tricks#Using a template file</a> which wipes with non-random preset data (e.g. overwrite a whole disk with a single file) but is very fast</li>
+<li>
+<a href="../en/Dm-crypt/Drive_preparation.html#dm-crypt_specific_methods" title="Dm-crypt/Drive preparation">Dm-crypt/Drive preparation#dm-crypt specific methods</a> which uses dm-crypt.</li>
+</ul>
+<h3><span class="mw-headline" id="wipe">wipe</span></h3>
+<p>A program specialized on wiping files. It is available as part of the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=wipe">wipe</a></span> package. To make a quick wipe of a destination, you can use something like:
+</p>
+<pre>$ wipe -r /path/to/wipe
+</pre>
+<p>See also <span class="plainlinks archwiki-template-man" title="$ man 1 wipe"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/wipe.1">wipe(1)</a></span>. The tool was last updated in 2009. Its <a rel="nofollow" class="external text" href="http://wipe.sourceforge.net/">SourceForge page</a> suggests that it is <b>currently unmaintained</b>.
+</p>
+<h3><span class="mw-headline" id="shred">shred</span></h3>
+<p><a rel="nofollow" class="external text" href="https://www.gnu.org/software/coreutils/manual/html_node/shred-invocation.html"><i>shred</i></a> (from the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=coreutils">coreutils</a></span> package) is a Unix command that can be used to securely delete individual files or full devices so that they can be recovered only with great difficulty with specialised hardware, if at all. By default <i>shred</i> uses three passes, writing <a href="../en/Random_number_generation.html" title="Random number generation">pseudo-random data</a> to the device during each pass. This can be reduced or increased.
+</p>
+<p>The following command invokes shred with its default settings and displays the progress.
+</p>
+<pre># shred -v /dev/sd<i>X</i>
+</pre>
+<p>Shred can also be used on a single partition, e.g. to wipe the first partition use <code>shred -v /dev/sd<i>X</i>1</code>.
+</p>
+<p>Alternatively, shred can be instructed to do only one pass, with entropy from e.g. <code>/dev/urandom</code>.
+</p>
+<pre># shred --verbose --random-source=/dev/urandom -n1 /dev/sd<i>X</i>
+</pre>
+<h3><span class="mw-headline" id="Badblocks">Badblocks</span></h3>
+<p>The tool <a href="../en/Badblocks.html" title="Badblocks">badblocks</a> from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=e2fsprogs">e2fsprogs</a></span> is able to perform destructive read-write test, effectively wiping the device. By default, it performs four passes and can take very long.
+</p>
+<pre># badblocks -wsv /dev/<i>device</i>
+</pre>
+<h3><span class="mw-headline" id="hdparm">hdparm</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not attempt to issue a Secure Erase ATA command on a device connected through USB; see <a rel="nofollow" class="external free" href="https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase">https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase</a> and <a rel="nofollow" class="external text" href="https://web.archive.org/web/20180711170859/http://www.tomshardware.co.uk/answers/id-1984547/secure-erase-external-usb-hard-drive.html">this answer</a> for details.</div>
+<p><a href="../en/Hdparm.html" title="Hdparm">hdparm</a> supports <a rel="nofollow" class="external text" href="https://tinyapps.org/docs/wipe_drives_hdparm.html">ATA Secure Erase</a>, which is functionally equivalent to zero-filling a disk. It is however handled by the hard drive firmware itself, and includes "hidden data areas". As such, it can be seen as a modern-day "low-level format" command. <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a> drives reportedly achieve factory performance after issuing this command, but may not be sufficiently wiped (see <a href="#Flash_memory">#Flash memory</a>).
+</p>
+<p>Some drives support <b>Enhanced Secure Erase</b>, which uses distinct patterns defined by the manufacturer. If the output of <code>hdparm -I</code> for the device indicates a manifold time advantage for the <b>Enhanced</b>  erasure, the device probably has a hardware encryption feature and the wipe will be performed to the encryption keys only.
+</p>
+<p>For detailed instructions on using ATA Secure Erase, see <a href="../en/Solid_state_drive/Memory_cell_clearing.html" title="Solid state drive/Memory cell clearing">Solid state drive/Memory cell clearing</a> and the <a rel="nofollow" class="external text" href="https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase">Linux ATA wiki</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://superuser.com/questions/19326/how-to-wipe-free-disk-space-in-linux">Wipe free space in Linux</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+<li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Securely_wipe_disk&amp;oldid=636987">https://wiki.archlinux.org/index.php?title=Securely_wipe_disk&amp;oldid=636987</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 October 2020, at 09:52.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Debug - Getting Traces - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Debug_-_Getting_Traces rootpage-Debug_-_Getting_Traces skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Debug - Getting Traces</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/General_troubleshooting.html" title="General troubleshooting">General troubleshooting</a></li>
+<li><a href="../en/Bug_reporting_guidelines.html" class="mw-redirect" title="Reporting bug guidelines">Reporting bug guidelines</a></li>
+<li><a href="../en/Debugging.html" class="mw-redirect" title="Step-by-step debugging guide">Step-by-step debugging guide</a></li>
+</ul>
+</div>
+<p>This article aims to help in creating a debugging Arch package and using it to provide trace and debug information for reporting software bugs to developers.
+</p>
+<p>Usually, executable files are stripped of human readable context to make them smaller. Not only that, enhanced debugging information is usually not added to the executable in the first place, which drastically reduces the quality of the trace. So, before getting traces with debug information, one has to rebuild the package without stripping and with debugging information.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Package_names"><span class="tocnumber">1</span> <span class="toctext">Package names</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#PKGBUILD"><span class="tocnumber">2</span> <span class="toctext">PKGBUILD</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Compilation_settings"><span class="tocnumber">3</span> <span class="toctext">Compilation settings</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#General"><span class="tocnumber">3.1</span> <span class="toctext">General</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#GTK3/GLib2"><span class="tocnumber">3.2</span> <span class="toctext">GTK3/GLib2</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Qt4"><span class="tocnumber">3.3</span> <span class="toctext">Qt4</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Qt5"><span class="tocnumber">3.4</span> <span class="toctext">Qt5</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#CMAKE_(KDE)_applications"><span class="tocnumber">3.5</span> <span class="toctext">CMAKE (KDE) applications</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#dhcpcd"><span class="tocnumber">3.6</span> <span class="toctext">dhcpcd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Building_and_installing_the_package"><span class="tocnumber">4</span> <span class="toctext">Building and installing the package</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Getting_the_trace"><span class="tocnumber">5</span> <span class="toctext">Getting the trace</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Conclusion"><span class="tocnumber">6</span> <span class="toctext">Conclusion</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Package_names">Package names</span></h2>
+<p>The first thing to do is to obtain the names of the packages which require rebuilding.
+</p>
+<p>When looking at debug messages, such as by using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gdb">gdb</a></span> on a <a href="../en/Core_dump.html" title="Core dump">core dump</a>:
+</p>
+<pre>[...]
+Backtrace was generated from '/usr/bin/epiphany'
+
+<b>(no debugging symbols found)</b>
+Using host libthread_db library "/lib/libthread_db.so.1".
+<b>(no debugging symbols found)</b>
+[Thread debugging using libthread_db enabled]
+[New Thread -1241265952 (LWP 12630)]
+(no debugging symbols found)
+0xb7f25410 in __kernel_vsyscall ()
+#0  0xb7f25410 in __kernel_vsyscall ()
+#1  0xb741b45b in <b>??</b> () from /lib/libpthread.so.0
+[...]
+</pre>
+<p><code>??</code> shows where debugging info is missing, as well as the name of library or executable which called the function. Similarly, when <code>(no debugging symbols found)</code> appears, you should look for the stated file names. For example, with <a href="../en/Pacman.html" title="Pacman">pacman</a>:
+</p>
+<pre>$ pacman -Qo /lib/libthread_db.so.1
+/lib/libthread_db.so.1 is owned by <i>glibc</i> 2.5-8
+</pre>
+<p>The package is called <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=glibc">glibc</a></span> in version 2.5-8. Repeat this step for every package that needs debugging.
+</p>
+<h2><span class="mw-headline" id="PKGBUILD">PKGBUILD</span></h2>
+<p>In order to build a package from source, the <a href="../en/PKGBUILD.html" title="PKGBUILD">PKGBUILD</a> file is required. See <a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a> for packages in the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>, and <a href="../en/Arch_User_Repository.html#Acquire_build_files" class="mw-redirect" title="AUR">AUR#Acquire build files</a> for packages in the <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a>.
+</p>
+<h2><span class="mw-headline" id="Compilation_settings">Compilation settings</span></h2>
+<p>At this stage, you can modify the global configuration file of <code>makepkg</code> if you will be using it only for debug purposes. In other cases, you should modify package's PKGBUILD file only for each package you would like to rebuild.
+</p>
+<h3><span class="mw-headline" id="General">General</span></h3>
+<p>As of pacman 4.1, <code>/etc/makepkg.conf</code> has debug compilation flags in <code>DEBUG_CFLAGS</code> and <code>DEBUG_CXXFLAGS</code>. To use them, enable the <code>debug</code> makepkg option, and disable <code>strip</code>.
+</p>
+<pre>OPTIONS+=(debug !strip)
+</pre>
+<p>These settings will force compilation with debug symbols and will disable their stripping from executables. To apply this setting to a single package, modify the PKGBUILD:
+</p>
+<pre>options=(debug !strip)
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Packages using <a href="../en/Clang.html" title="Clang">Clang</a> as the compiler will not build with the <code>debug</code> option due to the debug flag <code>-fvar-tracking-assignments'</code> not being handled (e.g. <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=js68">js68</a></span>).  
+<p>Add the following at the top of the <code>build()</code> function to only remove the flag for the affected package: 
+</p>
+<pre>build() {
+  CFLAGS=${CFLAGS/-fvar-tracking-assignments}
+  CXXFLAGS=${CXXFLAGS/-fvar-tracking-assignments}
+[...]</pre>
+</div>
+<p>Alternatively you can put the debug information in a separate package by enabling both <code>debug</code> and <code>strip</code>, debug symbols will then be stripped from the main package and placed, together with source files to aid in stepping through the debugger, in a separate <code><i>foo</i>-debug</code> package.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is insufficient to simply install the newly compiled debug package, because the debugger will check that the file containing the debug symbols is from the same build as the associated library and executable. You must install both of the recompiled packages. In Arch, the debug symbol files are installed under <code>/usr/lib/debug</code>, and source files are installed under <code>/usr/src/debug</code>. See the <a rel="nofollow" class="external text" href="https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html">GDB documentation</a> 
+for more information about debug packages.</div>
+<p>Note that certain packages such as <i>glibc</i> are stripped regardless. Check the PKGBUILD for sections such as:
+</p>
+<pre>strip $STRIP_BINARIES usr/bin/{gencat,getconf,getent,iconv,iconvconfig} \
+                      usr/bin/{ldconfig,locale,localedef,nscd,makedb} \
+                      usr/bin/{pcprofiledump,pldd,rpcgen,sln,sprof} \
+                      usr/lib/getconf/*
+
+strip $STRIP_STATIC usr/lib/*.a
+
+strip $STRIP_SHARED usr/lib/{libanl,libBrokenLocale,libcidn,libcrypt}-*.so \
+                    usr/lib/libnss_{compat,db,dns,files,hesiod,nis,nisplus}-*.so \
+                    usr/lib/{libdl,libm,libnsl,libresolv,librt,libutil}-*.so \
+                    usr/lib/{libmemusage,libpcprofile,libSegFault}.so \
+                    usr/lib/{audit,gconv}/*.so
+</pre>
+<p>And remove them where appropriate.
+</p>
+<h3>
+<span id="GTK3.2FGLib2"></span><span class="mw-headline" id="GTK3/GLib2">GTK3/GLib2</span>
+</h3>
+<p>The <a href="../en/Unofficial_user_repositories.html#eschwartz" title="Unofficial user repositories">eschwartz</a> repository contains pre-built GTK3 and GLib2 packages with detached debug symbol packages.
+</p>
+<h3><span class="mw-headline" id="Qt4">Qt4</span></h3>
+<p>In addition to the previous general settings, pass <code>-developer-build</code> option to the <code>configure</code> script in the <code>PKGBUILD</code>. By default, <code>-developer-build</code> passes <code>-Werror</code> to the compiler, which may cause the compilation to fail. To avoid compilation errors, you may need pass <code>-no-warnings-are-errors</code>, too.
+</p>
+<h3><span class="mw-headline" id="Qt5">Qt5</span></h3>
+<p>The <a href="../en/Unofficial_user_repositories.html#qt-debug" title="Unofficial user repositories">qt-debug</a> repository contains pre-built Qt/PyQt packages with debug symbols. See also <a rel="nofollow" class="external text" href="http://doc.qt.io/qt-5/debug.html">upstream</a> instructions.
+</p>
+<p>The <a href="../en/Unofficial_user_repositories.html#eschwartz" title="Unofficial user repositories">eschwartz</a> repository contains pre-built qt5-base and pyqt5 packages with detached debug symbol packages.
+</p>
+<h3>
+<span id="CMAKE_.28KDE.29_applications"></span><span class="mw-headline" id="CMAKE_(KDE)_applications">CMAKE (KDE) applications</span>
+</h3>
+<p><a href="../en/KDE.html" title="KDE">KDE</a> and related programs typically use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cmake">cmake</a></span>. To enable debug information and disable optimizations, change <code>-DCMAKE_BUILD_TYPE</code> to <code>Debug</code>, for KDE applications change it to <code>debugfull</code>.
+To enable debug information while keeping optimisations enabled, change <code>-DCMAKE_BUILD_TYPE</code> to <code>RelWithDebInfo</code>.
+</p>
+<h3><span class="mw-headline" id="dhcpcd">dhcpcd</span></h3>
+<p>Remember to pass the <code>--debug</code> flag to the <code>configure</code> script when building <a href="../en/Dhcpcd.html" title="Dhcpcd">dhcpcd</a>.
+</p>
+<h2><span class="mw-headline" id="Building_and_installing_the_package">Building and installing the package</span></h2>
+<p>Build the package from source using <code>makepkg</code> while in the PKGBUILD's directory. This could take some time:
+</p>
+<pre>$ makepkg
+</pre>
+<p>Then install the built package:
+</p>
+<pre># pacman -U glibc-2.26-1-x86_64.pkg.tar.gz
+</pre>
+<h2><span class="mw-headline" id="Getting_the_trace">Getting the trace</span></h2>
+<p>The actual backtrace (or stack trace) can now be obtained via e.g. <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gdb">gdb</a></span>, the GNU Debugger. Run it either via:
+</p>
+<pre># gdb /path/to/file
+</pre>
+<p>or:
+</p>
+<pre># gdb
+(gdb) exec /path/to/file
+</pre>
+<p>The path is optional, if already set in the <code>$PATH</code> variable.
+</p>
+<p>Then, within <code>gdb</code>, type <code>run</code> followed by any arguments you wish the program to start with, e.g.:
+</p>
+<pre>(gdb) run --no-daemon --verbose
+</pre>
+<p>to start execution of the file. Do whatever necessary to evoke the bug. For the actual log, type the lines:
+</p>
+<pre>(gdb) set logging file trace.log
+(gdb) set logging on
+</pre>
+<p>and then:
+</p>
+<pre>(gdb) thread apply all bt full
+</pre>
+<p>to output the trace to <code>trace.log</code> into the directory <code>gdb</code> was started in. To exit, enter:
+</p>
+<pre>(gdb) set logging off
+(gdb) quit
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong>  To debug an application written in python:
+<pre># gdb /usr/bin/python
+(gdb) run &lt;python application&gt;
+</pre>
+</div>
+<p>You can also debug an already running application, e.g.:
+</p>
+<pre> # gdb --pid=$(pidof firefox)
+ (gdb) continue
+</pre>
+<p>To debug an application that has already crashed, you will want to invoke gdb on its <a href="../en/Core_dump.html#Examining_a_core_dump" title="Core dump">core dump</a>.
+</p>
+<h2><span class="mw-headline" id="Conclusion">Conclusion</span></h2>
+<p>Use the complete stack trace to inform developers of a bug you have discovered before. This will be highly appreciated by them and will help to improve your favorite program.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="https://wiki.debian.org/HowToGetABacktrace" class="extiw" title="debian:HowToGetABacktrace">Debian Wiki - How To Get a Backtrace</a></li>
+<li><a rel="nofollow" class="external text" href="https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Backtraces">Gentoo Wiki - Backtraces with Gentoo</a></li>
+<li><a rel="nofollow" class="external text" href="http://fedoraproject.org/wiki/StackTraces">Fedora - StackTraces</a></li>
+<li><a rel="nofollow" class="external text" href="https://wiki.gnome.org/Community/GettingInTouch/Bugzilla/GettingTraces/Details#obtain-a-stacktrace">GNOME - Getting Stack Traces</a></li>
+<li><a rel="nofollow" class="external text" href="http://linux.bytesex.org/gdb.html">gdb mini intro</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Package_development.html" title="Category:Package development">Package development</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Debug_-_Getting_Traces&amp;oldid=640850">https://wiki.archlinux.org/index.php?title=Debug_-_Getting_Traces&amp;oldid=640850</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 November 2020, at 19:37.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

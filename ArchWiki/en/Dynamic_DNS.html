@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Dynamic DNS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dynamic_DNS rootpage-Dynamic_DNS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Dynamic DNS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>According to <a href="https://en.wikipedia.org/wiki/Dynamic_DNS" class="extiw" title="wikipedia:Dynamic DNS">Wikipedia</a>:
+</p>
+<dl><dd>
+<b>Dynamic DNS</b> (<b>DDNS</b> or <b>DynDNS</b>) is a method of automatically updating a <a href="https://en.wikipedia.org/wiki/name_server" class="extiw" title="wikipedia:name server">name server</a> in the <a href="https://en.wikipedia.org/wiki/Domain_Name_System" class="extiw" title="wikipedia:Domain Name System">Domain Name System</a> (DNS), often in real time, with the active DDNS configuration of its configured hostnames, addresses or other information.</dd></dl>
+<dl><dd>The term is used to describe two different concepts. The first is "dynamic DNS updating" which refers to systems that are used to update traditional DNS records without manual editing. These mechanisms are explained in <a href="https://tools.ietf.org/html/rfc2136" class="extiw" title="rfc:2136">RFC 2136</a>, and use the <a href="https://en.wikipedia.org/wiki/TSIG" class="extiw" title="wikipedia:TSIG">TSIG</a> mechanism to provide security. The second kind of dynamic DNS permits lightweight and immediate updates often using an update client, which do not use the RFC2136 standard for updating DNS records. These clients provide a persistent addressing method for devices that change their location, configuration or <a href="https://en.wikipedia.org/wiki/IP_address" class="extiw" title="wikipedia:IP address">IP address</a> frequently.</dd></dl>
+<p>For RFC2136 there is <span class="plainlinks archwiki-template-man" title="$ man 1 nsupdate"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nsupdate.1">nsupdate(1)</a></span> from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span>. For dynamic DNS services there are several packages available, see <a href="#Update_clients">#Update clients</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Router"><span class="tocnumber">1</span> <span class="toctext">Router</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Update_clients"><span class="tocnumber">2</span> <span class="toctext">Update clients</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Multi-service_clients"><span class="tocnumber">2.1</span> <span class="toctext">Multi-service clients</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Single-service_clients"><span class="tocnumber">2.2</span> <span class="toctext">Single-service clients</span></a></li>
+<li class="toclevel-2 tocsection-5">
+<a href="#ddclient"><span class="tocnumber">2.3</span> <span class="toctext">ddclient</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#Use_an_external_website_to_determine_IP_address"><span class="tocnumber">2.3.1</span> <span class="toctext">Use an external website to determine IP address</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Starting_ddclient_after_networking_is_up"><span class="tocnumber">2.3.2</span> <span class="toctext">Starting ddclient after networking is up</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Other_providers"><span class="tocnumber">3</span> <span class="toctext">Other providers</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Router">Router</span></h2>
+<p>If the device needing DDNS sits behind a router, you should first check if the router itself can update any DDNS services. Although the selection of services may be limited, there are several advantages to using the router: it will probably be easier to set up, will require little to no maintenance, and will have no downtime (if the router is down you will not have Internet anyway).
+</p>
+<h2><span class="mw-headline" id="Update_clients">Update clients</span></h2>
+<p>Note that some dynamic DNS providers do not require a dedicated client and can be updated with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=curl">curl</a></span>.
+</p>
+<h3><span class="mw-headline" id="Multi-service_clients">Multi-service clients</span></h3>
+<ul><li>
+<b><a href="#ddclient">ddclient</a></b> — Update dynamic DNS entries for accounts on many dynamic DNS services.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/ddclient/ddclient">https://github.com/ddclient/ddclient</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ddclient">ddclient</a></span>
+</dd></dl>
+<ul><li>
+<b>ddnsc</b> — A simple &amp; lightweight client written in python.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/shyaminayesh/ddnsc">https://github.com/shyaminayesh/ddnsc</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/ddnsc/">ddnsc</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>inadyn-fork</b> — Dynamic DNS client with SSL/TLS support.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://troglobit.com/inadyn.html">http://troglobit.com/inadyn.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/inadyn-fork/">inadyn-fork</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/inadyn-fork-git/">inadyn-fork-git</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>inadyn-mt</b> — A simple dynamic DNS client based on inadyn.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://inadyn-mt.sourceforge.net/">http://inadyn-mt.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/inadyn-mt/">inadyn-mt</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>ndyndns</b> — Supports DynDNS and Namecheap.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/niklata/ndyndns">https://github.com/niklata/ndyndns</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/ndyndns/">ndyndns</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<h3><span class="mw-headline" id="Single-service_clients">Single-service clients</span></h3>
+<ul><li>
+<b>duckdns</b> — Update your DuckDNS.org entries from your computer with systemd.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://www.duckdns.org/">https://www.duckdns.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/duckdns/">duckdns</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/duckdns-ipv6/">duckdns-ipv6</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>noip</b> — Dynamic DNS Client Updater for no-ip.com services.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.no-ip.com/downloads.php?page=linux">http://www.no-ip.com/downloads.php?page=linux</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/noip/">noip</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>petrified</b> — Bash client to update dynamic DNS at freedns.afraid.org.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://gitlab.com/troyengel/petrified">https://gitlab.com/troyengel/petrified</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/petrified/">petrified</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<h3><span class="mw-headline" id="ddclient">ddclient</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ddclient">ddclient</a></span> is compatible with many DDNS services and is the recommended tool for updating DDNS if your <a href="#Router">router</a> is not an option. It includes <a href="../en/Systemd.html" title="Systemd">systemd</a> support.
+</p>
+<p>After installing, edit the default config <code>/etc/ddclient/ddclient.conf</code> to set up your DDNS provider (it includes many examples). Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>ddclient.service</code>.
+</p>
+<p>The configuration can be tested by running <code>ddclient</code> with the <code>-noquiet</code> and <code>-debug</code> options:
+</p>
+<pre># ddclient -daemon=0 -noquiet -debug
+</pre>
+<p>Some of the compatible services are listed below, but you can also check the <a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/code/HEAD/tree/trunk/sample-etc_ddclient.conf">examples</a> and <a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/wiki/protocols/">protocols</a> for more.
+</p>
+<table class="wikitable">
+<caption>ddclient compatible services
+</caption>
+<tbody>
+<tr>
+<th>Service
+</th>
+<th>Config Notes
+</th>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="http://now-dns.com/">Now-DNS</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://now-dns.com/client/ddclient.conf">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="http://www.changeip.com/">ChangeIP</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/wiki/protocols/#changeip">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="https://www.duckdns.org/">Duck DNS</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/wiki/protocols/#duckdns">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="http://freedns.afraid.org/">FreeDNS</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="http://freedns.afraid.org/scripts/freedns.clients.php">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="http://www.noip.com/">No-IP</a>
+</th>
+<td>Use protocol <code>noip</code>, server <code>dynupdate.no-ip.com</code>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="https://www.nsupdate.info/">nsupdate.info</a>
+</th>
+<td>Use protocol <code>dyndns2</code>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="https://dyn.com/dns/">Dyn DNS</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/wiki/protocols/#dyndns2">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="https://www.namecheap.com/">Namecheap</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://sourceforge.net/p/ddclient/wiki/protocols/#namecheap">example</a>
+</td>
+</tr>
+<tr>
+<th>
+<a rel="nofollow" class="external text" href="https://www.dynu.com/">Dynu</a>
+</th>
+<td>
+<a rel="nofollow" class="external text" href="https://www.dynu.com/DynamicDNS/IPUpdateClient/DDClient">example</a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Free users of no-ip are required to manually confirm their domain(s) every 30 days. Domain confirmation is not required for Enhanced users though. More info at <a rel="nofollow" class="external text" href="http://www.noip.com/support/knowledgebase/why-is-my-hostname-pending-deletion/">Why is My Hostname Pending Deletion?</a>
+</div> 
+<h4><span class="mw-headline" id="Use_an_external_website_to_determine_IP_address">Use an external website to determine IP address</span></h4>
+<p>If ddclient is unable to detect your IP address, you can configure ddclient to fetch your IP from an external webpage such as <a rel="nofollow" class="external text" href="http://checkip.dyndns.org/">checkip.dyndns.org</a>. This address is used by default when <code>use=web</code> is specified. It is also recommended to increase the check interval to avoid frequent requests to the IP check service:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ddclient/ddclient.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">daemon=900
+# obtain IP address from web status page
+use=web</pre>
+<p>An alternative IP check service can be specified with the <code>web</code> key:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ddclient/ddclient.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">daemon=900
+# obtain IP address from web status page
+use=web, web=myonlineportal.net/checkip</pre>
+<h4><span class="mw-headline" id="Starting_ddclient_after_networking_is_up">Starting ddclient after networking is up</span></h4>
+<p>If you find that ddclient is unable to update your IP properly, it may be that the ddclient process is starting before networking is up. To fix it, you can edit the unit file to depend on <code>network-online.target</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># systemctl edit ddclient.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+After=network-online.target
+Wants=network-online.target</pre>
+<p>Additional configuration for <code>network-online.target</code> may be necessary, see <a rel="nofollow" class="external autonumber" href="https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget#cutthecraphowdoimakenetwork.targetworkforme">[1]</a>.
+</p>
+<h2><span class="mw-headline" id="Other_providers">Other providers</span></h2>
+<p>Other DDNS providers are not compatible with <a href="#ddclient">ddclient</a> so updating your IP with them may require a special tool or some custom scripting. Remember that if the service allows you to update your IP using the command line, you can automate the process using tools such as <a href="../en/Cron.html" title="Cron">cron</a> or <a href="../en/Systemd/Timers.html" title="Systemd/Timers">systemd/Timers</a>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Domain_Name_System.html" title="Category:Domain Name System">Domain Name System</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dynamic_DNS&amp;oldid=629092">https://wiki.archlinux.org/index.php?title=Dynamic_DNS&amp;oldid=629092</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 08:23.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

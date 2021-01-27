@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Dovecot - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dovecot rootpage-Dovecot skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Dovecot</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Postfix.html" title="Postfix">Postfix</a></li>
+<li><a href="../en/Courier_Mail_Server.html" class="mw-redirect" title="Courier MTA">Courier MTA</a></li>
+<li><a href="../en/OpenSMTPD.html" title="OpenSMTPD">OpenSMTPD</a></li>
+<li><a href="../en/Fail2ban.html" title="Fail2ban">Fail2ban</a></li>
+<li><a href="../en/SOGo.html" title="SOGo">SOGo</a></li>
+<li><a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" class="mw-redirect" title="Virtual user mail system">Virtual user mail system</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="http://www.dovecot.org/">Dovecot</a> is an open source <a href="https://en.wikipedia.org/wiki/IMAP" class="extiw" title="wikipedia:IMAP">IMAP</a> and <a href="https://en.wikipedia.org/wiki/POP3" class="extiw" title="wikipedia:POP3">POP3</a> server for Linux/UNIX-like systems, written primarily with security in mind. Dovecot primarily aims to be a lightweight, fast and easy to set up open source mailserver.  For more detailed information, please see the official <a rel="nofollow" class="external text" href="http://wiki2.dovecot.org/">Dovecot Wiki</a>.
+</p>
+<p>This article describes how to set up Dovecot for personal or small office use.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Assumptions"><span class="tocnumber">2.1</span> <span class="toctext">Assumptions</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Create_the_TLS_certificate"><span class="tocnumber">2.2</span> <span class="toctext">Create the TLS certificate</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Dovecot_configuration"><span class="tocnumber">2.3</span> <span class="toctext">Dovecot configuration</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Generate_DH_parameters"><span class="tocnumber">2.4</span> <span class="toctext">Generate DH parameters</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#PAM_Authentication_with_LDAP"><span class="tocnumber">2.5</span> <span class="toctext">PAM Authentication with LDAP</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Sieve"><span class="tocnumber">2.6</span> <span class="toctext">Sieve</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9">
+<a href="#Sieve_Interpreter_Plugin"><span class="tocnumber">2.6.1</span> <span class="toctext">Sieve Interpreter Plugin</span></a>
+<ul>
+<li class="toclevel-4 tocsection-10"><a href="#Example:_SpamAssassin_-_move_spam_to_%22Junk%22_folder"><span class="tocnumber">2.6.1.1</span> <span class="toctext">Example: SpamAssassin - move spam to "Junk" folder</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-11"><a href="#ManageSieve_Server"><span class="tocnumber">2.6.2</span> <span class="toctext">ManageSieve Server</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#Full_Text_Search"><span class="tocnumber">3</span> <span class="toctext">Full Text Search</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#Starting_the_server"><span class="tocnumber">4</span> <span class="toctext">Starting the server</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#Tricks"><span class="tocnumber">5</span> <span class="toctext">Tricks</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dovecot">dovecot</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="Assumptions">Assumptions</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Don't make arbitrary assumptions. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Dovecot">Talk:Dovecot#</a>)</div>
+</div>
+<ul>
+<li>Each mail account served by Dovecot, has a local user account defined on the server.</li>
+<li>The server uses <a href="../en/PAM.html" title="PAM">PAM</a> to authenticate the user against the local user database (<code>/etc/passwd</code>).</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Transport_Layer_Security" class="extiw" title="wikipedia:Transport Layer Security">TLS</a> is used to encrypt the authentication password.</li>
+<li>The common <a href="https://en.wikipedia.org/wiki/Maildir" class="extiw" title="wikipedia:Maildir">Maildir</a> format is used to store the mail in the user's home directory.</li>
+<li>A <a href="https://en.wikipedia.org/wiki/Mail_delivery_agent" class="extiw" title="wikipedia:Mail delivery agent">MDA</a> has already been set up to deliver mail to the local users.</li>
+</ul>
+<h3><span class="mw-headline" id="Create_the_TLS_certificate">Create the TLS certificate</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you deploy <a href="https://en.wikipedia.org/wiki/TLS" class="extiw" title="wikipedia:TLS">TLS</a>, be sure to follow <a rel="nofollow" class="external text" href="https://weakdh.org/sysadmin.html">weakdh.org's guide</a> to prevent vulnerabilities. <code>ssl_min_protocol</code> defaults to TLSv1. For more information see <a href="../en/Transport_Layer_Security.html#Server-side_recommendations" class="mw-redirect" title="Server-side TLS">Server-side TLS</a>.</div>
+<p>To obtain a certificate, see <a href="../en/OpenSSL.html#Usage" title="OpenSSL">OpenSSL#Usage</a>.
+</p>
+<p>Alternatively you can generate the certificate using a script that comes with the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dovecot">dovecot</a></span> package:
+</p>
+<ol>
+<li>Copy the example configuration: <code>cp /usr/share/doc/dovecot/dovecot-openssl.cnf /etc/ssl/dovecot-openssl.cnf</code> as the root user.</li>
+<li>Edit <code>/etc/ssl/dovecot-openssl.cnf</code> to configure the certificate.</li>
+<li>Execute <code>/usr/lib/dovecot/mkcert.sh</code> as the root user to generate the certificate.</li>
+</ol>
+<p>The certificate/key pair is created as <code>/etc/ssl/certs/dovecot.pem</code> and <code>/etc/ssl/private/dovecot.pem</code>.
+</p>
+<p>Run <code>cp /etc/ssl/certs/dovecot.pem /etc/ca-certificates/trust-source/anchors/dovecot.crt</code> and then <code>trust extract-compat</code> as the root user whenever you have
+changed your certificate.
+</p>
+<h3><span class="mw-headline" id="Dovecot_configuration">Dovecot configuration</span></h3>
+<ul><li>Copy the <code>dovecot.conf</code> and <code>conf.d/*</code> configuration files from <code>/usr/share/doc/dovecot/example-config</code> to <code>/etc/dovecot</code>:</li></ul>
+<pre># cp /usr/share/doc/dovecot/example-config/dovecot.conf /etc/dovecot
+# cp -r /usr/share/doc/dovecot/example-config/conf.d /etc/dovecot
+</pre>
+<p>The default configuration is ok for most systems, but make sure to read through the configuration files to see what options are available.  See the <a rel="nofollow" class="external text" href="https://doc.dovecot.org/configuration_manual/quick_configuration/">quick configuration guide</a> and <a rel="nofollow" class="external text" href="http://wiki2.dovecot.org/#Dovecot_configuration">dovecot configuration</a> for more instructions.
+</p>
+<p>By default dovecot will try to detect what mail storage system is in use on the system. To use the Maildir format edit <code>/etc/dovecot/conf.d/10-mail.conf</code> to set <code>mail_location = maildir:~/Maildir</code>.
+</p>
+<h3><span class="mw-headline" id="Generate_DH_parameters">Generate DH parameters</span></h3>
+<p>To generate a new DH parameters file (this will take very long):
+</p>
+<pre># openssl dhparam -out /etc/dovecot/dh.pem 4096
+</pre>
+<p>then add the file to <code>/etc/dovecot/conf.d/10-ssl.conf</code>
+</p>
+<pre>ssl_dh = &lt;/etc/dovecot/dh.pem
+</pre>
+<h3><span class="mw-headline" id="PAM_Authentication_with_LDAP">PAM Authentication with LDAP</span></h3>
+<ul><li>If you are using an <a href="../en/OpenLDAP.html" title="OpenLDAP">OpenLDAP</a> server for authentication instead, be sure to be able to login with your LDAP users first, as described in <a href="../en/LDAP_authentication.html" title="LDAP authentication">LDAP authentication</a>.</li></ul>
+<p>You can then write the following in <code>/etc/pam.d/dovecot</code> remembering that the entries order is very important:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pam.d/dovecot</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">auth    sufficient      pam_ldap.so
+auth    required        pam_unix.so     nullok
+account sufficient      pam_ldap.so
+account required        pam_unix.so
+session required        pam_mkhomedir.so skel=/etc/skel umask=0022
+session sufficient      pam_ldap.so</pre>
+<p>In this way both LDAP and system users have their mailbox. 
+</p>
+<ul><li>Edit <code>/etc/dovecot/conf.d/auth-system.conf</code> by changing the <code>passdb</code> directive, like this:</li></ul>
+<pre>passdb {
+  driver = pam
+  args = session=yes dovecot
+}
+</pre>
+<p>By using the <code>pam_mkhomedir.so</code> module and by adding the <code>session</code> part in the <code>passdb</code> directive, if an LDAP user logs in for the first time the corresponding home directory will be automatically created.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  The pam session is cleared after the initial authentication request; you may experience race conditions where the home directory gets cleared during the imap session. </div>
+<h3><span class="mw-headline" id="Sieve">Sieve</span></h3>
+<p><a href="https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)" class="extiw" title="wikipedia:Sieve (mail filtering language)">Sieve</a> is a programming language that can be used to create filters for email on mail server.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  You must be using Dovecot as a local delivery agent (through LMTP or LDA) for plugins like Sieve to work. If you are following the <a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" class="mw-redirect" title="Virtual user mail system">Virtual user mail system</a> guide, this is most likely not the case and you will need to modify your Postfix configuration. A guide can be found in the <a rel="nofollow" class="external text" href="https://wiki2.dovecot.org/HowTo/PostfixDovecotLMTP">Dovecot Wiki</a>.</div>
+<h4><span class="mw-headline" id="Sieve_Interpreter_Plugin">Sieve Interpreter Plugin</span></h4>
+<p>This facilitates the actual Sieve filtering upon delivery. 
+</p>
+<ul>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pigeonhole">pigeonhole</a></span>.</li>
+<li>Depending on your usage, add <code>sieve</code> to <code>mail_plugins</code> in
+<ul>
+<li>
+<code>/etc/dovecot/conf.d/15-lda.conf</code><pre>protocol lda {
+  mail_plugins = $mail_plugins sieve
+}
+</pre>
+</li>
+<li>and/or <code>/etc/dovecot/conf.d/20-lmtp.conf</code><pre>protocol lmtp {
+  mail_plugins = $mail_plugins sieve
+}
+</pre>
+</li>
+</ul>
+</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Nowadays it is recommended to use LMTP instead of LDA. Nevertheless the Dovecot LDA can still be used for small mailservers. More information can be found in the <a rel="nofollow" class="external text" href="http://wiki2.dovecot.org/LMTP">Dovecot Wiki</a>.</div>
+<ul><li>Optionally, add configuration in <code>plugin</code> section. See <a rel="nofollow" class="external text" href="http://wiki2.dovecot.org/Pigeonhole/Sieve/Configuration">Sieve Interpreter Documentation</a> for configuration options and default values.<br> Example: run <code>cp /usr/share/doc/dovecot/example-config/conf.d/90-sieve.conf /etc/dovecot/conf.d/90-sieve.conf</code> and verify in <code>/etc/dovecot/conf.d/90-sieve.conf</code>: <pre>plugin {
+  sieve = file:~/sieve;active=~/.dovecot.sieve 
+}
+</pre>
+</li></ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Configuration files in <code>/etc/dovecot/conf.d/</code> will not be read without a line in <code>/etc/dovecot/dovecot.conf</code> like <code>!include /etc/dovecot/conf.d/*.conf</code>. If you are following the <a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" class="mw-redirect" title="Virtual user mail system">Virtual user mail system</a> guide, you may need to add this line.</div>
+<h6>
+<span id="Example:_SpamAssassin_-_move_spam_to_.22Junk.22_folder"></span><span class="mw-headline" id='Example:_SpamAssassin_-_move_spam_to_"Junk"_folder'>Example: SpamAssassin - move spam to "Junk" folder</span>
+</h6>
+<ul><li>Add spamtest configuration</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/dovecot/conf.d/90-sieve.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">plugin {
+  sieve_extensions = +spamtest +spamtestplus
+
+  sieve_spamtest_status_type = score
+  sieve_spamtest_status_header = \ 
+    X-Spam_score: (-?[[:digit:]]+\.[[:digit:]]).* 
+  sieve_spamtest_max_value = 5.0 
+
+  sieve_before = /var/lib/dovecot/sieve/global_sieves/move_to_spam_folder.sieve
+}
+</pre> <p><b>Note:</b> This tests for "X-Spam_score" (which is the spam header format in default Exim configuration). Your header might look different, ie "X-Spam-Score".
+</p>
+<ul><li>Create sieve script: <code>mkdir -p /var/lib/dovecot/sieve/global_sieves</code>
+</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/var/lib/dovecot/sieve/global_sieves/move_to_spam_folder.sieve</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">require "spamtestplus";
+require "fileinto";
+require "relational";
+require "comparator-i;ascii-numeric";
+
+if spamtest :value "ge" :comparator "i;ascii-numeric" "5" {
+  fileinto "Junk";
+}
+</pre>
+<ul><li>To compile sieve, execute in shell <pre>sievec /var/lib/dovecot/sieve/global_sieves
+</pre> and make sure the <code>move_to_spam_folder.sieve</code> and the resulting <code>move_to_spam_folder.svbin</code> files are world readable.</li></ul>
+<h4><span class="mw-headline" id="ManageSieve_Server">ManageSieve Server</span></h4>
+<p>This implements the ManageSieve protocol through which users can remotely manage Sieve scripts on the server.
+</p>
+<ul>
+<li>Follow the steps in <b>Sieve Interpreter Plugin</b> above.</li>
+<li>Add <code>sieve</code> to <code>protocols</code> in <code>dovecot.conf</code> <pre>protocols = imap pop3 sieve
+</pre>
+</li>
+<li>Add minimal <code>/etc/dovecot/conf.d/20-managesieve.conf</code> <pre>service managesieve-login {
+}
+
+service managesieve {
+}
+
+protocol sieve {
+}
+</pre>
+</li>
+<li>Restart <code>dovecot</code>. The managesieve daemon will listen on port 4190 by default.</li>
+</ul>
+<h2><span class="mw-headline" id="Full_Text_Search">Full Text Search</span></h2>
+<p>By default dovecot doesn't index the full message content, which will result in slow response times for IMAP SEARCH queries for bigger mailboxes. There's a number of <a rel="nofollow" class="external text" href="https://doc.dovecot.org/configuration_manual/fts/">FTS backends</a> dovecot can be hooked up to.
+</p>
+<p>Dovecot needs a plugin for the chosen search backend. The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=solr">solr</a></span> plugin is included in the Archlinux dovecot package but solr itself is not the easiest to set up. There are AUR packages for <a href="https://en.wikipedia.org/wiki/Xapian" class="extiw" title="wikipedia:Xapian">Xapian</a> (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dovecot-fts-xapian/">dovecot-fts-xapian</a></span><sup><small>AUR</small></sup>) and <a href="https://en.wikipedia.org/wiki/Elasticsearch" class="extiw" title="wikipedia:Elasticsearch">Elasticsearch</a> (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/dovecot-fts-elastic/">dovecot-fts-elastic</a></span><sup><small>AUR</small></sup>).
+</p>
+<h2><span class="mw-headline" id="Starting_the_server">Starting the server</span></h2>
+<p>Use the standard <a href="../en/Systemd.html" title="Systemd">systemd</a> syntax to control the <code>dovecot.service</code> <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a>.
+</p>
+<h2><span class="mw-headline" id="Tricks">Tricks</span></h2>
+<p>Generate hashes with non-default hash functions.
+</p>
+<pre>doveadm pw -s SHA512-CRYPT -p "superpassword"
+</pre>
+<p>Remember to make sure that the column in the database is large enough(you might not get a warning..)
+</p>
+<p>Remember to set the password scheme in your dovecot-sql.conf file
+</p>
+<pre>default_pass_scheme = SHA512-CRYPT
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Mail_server.html" title="Category:Mail server">Mail server</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dovecot&amp;oldid=648386">https://wiki.archlinux.org/index.php?title=Dovecot&amp;oldid=648386</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 January 2021, at 22:57.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

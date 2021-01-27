@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Preboot Execution Environment - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Preboot_Execution_Environment rootpage-Preboot_Execution_Environment skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Preboot Execution Environment</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Diskless_system.html" title="Diskless system">Diskless system</a></li>
+</ul>
+</div>
+<p>From <a href="https://en.wikipedia.org/wiki/Preboot_Execution_Environment" class="extiw" title="wikipedia:Preboot Execution Environment">Wikipedia:Preboot Execution Environment</a>:
+</p>
+<dl><dd>The Preboot eXecution Environment (PXE, most often pronounced as pixie) specification describes a standardized client-server environment that boots a software assembly, retrieved from a network, on PXE-enabled clients. On the client side it requires only a PXE-capable network interface controller (NIC), and uses a small set of industry-standard network protocols such as DHCP and TFTP.</dd></dl>
+<p>In this guide, PXE is used to boot the installation media with an appropriate option-rom that supports PXE on the target. This works well when you already have a server set up.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Preparation"><span class="tocnumber">1</span> <span class="toctext">Preparation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Overview"><span class="tocnumber">1.1</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Boot_from_install_media"><span class="tocnumber">1.2</span> <span class="toctext">Boot from install media</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Boot_from_netboot"><span class="tocnumber">1.3</span> <span class="toctext">Boot from netboot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5"><a href="#Pixiecore"><span class="tocnumber">2</span> <span class="toctext">Pixiecore</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Server_setup"><span class="tocnumber">3</span> <span class="toctext">Server setup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Network"><span class="tocnumber">3.1</span> <span class="toctext">Network</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#DHCP_+_TFTP"><span class="tocnumber">3.2</span> <span class="toctext">DHCP + TFTP</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#BIOS_boot_from_install_media"><span class="tocnumber">3.2.1</span> <span class="toctext">BIOS boot from install media</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#UEFI_boot_from_netboot"><span class="tocnumber">3.2.2</span> <span class="toctext">UEFI boot from netboot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11">
+<a href="#Transferring_archiso_root_filesystem"><span class="tocnumber">3.3</span> <span class="toctext">Transferring archiso root filesystem</span></a>
+<ul>
+<li class="toclevel-3 tocsection-12"><a href="#HTTP"><span class="tocnumber">3.3.1</span> <span class="toctext">HTTP</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#NFS"><span class="tocnumber">3.3.2</span> <span class="toctext">NFS</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#NBD"><span class="tocnumber">3.3.3</span> <span class="toctext">NBD</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-15"><a href="#Existing_PXE_server"><span class="tocnumber">3.4</span> <span class="toctext">Existing PXE server</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Installation"><span class="tocnumber">4</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#Boot"><span class="tocnumber">4.1</span> <span class="toctext">Boot</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Post-boot"><span class="tocnumber">4.2</span> <span class="toctext">Post-boot</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Low_memory_systems"><span class="tocnumber">4.3</span> <span class="toctext">Low memory systems</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#Sharing_internet_with_PXE_clients"><span class="tocnumber">4.4</span> <span class="toctext">Sharing internet with PXE clients</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#DHCP_interface_rename_bug"><span class="tocnumber">5.1</span> <span class="toctext">DHCP interface rename bug</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#VirtualBox_cannot_boot_while_real_machines_can"><span class="tocnumber">5.2</span> <span class="toctext">VirtualBox cannot boot while real machines can</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Preparation">Preparation</span></h2>
+<h3><span class="mw-headline" id="Overview">Overview</span></h3>
+<p>It is useful to give an overview of the PXE boot process in order to understand the <a href="#Server_setup">#Server setup</a>, the <a href="#Installation">#Installation</a> on the client side and the Arch Linux files needed.
+</p>
+<p>The client starts by broadcasting packets asking for a DHCP server and containing specific PXE options. The DHCP server responds with networking information (the IP address assigned to the client) and also provides, by using specific <a href="https://en.wikipedia.org/wiki/Bootstrap_Protocol" class="extiw" title="wikipedia:Bootstrap Protocol">bootstrap protocol (BOOTP)</a> parameters of the DHCP, additional information like the <a href="../en/TFTP.html" title="TFTP">TFTP</a> server address, the path of the initial network bootstrap program (NBP) to download or the boot configuration file name.
+</p>
+<p>The NBP is transferred from the PXE server to the client using TFTP, to be loaded into memory and executed. The kernel and the initramfs are also transferred this way.
+</p>
+<p>Then the root filesystem is transferred using one of the following protocols: HTTP, NFS or NBD.
+</p>
+<h3><span class="mw-headline" id="Boot_from_install_media">Boot from install media</span></h3>
+<p>In order to gather the files that will be transferred from the server to the client for booting, get the latest official install media from the <a rel="nofollow" class="external text" href="https://archlinux.org/download/">download page</a>.
+</p>
+<p>Next mount the image:
+</p>
+<pre># mkdir /mnt/archiso
+# mount -o loop,ro archlinux-<i>release_date</i>-x86_64.iso /mnt/archiso
+</pre>
+<p>where <code><i>release_date</i></code> is the release date in the ISO filename like, e.g., <code>2020.10.01</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The Arch ISO currently only supports <b>BIOS</b>-style PXE booting. See <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/50188">FS#50188</a> for more information.</div>
+<h3><span class="mw-headline" id="Boot_from_netboot">Boot from netboot</span></h3>
+<p>Arch Linux <a href="../en/Netboot.html" title="Netboot">netboot</a> images can be used to download the latest Arch Linux release on the fly upon system boot. Download the image compatible with your configuration.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The Arch netboot supports both <b>BIOS</b> and <b>UEFI</b> booting.</div>
+<h2><span class="mw-headline" id="Pixiecore">Pixiecore</span></h2>
+<p>A all-in-one solution is provided by <a rel="nofollow" class="external text" href="https://github.com/danderson/netboot/tree/master/pixiecore">pixiecore</a>
+</p>
+<ol>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pixiecore-git/">pixiecore-git</a></span><sup><small>AUR</small></sup>
+</li>
+<li>Run <code>pixiecore quick arch --dhcp-no-bind</code> as root</li>
+<li>Boot via PXE</li>
+</ol>
+<h2><span class="mw-headline" id="Server_setup">Server setup</span></h2>
+<p>You will need to setup a DHCP server, a TFTP server for transferring the NBP and one of the following services for transferring the root filesystem: <a href="../en/List_of_applications/Internet.html#Web_servers" title="List of applications/Internet">HTTP server</a>, NFS or NBD.
+</p>
+<h3><span class="mw-headline" id="Network">Network</span></h3>
+<p>Bring up your wired network adapter, and assign it an address appropriately.
+</p>
+<pre># ip link set <i>eth0</i> up
+# ip addr add 192.168.0.1/24 dev <i>eth0</i>
+</pre>
+<h3>
+<span id="DHCP_.2B_TFTP"></span><span class="mw-headline" id="DHCP_+_TFTP">DHCP + TFTP</span>
+</h3>
+<p>You will need both a DHCP server and a TFTP server to configure networking on the install target and to facilitate the transfer of files between the server and the client.
+<a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a> does both, and is extremely easy to set up.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dnsmasq">dnsmasq</a></span> package.
+</p>
+<p><i>dnsmasq</i> needs to be configured.
+See instructions on how to setup a <a href="../en/Dnsmasq.html#TFTP_server" title="Dnsmasq">dnsmasq#TFTP server</a> and a <a href="../en/Dnsmasq.html#PXE_server" title="Dnsmasq">dnsmasq#PXE server</a>.
+</p>
+<p>Are provided below some common configuration instructions. <i>tftp_root</i> is the directory where the Arch ISO is mounted (e.g. <code>/mnt/archiso</code>) or where the network boot program is located.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># /etc/dnsmasq.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Listen only to the specified interface
+interface=<i>eth0</i>
+
+# Don't function as dns server
+port=0
+
+# tftp server setup
+enable-tftp
+tftp-root=<i>tftp_root</i>
+
+# Log extra information about dhcp transactions (for debug purposes)
+log-dhcp</pre>
+<p>To enable the DHCP server and give IPv4 addresses within a range, add to the configuration file a line similar to:
+</p>
+<pre>dhcp-range=192.168.0.50,192.168.0.150
+</pre>
+<p>Or in case there is already a DHCP-server running on the network and you want to interoperate with it, see <a href="../en/Dnsmasq.html#Proxy_DHCP" title="Dnsmasq">dnsmasq#Proxy DHCP</a>.
+</p>
+<p>Two examples covering different boot style and installation media are provided below.
+</p>
+<p>Once configured according to your needs, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>dnsmasq.service</code>.
+</p>
+<h4><span class="mw-headline" id="BIOS_boot_from_install_media">BIOS boot from install media</span></h4>
+<p>The path of the initial bootstrap program to be transferred is defined with the <code>dhcp-boot</code> option in the configuration file.
+</p>
+<pre>dhcp-boot=/arch/boot/syslinux/lpxelinux.0
+</pre>
+<p>In order to send specific <a rel="nofollow" class="external text" href="https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml"><i>boot</i>strap <i>p</i>rotocol (BOOTP) parameters</a>, like the configuration file path, the <code>dhcp-option-force=<i>flag</i>,<i>value</i></code> line is used.
+</p>
+<pre>dhcp-option-force=209,boot/syslinux/archiso.cfg
+dhcp-option-force=210,/arch/
+</pre>
+<h4><span class="mw-headline" id="UEFI_boot_from_netboot">UEFI boot from netboot</span></h4>
+<p>To send a file depending on the architecture, here the netboot image for UEFI-style boot, use:
+</p>
+<pre>pxe-service=BC_EFI, "Boot from network BC EFI", ipxe.efi
+pxe-service=X86-64_EFI, "Boot from network X86-64 EFI", ipxe.efi
+</pre>
+<p>If using netboot, the rest of the server setup section which focuses on the Arch ISO does not apply.
+</p>
+<h3><span class="mw-headline" id="Transferring_archiso_root_filesystem">Transferring archiso root filesystem</span></h3>
+<p>Thanks to <code>archiso_pxe_http</code>, <code>archiso_pxe_nfs</code> and <code>archiso_pxe_nbd</code> initcpio hooks in <a href="../en/Archiso.html" title="Archiso">archiso</a>, it is possible to boot using HTTP, NFS or NBD. Boot time is approximately the same in all three methods, but HTTP method allows you to watch a state of downloading airootfs.sfs in percents.
+</p>
+<h4><span class="mw-headline" id="HTTP">HTTP</span></h4>
+<p>Among all alternatives, <i>darkhttpd</i> is by far the most trivial to setup (and the lightest-weight).
+</p>
+<p>First, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=darkhttpd">darkhttpd</a></span> package.
+</p>
+<p>Then start <i>darkhttpd</i> using our <code>/mnt/archiso</code> as the document root:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># darkhttpd /mnt/archiso</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">darkhttpd/1.8, copyright (c) 2003-2011 Emil Mikulic.
+listening on: http://0.0.0.0:80/
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is important that the server is running on port <b>80</b>. If you start <i>darkhttpd</i> without root access it will default to <b>8080</b>, the client will still try to access port 80 and the boot will fail.</div>
+<h4><span class="mw-headline" id="NFS">NFS</span></h4>
+<p>You will need to set up an <a href="../en/NFS.html" title="NFS">NFS server</a> with an export at the root of your mounted installation media, which would be <code>/mnt/archiso</code> if you followed <a href="#Preparation">#Preparation</a>. After setting up the server, add the following line to your <code>/etc/exports</code> file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/exports</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/mnt/archiso 192.168.0.0/24(ro,no_subtree_check)
+</pre>
+<p>If the server was already running, re-export the filesystems with <code>exportfs -r -a -v</code>.
+</p>
+<p>The default settings in the installer expect to find the NFS at <code>/run/archiso/bootmnt</code>, so you will need to edit the boot options.  To do this, press Tab on the appropriate boot menu choice and edit the <code>archiso_nfs_srv</code> option accordingly:
+</p>
+<pre>archiso_nfs_srv=${pxeserver}:/mnt/archiso
+</pre>
+<p>Alternatively, you can use <code>/run/archiso/bootmnt</code> for the entire process.
+</p>
+<p>After the kernel loads, the Arch bootstrap image will copy the root filesystem via NFS to the booting host.  This can take a little while.  Once this completes, you should have a running system.
+</p>
+<h4><span class="mw-headline" id="NBD">NBD</span></h4>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nbd">nbd</a></span> package and configure it:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nbd-server/config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[generic]
+[archiso]
+    readonly = true
+    exportname = /srv/archlinux-<i>release_date</i>-x86_64.iso</pre>
+<p>where <code><i>release_date</i></code> is the release date in the ISO filename like, e.g., <code>2020.03.01</code>.
+</p>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> <code>nbd.service</code>.
+</p>
+<h3><span class="mw-headline" id="Existing_PXE_server">Existing PXE server</span></h3>
+<p>If you have an existing PXE server with a <a href="../en/Syslinux.html#PXELINUX" class="mw-redirect" title="PXELINUX">PXELINUX</a> system setup (e.g. a combination of DHCP and <a href="../en/TFTP.html" title="TFTP">TFTP</a>), you can add the following menu items to your <code>/tftpboot/pxelinux.cfg/default</code> file in order to boot Arch via your preferred method:
+</p>
+<pre>LABEL archlinux
+        MENU LABEL Arch Linux x86_64
+        LINUX <i>/path/to/extracted/Arch/ISO</i>/arch/boot/x86_64/vmlinuz-linux
+        INITRD <i>/path/to/extracted/Arch/ISO</i>/arch/boot/intel-ucode.img,<i>/path/to/extracted/Arch/ISO</i>/arch/boot/amd-ucode.img,<i>/path/to/extracted/Arch/ISO</i>/arch/boot/x86_64/initramfs-linux.img
+        APPEND archisobasedir=arch archiso_http_srv=<i>http://httpserver/path/to/extracted/Arch/ISO</i>/
+        SYSAPPEND 3
+        TEXT HELP
+        Arch Linux 2020.10.01 x86_64
+        ENDTEXT</pre>
+<p>You can replace <code>archiso_http_srv</code> with <code>archiso_nfs_srv</code> for NFS or <code>archiso_nbd_srv</code> for NBD (see usage examples in <code>arch/boot/syslinux/archiso_pxe.cfg</code> file resided on ArchLinux iso). Whichever method you choose, you must pass <code>ip=</code> parameter to instruct the kernel to bring up the network interface before it attempts to mount the installation medium over the network. Passing <code>BOOTIF=</code> is required when there are several wired interfaces on the client side and/or you want resolv.conf to be already configured inside booted archiso. You can use <a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php?title=Config#SYSAPPEND">sysappend mask</a> 3 (which is 1+2) to pass these parameters automatically. For available boot parameters see <a rel="nofollow" class="external text" href="https://gitlab.archlinux.org/archlinux/archiso/-/blob/master/docs/README.bootparams">README.bootparams</a>.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>For this portion you will need to figure out how to tell the client to attempt a PXE boot; in the corner of the screen along with the normal post messages, usually there will be some hint on which key to press to try PXE booting first. On an IBM x3650 <code>F12</code> brings up a boot menu, the first option of which is <i>Network</i>; on a Dell PE 1950/2950 pressing <code>F12</code> initiates PXE booting directly.
+</p>
+<h3><span class="mw-headline" id="Boot">Boot</span></h3>
+<p>Looking at <a href="../en/Systemd/Journal.html" class="mw-redirect" title="Journald">journald</a> on the PXE server will provide some additional insight to what exactly is going on during the early stages of the PXE boot process:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># journalctl -u dnsmasq.service -f</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">dnsmasq-dhcp[2544]: DHCPDISCOVER(eth1) 00:1a:64:6a:a2:4d 
+dnsmasq-dhcp[2544]: DHCPOFFER(eth1) 192.168.0.110 00:1a:64:6a:a2:4d 
+dnsmasq-dhcp[2544]: DHCPREQUEST(eth1) 192.168.0.110 00:1a:64:6a:a2:4d 
+dnsmasq-dhcp[2544]: DHCPACK(eth1) 192.168.0.110 00:1a:64:6a:a2:4d 
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/pxelinux.0 to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/whichsys.c32 to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_pxe_choose.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/ifcpu64.c32 to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_pxe_both_inc.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_head.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_pxe32.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_pxe64.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/archiso_tail.cfg to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/vesamenu.c32 to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/syslinux/splash.png to 192.168.0.110
+</pre>
+<p>After you load <code>pxelinux.0</code> and <code>archiso.cfg</code> via TFTP, you will (hopefully) be presented with a <a href="../en/Syslinux.html" title="Syslinux">syslinux</a> boot menu with several options, where you can select <i>Boot Arch Linux (x86_64) (HTTP)</i>.
+</p>
+<p>Next the kernel and initramfs (appropriate for the architecture you selected) will be transferred, again via TFTP:
+</p>
+<pre>dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/x86_64/vmlinuz to 192.168.0.110
+dnsmasq-tftp[2544]: sent /mnt/archiso/arch/boot/x86_64/initramfs-linux.img to 192.168.0.110</pre>
+<p>If all goes well, you should then see activity on darkhttpd coming from the PXE-target; at this point the kernel would be loaded on the PXE-target, and in init: 
+</p>
+<pre>1348347586 192.168.0.110 "GET /arch/aitab" 200 678 "" "curl/7.27.0"
+1348347587 192.168.0.110 "GET /arch/x86_64/root-image.fs.sfs" 200 107860206 "" "curl/7.27.0"
+1348347588 192.168.0.110 "GET /arch/x86_64/usr-lib-modules.fs.sfs" 200 36819181 "" "curl/7.27.0"
+1348347588 192.168.0.110 "GET /arch/any/usr-share.fs.sfs" 200 63693037 "" "curl/7.27.0"</pre>
+<p>After the root filesystem is downloaded via HTTP, you will eventually end up at the normal live system root <a href="../en/Zsh.html" title="Zsh">zsh</a> prompt.
+</p>
+<h3><span class="mw-headline" id="Post-boot">Post-boot</span></h3>
+<p>Unless you want all traffic to be routed through your PXE server (which will not work anyway unless you <a href="#Sharing_internet_with_PXE_clients">set it up properly</a>), you will want to <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Stop">stop</a> <code>dnsmasq.service</code> and get a new lease on the install target, as appropriate for your network layout.
+</p>
+<p>You can also kill <i>darkhttpd</i>; the target has already downloaded the root filesystem, so it is no longer needed. While you are at it, you can also unmount the installation image:
+</p>
+<pre># umount /mnt/archiso
+</pre>
+<p>At this point you can follow the <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a>.
+</p>
+<h3><span class="mw-headline" id="Low_memory_systems">Low memory systems</span></h3>
+<p>The <code>copytoram</code> <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> option can be used to control whether the root filesystem should be copied to ram in its entirety in early-boot.
+</p>
+<p>It highly recommended to leave this option alone, and should only be disabled if entirely necessary (systems with less than ~256MB physical memory). Append <code>copytoram=n</code> to your kernel line if you wish to do so.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> As this requires loop-mounting squashfs from a mounted remote filesystem, <code>copytoram=n</code> and <code><a href="#HTTP">archiso_pxe_http</a></code> are mutually exclusive.</div>
+<h3><span class="mw-headline" id="Sharing_internet_with_PXE_clients">Sharing internet with PXE clients</span></h3>
+<p>If your network for PXE clients is private (for example, 192.168.1.0/24), and you want them to be able to access internet (for example, for packages installation), you should configure masquerade/source nat properly. Your PXE server must have a separate NIC connected to the internet. You can use such command to pass through the internet to clients:
+</p>
+<pre>iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j MASQUERADE
+</pre>
+<p>To make this rule persistent after reboot, run the following command:
+</p>
+<pre>iptables-save -f /etc/iptables/iptables.rules
+</pre>
+<p>and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>iptables.service</code>.
+</p>
+<p>See <a href="../en/Simple_stateful_firewall.html#Setting_up_a_NAT_gateway" title="Simple stateful firewall">Simple stateful firewall#Setting up a NAT gateway</a> and <a href="../en/Internet_sharing.html#Enable_NAT" title="Internet sharing">Internet sharing#Enable NAT</a> for more information.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="DHCP_interface_rename_bug">DHCP interface rename bug</span></h3>
+<p><a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/36749">FS#36749</a> causes default <a rel="nofollow" class="external text" href="https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/">predictable network interface renaming</a> to fail and then DHCP client to fail because of it. A workaround is to add the kernel boot parameter <code>net.ifnames=0</code> to disable predictable interface names.
+</p>
+<h3><span class="mw-headline" id="VirtualBox_cannot_boot_while_real_machines_can">VirtualBox cannot boot while real machines can</span></h3>
+<p>When using <a href="../en/VirtualBox.html" title="VirtualBox">VirtualBox</a> to test your configuration, the virtual machine may get stuck at:
+</p>
+<pre>Probing EDD (edd=off to disable)... ok
+</pre>
+<p>While PXE booting with a real machine works fine. The problem may be because you have set several CPU cores to your client machine, and you set its type as <i>Other</i> and version as <i>Other/Unknown (64 bit)</i>. So VirtualBox does not know which paravirtualization interface to use by default.
+</p>
+<p>Adding <code>loglevel=7</code> to the <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a> lets you see where it actually got stuck:
+</p>
+<pre>[    0.063697] smp: Bringing up secondary CPUs...
+[    0.103768] x86: Booting SMP configuration:
+</pre>
+<p>To resolve this, either use one CPU core, or go to <i>Machine &gt; Settings &gt; System &gt; Acceleration</i> and set one of the following paravirtualization interface: <i>Minimal</i>, <i>Hyper-V</i> or <i>KVM</i>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Installation_process.html" title="Category:Installation process">Installation process</a></li>
+<li><a href="../en/Category:Networking.html" title="Category:Networking">Networking</a></li>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Preboot_Execution_Environment&amp;oldid=647903">https://wiki.archlinux.org/index.php?title=Preboot_Execution_Environment&amp;oldid=647903</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 1 January 2021, at 22:43.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

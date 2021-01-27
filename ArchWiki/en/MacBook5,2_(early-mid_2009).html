@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>MacBook5,2 (early-mid 2009) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-MacBook5_2_early-mid_2009 rootpage-MacBook5_2_early-mid_2009 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">MacBook5,2 (early-mid 2009)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Installing Archlinux on the Macbook5,2 (Polycarbonate, Mid-2009) has several pitfalls as of right now. I have written them into this article for people having trouble installing Archlinux on their 5,2 Macbook. This guide assumes you are also going to follow the <a href="../en/Mac.html" title="Mac">Mac</a> install guide, and will point out a few modifications to get it working on this Macbook. Review these suggestions and then follow the guide. This guide also assumes you have rEFIt installed before hand.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Installing_Grub_2"><span class="tocnumber">2</span> <span class="toctext">Installing Grub 2</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Touchpad"><span class="tocnumber">3</span> <span class="toctext">Touchpad</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Audio"><span class="tocnumber">4</span> <span class="toctext">Audio</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Further_Reference"><span class="tocnumber">5</span> <span class="toctext">Further Reference</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>I suggest formatting your Arch Linux Partition using a <a rel="nofollow" class="external text" href="http://gparted.sourceforge.net/livecd.php">GParted</a> live disc, which works just fine. You will more than likely format <code>/dev/sda3</code> to ext3. You can also use parted from the install disc if you like. However, no matter which option you choose, after formatting, you MUST reboot your Macbook and use rEFIt to resync the partition tables.
+</p>
+<p>The Macbook5,2 seems to have trouble in general with Grub (but not grub2). Unless you use the ISOLINUX install disc, you probably will not make it past the grub boot selection screen. Assuming you are using the ISOLINUX disc, boot with:
+</p>
+<pre># arch maxcpus=1
+</pre>
+<p>Without this, when the installer attempts to initialize the second CPU in your laptop the screen will go blank and you will be unable to proceed. This is a well known issue with the Macbook5,2. You can also boot the system with acpi=off. You will always need one of these options to boot, even after install.
+</p>
+<pre># arch acpi=off
+</pre>
+<p>Install proceeds normally, except for during hard drive preparation. Manually select block devices, select <code>/dev/sda3</code> and the filesystem you selected. If you used the Gparted live disc, say that you do not need to create the partition. Ignore warnings about swap drive, That will be handled later. Install should go okay. Do NOT install Grub, it will not work. The next section describes how to use grub2 as your Boot Loader for the Macbook.
+</p>
+<h2><span class="mw-headline" id="Installing_Grub_2">Installing Grub 2</span></h2>
+<p>Some of this information is pulled from the <a href="../en/GRUB.html" class="mw-redirect" title="Grub2">Grub2</a> article. As an aside, some triple boot guides suggest using LILO, but I could not get LILO to work.
+</p>
+<ul>
+<li>Ensure the network is properly configured.</li>
+<li>From the installer's live shell, chroot to the installed system:</li>
+</ul>
+<pre># mount -o bind /dev /mnt/dev
+# chroot /mnt bash
+</pre>
+<ul>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=grub">grub</a></span> package.</li>
+<li>Install GRUB2 to the Archlinux partition (Do not install to /dev/sda!)</li>
+</ul>
+<pre># grub-install --recheck /dev/sda3
+</pre>
+<p>GRUB2 will probably inform you that this is not a suggested action. However, it is what must be done to boot the system. Use the following to force GRUB2 to install to <code>/dev/sda3</code>
+</p>
+<pre># grub-install --recheck --force /dev/sda3
+</pre>
+<p>I found that GRUB2's grub-mkconfig function does not work on the MacBook. I suggest reading the <a href="../en/GRUB.html" class="mw-redirect" title="Grub2">Grub2</a> article for more advanced tips, but for convenience, here is my <code>/boot/grub/grub.cfg</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/grub/grub.cfg
+</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">
+
+set timeout=5
+set default=0
+
+menuentry "Arch Linux" {
+set root=(hd0,3)
+linux /boot/vmlinuz-linux root=/dev/sda3 ro maxcpus=1 reboot=pci irqpoll noapic
+initrd /boot/initramfs-linux.img
+}
+
+</pre>
+<p>If everything went alright, you should be looking at the command prompt.
+</p>
+<h2><span class="mw-headline" id="Touchpad">Touchpad</span></h2>
+<p>See <a href="../en/Touchpad_Synaptics.html" title="Touchpad Synaptics">Touchpad Synaptics</a>. Especially the "Advanced Policy Configuration" section. Increase the sensitivity, acceleration, min_speed, and max_speed greatly
+</p>
+<h2><span class="mw-headline" id="Audio">Audio</span></h2>
+<p>I found that to get Audio to work, you should use
+</p>
+<pre># options snd_hda_intel model=mb5
+</pre>
+<p>In <code>/etc/modprobe.d/modprobe.conf</code>. This seems to work consistently across all MacBook5,2s
+</p>
+<h2><span class="mw-headline" id="Further_Reference">Further Reference</span></h2>
+<p><a rel="nofollow" class="external text" href="https://help.ubuntu.com/community/MacBook5-2/Karmic">Ubuntu Guide For MacBook5,2</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-30 ⓘ]</sup>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Apple.html" title="Category:Apple">Apple</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=MacBook5,2_(early-mid_2009)&amp;oldid=607255">https://wiki.archlinux.org/index.php?title=MacBook5,2_(early-mid_2009)&amp;oldid=607255</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 22 April 2020, at 10:10.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

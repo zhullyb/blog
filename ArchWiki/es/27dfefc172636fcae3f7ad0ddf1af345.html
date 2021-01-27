@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Improving performance (Español)/Boot process (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Improving_performance_Español_Boot_process_Español rootpage-Improving_performance_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Improving performance (Español)/Boot process (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Improving_performance.html" title="Improving performance (Español)">Improving performance (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../en/Improving_performance.html" title="Improving performance">Improving performance</a></li>
+<li><a href="../en/Silent_boot.html" title="Silent boot">Silent boot</a></li>
+<li><a href="../en/Daemons.html" class="mw-redirect" title="Daemon">Daemon</a></li>
+<li><a href="../en/E4rat.html" title="E4rat">e4rat</a></li>
+<li><a href="../en/Kexec.html" title="Kexec">Kexec</a></li>
+</ul>
+</div>
+<p>Mejorar el rendimiento de arranque de un sistema puede proporcionar que los tiempos de espera de arranque sean reducidos, para aprender más acerca de cómo ciertos archivos y scripts del sistema interactúan entre sí. En este artículo se intentará agregar métodos sobre cómo mejorar el rendimiento de arranque de un sistema Arch Linux.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Analizando_los_procesos_de_inicio"><span class="tocnumber">1</span> <span class="toctext">Analizando los procesos de inicio</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Usando_systemd-analyze"><span class="tocnumber">1.1</span> <span class="toctext">Usando systemd-analyze</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#Usando_systemd-bootchart"><span class="tocnumber">2</span> <span class="toctext">Usando systemd-bootchart</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Usando_bootchart2"><span class="tocnumber">3</span> <span class="toctext">Usando bootchart2</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Leer_por_adelantado_(Readahead)"><span class="tocnumber">4</span> <span class="toctext">Leer por adelantado (Readahead)</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Compilando_un_custom_kernel"><span class="tocnumber">5</span> <span class="toctext">Compilando un custom kernel</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Initramfs"><span class="tocnumber">6</span> <span class="toctext">Initramfs</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Cominezo_r%C3%A1pido_de_los_serivicios"><span class="tocnumber">7</span> <span class="toctext">Cominezo rápido de los serivicios</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Escalonar_spin-up"><span class="tocnumber">8</span> <span class="toctext">Escalonar spin-up</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#Montaje_de_sistemas_de_archivos"><span class="tocnumber">9</span> <span class="toctext">Montaje de sistemas de archivos</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Menos_salida_durante_el_arranque"><span class="tocnumber">10</span> <span class="toctext">Menos salida durante el arranque</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Suspensi%C3%B3n_de_la_RAM"><span class="tocnumber">11</span> <span class="toctext">Suspensión de la RAM</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Analizando_los_procesos_de_inicio">Analizando los procesos de inicio</span></h2>
+<h3><span class="mw-headline" id="Usando_systemd-analyze">Usando systemd-analyze</span></h3>
+<p><a href="../es/Systemd.html" title="Systemd (Español)">systemd (Español)</a> proporciona una herramienta llamada <code>systemd-analyze</code> que se puede utilizar para mostrar los detalles de temporización sobre los procesos de arranque, incluyendo un diagrama que muestra en SVG, las unidades en espera de sus dependencias. También podemos ver qué archivos de unidades están causando el proceso de arranque para reducir la velocidad. A continuación, puede optimizar su sistema en consecuencia.
+</p>
+<p>Para ver la cantidad de tiempo que hay en el espacio del núcleo y el espacio de usuario en el arranque, basta con utilizar:
+</p>
+<pre>$ systemd-analyze
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> Si se inicia vía <a href="../es/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface (Español)">Unified Extensible Firmware Interface (Español)</a> (UEFI) y utiliza un gestor de arranque que implementa systemd <a rel="nofollow" class="external text" href="https://www.freedesktop.org/wiki/Software/systemd/BootLoaderInterface">Boot Loader Interface</a> (que actualmente <a href="../es/Systemd-boot.html" title="Systemd-boot (Español)">Systemd-boot (Español)</a> y <a href="../es/GRUB.html" title="GRUB (Español)">GRUB (Español)</a> do), <i>systemd-analyze</i> puede mostrar cuán rápido inició el firmware EFI y el porpio gestor de arranque.</div>
+<p>Para listar los archivos en las unidades iniciadas, ordenadas por el tiempo que les tomó iniciar a cada uno:
+</p>
+<pre>$ systemd-analyze blame
+</pre>
+<p>En algunos puntos del proceso de arranque, las cosas no pueden continuar hasta que una determinada unidad tiene éxito. Para ver qué unidades se encuentran en éstos puntos críticos en la cadena de inicio, usamos:
+</p>
+<pre>$ systemd-analyze critical-chain
+</pre>
+<p>También podemos crear un archivo SVG que describe el proceso de arranque de forma gráfica simila a <a href="../en/Bootchart.html" title="Bootchart">Bootchart</a>:
+</p>
+<pre>$ systemd-analyze plot &gt; plot.svg
+</pre>
+<p>Ver <span class="plainlinks archwiki-template-man" title="$ man 1 systemd-analyze"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-analyze.1">systemd-analyze(1)</a></span> para más detalles.
+</p>
+<h2><span class="mw-headline" id="Usando_systemd-bootchart">Usando systemd-bootchart</span></h2>
+<p>Bootchart se fusionó con <b>systemd</b> desde Octubre de 2012 y se puede usar para arrancar tal como lo haría con el bootchart original. Agregamos ésto a nuestro kernel:
+</p>
+<pre>initcall_debug printk.time=y init=/usr/lib/systemd/systemd-bootchart
+</pre>
+<p>Después de recoger una cierta cantidad de datos (configurable) las paradas de registro y un gráfico que se genera a partir de la información registrada. Este gráfico contiene pistas vitales en cuanto a que se utilizan los recursos (por defecto I/O, CPU y el inicio del Kernel), en qué orden y donde existen posibles problemas en la secuencia de arranque del sistema. Es esencialmente una versión más detallada de la función de parcela systemd-analizar.
+</p>
+<p>Bootchart graphs escribe de manera predeterminada el time-stamped en /run/log y se guarda en journal como
+MESSAGE_ID=9f26aa562cf440c2b16c773d0479b518. BOOTCHART= contiene el bootchart en format SVG.
+</p>
+<p>Mirá la <a rel="nofollow" class="external text" href="http://www.freedesktop.org/software/systemd/man/systemd-bootchart.html">manpage</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">enlace roto</a> 2020-08-02]</sup> para más información.
+</p>
+<h2><span class="mw-headline" id="Usando_bootchart2">Usando bootchart2</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Bootchart.html#Running_Bootchart2" title="Bootchart">Bootchart#Running Bootchart2</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> different instructions from the main page (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Improving_performance_(Espa%C3%B1ol)/Boot_process_(Espa%C3%B1ol)">Talk:Improving performance (Español)/Boot process (Español)#</a>)</div>
+</div>
+<p>También es posible usar una versión de bootchart para visualizar la secuencia de arranque. Puesto que no es capaz de poner un segundo inicio en la línea de comandos del kernel que no será capaz de utilizar cualquiera de las configuraciones estándar de Bootchart. Sin embargo el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bootchart2-git/">bootchart2-git</a></span><sup><small>AUR</small></sup> desde <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> viene con servicio systemd deshabilitado. Luego de haber instalado bootchart2 hacemos:
+</p>
+<pre># systemctl enable bootchart2
+</pre>
+<p>Podés visualizar los resultados por apertura <i>/var/log/bootchart.png</i>, o si deseas más detalles de la ejecución:
+</p>
+<pre>$ pybootchartgui -i
+</pre>
+<p>Leer la <a rel="nofollow" class="external text" href="https://github.com/mmeeks/bootchart">bootchart2 documentacion</a> para más detalles sobre el uso de ésta versión de bootchart.
+</p>
+<h2>
+<span id="Leer_por_adelantado_.28Readahead.29"></span><span class="mw-headline" id="Leer_por_adelantado_(Readahead)">Leer por adelantado (Readahead)</span>
+</h2>
+<p><a href="../es/Systemd.html" title="Systemd (Español)">systemd (Español)</a> llegó hasta la versión 216 con su propia aplicación readahead que debería, en principio, mejorar el tiempo de arranque. Hay dos servicios <code>systemd-readahead-collect</code>, que recoge la información sobre la que se utilizan los archivos durante el arranque, y <code>systemd-readahead-replay</code>, que tira de estos archivos en la memoria caché temprano en el proceso de arranque.
+</p>
+<p>Para habilitar systemd readahead instalamos el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/systemd-readahead/">systemd-readahead</a></span><sup><small>AUR</small></sup> desde <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> y escribimos:
+</p>
+<pre># systemctl enable systemd-readahead-collect systemd-readahead-replay
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Es necesario reinciar un par de veces así systemd-readahead-collect pueda recoger suficiente información para que systemd-readahead-pleay trabaje con eficacia.</li>
+<li>Dependiendo de la versión del kernel y el tipo de disco duro, su experiencia puede variar (por ejemplo, con un SSD verá poco o ningún beneficio o incluso puede ver un peor rendimiento).</li>
+</ul>
+</div>
+<h2><span class="mw-headline" id="Compilando_un_custom_kernel">Compilando un custom kernel</span></h2>
+<p>Compilar un kernel personalizado puede reducir el tiempo de arranque y el uso de memoria. A pesar de la normalización de la arquitectura de 64 bits y la naturaleza modular del núcleo de Linux, estos beneficios pueden no ser tan grande como se esperaba. <a href="../es/Kernel.html#Compilaci%C3%B3n" class="mw-redirect" title="Kernel Compilation (Español)">Read more about compiling a kernel</a>
+</p>
+<h2><span class="mw-headline" id="Initramfs">Initramfs</span></h2>
+<p>Parecido a <a href="#Compilando_un_custom_kernel">#Compilando un custom kernel</a>, el initramfs puede ser más ligero. Una forma sencilla es incluir el <a href="../es/Mkinitcpio.html" title="Mkinitcpio (Español)">mkinitcpio (Español)</a> <code>autodetect</code> hook. Si querés ir más allá de éso puedes ver <a href="../en/Minimal_initramfs.html" title="Minimal initramfs">Minimal initramfs</a>.
+</p>
+<h2>
+<span id="Cominezo_r.C3.A1pido_de_los_serivicios"></span><span class="mw-headline" id="Cominezo_rápido_de_los_serivicios">Cominezo rápido de los serivicios</span>
+</h2>
+<p>Una característica central de systemd es <a href="../es/D-Bus.html" title="D-Bus (Español)">D-Bus (Español)</a> y la activación de socket. Esto hace que los servicios sean arrancados cuando se accede a la primera y en general ésto es positivo. Sin embargo, si se sabe que un servicio (como ser <a href="../en/ArchWiki:Archive.html" class="mw-redirect" title="UPower">UPower</a>) siempre se pondrá en marcha durante el arranque, el tiempo total de arranque podría reducirse si la comienza tan pronto como sea posible. Esto se puede lograr (si el archivo de servicio está configurado para ello, que en la mayoría de los casos es) de la siguiente manera:
+</p>
+<pre># systemctl enable upower
+</pre>
+<p>Ésto hará que systemd inicie UPower tan pronto como sea posible sin causar ningún percance con los sockets o la activación de D-Bus.
+</p>
+<h2><span class="mw-headline" id="Escalonar_spin-up">Escalonar spin-up</span></h2>
+<p>Algunos equipos implementan <a href="https://en.wikipedia.org/wiki/Spin-up#Staggered_spin-up" class="extiw" title="wikipedia:Spin-up">staggered spin-up</a>, que hace que el sistema operativo a la sonda interfaces de ATA en serie, que se puede girar hasta las unidades de una en una y reducir el uso de energía de pico. Esto ralentiza la velocidad de arranque, y en la mayoría de los consumidores de hardware no proporciona ningún beneficio en absoluto ya que las unidades serán ya volver a acelerarse inmediatamente cuando la alimentación está activada. Para comprobar si se está utilizando SSS:
+</p>
+<pre>$ dmesg | grep SSS
+</pre>
+<p>Si no se utiliza durante el arranque, no habrá salida.
+</p>
+<p>Para deshabilitarlo agregamos <code>libahci.ignore_sss=1</code> a nuestra <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel line">kernel line</a>.
+</p>
+<h2><span class="mw-headline" id="Montaje_de_sistemas_de_archivos">Montaje de sistemas de archivos</span></h2>
+<p>Gracias a <a href="../es/Mkinitcpio.html" title="Mkinitcpio (Español)">mkinitcpio (Español)</a>'s <code>fsck</code> hook, se puede evitar que se monte de difícil manera cambiando <code>ro</code> a <code>rw</code> en la línea del kernel y sacarlo de <code>/etc/fstab</code>. Las opciones que se pueden setear con <code>rootflags=mount options...</code> en nuestro kernel. Recuerda que debes eliminar la entrada de tu archivo <code>/etc/fstab</code> de lo contrario <code>systemd-remount-fs.service</code> seguirá trabajando. Alternativamente se podría de enmascarar ésa unidad.
+</p>
+<p>Si btrfs está en uso para el sistema de ficheros raíz, no hay necesidad de un fsck en cada arranque al igual que otros sistemas de ficheros. Si este es el caso, <a href="../es/Mkinitcpio.html" title="Mkinitcpio (Español)">mkinitcpio (Español)</a>'s <code>fsck</code> hook puede ser eliminado. También es posible que desee enmascarar el <code>systemd-fsck-root.service</code>, o decirle que no realice el <i>fsck</i> en nuestro sistema usando la línea <code>fsck.mode=skip</code>. Sin <a href="../es/Mkinitcpio.html" title="Mkinitcpio (Español)">mkinitcpio (Español)</a>'s <code>fsck</code> hook, systemd seguirá usando fsckk sin ningún inconveniente con <code>systemd-fsck@.service</code>
+</p>
+<p>También puedes eliminar la API desde el sistema desde <code>/etc/fstab</code>, como systemd los monta (ver <code>pacman -Ql systemd | grep '\.mount$'</code> para un listado). No es raro que los usuarios que tienen un /tmp viniendo de sysvinit, pero en el comando anterior puedes ver que systemd se encargó de éso. Ergo, puede ser removido de manera segura.
+</p>
+<p>Otros sistemas de archivos como <code>/home</code> se pueden montar con unidadesd e montaje personalizados. Agregando <code>noauto,x-systemd.automount</code> para montar opciones amortiguar todos los accesos a la partición y se fsck y montarlo en el primer acceso, lo que reduce el número de sistemas de archivos que debe fsck / montaje durante el proceso de arranque.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul><li>Ésto hará que su <code>/home</code> use el sistema de archivos con <code>autofs</code>, el cual se ignora con <a href="../en/Locate.html" class="mw-redirect" title="Mlocate">mlocate</a> por defecto. The speedup of automounting <code>/home</code> may not be more than a second or two, depending on your system, so this trick may not be worth it.</li></ul>
+<p>Si el sistema está instalado dentro de un <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> (Especialmente: el directorio root <code>/</code> éste sería un volumen secundario) y <code>/home</code> se encuentra separado del sistema, aunque también es posible que desee evitar la creación de <code>/home</code> subvolume. Protegemos el <code>home.conf</code> tmpfile: <code>ln -s /dev/null /etc/tmpfiles.d/home.conf</code>.
+</p>
+</div>
+<h2><span class="mw-headline" id="Menos_salida_durante_el_arranque">Menos salida durante el arranque</span></h2>
+<p>Cambiar <code>verbose</code> a <code>quiet</code> en el inicio de nuestro kernel. En algunos sistemas, en particlar aquellos con un SSD, el lento rendimiento de la TTY es en realidad un cuello de botella y por menos producción significa arranque más rápido.
+</p>
+<h2>
+<span id="Suspensi.C3.B3n_de_la_RAM"></span><span class="mw-headline" id="Suspensión_de_la_RAM">Suspensión de la RAM</span>
+</h2>
+<p>La mejor manera de reducr el tiempo de booteo es que no inicie totalmente. Consideremos en cambio ésto: <a href="../en/Power_management/Suspend_and_hibernate.html#Suspend_to_RAM" class="mw-redirect" title="Suspend and hibernate">suspending your system to RAM</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Boot_process.html" title="Category:Boot process (Español)">Boot process (Español)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Improving_performance_(Espa%C3%B1ol)/Boot_process_(Espa%C3%B1ol)&amp;oldid=629189">https://wiki.archlinux.org/index.php?title=Improving_performance_(Español)/Boot_process_(Español)&amp;oldid=629189</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 12:07.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

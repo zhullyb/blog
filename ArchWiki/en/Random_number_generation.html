@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Random number generation - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Random_number_generation rootpage-Random_number_generation skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Random number generation</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>From <a href="https://en.wikipedia.org/wiki/Random_number_generation" class="extiw" title="wikipedia:Random number generation">wikipedia:Random number generation</a>:
+</p>
+<dl><dd>A random number generator (RNG) is a computational or physical device designed to generate a sequence of numbers or symbols that lack any pattern, i.e. appear random.</dd></dl>
+<p>Generation of random data is crucial for several applications like making cryptographic keys (e.g. for <a href="../en/Data-at-rest_encryption.html" title="Data-at-rest encryption">data-at-rest encryption</a>), <a href="../en/Securely_wipe_disk.html" title="Securely wipe disk">securely wiping disks</a>, running encrypted <a href="../en/Software_access_point.html" title="Software access point">Software access points</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Kernel_built-in_RNG"><span class="tocnumber">1</span> <span class="toctext">Kernel built-in RNG</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#/dev/random"><span class="tocnumber">1.1</span> <span class="toctext">/dev/random</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#/dev/urandom"><span class="tocnumber">1.2</span> <span class="toctext">/dev/urandom</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Alternatives"><span class="tocnumber">2</span> <span class="toctext">Alternatives</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#OpenSSL_issues"><span class="tocnumber">3</span> <span class="toctext">OpenSSL issues</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Kernel_built-in_RNG">Kernel built-in RNG</span></h2>
+<p>The Linux kernel's built-in RNGs <a href="https://en.wikipedia.org/wiki//dev/random" class="extiw" title="wikipedia:/dev/random">/dev/{u}random</a> are highly acclaimed for producing reliable random data providing the same security level that is used for the creation of cryptographic keys. The random number generator gathers environmental noise from device drivers and other sources into an entropy pool.
+</p>
+<p>Note that the <code>man random</code> command will misdirect to the library function manpage <span class="plainlinks archwiki-template-man" title="$ man 3 random"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/random.3">random(3)</a></span> while for information about the <code>/dev/random</code> device files you should run <code>man 4 random</code> to read <span class="plainlinks archwiki-template-man" title="$ man 4 random"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/random.4">random(4)</a></span>.
+</p>
+<h3>
+<span id=".2Fdev.2Frandom"></span><span class="mw-headline" id="/dev/random">/dev/random</span>
+</h3>
+<p><code>/dev/random</code> uses an entropy pool of 4096 bits (512 Bytes) to generate random data and stops when the pool is exhausted until it gets (slowly) refilled. <code>/dev/random</code> is designed for generating cryptographic keys (e.g. SSL, SSH, dm-crypt's LUKS), but it is impractical to use for wiping current HDD capacities: what makes disk wiping take so long is waiting for the system to <a href="https://en.wikipedia.org/wiki/Hardware_random_number_generator#Using_observed_events" class="extiw" title="wikipedia:Hardware random number generator">gather enough true entropy</a>. In an entropy-starved situation (e.g. a remote server) this might never end. While doing search operations on large directories or moving the mouse in X can slowly refill the entropy pool, it's designated pool size alone will be indication enough of the inadequacy for wiping a disk. 
+</p>
+<p>You can always compare <code>/proc/sys/kernel/random/entropy_avail</code> against <code>/proc/sys/kernel/random/poolsize</code> to keep an eye on the system's entropy pool.
+</p>
+<p>While Linux kernel 2.4 did have writable <code>/proc</code> entries for controlling the entropy pool size, in newer kernels only <code>read_wakeup_threshold</code> and <code>write_wakeup_threshold</code> are writable. The pool size is now hardcoded in kernel line 275 of <code>/drivers/char/random.c</code>:
+</p>
+<pre>/*
+ * Configuration information
+ */
+#define <b>INPUT_POOL_WORDS 128</b>
+#define <b>OUTPUT_POOL_WORDS 32</b>
+...</pre>
+<p>The kernel's pool size is given by <code>INPUT_POOL_WORDS * OUTPUT_POOL_WORDS</code> which makes, as already stated, 4096 bits.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use even <code>/dev/random</code> to generate <i>critical</i> cryptographic keys on a system you do not <a rel="nofollow" class="external text" href="http://everything2.com/title/Compromising+%252Fdev%252Frandom">control</a>. If in doubt, for example in shared server environments, rather choose to create the keys on another system and transfer them. The cryptographer D. J. Bernstein illustrates the control problem with a <a rel="nofollow" class="external text" href="http://blog.cr.yp.to/20140205-entropy.html">Mark Twain quotation</a>.</div>
+<h3>
+<span id=".2Fdev.2Furandom"></span><span class="mw-headline" id="/dev/urandom">/dev/urandom</span>
+</h3>
+<p>In contrast to <code>/dev/random</code>, <code>/dev/urandom</code> takes (since kernel 4.8) an initial random seed to feed a cryptographic stream cipher.<a rel="nofollow" class="external autonumber" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e192be9d9a30555aae2ca1dc3aad37cba484cd4a">[1]</a>
+</p>
+<p>The stream cipher is used because it can provide a high volume of high quality pseudo-random data suitable for many purposes like, for example, <a href="../en/Securely_wipe_disk.html#Preparations_for_block_device_encryption" title="Securely wipe disk">preparing for block device encryption</a>, wiping LUKS keyslots, etc.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <code>/dev/urandom</code> is <b>not</b> recommended for the generation of long-term cryptographic keys.</div>
+<p>The warning above keeps it simple, i.e. whether it applies or not largely depends on the system's status and purpose. For example, it matters considerably whether the system has just booted up, or the kernel has had time to gather entropy and fill the entropy pool.
+</p>
+<p>Some posts which explain and discuss the different aspects are:
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://www.2uo.de/myths-about-urandom/">Myths about urandom</a> - highly informative but (unfortunately) also containing fallacies, and</li>
+<li>
+<a rel="nofollow" class="external text" href="http://sockpuppet.org/blog/2014/02/25/safely-generate-random-numbers/">Safely generate random numbers</a> - a post which illustrates what may happen when trying to single-handedly change the kernel infrastructure for gathering entropy.</li>
+</ul>
+<p>For an Arch system, the above implies the following for <code>/dev/urandom</code>:
+</p>
+<ol>
+<li>Use the kernel's <code>getrandom()</code> system call, whenever possible. It is provided to ensure that <code>/dev/urandom</code> has initialized appropriately. See <span class="plainlinks archwiki-template-man" title="$ man 2 getrandom"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/getrandom.2">getrandom(2)</a></span>.</li>
+<li>If you use the <code>/dev/urandom</code> device for generating entropy for any long-term purpose, <b>do ensure</b> it has initialized properly.</li>
+<li>Take care to troubleshoot critical services which rely on <code>/dev/urandom</code> entropy during boot/startup. Even on a modern system the kernel's entropy initialization may take many seconds and some factors (e.g. virtualization) may delay it further. The kernel does warn, but not indefinetely.<a rel="nofollow" class="external autonumber" href="https://patchwork.kernel.org/patch/9173499/">[2]</a>
+</li>
+</ol>
+<p>An example output:
+</p>
+<pre>$ dmesg | grep -e random:
+...
+[    0.844818] random: systemd-udevd: uninitialized urandom read (16 bytes read)
+[    7.022171] random: fast init done
+[   12.916705] random: crng init done
+</pre>
+<p>In above example, the system has long reached its default boot target before the kernel gathered enough entropy to initialize the pool. Due to systemd <a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/4167">requiring</a> entropy at an early stage, it may happen though that the pool is depleted in the boot process without further kernel warnings.
+</p>
+<p>Hence, a problem at this boot stage is that another service, e.g. an <a href="../en/OpenSSL.html" title="OpenSSL">OpenSSL</a> session for a web server or any other cryptographic service, may start without receiving a sufficient quality entropy seed from the depleted <code>/dev/urandom</code> pool. Moving on, in a typical configuration OpenSSL may use that seed during the whole session's runtime, and only request a fresh seed for a new session.
+</p>
+<h2><span class="mw-headline" id="Alternatives">Alternatives</span></h2>
+<p>For applications other than the generation of long-term cryptographic keys, a practical compromise between performance and security is the use of a <a href="https://en.wikipedia.org/wiki/Pseudorandom_number_generator" class="extiw" title="wikipedia:Pseudorandom number generator">pseudorandom number generator</a>. In Arch Linux repositories for example: 
+</p>
+<ul>
+<li><a href="../en/Haveged.html" title="Haveged">Haveged</a></li>
+<li><a href="../en/Frandom.html" title="Frandom">Frandom</a></li>
+<li><a href="../en/Rng-tools.html" title="Rng-tools">rng-tools</a></li>
+</ul>
+<p>There are also <a href="https://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator" class="extiw" title="wikipedia:Cryptographically secure pseudorandom number generator">cryptographically secure pseudorandom number generators</a> like <a href="https://en.wikipedia.org/wiki/Yarrow_algorithm" class="extiw" title="wikipedia:Yarrow algorithm">Yarrow</a> (macOS) or <a href="https://en.wikipedia.org/wiki/Fortuna_(PRNG)" class="extiw" title="wikipedia:Fortuna (PRNG)">Fortuna</a> (FreeBSD, the successor of Yarrow).
+</p>
+<h2><span class="mw-headline" id="OpenSSL_issues">OpenSSL issues</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> No explanation of the actual issues. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Random_number_generation">Talk:Random number generation#</a>)</div>
+</div>
+<p><a href="../en/OpenSSL.html" title="OpenSSL">OpenSSL</a> supports <a href="https://en.wikipedia.org/wiki/RDRAND" class="extiw" title="wikipedia:RDRAND">RDRAND</a> as <code>rdrand</code> engine (use <code>openssl engine</code> to view available OpenSSL engines), but OpenSSL and related applications (such as <a href="../en/Nginx.html" title="Nginx">Nginx</a>, <a href="../en/Stunnel.html" title="Stunnel">Stunnel</a> and <a href="../en/CURL.html" title="CURL">CURL</a>) may not use RDRAND by default. OpenSSL does not use the <code>/dev/urandom</code> directly.
+</p>
+<p>For example, you can pass <code>-engine rdrand</code> option to the <code>openssl</code> command line tools, or you can add <code>ssl_engine rdrand;</code> line to the <code>/etc/nginx/nginx.conf</code> for <a href="../en/Nginx.html" title="Nginx">nginx</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://www.ietf.org/rfc/rfc4086.txt">RFC4086 - Randomness Requirements for Security</a> (Section 7.1.2 for /dev/random)</li>
+<li>
+<a rel="nofollow" class="external text" href="http://lkml.indiana.edu/hypermail/linux/kernel/1302.1/00479.html">Linux Kernel ML</a> - discussion on patching /dev/random for higher throughput (February 2013)</li>
+<li>
+<a rel="nofollow" class="external text" href="http://eprint.iacr.org/2013/338">A challenge on /dev/random robustness</a> (June 2013)</li>
+<li>
+<a rel="nofollow" class="external text" href="http://eprint.iacr.org/2014/167">An analysis of low entropy state</a> behaviour of /dev/random, Yarrow, Fortuna and new model approach (March 2014)</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.random.org/randomness/">Randomness</a> - A popular science article explaining different RNGs</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.fourmilab.ch/random/">ENT</a> - A simple program for testing random sequences (entropy, Chi square test, Monte Carlo, correlation, etc.)</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.codeproject.com/Articles/795845/Arduino-Hardware-Random-Sequence-Generator-with-Ja">DIY HRNG</a> - One example of a low-cost, DIY Arduino HRNG</li>
+<li>
+<a rel="nofollow" class="external text" href="https://eprint.iacr.org/2016/367">An Analysis of OpenSSL's Random Number Generator</a> - Paper on RNG reseeding risks in OpenSSL functionality</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.chronox.de/lrng/doc/lrng.pdf">Linux Random Number Generator – A New Approach</a> - Paper discussing updates to the devices (March 2017)</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Cryptography.html" title="Category:Cryptography">Cryptography</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Random_number_generation&amp;oldid=645141">https://wiki.archlinux.org/index.php?title=Random_number_generation&amp;oldid=645141</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 December 2020, at 14:22.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

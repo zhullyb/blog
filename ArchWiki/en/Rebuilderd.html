@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Rebuilderd - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Rebuilderd rootpage-Rebuilderd skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Rebuilderd</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://github.com/kpcyrd/rebuilderd">Rebuilderd</a> is an independent verification system for binary packages. It allows verification of pre-compiled packages by repeating the build step in an identical environment and then verifies that the package is identical. Right now only Arch Linux packages can be verified.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> rebuilderd is still experimental and a large number of builds are not reproducible yet. A failed rebuild does not necessarily mean that the package is malicious.</div>
+<p>If you run a rebuilder or consider running a rebuilder feel free to join the <a rel="nofollow" class="external text" href="ircs://chat.freenode.net/archlinux-reproducible">#archlinux-reproducible</a> IRC channel.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Setup"><span class="tocnumber">2</span> <span class="toctext">Setup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Single_machine"><span class="tocnumber">2.1</span> <span class="toctext">Single machine</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Rebuilder_network"><span class="tocnumber">2.2</span> <span class="toctext">Rebuilder network</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5"><a href="#Syncing_packages_to_rebuild"><span class="tocnumber">3</span> <span class="toctext">Syncing packages to rebuild</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Ansible_playbook"><span class="tocnumber">4</span> <span class="toctext">Ansible playbook</span></a></li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Tips_and_tricks"><span class="tocnumber">5</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Requeueing_failed_builds"><span class="tocnumber">5.1</span> <span class="toctext">Requeueing failed builds</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rebuilderd">rebuilderd</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Setup">Setup</span></h2>
+<h3><span class="mw-headline" id="Single_machine">Single machine</span></h3>
+<p>On a single machine you just <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>rebuilderd.service</code> and the worker service(s): <code>rebuilderd-worker@<i>workername</i>.service</code>.
+</p>
+<p>Afterwards you can verify rebuilderd is correctly running with a single worker by running:
+</p>
+<pre># rebuildctl status
+</pre>
+<p>If you get an error that no authentication cookie could be found, you might need to add yourself to the <code>rebuilderd</code> <a href="../en/Users_and_groups.html#Group_management" class="mw-redirect" title="User group">user group</a>.
+</p>
+<p>Continue with the next section to sync packages that our worker can rebuild.
+</p>
+<h3><span class="mw-headline" id="Rebuilder_network">Rebuilder network</span></h3>
+<p>To securely run a rebuilder network we need to configure a secret key for administration with rebuildctl, and another secret key that is used by our workers to sign up. The secrets can be generated with <code>pwgen -1s 32</code>.
+</p>
+<pre>[http]
+# it is highly recommended to bind to localhost and setup nginx as a reverse proxy for https
+bind_addr = "127.0.0.1:8080"
+
+[auth]
+# set the generated secret for administration here
+cookie = "INSECURE-CHANGE-ME"
+
+[worker]
+# set the generated secret for our workers here
+signup_secret = "INSECURE-CHANGE-ME"
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>rebuilderd.service</code>.
+</p>
+<p>Next we head over to our worker machines to set them up. Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rebuilderd">rebuilderd</a></span> as well and edit <code>/etc/rebuilderd-worker.conf</code>:
+</p>
+<pre>## The rebuilderd to connect to
+endpoint = "<a rel="nofollow" class="external free" href="https://rebuilder.example.com">https://rebuilder.example.com</a>"
+# change this to the generated secret for our workers
+signup_secret = "INSECURE-CHANGE-ME"
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>rebuilderd-worker@<i>workername</i>.service</code>.
+</p>
+<h2><span class="mw-headline" id="Syncing_packages_to_rebuild">Syncing packages to rebuild</span></h2>
+<p>The rebuilder setup will not do anything by default until you explicitly configure where to sync packages from. The sync profiles are configured in <code>/etc/rebuilderd-sync.conf</code>. The profile names are supposed to be unique. You configure it to only build packages of a specific maintainer with the <code>maintainer</code> option. By default it is importing packages of all maintainers.
+</p>
+<pre>## rebuild all of core
+[profile."archlinux-core"]
+distro = "archlinux"
+suite = "core"
+architecture = "x86_64"
+source = "<a rel="nofollow" class="external free" href="https://ftp.halifax.rwth-aachen.de/archlinux/%24repo/os/%24arch">https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch</a>"
+
+## rebuild community packages of specific maintainers, or whitelist packages by name.
+## If no filter is set, all packages are imported, if both filters are set the package only
+## has to match one of them to be included.
+#[profile."archlinux-community"]
+#distro = "archlinux"
+#suite = "community"
+#architecture = "x86_64"
+#source = "<a rel="nofollow" class="external free" href="https://ftp.halifax.rwth-aachen.de/archlinux/%24repo/os/%24arch">https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch</a>"
+#maintainers = ["somebody"]
+#pkgs = ["some-pkg", "python-*"]
+#excludes = ["tensorflow*"]
+</pre>
+<p>Afterwards you can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>rebuilderd-sync@archlinux-core.timer</code> to automatically sync the profile.
+</p>
+<h2><span class="mw-headline" id="Ansible_playbook">Ansible playbook</span></h2>
+<p>An <a href="../en/Ansible.html" title="Ansible">Ansible</a> playbook with a rebuilderd role can be found in Arch Linux's <a rel="nofollow" class="external text" href="https://gitlab.archlinux.org/archlinux/infrastructure/-/blob/master/playbooks/reproducible.archlinux.org.yml">infastructure repository</a>. Use this as inspiration as the Ansible repository is heavily dependent on how the Arch Linux infrastructure is set up.
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Requeueing_failed_builds">Requeueing failed builds</span></h3>
+<p>Starting with rebuilderd 0.5.0 failed builds are retried automatically with increasing delays. You can retry packages immediately with:
+</p>
+<pre># rebuildctl pkgs requeue --suite core --status BAD
+</pre>
+<p>In older versions you had to use this command to add all failed builds to the queue again:
+</p>
+<pre># rebuildctl pkgs ls --distro archlinux --suite core --status BAD --json | jq -r '.[].name' | xargs -L1 rebuildctl queue push archlinux core
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Package_management.html" title="Category:Package management">Package management</a></li>
+<li><a href="../en/Category:Package_development.html" title="Category:Package development">Package development</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Rebuilderd&amp;oldid=640453">https://wiki.archlinux.org/index.php?title=Rebuilderd&amp;oldid=640453</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 November 2020, at 06:57.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

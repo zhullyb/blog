@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>nftables (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Nftables_简体中文 rootpage-Nftables_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">nftables (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Iptables.html" title="Iptables">iptables</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Nftables.html" title="Nftables">Nftables</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2019-04-17。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Nftables&amp;diff=0&amp;oldid=571364">更改</a>，则您可以帮助同步翻译。</div>
+<p><a rel="nofollow" class="external text" href="http://netfilter.org/projects/nftables/">nftables</a> 是一个netfilter项目，旨在替换现有的{ip,ip6,arp,eb}tables框架，为{ip,ip6}tables提供一个新的包过滤框架、一个新的用户空间实用程序（nft）和一个兼容层。它使用现有的钩子、链接跟踪系统、用户空间排队组件和netfilter日志子系统。
+</p>
+<p>它由三个主要组件组成：内核实现、libnl netlink通信和nftables用户空间前端。
+内核提供了一个netlink配置接口以及运行时规则集评估，libnl包含了与内核通信的基本函数，nftables前端是用户通过nft交互。
+</p>
+<p>您还可以访问<a rel="nofollow" class="external text" href="https://wiki.nftables.org/wiki-nftables/index.php/Main_Page">nftables官方wiki页面</a>获取更多信息。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#%E7%94%A8%E6%B3%95"><span class="tocnumber">2</span> <span class="toctext">用法</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">3</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#%E8%A1%A8%EF%BC%88Tables%EF%BC%89"><span class="tocnumber">3.1</span> <span class="toctext">表（Tables）</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#%E5%88%9B%E5%BB%BA%E8%A1%A8"><span class="tocnumber">3.1.1</span> <span class="toctext">创建表</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#%E5%88%97%E5%87%BA%E8%A1%A8"><span class="tocnumber">3.1.2</span> <span class="toctext">列出表</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#%E5%88%97%E5%87%BA%E8%A1%A8%E4%B8%AD%E7%9A%84%E9%93%BE%E5%92%8C%E8%A7%84%E5%88%99"><span class="tocnumber">3.1.3</span> <span class="toctext">列出表中的链和规则</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#%E5%88%A0%E9%99%A4%E8%A1%A8"><span class="tocnumber">3.1.4</span> <span class="toctext">删除表</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#%E6%B8%85%E7%A9%BA%E8%A1%A8"><span class="tocnumber">3.1.5</span> <span class="toctext">清空表</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10">
+<a href="#%E9%93%BE%EF%BC%88Chains%EF%BC%89"><span class="tocnumber">3.2</span> <span class="toctext">链（Chains）</span></a>
+<ul>
+<li class="toclevel-3 tocsection-11">
+<a href="#%E5%88%9B%E5%BB%BA%E9%93%BE"><span class="tocnumber">3.2.1</span> <span class="toctext">创建链</span></a>
+<ul>
+<li class="toclevel-4 tocsection-12"><a href="#%E5%B8%B8%E8%A7%84%E9%93%BE"><span class="tocnumber">3.2.1.1</span> <span class="toctext">常规链</span></a></li>
+<li class="toclevel-4 tocsection-13"><a href="#%E5%9F%BA%E6%9C%AC%E9%93%BE"><span class="tocnumber">3.2.1.2</span> <span class="toctext">基本链</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-14"><a href="#%E5%88%97%E5%87%BA%E8%A7%84%E5%88%99"><span class="tocnumber">3.2.2</span> <span class="toctext">列出规则</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#%E7%BC%96%E8%BE%91%E9%93%BE"><span class="tocnumber">3.2.3</span> <span class="toctext">编辑链</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#%E5%88%A0%E9%99%A4%E9%93%BE"><span class="tocnumber">3.2.4</span> <span class="toctext">删除链</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#%E6%B8%85%E7%A9%BA%E9%93%BE%E4%B8%AD%E7%9A%84%E8%A7%84%E5%88%99"><span class="tocnumber">3.2.5</span> <span class="toctext">清空链中的规则</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18">
+<a href="#%E8%A7%84%E5%88%99%EF%BC%88Rules%EF%BC%89"><span class="tocnumber">3.3</span> <span class="toctext">规则（Rules）</span></a>
+<ul>
+<li class="toclevel-3 tocsection-19">
+<a href="#%E6%B7%BB%E5%8A%A0%E8%A7%84%E5%88%99"><span class="tocnumber">3.3.1</span> <span class="toctext">添加规则</span></a>
+<ul>
+<li class="toclevel-4 tocsection-20"><a href="#%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="tocnumber">3.3.1.1</span> <span class="toctext">表达式</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-21"><a href="#%E5%88%A0%E9%99%A4"><span class="tocnumber">3.3.2</span> <span class="toctext">删除</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-22"><a href="#%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BD%BD"><span class="tocnumber">3.4</span> <span class="toctext">自动重载</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23">
+<a href="#%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="tocnumber">4</span> <span class="toctext">配置示例</span></a>
+<ul>
+<li class="toclevel-2 tocsection-24"><a href="#%E5%B7%A5%E4%BD%9C%E7%AB%99"><span class="tocnumber">4.1</span> <span class="toctext">工作站</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#%E7%AE%80%E5%8D%95%E7%9A%84IPv4/IPv6%E9%98%B2%E7%81%AB%E5%A2%99"><span class="tocnumber">4.2</span> <span class="toctext">简单的IPv4/IPv6防火墙</span></a></li>
+<li class="toclevel-2 tocsection-26"><a href="#IPv4/IPv6%E9%98%B2%E7%81%AB%E5%A2%99%E9%99%90%E6%B5%81"><span class="tocnumber">4.3</span> <span class="toctext">IPv4/IPv6防火墙限流</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#%E8%B7%B3%E8%BD%AC"><span class="tocnumber">4.4</span> <span class="toctext">跳转</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href="#%E4%B8%8D%E5%90%8C%E6%8E%A5%E5%8F%A3%E9%87%87%E7%94%A8%E4%B8%8D%E5%90%8C%E8%A7%84%E5%88%99"><span class="tocnumber">4.5</span> <span class="toctext">不同接口采用不同规则</span></a></li>
+<li class="toclevel-2 tocsection-29"><a href="#Masquerading"><span class="tocnumber">4.6</span> <span class="toctext">Masquerading</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-30">
+<a href="#%E6%8F%90%E7%A4%BA%E5%92%8C%E6%8A%80%E5%B7%A7"><span class="tocnumber">5</span> <span class="toctext">提示和技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-31">
+<a href="#%E7%AE%80%E5%8D%95%E5%8F%AF%E7%94%A8%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99"><span class="tocnumber">5.1</span> <span class="toctext">简单可用的防火墙</span></a>
+<ul>
+<li class="toclevel-3 tocsection-32"><a href="#%E5%8D%95%E4%B8%80%E8%AE%A1%E7%AE%97%E6%9C%BA"><span class="tocnumber">5.1.1</span> <span class="toctext">单一计算机</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-33"><a href="#%E9%98%B2%E6%AD%A2%E6%9A%B4%E5%8A%9B%E6%94%BB%E5%87%BB"><span class="tocnumber">5.2</span> <span class="toctext">防止暴力攻击</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-34"><a href="#%E5%8F%82%E8%80%83"><span class="tocnumber">6</span> <span class="toctext">参考</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a>用户空间实用程序包<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nftables">nftables</a></span>或者git版本<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nftables-git/">nftables-git</a></span><sup><small>AUR</small></sup>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 大部分<a href="../en/Iptables.html#Front-ends" title="Iptables">iptables前端</a>没有直接或间接支持nftables，但可以导入到其中。<a rel="nofollow" class="external autonumber" href="https://www.spinics.net/lists/netfilter/msg58215.html">[1]</a> <a href="../en/Firewalld.html" title="Firewalld">firewalld</a>是一个同时支持nftables和iptables的图形前端。<a rel="nofollow" class="external autonumber" href="https://firewalld.org/2018/07/nftables-backend">[2]</a>
+</div>
+<h2>
+<span id=".E7.94.A8.E6.B3.95"></span><span class="mw-headline" id="用法">用法</span>
+</h2>
+<p><i>nftables</i>区分命令行输入的临时规则和从文件加载或保存到文件的永久规则。
+默认配置文件是<code>/etc/nftables.conf</code>，其中已经包含一个名为"inet filter"的简单ipv4/ipv6防火墙列表。
+</p>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>nftables.service</code>。
+</p>
+<p>检查规则集：
+</p>
+<pre># nft list ruleset
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 要使systemd服务正确运行，可能需要创建包含nftables所有相关模块的<code>/etc/modules-load.d/nftables.conf</code>文件。可以用以下命令获取模块列表： <pre>$ lsmod | grep '^nf'</pre>
+否则，可能会出现错误： <code>Error: Could not process rule: No such file or directory</code> </div>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>nftables的用户空间实用程序<i>nft</i>评估大多数规则集并传递到内核。规则存储在链中，链存储在表中。以下部分说明如何创建和修改这些结构。
+</p>
+<p>以下所有更改都是临时的。要永久更改，请见规则集保存到<code>nftables.service</code>加载的<code>/etc/nftables.conf</code>中：
+</p>
+<pre># nft list ruleset &gt; /etc/nftables.conf
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>
+<code>nft list</code>不输出变量的定义，如果在<code>/etc/nftables.conf</code>中有任何变量定义将会丢失。规则中使用的变量将替换为其变量值。</li>
+<li>
+<code>nft list ruleset</code>在nftables v0.7 （Scrooge McDuck）在同时使用ICMP和ICMPv6时有语法限制。如果导出用作新的规则集将会导致错误。有关信息和解决方案，请参阅 <a rel="nofollow" class="external text" href="https://unix.stackexchange.com/questions/408497/nftables-configuration-error-conflicting-protocols-specified-inet-service-v-i?rq=1">stackexchange post</a>。</li>
+</ul>
+</div>
+<p>要从文件读取输入，请使用<code>-f</code>参数：
+</p>
+<pre># nft -f <i>filename</i>
+</pre>
+<p>注意，任何已加载的规则不会自动清空。
+</p>
+<p>有关命令的完整列表，参见<span class="plainlinks archwiki-template-man" title="$ man 8 nft"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nft.8">nft(8)</a></span>。
+</p>
+<h3>
+<span id=".E8.A1.A8.EF.BC.88Tables.EF.BC.89"></span><span class="mw-headline" id="表（Tables）">表（Tables）</span>
+</h3>
+<p>表包含<a href="#%E9%93%BE">#链</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>。与iptables中的表不同，nftables中没有内置表。表的数量和名称由用户决定。但是，每个表只有一个地址簇，并且只适用于该簇的数据包。表可以指定五个簇中的一个：
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>nftables簇</th>
+<th>iptables实用程序
+</th>
+</tr>
+<tr>
+<td>ip</td>
+<td>iptables
+</td>
+</tr>
+<tr>
+<td>ip6</td>
+<td>ip6tables
+</td>
+</tr>
+<tr>
+<td>inet</td>
+<td>iptables和ip6tables
+</td>
+</tr>
+<tr>
+<td>arp</td>
+<td>arptables
+</td>
+</tr>
+<tr>
+<td>bridge</td>
+<td>ebtables
+</td>
+</tr>
+</tbody>
+</table>
+<p><code>ip</code>（即IPv4）是默认簇，如果未指定簇，则使用该簇。
+</p>
+<p>要创建同时适用于IPv4和IPv6的规则，请使用<code>inet</code>。<code>inet</code>允许统一<code>ip</code>和<code>ip6</code>簇，以便更容易地定义规则。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <code>inet</code>不能用于<code>nat</code>类型的链，只能用于<code>filter</code>类型的链。（<a rel="nofollow" class="external text" href="http://www.spinics.net/lists/netfilter/msg56411.html">source</a>）</div>
+<p>有关地址簇的完整描述，请参见<span class="plainlinks archwiki-template-man" title="$ man 8 nft"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nft.8">nft(8)</a></span>中的<code>ADDRESS FAMILIES</code>章节。
+</p>
+<p>在以下情况中，<code><i>family</i></code>是可选的，如果未指定则设为<code>ip</code>。
+</p>
+<h4>
+<span id=".E5.88.9B.E5.BB.BA.E8.A1.A8"></span><span class="mw-headline" id="创建表">创建表</span>
+</h4>
+<p>创建一个新的表：
+</p>
+<pre># nft add table <i>family</i> <i>table</i>
+</pre>
+<h4>
+<span id=".E5.88.97.E5.87.BA.E8.A1.A8"></span><span class="mw-headline" id="列出表">列出表</span>
+</h4>
+<p>列出所有表：
+</p>
+<pre># nft list tables
+</pre>
+<h4>
+<span id=".E5.88.97.E5.87.BA.E8.A1.A8.E4.B8.AD.E7.9A.84.E9.93.BE.E5.92.8C.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="列出表中的链和规则">列出表中的链和规则</span>
+</h4>
+<p>列出指定表中的所有链和规则：
+</p>
+<pre># nft list table <i>family</i> <i>table</i>
+</pre>
+<p>例如，要列出<code>inet</code>簇中<code>filter</code>表中的所有规则：
+</p>
+<pre># nft list table inet filter
+</pre>
+<h4>
+<span id=".E5.88.A0.E9.99.A4.E8.A1.A8"></span><span class="mw-headline" id="删除表">删除表</span>
+</h4>
+<p>删除一个表：
+</p>
+<pre># nft delete table <i>family</i> <i>table</i>
+</pre>
+<p>只能删除不包含链的表。
+</p>
+<h4>
+<span id=".E6.B8.85.E7.A9.BA.E8.A1.A8"></span><span class="mw-headline" id="清空表">清空表</span>
+</h4>
+<p>要清空一个表中的所有规则：
+</p>
+<pre># nft flush table <i>family</i> <i>table</i>
+</pre>
+<h3>
+<span id=".E9.93.BE.EF.BC.88Chains.EF.BC.89"></span><span class="mw-headline" id="链（Chains）">链（Chains）</span>
+</h3>
+<p>链的目的是保存<a href="#%E8%A7%84%E5%88%99">#规则</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>。与iptables中的链不同，nftables没有内置链。这意味着与iptables不同，如果链没有使用netfilter框架中的任何类型或钩子，则流经这些链的数据包不会被nftables触及。
+</p>
+<p>链有两种类型。<i>基本</i>链是来自网络栈的数据包的入口点，其中指定了钩子值。<i>常规</i>链可以作为更好地处理的跳转目标。
+</p>
+<p>在以下情况中，<code><i>family</i></code>是可选的，如果未指定则设为<code>ip</code>。
+</p>
+<h4>
+<span id=".E5.88.9B.E5.BB.BA.E9.93.BE"></span><span class="mw-headline" id="创建链">创建链</span>
+</h4>
+<h5>
+<span id=".E5.B8.B8.E8.A7.84.E9.93.BE"></span><span class="mw-headline" id="常规链">常规链</span>
+</h5>
+<p>将名为<code><i>chain</i></code>的常规链添加到名为<code><i>table</i></code>的表中：
+</p>
+<pre># nft add chain <i>family</i> <i>table</i> <i>chain</i>
+</pre>
+<p>例如，将名为<code>tcpchain</code>的常规链添加到<code>inet</code>簇中名为<code>filter</code>的表中：
+</p>
+<pre># nft add chain inet filter tcpchain
+</pre>
+<h5>
+<span id=".E5.9F.BA.E6.9C.AC.E9.93.BE"></span><span class="mw-headline" id="基本链">基本链</span>
+</h5>
+<p>添加基本链，需要指定钩子和优先级值：
+</p>
+<pre># nft add chain <i>family</i> <i>table</i> <i>chain</i> { type <i>type</i> hook <i>hook</i> priority <i>priority</i> \; }
+</pre>
+<p><code><i>type</i></code>可以是<code>filter</code>、<code>route</code>或者<code>nat</code>。
+</p>
+<p>IPv4/IPv6/Inet地址簇中，<code><i>hook</i></code>可以是<code>prerouting</code>、<code>input</code>、<code>forward</code>、<code>output</code>或者<code>postrouting</code>。其他地址簇中的钩子列表请参见<span class="plainlinks archwiki-template-man" title="$ man 8 nft"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nft.8">nft(8)</a></span>。
+</p>
+<p><code><i>priority</i></code>采用整数值。数字较小的链优先处理，并且可以是负数。<a rel="nofollow" class="external autonumber" href="https://wiki.nftables.org/wiki-nftables/index.php/Configuring_chains#Base_chain_types">[3]</a>
+</p>
+<p>例如，添加筛选输入数据包的基本链：
+</p>
+<pre># nft add chain inet filter input { type filter hook input priority 0\; }
+</pre>
+<p>将上面命令中的<code>add</code>替换为<code>create</code>则可以添加一个新的链，但如果链已经存在，则返回错误。
+</p>
+<h4>
+<span id=".E5.88.97.E5.87.BA.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="列出规则">列出规则</span>
+</h4>
+<p>列出一个链中的所有规则：
+</p>
+<pre># nft list chain <i>family</i> <i>table</i> <i>chain</i>
+</pre>
+<p>例如，要列出<code>inet</code>中<code>filter</code>表的<code>output</code>链中的所有规则：
+</p>
+<pre># nft list chain inet filter output
+</pre>
+<h4>
+<span id=".E7.BC.96.E8.BE.91.E9.93.BE"></span><span class="mw-headline" id="编辑链">编辑链</span>
+</h4>
+<p>要编辑一个链，只需按名称调用并定义要更改的规则。
+</p>
+<pre># nft chain <i>family table chain</i> { [ type <i>type</i> hook <i>hook</i> device <i>device</i> priority <i>priority</i> \; policy &lt;policy&gt; \; ] }
+</pre>
+<p>例如，将默认表中的input链策略从<code>accept</code>更改为<code>drop</code>：
+</p>
+<pre># nft chain inet filter input { policy drop \; }
+</pre>
+<h4>
+<span id=".E5.88.A0.E9.99.A4.E9.93.BE"></span><span class="mw-headline" id="删除链">删除链</span>
+</h4>
+<p>删除一个链：
+</p>
+<pre># nft delete chain <i>family</i> <i>table</i> <i>chain</i>
+</pre>
+<p>要删除的链不能包含任何规则或者跳转目标。
+</p>
+<h4>
+<span id=".E6.B8.85.E7.A9.BA.E9.93.BE.E4.B8.AD.E7.9A.84.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="清空链中的规则">清空链中的规则</span>
+</h4>
+<p>清空一个链的规则：
+</p>
+<pre># nft flush chain <i>family</i> <i>table</i> <i>chain</i>
+</pre>
+<h3>
+<span id=".E8.A7.84.E5.88.99.EF.BC.88Rules.EF.BC.89"></span><span class="mw-headline" id="规则（Rules）">规则（Rules）</span>
+</h3>
+<p>规则由语句或表达式构成，包含在链中。
+</p>
+<h4>
+<span id=".E6.B7.BB.E5.8A.A0.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="添加规则">添加规则</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> <i>iptables-translate</i>实用程序何以将<a href="../en/Iptables.html" title="Iptables">iptables</a>规则转换成nftables格式。</div>
+<p>将一条规则添加到链中：
+</p>
+<pre># nft add rule <i>family</i> <i>table</i> <i>chain</i> handle <i>handle</i> <i>statement</i>
+</pre>
+<p>规则添加到<code><i>handle</i></code>处，这是可选的。如果不指定，则规则添加到链的末尾。
+</p>
+<p>将规则插入到指定位置：
+</p>
+<pre># nft insert rule <i>family</i> <i>table</i> <i>chain</i> handle <i>handle</i> <i>statement</i>
+</pre>
+<p>如果未指定<code><i>handle</i></code>，则规则插入到链的开头。
+</p>
+<h5>
+<span id=".E8.A1.A8.E8.BE.BE.E5.BC.8F"></span><span class="mw-headline" id="表达式">表达式</span>
+</h5>
+<p>通常情况下，<code><i>statement</i></code>包含一些要匹配的表达式，然后是判断语句。结论语句包括<code>accept</code>、<code>drop</code>、<code>queue</code>、<code>continue</code>、<code>return</code>、<code>jump <i>chain</i></code>和<code>goto <i>chain</i></code>。也可能是其他陈述。有关信息信息，请参阅<span class="plainlinks archwiki-template-man" title="$ man 8 nft"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nft.8">nft(8)</a></span>。
+</p>
+<p>nftables中有多种可用的表达式，并且在大多数情况下，与iptables的对应项一致。最明显的区别是没有一般或隐式匹配。一般匹配是始终可用的匹配，如<code>--protocol</code>或<code>--source</code>。隐式匹配是用于特定协议的匹配，如TCP数据包的<code>--sport</code>。
+</p>
+<p>以下是可用匹配的部分列表：
+</p>
+<ul>
+<li>meta    （元属性，如接口）</li>
+<li>icmp    （ICMP协议）</li>
+<li>icmpv6  （ICMPv6协议）</li>
+<li>ip      （IP协议）</li>
+<li>ip6     （IPv6协议）</li>
+<li>tcp     （TCP协议）</li>
+<li>udp     （UDP协议）</li>
+<li>sctp    （SCTP协议）</li>
+<li>ct      （链接跟踪）</li>
+</ul>
+<p>以下是匹配参数的部分列表（完整列表请参见<span class="plainlinks archwiki-template-man" title="$ man 8 nft"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nft.8">nft(8)</a></span>）：
+</p>
+<pre>meta:
+  oif &lt;output interface INDEX&gt;
+  iif &lt;input interface INDEX&gt;
+  oifname &lt;output interface NAME&gt;
+  iifname &lt;input interface NAME&gt;
+
+  （oif 和 iif 接受字符串参数并转换为接口索引）
+  （oifname 和 iifname 更具动态性，但因字符串匹配速度更慢）
+
+icmp:
+  type &lt;icmp type&gt;
+
+icmpv6:
+  type &lt;icmpv6 type&gt;
+
+ip:
+  protocol &lt;protocol&gt;
+  daddr &lt;destination address&gt;
+  saddr &lt;source address&gt;
+
+ip6:
+  daddr &lt;destination address&gt;
+  saddr &lt;source address&gt;
+
+tcp:
+  dport &lt;destination port&gt;
+  sport &lt;source port&gt;
+
+udp:
+  dport &lt;destination port&gt;
+  sport &lt;source port&gt;
+
+sctp:
+  dport &lt;destination port&gt;
+  sport &lt;source port&gt;
+
+ct:
+  state &lt;new | established | related | invalid&gt;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <i>nft</i>不使用<code>/etc/services</code>文件匹配端口号和名称，而是使用<a rel="nofollow" class="external text" href="https://git.netfilter.org/nftables/plain/src/services.c">内置列表</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-04 ⓘ]</sup>。要在命令行显示端口映射，请使用 <code>nft describe tcp dport</code>。</div>
+<h4>
+<span id=".E5.88.A0.E9.99.A4"></span><span class="mw-headline" id="删除">删除</span>
+</h4>
+<p>单个规则只能通过其句柄删除。使用<code>nft --handle list</code>命令确定规则的句柄。请注意，<code>--handle</code>开关告诉<code>nft</code>输出句柄列表。
+</p>
+<p>下面命令确定一个规则的句柄，然后删除。<code>--number</code>参数用于查看数字输出，如未解析的IP地址。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># nft --handle --numeric list chain inet filter input</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">table ip fltrTable {
+     chain input {
+          type filter hook input priority 0;
+          ip saddr 127.0.0.1 accept # handle 10
+     }
+}
+</pre>
+<pre># nft delete rule inet fltrTable input handle 10
+</pre>
+<p>可以用<code>nft flush table</code>命令清空表中的所有的链。可以用<code>nft flush chain</code>或者<code>nft delete rule</code>命令清空单个链。
+</p>
+<pre># nft flush table foo
+# nft flush chain foo bar
+# nft delete rule ip6 foo bar
+</pre>
+<p>第一个命令清空<code>foo</code>表中的所有链。第二个命令清空ip <code>foo</code>表中的<code>bar</code>链。第三个命令删除ip6 <code>foo</code>表<code>bar</code>两种的所有规则。
+</p>
+<h3>
+<span id=".E8.87.AA.E5.8A.A8.E9.87.8D.E8.BD.BD"></span><span class="mw-headline" id="自动重载">自动重载</span>
+</h3>
+<p>清空当前规则集：
+</p>
+<pre># echo "flush ruleset" &gt; /tmp/nftables 
+</pre>
+<p>导出当前规则集：
+</p>
+<pre># nft list ruleset &gt;&gt; /tmp/nftables
+</pre>
+<p>可以直接修改/tmp/nftables文件，使更改生效则运行：
+</p>
+<pre># nft -f /tmp/nftables
+</pre>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE.E7.A4.BA.E4.BE.8B"></span><span class="mw-headline" id="配置示例">配置示例</span>
+</h2>
+<h3>
+<span id=".E5.B7.A5.E4.BD.9C.E7.AB.99"></span><span class="mw-headline" id="工作站">工作站</span>
+</h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nftables.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">flush ruleset
+
+table inet filter {
+        chain input {
+                type filter hook input priority 0;
+
+                # accept any localhost traffic
+                iif lo accept
+
+                # accept traffic originated from us
+                ct state established,related accept
+
+		# accept ICMP &amp; IGMP
+		ip6 nexthdr icmpv6 icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, mld-listener-query, mld-listener-report, mld-listener-reduction, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept
+		ip protocol icmp icmp type { destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } accept
+		ip protocol igmp accept
+
+                # activate the following line to accept common local services
+                #tcp dport { 22, 80, 443 } ct state new accept
+
+                # count and drop any other traffic
+                counter drop
+        }
+}
+</pre>
+<h3>
+<span id=".E7.AE.80.E5.8D.95.E7.9A.84IPv4.2FIPv6.E9.98.B2.E7.81.AB.E5.A2.99"></span><span class="mw-headline" id="简单的IPv4/IPv6防火墙">简单的IPv4/IPv6防火墙</span>
+</h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">firewall.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># A simple firewall
+
+flush ruleset
+
+table inet filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+
+		# established/related connections
+		ct state established,related accept
+
+		# invalid connections
+		ct state invalid drop
+		
+		# loopback interface
+		iif lo accept
+
+		# ICMP &amp; IGMP
+		ip6 nexthdr icmpv6 icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, mld-listener-query, mld-listener-report, mld-listener-reduction, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept
+		ip protocol icmp icmp type { destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } accept
+		ip protocol igmp accept
+
+		# SSH (port 22)
+		tcp dport ssh accept
+
+		# HTTP (ports 80 &amp; 443)
+		tcp dport { http, https } accept
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+	}
+
+	chain output {
+		type filter hook output priority 0; policy accept;
+	}
+
+}
+</pre>
+<h3>
+<span id="IPv4.2FIPv6.E9.98.B2.E7.81.AB.E5.A2.99.E9.99.90.E6.B5.81"></span><span class="mw-headline" id="IPv4/IPv6防火墙限流">IPv4/IPv6防火墙限流</span>
+</h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">firewall.2.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">table inet filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+
+		ct state invalid drop
+
+		iif lo accept
+
+		# no ping floods:
+		ip protocol icmp icmp type echo-request limit rate over 10/second burst 4 packets  drop
+		ip6 nexthdr icmpv6 icmpv6 type echo-request limit rate over 10/second burst 4 packets drop
+
+		ct state established,related accept
+
+		# ICMP &amp; IGMP
+		ip6 nexthdr icmpv6 icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, mld-listener-query, mld-listener-report, mld-listener-reduction, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept
+		ip protocol icmp icmp type { destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } accept
+		ip protocol igmp accept
+
+		# avoid brute force on ssh:
+		tcp dport ssh ct state new limit rate 15/minute accept
+
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+	}
+
+	chain output {
+		type filter hook output priority 0; policy accept;
+	}
+
+}
+</pre>
+<h3>
+<span id=".E8.B7.B3.E8.BD.AC"></span><span class="mw-headline" id="跳转">跳转</span>
+</h3>
+<p>在配置文件中使用跳转时，必须确保已经定义目标链。否则会引起错误<code>Error: Could not process rule: No such file or directory</code>。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">jump.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">table inet filter {
+    chain web {
+        tcp dport http accept
+        tcp dport 8080 accept
+    }
+    chain input {
+        type filter hook input priority 0;
+        ip saddr 10.0.2.0/24 jump web
+        drop
+    }
+}
+</pre>
+<h3>
+<span id=".E4.B8.8D.E5.90.8C.E6.8E.A5.E5.8F.A3.E9.87.87.E7.94.A8.E4.B8.8D.E5.90.8C.E8.A7.84.E5.88.99"></span><span class="mw-headline" id="不同接口采用不同规则">不同接口采用不同规则</span>
+</h3>
+<p>如果设备有多个网络接口，并且需要对不同接口采用不同的规则，则可能需要使用“调度”筛选链，然后使用特定接口筛选链。例如，假设设备用作家庭路由器，你需要在LAN（接口enp3s0）运行一个web服务器，但不用于internet（接口enp2s0），可以考虑以下的结构：
+</p>
+<pre>table inet filter {
+  chain input { # this chain serves as a dispatcher
+    type filter hook input priority 0;
+
+    iif lo accept # always accept loopback
+    iifname enp2s0 jump input_enp2s0
+    iifname enp3s0 jump input_enp3s0
+
+    reject with icmp type port-unreachable # refuse traffic from all other interfaces
+  }
+  chain input_enp2s0 { # rules applicable to public interface interface
+    ct state {established,related} accept
+    ct state invalid drop
+    udp dport bootpc accept
+    tcp dport bootpc accept
+    reject with icmp type port-unreachable # all other traffic
+  }
+  chain input_enp3s0 {
+    ct state {established,related} accept
+    ct state invalid drop
+    udp dport bootpc accept
+    tcp dport bootpc accept
+    tcp port http accept
+    tcp port https accept
+    reject with icmp type port-unreachable # all other traffic
+  }
+  chain ouput { # we let everything out
+    type filter hook output priority 0;
+    accept
+  }
+ }
+</pre>
+<p>或者，可以只选择一个<code>iifname</code>语句，如单个上游接口，并将其他接口的默认规则放在一起，而不是为每个接口进行调度。
+</p>
+<h3><span class="mw-headline" id="Masquerading">Masquerading</span></h3>
+<p>nftables有一个特殊的关键字<code>masquerade</code> "where the source address is automagically set to the address of the output interface（源地址自动设置为出口地址）" ([<a rel="nofollow" class="external free" href="http://wiki.nftables.org/wiki-ip%E5%9C%B0%E5%9D%80%E6%94%B9%E5%8F%98%E6%97%B6%E6%9B%B4%E6%96%B0%E8%A7%84%E5%88%99%E3%80%82">http://wiki.nftables.org/wiki-ip地址改变时更新规则。</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-04 ⓘ]</sup>
+</p>
+<p>使用方法：
+</p>
+<ul><li>确保在内核中启用Masquerading（默认内核已启用），否则在内核配置过程中设置</li></ul>
+<pre>CONFIG_NFT_MASQ=m
+</pre>
+<ul>
+<li>
+<code>masquerade</code>关键字只能用于<code>nat</code>类型的链，而<code>nat</code>链又不能在<code>inet</code>簇的表中。要用<code>ip</code>和/或<code>ip6</code>簇的表。</li>
+<li>masquerading是一中源NAT，只能工作于输出路径。</li>
+</ul>
+<p>具有两个接口的计算机的示例：LAN连接到<code>nsp3s0</code>，internet连接到<code>enp2s0</code>：
+</p>
+<pre>table ip nat {
+  chain prerouting {
+    type nat hook prerouting priority 0;
+  }
+  chain postrouting {
+    type nat hook postrouting priority 100;
+    oifname "enp0s2" masquerade
+  }
+}
+</pre>
+<h2>
+<span id=".E6.8F.90.E7.A4.BA.E5.92.8C.E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="提示和技巧">提示和技巧</span>
+</h2>
+<h3>
+<span id=".E7.AE.80.E5.8D.95.E5.8F.AF.E7.94.A8.E7.9A.84.E9.98.B2.E7.81.AB.E5.A2.99"></span><span class="mw-headline" id="简单可用的防火墙">简单可用的防火墙</span>
+</h3>
+<p>详细信息参见 <a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a> 。
+</p>
+<h4>
+<span id=".E5.8D.95.E4.B8.80.E8.AE.A1.E7.AE.97.E6.9C.BA"></span><span class="mw-headline" id="单一计算机">单一计算机</span>
+</h4>
+<p>清空当前规则集：
+</p>
+<pre># nft flush ruleset
+</pre>
+<p>添加一个表：
+</p>
+<pre># nft add table inet filter
+</pre>
+<p>添加input、forward和output三个基本链。input和forward的默认策略是drop。output的默认策略是accept。
+</p>
+<pre># nft add chain inet filter input { type filter hook input priority 0 \; policy drop \; }
+# nft add chain inet filter forward { type filter hook forward priority 0 \; policy drop \; }
+# nft add chain inet filter output { type filter hook output priority 0 \; policy accept \; }
+</pre>
+<p>添加两个与TCP和UDP关联的常规链：
+</p>
+<pre># nft add chain inet filter TCP
+# nft add chain inet filter UDP
+</pre>
+<p>related和established的流量会accept：
+</p>
+<pre># nft add rule inet filter input ct state related,established accept
+</pre>
+<p>loopback接口的流量会accept：
+</p>
+<pre># nft add rule inet filter input iif lo accept
+</pre>
+<p>无效的流量会drop：
+</p>
+<pre># nft add rule inet filter input ct state invalid drop
+</pre>
+<p>新的echo请求（ping）会accept：
+</p>
+<pre># nft add rule inet filter input ip protocol icmp icmp type echo-request ct state new accept
+</pre>
+<p>新的UDP流量跳转到UDP链：
+</p>
+<pre># nft add rule inet filter input ip protocol udp ct state new jump UDP
+</pre>
+<p>新的TCP流量跳转到TCP链：
+</p>
+<pre># nft add rule inet filter input ip protocol tcp tcp flags \&amp; \(fin\|syn\|rst\|ack\) == syn ct state new jump TCP
+</pre>
+<p>未由其他规则处理的所有通信会reject：
+</p>
+<pre># nft add rule inet filter input ip protocol udp reject
+# nft add rule inet filter input ip protocol tcp reject with tcp reset
+# nft add rule inet filter input counter reject with icmp type prot-unreachable
+</pre>
+<p>此时，应决定对传入连接打开哪些端口，这些由TCP和UDP链处理。例如，要打开web服务器的连接端口，添加：
+</p>
+<pre># nft add rule inet filter TCP tcp dport 80 accept
+</pre>
+<p>要打开web服务器HTTPS连接端口443：
+</p>
+<pre># nft add rule inet filter TCP tcp dport 443 accept
+</pre>
+<p>允许SSH连接端口22：
+</p>
+<pre># nft add rule inet filter TCP tcp dport 22 accept
+</pre>
+<p>允许传入DNS请求：
+</p>
+<pre># nft add rule inet filter TCP tcp dport 53 accept
+# nft add rule inet filter UDP udp dport 53 accept
+</pre>
+<p>确保更改是永久的。
+</p>
+<h3>
+<span id=".E9.98.B2.E6.AD.A2.E6.9A.B4.E5.8A.9B.E6.94.BB.E5.87.BB"></span><span class="mw-headline" id="防止暴力攻击">防止暴力攻击</span>
+</h3>
+<p><a href="../en/Sshguard.html" title="Sshguard">Sshguard</a>是可以检测暴力攻击的程序，并根据临时黑名单IP地址修改防火墙。有关如何与nftables一起使用的问题，请参阅<a href="../en/Sshguard.html#nftables" title="Sshguard">Sshguard#nftables</a>。
+</p>
+<h2>
+<span id=".E5.8F.82.E8.80.83"></span><span class="mw-headline" id="参考">参考</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://wiki.nftables.org/">netfilter nftables wiki</a></li>
+<li><a href="https://wiki.debian.org/nftables" class="extiw" title="debian:nftables">debian:nftables</a></li>
+<li><a href="https://wiki.gentoo.org/wiki/nftables" class="extiw" title="gentoo:nftables">gentoo:nftables</a></li>
+<li><a rel="nofollow" class="external text" href="https://lwn.net/Articles/324251/">First release of nftables</a></li>
+<li><a rel="nofollow" class="external text" href="https://home.regit.org/netfilter-en/nftables-quick-howto/">nftables quick howto</a></li>
+<li><a rel="nofollow" class="external text" href="https://lwn.net/Articles/564095/">The return of nftables</a></li>
+<li><a rel="nofollow" class="external text" href="http://developers.redhat.com/blog/2016/10/28/what-comes-after-iptables-its-successor-of-course-nftables/">What comes after ‘iptables’? Its successor, of course: `nftables`</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Firewalls.html" title="Category:Firewalls (简体中文)">Firewalls (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Nftables_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=629678">https://wiki.archlinux.org/index.php?title=Nftables_(简体中文)&amp;oldid=629678</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 August 2020, at 06:38.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

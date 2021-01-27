@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Scanner Button Daemon - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Scanner_Button_Daemon rootpage-Scanner_Button_Daemon skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Scanner Button Daemon</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Introduction"><span class="tocnumber">1</span> <span class="toctext">Introduction</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#What_is_scanbd_good_for?"><span class="tocnumber">1.1</span> <span class="toctext">What is scanbd good for?</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#How_does_it_work?"><span class="tocnumber">1.2</span> <span class="toctext">How does it work?</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Installation"><span class="tocnumber">2</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Sane_configuration"><span class="tocnumber">2.1</span> <span class="toctext">Sane configuration</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#scanbd_configuration"><span class="tocnumber">2.2</span> <span class="toctext">scanbd configuration</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Introduction">Introduction</span></h2>
+<h3>
+<span id="What_is_scanbd_good_for.3F"></span><span class="mw-headline" id="What_is_scanbd_good_for?">What is scanbd good for?</span>
+</h3>
+<p>The majority of the desktop scanners are more or less "passive" devices: They might function with a suitable application but are unable to be used by buttons only.
+</p>
+<p><a rel="nofollow" class="external text" href="https://sourceforge.net/projects/scanbd/">scanbd</a> tries to solve the problem with managing such scanners to make use of the scanner-buttons they have <i>(only when the buttons are supported by sane)</i>.
+</p>
+<h3>
+<span id="How_does_it_work.3F"></span><span class="mw-headline" id="How_does_it_work?">How does it work?</span>
+</h3>
+<p><i>scanbd</i> (the scanner button daemon) opens and polls the scanner and therefore locks the device. So no other application can access the device directly (open the /dev/..., or via libusb, etc).
+</p>
+<p>To solve this, a second daemon is used (in the so called "manager-mode" of <i>scanbd</i>): <i>scanbm</i> is configured as a "proxy" to access the scanner and, if another application tries to use the scanner, the polling daemon is ordered to disable polling for the time the other scan-application wants to use the scanner.
+</p>
+<p>To make this happen, <i>scanbm</i> is configured instead of <a href="../en/SANE.html#Network_scanning" title="SANE">saned</a> as the network scanning daemon. If a scan request arrives on the sane-port, <i>scanbm</i> stops the polling by sending a dbus-signal to the polling <i>scanbd-daemon</i>. Then it starts the real <i>saned</i> which scans and sends the data back to the requesting application. Afterwards the scanbd-manager <i>scanbm</i> restarts the polling by sending another dbus-signal to <i>scanbd</i>.
+</p>
+<p>Due to the above, the set up of the <i>scanbd</i> requires changes in default configuration of <a href="../en/SANE.html" title="SANE">SANE</a> and also definition of own action scripts (defining what should be done when a button on the scanner is pressed).
+</p>
+<p>There are also alternatives to <i>scanbd</i>, eg. <a rel="nofollow" class="external text" href="http://scanbuttond.sourceforge.net/">scanbuttond</a>, however these seem to be unmaintained nowadays.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/scanbd/">scanbd</a></span><sup><small>AUR</small></sup> package.
+</p>
+<p>As of version 1.3, scanbd is fully compatible with <a href="../en/Systemd.html" title="Systemd">systemd</a> service activation and does not require <b>inet</b> neither <b>xinetd</b> to start scanbm (manager mode of scanbd), though these remain as an alternative (not described here).
+</p>
+<h3><span class="mw-headline" id="Sane_configuration">Sane configuration</span></h3>
+<p>Since <i>scanbd</i> and <i>saned</i> are running on the same machine as the scanner is connected to, we need to have two sets of saned configurations - one in the default location (<code>/etc/sane.d/</code>), which would redirect local applications to a network socket, that systemd is listening on, and another one (e.g. <code>/etc/scanbd/sane.d/</code>), which will be actually used by sane backend to access the attached scanner.
+</p>
+<p>First, copy all config files from <code>/etc/sane.d/</code> to <code>/etc/scanbd/sane.d/</code> (these will be needed later):
+</p>
+<pre># cp /etc/sane.d/* /etc/scanbd/sane.d/
+</pre>
+<p>Modify <code>/etc/sane.d/dll.conf</code> so that it includes <i>only</i> the "net" directive (either delete the other directives (printers), or comment them with # symbol):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sane.d/dll.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">net</pre>
+<p>Modify the net-backend configuration file (see scanbd's README.txt for more complicated setups):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sane.d/net.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">connect_timeout = 3
+localhost # scanbm is listening on localhost</pre>
+<p>Now the desktop applications (which use libsane) are forced (by the above dll.conf) to use the net-backend only. This prevents them from using the locally attached scanners directly (and blocking them).
+</p>
+<p>Whenever there is a connection to the standard sane network socket, systemd starts <i>scanbm</i> ("manager mode" of scanbd), which in turn tells (the already running) <i>scanbd</i> to stop polling the scanner and then it starts <i>saned</i> with the alternative configuration directory.
+</p>
+<p>The last step is to modify the alternative configuration of sane in <code>/etc/scanbd/sane.d/dll.conf</code>: just make sure that the "net" directive is commented and the corresponding scanner-backends are uncommented:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/scanbd/sane.d/dll.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#net
+pixma
+epson2
+#... whatever other scanner backend needed ...</pre>
+<p>Now it is time to enable and start the systemd units of scanbm:
+</p>
+<pre># systemctl enable scanbd.service
+# systemctl start scanbd.service
+# systemctl start scanbm.socket
+</pre>
+<p>You can check <code>/var/log/everything</code> to see if the scanbd service and scanbm socket were started. To increase debugging verbosity, change <code>debug-level = 7</code> in <code>/etc/scanbd/scanbd.conf</code> and restart the scanbd service.
+</p>
+<h3><span class="mw-headline" id="scanbd_configuration">scanbd configuration</span></h3>
+<p>If you are lucky, your scanner might work almost out of the box and you would only want to modify the action scripts, which define what is done when a particular button is pressed.
+</p>
+<p>scanbm listens to scanner's status and on the basis of messages received, it decides what to do. The standard behaviour is defined in <code>/etc/scanbd/scanbd.conf</code>. E.g. the action scan:
+</p>
+<pre>action scan {
+        filter = "^scan.*"
+        numerical-trigger {
+               from-value = 1
+               to-value   = 0
+               }
+        desc   = "Scan to file"
+        script = "test.script"
+       }
+</pre>
+<p>Whenever the message from the scanner includes word "scan" (see reg-exp for more details on filters) and the value changes from 1 to 0, then it runs script <code>/etc/scanbd/test.script</code>.
+</p>
+<p><code>/etc/scanbd/test.script</code> does not do anything but sends a message to syslog:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/scanbd/test.script</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+# look in scanbd.conf for environment variables
+
+logger -t "scanbd: $0" "Begin of $SCANBD_ACTION for device $SCANBD_DEVICE"
+
+# printout all env-variables
+/usr/bin/printenv &gt; /tmp/scanbd.script.env
+
+logger -t "scanbd: $0" "End   of $SCANBD_ACTION for device $SCANBD_DEVICE"</pre>
+<p>There are a few other scripts available in <code>/etc/scanbd/</code> that actually do something - have a look yourself.
+</p>
+<p>Also, <code>/etc/scanbd/scanbd.conf</code> has "include" directives at the end, which refer to preconfigured button definitions of a few printers.
+</p>
+<pre>$ cat /etc/scanbd/scanbd.conf | grep include\(
+# include("scanner.d/myscanner.conf")
+# include("/my/long/path/myscanner.conf")
+include(scanner.d/avision.conf)
+include(scanner.d/fujitsu.conf)
+include(scanner.d/hp.conf)
+include(scanner.d/pixma.conf)
+include(scanner.d/snapscan.conf)
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Digital_imaging.html" title="Category:Digital imaging">Digital imaging</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Scanner_Button_Daemon&amp;oldid=629463">https://wiki.archlinux.org/index.php?title=Scanner_Button_Daemon&amp;oldid=629463</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 15:48.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

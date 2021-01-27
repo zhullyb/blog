@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Nginx (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Nginx_简体中文 rootpage-Nginx_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Nginx (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Nginx.html" title="Nginx">Nginx</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2020-07-16。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Nginx&amp;diff=0&amp;oldid=624934">更改</a>，则您可以帮助同步翻译。</div>
+<p><b>Nginx</b> (读作"engine X") 由Igor Sysoev(俄罗斯)于2005年编写，是一个免费、开源、高性能的HTTP服务器和反向代理，也可以作为一个IMAP/POP3代理服务器。Nginx因为稳定，丰富的功能集，配置简单，资源占用低而闻名世界。
+</p>
+<p>这篇文章描述了如何设置nginx并且如何通过<a href="#FastCGI">#FastCGI</a>集成<a href="../en/PHP.html" title="PHP">PHP</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#%E5%90%AF%E5%8A%A8"><span class="tocnumber">2</span> <span class="toctext">启动</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">3</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#%E9%85%8D%E7%BD%AE%E4%BE%8B%E5%AD%90"><span class="tocnumber">3.1</span> <span class="toctext">配置例子</span></a></li>
+<li class="toclevel-2 tocsection-5">
+<a href="#%E9%80%9A%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="tocnumber">3.2</span> <span class="toctext">通用配置</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#%E8%BF%9B%E7%A8%8B%E5%92%8C%E8%BF%9E%E6%8E%A5"><span class="tocnumber">3.2.1</span> <span class="toctext">进程和连接</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#%E4%B8%8D%E5%90%8C%E7%94%A8%E6%88%B7%E9%97%B4%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="tocnumber">3.2.2</span> <span class="toctext">不同用户间的使用</span></a></li>
+<li class="toclevel-3 tocsection-8">
+<a href="#server%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="tocnumber">3.2.3</span> <span class="toctext">server代码块</span></a>
+<ul>
+<li class="toclevel-4 tocsection-9"><a href="#%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%A5%E5%8F%A3"><span class="tocnumber">3.2.3.1</span> <span class="toctext">管理服务器入口</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-10"><a href="#TLS"><span class="tocnumber">3.2.4</span> <span class="toctext">TLS</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#%E5%88%86%E7%94%A8%E6%88%B7%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.2.5</span> <span class="toctext">分用户目录</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12">
+<a href="#FastCGI"><span class="tocnumber">3.3</span> <span class="toctext">FastCGI</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13">
+<a href="#PHP%E5%AE%9E%E7%8E%B0"><span class="tocnumber">3.3.1</span> <span class="toctext">PHP实现</span></a>
+<ul>
+<li class="toclevel-4 tocsection-14"><a href="#nginx_%E9%85%8D%E7%BD%AE"><span class="tocnumber">3.3.1.1</span> <span class="toctext">nginx 配置</span></a></li>
+<li class="toclevel-4 tocsection-15"><a href="#%E6%B5%8B%E8%AF%95%E9%85%8D%E7%BD%AE"><span class="tocnumber">3.3.1.2</span> <span class="toctext">测试配置</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-16">
+<a href="#CGI_%E5%AE%9E%E7%8E%B0"><span class="tocnumber">3.3.2</span> <span class="toctext">CGI 实现</span></a>
+<ul>
+<li class="toclevel-4 tocsection-17">
+<a href="#fcgiwrap"><span class="tocnumber">3.3.2.1</span> <span class="toctext">fcgiwrap</span></a>
+<ul>
+<li class="toclevel-5 tocsection-18"><a href="#%E5%A4%9A%E4%B8%AA%E5%B7%A5%E4%BA%BA%E7%BA%BF%E7%A8%8B"><span class="tocnumber">3.3.2.1.1</span> <span class="toctext">多个工人线程</span></a></li>
+</ul>
+</li>
+<li class="toclevel-4 tocsection-19"><a href="#nginx%E9%85%8D%E7%BD%AE"><span class="tocnumber">3.3.2.2</span> <span class="toctext">nginx配置</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20">
+<a href="#%E5%9C%A8chroot%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%AE%89%E8%A3%85"><span class="tocnumber">4</span> <span class="toctext">在chroot环境下安装</span></a>
+<ul>
+<li class="toclevel-2 tocsection-21"><a href="#%E5%88%9B%E5%BB%BA%E5%BF%85%E8%A6%81%E7%9A%84%E8%AE%BE%E5%A4%87"><span class="tocnumber">4.1</span> <span class="toctext">创建必要的设备</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#%E5%88%9B%E5%BB%BA%E5%BF%85%E8%A6%81%E7%9B%AE%E5%BD%95"><span class="tocnumber">4.2</span> <span class="toctext">创建必要目录</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#%E5%A1%AB%E5%85%85chroot"><span class="tocnumber">4.3</span> <span class="toctext">填充chroot</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#%E4%BF%AE%E6%94%B9nginx.service%E6%9D%A5%E5%BC%80%E5%90%AFchroot"><span class="tocnumber">4.4</span> <span class="toctext">修改nginx.service来开启chroot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25">
+<a href="#%E5%BB%BA%E8%AE%AE%E5%92%8C%E6%8A%80%E5%B7%A7"><span class="tocnumber">5</span> <span class="toctext">建议和技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-26"><a href="#%E4%BD%BF%E7%94%A8_systemd%E6%97%A0%E6%9D%83%E9%99%90%E8%BF%90%E8%A1%8C"><span class="tocnumber">5.1</span> <span class="toctext">使用 systemd无权限运行</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#%E9%92%88%E5%AF%B9systemd%E7%9A%84%E5%8F%AF%E9%80%89%E8%84%9A%E6%9C%AC"><span class="tocnumber">5.2</span> <span class="toctext">针对systemd的可选脚本</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href="#Nginx_Beautifier_%EF%BC%88nginx%E7%BE%8E%E5%8C%96%E5%99%A8%EF%BC%89"><span class="tocnumber">5.3</span> <span class="toctext">Nginx Beautifier （nginx美化器）</span></a></li>
+<li class="toclevel-2 tocsection-29"><a href="#%E6%9B%B4%E5%A5%BD%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86"><span class="tocnumber">5.4</span> <span class="toctext">更好的头文件管理</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-30">
+<a href="#%E6%95%85%E9%9A%9C%E6%8E%92%E9%99%A4"><span class="tocnumber">6</span> <span class="toctext">故障排除</span></a>
+<ul>
+<li class="toclevel-2 tocsection-31"><a href="#%E9%85%8D%E7%BD%AE%E9%AA%8C%E8%AF%81"><span class="tocnumber">6.1</span> <span class="toctext">配置验证</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#%E6%8E%A5%E5%85%A5%E6%9C%AC%E5%9C%B0IP%E9%87%8D%E5%AE%9A%E5%90%91%E5%88%B0_localhost"><span class="tocnumber">6.2</span> <span class="toctext">接入本地IP重定向到 localhost</span></a></li>
+<li class="toclevel-2 tocsection-33"><a href="#Error:_The_page_you_are_looking_for_is_temporarily_unavailable._Please_try_again_later._(502_Bad_Gateway)"><span class="tocnumber">6.3</span> <span class="toctext">Error: The page you are looking for is temporarily unavailable. Please try again later. (502 Bad Gateway)</span></a></li>
+<li class="toclevel-2 tocsection-34"><a href="#Error:_No_input_file_specified"><span class="tocnumber">6.4</span> <span class="toctext">Error: No input file specified</span></a></li>
+<li class="toclevel-2 tocsection-35"><a href="#Warning:_Could_not_build_optimal_types_hash"><span class="tocnumber">6.5</span> <span class="toctext">Warning: Could not build optimal types_hash</span></a></li>
+<li class="toclevel-2 tocsection-36"><a href="#%E4%B8%8D%E8%83%BD%E6%8C%87%E5%AE%9A%E8%AF%B7%E6%B1%82%E5%9C%B0%E5%9D%80"><span class="tocnumber">6.6</span> <span class="toctext">不能指定请求地址</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-37"><a href="#%E5%8F%82%E8%A7%81"><span class="tocnumber">7</span> <span class="toctext">参见</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a> 包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx-mainline">nginx-mainline</a></span> (主线(mainline)分支:新功能，更新，bug解决) 或者 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx">nginx</a></span> (稳定分支: 只是bug解决).
+</p>
+<p>推荐使用主线分支。使用稳定分支的主要原因是担心新功能的造成的不良影响，比如与第三方模块不兼容或者开发者疏忽导致引入<a rel="nofollow" class="external text" href="https://nginx.org/en/download.html">新功能</a>时出现bug.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 所有在<a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>可用的模块都需要<i>nginx</i>(与<i>nginx-mainline</i>相反)作为依赖.你可能需要在下决定选<i>nginx</i>还是<i>nginx-mainline</i>前，先查看下模块名单。<i>nginx-mainline</i>的模块能在<a href="../en/Arch_User_Repository.html" title="Arch User Repository">Arch User Repository</a>找到.</div>
+<p>对于在基于chroot环境下的额外安全性，可查阅<a href="#Installation_in_a_chroot">#Installation in a chroot</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+<h2>
+<span id=".E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="启动">启动</span>
+</h2>
+<p><a href="../zh-CN/Systemd.html#%E4%BD%BF%E7%94%A8%E5%8D%95%E5%85%83" class="mw-redirect" title="启动/启用">启动/启用</a> <code>nginx.service</code>.
+</p>
+<p>默认在 <a rel="nofollow" class="external free" href="http://127.0.0.1">http://127.0.0.1</a> 页面服务的页面是 <code>/usr/share/nginx/html/index.html</code>.
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>安装nginx后的第一步该干什么写在<a rel="nofollow" class="external text" href="http://nginx.org/en/docs/beginners_guide.html">用户手册</a>里了. 你可以通过编辑在<code>/etc/nginx/</code>下的文件来修改配置。主配置文件在<code>/etc/nginx/nginx.conf</code>.
+</p>
+<p>更多细节和例子，你可以在 <a rel="nofollow" class="external free" href="http://wiki.nginx.org/Configuration">http://wiki.nginx.org/Configuration</a> 和 <a rel="nofollow" class="external text" href="http://nginx.org/en/docs/">官方文档</a>找到.
+</p>
+<p>下面的例子包含了最常见的使用案例.我们假定你使用的是默认文件路径(<code>/usr/share/nginx/html</code>). 如果你改了路径，用你自己的路径替代.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> DigitalOcean 提供了一个 <a rel="nofollow" class="external text" href="https://nginxconfig.io/">Nginx 配置工具</a>。</div>
+<h3>
+<span id=".E9.85.8D.E7.BD.AE.E4.BE.8B.E5.AD.90"></span><span class="mw-headline" id="配置例子">配置例子</span>
+</h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">user http;
+worker_processes auto;
+worker_cpu_affinity auto;
+
+events {
+    multi_accept on;
+    worker_connections 1024;
+}
+
+http {
+    charset utf-8;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    server_tokens off;
+    log_not_found off;
+    types_hash_max_size 4096;
+    client_max_body_size 16M;
+
+    # MIME
+    include mime.types;
+    default_type application/octet-stream;
+
+    # logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log warn;
+
+    # load configs
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+</pre>
+<h3>
+<span id=".E9.80.9A.E7.94.A8.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="通用配置">通用配置</span>
+</h3>
+<h4>
+<span id=".E8.BF.9B.E7.A8.8B.E5.92.8C.E8.BF.9E.E6.8E.A5"></span><span class="mw-headline" id="进程和连接">进程和连接</span>
+</h4>
+<p>你应该为<code>worker_processes</code>选一个合适的值. 这项设置最终决定了nginx接受多少连接和它会使用多少处理器。通常来说，把它设置成你系统里的硬件线程数就好了。可选的是，自从 1.3.8 和 1.2.5版本以后， <code>worker_processes</code> 接受 <code>auto</code> 作为值了, 他会自动检测最优值 (<a rel="nofollow" class="external text" href="http://nginx.org/en/docs/ngx_core_module.html#worker_processes">source</a>).
+</p>
+<p>nginx的最大连接数有下面的公式给出<code>max_clients = worker_processes * worker_connections</code>.
+</p>
+<h4>
+<span id=".E4.B8.8D.E5.90.8C.E7.94.A8.E6.88.B7.E9.97.B4.E7.9A.84.E4.BD.BF.E7.94.A8"></span><span class="mw-headline" id="不同用户间的使用">不同用户间的使用</span>
+</h4>
+<p>默认的, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx">nginx</a></span> 用 <code>root</code> 身份运行主进程二用<code>http</code>用户运行worker进程. 如果要用其它用户运行worker进程, 改变<code>nginx.conf</code>里的<code>user</code>参数就好了:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">user <i>user</i> [<i>group</i>];
+</pre>
+<p>如果组（group）忽略不写的话，就会用和<i>user</i>相同的名字来代替
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 其实也可以使用<a href="../en/Systemd.html" title="Systemd">systemd</a>以<code>root</code>身份在没有任何东西运行的情况下运行nginx . 可以看 <a href="#%E4%BD%BF%E7%94%A8_systemd%E6%97%A0%E6%9D%83%E9%99%90%E8%BF%90%E8%A1%8C">#使用 systemd无权限运行</a>.</div>
+<h4>
+<span id="server.E4.BB.A3.E7.A0.81.E5.9D.97"></span><span class="mw-headline" id="server代码块">server代码块</span>
+</h4>
+<p>通过使用 <code>server</code> 模块，可以实现服务多个域名. 这些模块可以类比为<a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a>中的"VirtualHosts" . 也可查阅 <a rel="nofollow" class="external text" href="https://www.nginx.com/resources/wiki/start/topics/examples/server_blocks/">上游文献</a>.
+</p>
+<p>下面的例子，服务器监听IPv4和IPv6的80端口的进入流量的两个域名，分别是<code>domainname1.dom</code> 和<code>domainname2.dom</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+server {
+    listen 80;
+    listen [::]:80;
+    server_name domainname1.dom;
+    root /usr/share/nginx/domainname1.dom/html;
+    location / {
+       index index.php index.html index.htm;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name domainname2.dom;
+    root /usr/share/nginx/domainname2.dom/html;
+    ...
+}
+...
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">Restart</a>(重启) <code>nginx.service</code> 来让改变的配置生效.
+</p>
+<p>确保主机名是可以被设置好的DNS服务器比如<a href="../en/BIND.html" title="BIND">BIND</a> 或者 <a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a>解析的，或者可以查看下<a href="../en/Network_configuration.html#Local_network_hostname_resolution" title="Network configuration">Network configuration#Local network hostname resolution</a>.
+</p>
+<h5>
+<span id=".E7.AE.A1.E7.90.86.E6.9C.8D.E5.8A.A1.E5.99.A8.E5.85.A5.E5.8F.A3"></span><span class="mw-headline" id="管理服务器入口">管理服务器入口</span>
+</h5>
+<p>把不同的<code>server</code>模块放到不同的文件里是可能的.这样的话可以让你很轻易的开启和禁用特定的站点.
+</p>
+<p>创建以下文件夹:
+</p>
+<pre># mkdir /etc/nginx/sites-available
+# mkdir /etc/nginx/sites-enabled
+</pre>
+<p>在<code>sites-available</code>文件夹下创建一个文件包含一个或更多服务器模块:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/sites-available/example.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+}
+</pre>
+<p>把<code> include sites-enabled/*;</code>放到<code>http</code> 模块的末尾:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+http {
+    ...
+    include sites-enabled/*;
+}
+...
+</pre>
+<p>如果要启用一个网站, 只需要简单的创建一个符号链接:
+</p>
+<pre># ln -s /etc/nginx/sites-available/example.conf /etc/nginx/sites-enabled/example.conf
+</pre>
+<p>如果要移除一个网站
+</p>
+<pre># unlink /etc/nginx/sites-enabled/example.conf
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Reload">Reload</a>/<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>nginx.service</code> 来让配置生效.
+</p>
+<h4><span class="mw-headline" id="TLS">TLS</span></h4>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 不要仅仅把 <a href="../en/OpenSSL.html#Certificates" title="OpenSSL">OpenSSL#Certificates</a>的配置搬过来. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Nginx_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Nginx (简体中文)#</a>)</div>
+</div>
+<p><a href="../en/OpenSSL.html" title="OpenSSL">OpenSSL</a> 提供了TLS支持并且默认在Arch系统安装时安装了.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 
+<ul>
+<li>你可能需要在配置SSL之前阅读 <a rel="nofollow" class="external text" href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html">ngx_http_ssl_module</a>文档.</li>
+<li>
+<a href="../en/Certbot.html" class="mw-redirect" title="Let’s Encrypt">Let’s Encrypt</a> 时一个免费的、自动的、开放的证书颁发机构.有一个插件可以从茉莉花请求有效的证书并自动配置的.</li>
+<li>Mozilla有一篇有用的 <a href="https://wiki.mozilla.org/Security/Server_Side_TLS" class="extiw" title="mozillawiki:Security/Server Side TLS">TLS文章</a>，也有一个<a rel="nofollow" class="external text" href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">自动化工具</a>来创建一个更安全的配置.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://cipherli.st">Cipherli.st</a><sup title="最后检查状态：SSL error">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-04 ⓘ]</sup> 为大多数现代web服务器提供了强大的 TLS 实现例子和教程.</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 如果你打算实现TLS, 你必须知道一些变化和实现 <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#Attacks_against_TLS.2FSSL" class="extiw" title="wikipedia:Transport Layer Security">仍然被攻击时很脆弱</a><a rel="nofollow" class="external autonumber" href="https://weakdh.org/#affected">[1]</a>. 如果想知道TLS内现存的漏洞和怎样用合适的方法到nginx上，可访问 <a rel="nofollow" class="external free" href="https://weakdh.org/sysadmin.html">https://weakdh.org/sysadmin.html</a>
+</div>
+<p>创建一个私钥和自签名的证书，这对大多数不需要 <a href="../en/OpenSSL.html#Generate_a_certificate_signing_request" title="OpenSSL">CSR</a>的安装来说足够了:
+</p>
+<pre># mkdir /etc/nginx/ssl
+# cd /etc/nginx/ssl
+# openssl req -new -x509 -nodes -newkey rsa:4096 -keyout server.key -out server.crt -days 1095
+# chmod 400 server.key
+# chmod 444 server.crt
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <code>-days</code> 是可选的并且RSA键大小最低可到2048 (默认值).</div>
+<p>如果你需要创建一个CSR, 用下面的教程而不是上面的:
+</p>
+<pre># mkdir /etc/nginx/ssl
+# cd /etc/nginx/ssl
+# openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out server.key
+# chmod 400 server.key
+# openssl req -new -sha256 -key server.key -out server.csr
+# openssl x509 -req -days 1095 -in server.csr -signkey server.key -out server.crt
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果你需要更多的 <i>openssl</i>选项, 可以阅读 <span class="plainlinks archwiki-template-man" title="$ man 1ssl openssl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/openssl.1ssl">openssl(1ssl)</a></span> 或<a rel="nofollow" class="external text" href="https://www.openssl.org/docs/">扩展文档</a>.</div>
+<p>使用TLS的 <code>/etc/nginx/nginx.conf</code> 的基本例子:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http {
+    ...
+    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ..
+
+    # Redirect to HTTPS
+    server {
+        listen 80;
+        server_name localhost;
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        #listen 80; # Uncomment to also listen for HTTP requests
+        listen 443 ssl http2; # HTTP/2 is only possible when using SSL
+        server_name localhost;
+
+        ssl_certificate ssl/server.crt;
+        ssl_certificate_key ssl/server.key;
+
+        root /usr/share/nginx/html;
+        location / {
+            index index.html index.htm;
+        }
+    }
+}
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">Restart</a> <code>nginx.service</code> 来让配置生效.
+</p>
+<h4>
+<span id=".E5.88.86.E7.94.A8.E6.88.B7.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="分用户目录">分用户目录</span>
+</h4>
+<p>如果要复制Apache式的 <code>~user</code> URLs 到用户的 <code>~/public_html</code> 目录, 可以尝试下面的. (Note: 如果下面的两个规则都用了的话一定要把更清楚地PHP规则放在前面.)
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+server {
+    ...
+    # PHP in user directories, e.g. http://example.com/~user/test.php
+    location ~ ^/~(.+?)(/.+\.php)$ {
+        alias          /home/$1/public_html$2;
+        fastcgi_pass   unix:/run/php-fpm/php-fpm.sock;
+        fastcgi_index  index.php;
+        include        fastcgi.conf;
+    }
+
+    # User directories, e.g. http://example.com/~user/
+    location ~ ^/~(.+?)(/.*)?$ {
+        alias     /home/$1/public_html$2;
+        index     index.html index.htm;
+        autoindex on;
+    }
+    ...
+}
+...
+</pre>
+<p>查阅 <a href="#PHP%E5%AE%9E%E7%8E%B0">#PHP实现</a> 来阅读更多 <code>nginx</code>的PHP配置.
+</p>
+<p>重启 <code>nginx.service</code> 来启用新配置.
+</p>
+<h3><span class="mw-headline" id="FastCGI">FastCGI</span></h3>
+<p><a href="https://en.wikipedia.org/wiki/FastCGI" class="extiw" title="wikipedia:FastCGI">FastCGI</a>, 也叫 FCGI, 是适用于web服务器和交互式程序的接口的协议. FastCGI 是早期的 <a href="https://en.wikipedia.org/wiki/Common_Gateway_Interface" class="extiw" title="wikipedia:Common Gateway Interface">Common Gateway Interface</a> (CGI)的变种; FastCGI的主要目的是减少CGI程序和web服务器交互的开销,来允许服务器同时处理更多网页请求.
+</p>
+<p>FastCGI技术被引进nginx是为了与许多外部工具，比如. <a href="../en/Perl.html" title="Perl">Perl</a>, <a href="../en/PHP.html" title="PHP">PHP</a> and <a href="../en/Python.html" title="Python">Python</a> 
+</p>
+<h4>
+<span id="PHP.E5.AE.9E.E7.8E.B0"></span><span class="mw-headline" id="PHP实现">PHP实现</span>
+</h4>
+<p><a rel="nofollow" class="external text" href="https://php-fpm.org/">PHP-FPM</a> 是建议使用的用作<a href="../en/PHP.html" title="PHP">PHP</a>的FastCGI服务器的解决方案.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a>（安装） <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=php-fpm">php-fpm</a></span> 然后确保 <a href="../en/PHP.html" title="PHP">PHP</a> 被安装配置正确. PHP-FPM的主要配置文件是  <code>/etc/php/php-fpm.conf</code>. 基础使用的话默认配置就足够了.
+</p>
+<p>最后, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> 和 <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>php-fpm.service</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>如果你 <a href="#%E4%B8%8D%E5%90%8C%E7%94%A8%E6%88%B7%E9%97%B4%E7%9A%84%E4%BD%BF%E7%94%A8">用不同的用户运行nginx</a>, 确保PHP-FPM套接字文件能被这个用户访问，或者通过一个TCP套接字.</li>
+<li>如果你在chroot的环境下运行nginx (chroot 是 <code>/srv/nginx-jail</code>, web页面在 <code>/srv/nginx-jail/www</code>), 你必须修改文件 <code>/etc/php/php-fpm.conf</code> ，把 <code>chroot /srv/nginx-jail</code> 和 <code>listen = /srv/nginx-jail/run/php-fpm/php-fpm.sock</code> 两行加入到指令部分 (默认是<code>[www]</code>). 如果缺少的话请为套接字文件创建目录。此外, 动态链接到依赖的模块，你需要将这些依赖复制到(比如. 对于php-imagick, 你需要复制ImageMagic的库复制到chroot, 而不是imagick.so他自己).</li>
+<li>从 <code>php-fpm</code> 7.4.0 开始， <code>php-fpm.service</code> 定义了 <code>ProtectHome=true</code>，限制了对 <code>/home</code>, <code>/root</code> 和 <code>/run/user</code> 下文件的访问，会产生 <code>No input file specified.</code> 错误 <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/64683#comment184136">FS#64683#comment184136</a>
+</li>
+</ul>
+</div>
+<h5>
+<span id="nginx_.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="nginx_配置">nginx 配置</span>
+</h5>
+<p>当服务一个PHP web程序时，一个PHP-FPM的<code>location</code>应该包括在 <a href="#server%E4%BB%A3%E7%A0%81%E5%9D%97">#server代码块</a>里 <a rel="nofollow" class="external autonumber" href="https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/">[2]</a>,比如.:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/sites-available/example.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server {
+    root /usr/share/nginx/html;
+
+    location / {
+        index index.html index.htm;
+    }
+
+    location ~ \.php$ {
+        # 404
+        try_files $fastcgi_script_name =404;
+
+        # default fastcgi_params
+        include fastcgi_params;
+
+        # fastcgi settings
+        fastcgi_pass			unix:/run/php-fpm/php-fpm.sock;
+        fastcgi_index			index.php;
+        fastcgi_buffers			8 16k;
+        fastcgi_buffer_size		32k;
+
+        # fastcgi params
+        fastcgi_param DOCUMENT_ROOT	$realpath_root;
+        fastcgi_param SCRIPT_FILENAME	$realpath_root$fastcgi_script_name;
+        #fastcgi_param PHP_ADMIN_VALUE	"open_basedir=$base/:/usr/lib/php/:/tmp/";
+    }
+}
+</pre>
+<p>如果需要用PHP处理其他文件扩展名 (比如. <i>.html</i> and <i>.htm</i>):
+</p>
+<pre>location ~ [^/]\.(php|html|htm)(/|$) {
+    ...
+}
+</pre>
+<p>非 <i>.php</i> 的PHP-FPM扩展处理都需要被直接加入到 <code>/etc/php/php-fpm.d/www.conf</code>:
+</p>
+<pre>security.limit_extensions = .php .html .htm
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 需要注意下 <code>fastcgi_pass</code> 参数, 因为它被选定的FastCGI服务器在它的配置文件里定义TCP或Unix套接字. 对应<code>php-fpm</code>的<b>default</b> (Unix) 套接字是  是:
+<pre>fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+</pre>
+<p>你可能想要使用常见的 TCP 套接字, <b>not default</b>,
+</p>
+<pre>fastcgi_pass 127.0.0.1:9000;
+</pre>
+Unix 的域名套接字应该会快一点.</div>
+<p>如果你使用多个 <code>server</code> 块来启用PHP支持, 创建一个 <code>php_fastcgi.conf</code> 配置文件可能更简单:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/php_fastcgi.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">location ~ \.php$ {
+    # 404
+    try_files $fastcgi_script_name =404;
+    # default fastcgi_params
+    include fastcgi_params;
+    # fastcgi settings
+}
+</pre>
+<p>为特定的服务器启用PHP支持, 只需要简单的加入 <code>include php.conf</code>就好了:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/sites-available/example.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server {
+    server_name example.com;
+    ...
+    include /etc/nginx/php_fastcgi.conf;
+}
+</pre>
+<h5>
+<span id=".E6.B5.8B.E8.AF.95.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="测试配置">测试配置</span>
+</h5>
+<p>你需要<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a>  <code>php-fpm.service</code> 和 <code>nginx.service</code> 服务单元来让配置生效，如果配置之前被改变过的话.
+</p>
+<p>测试FastCGI实现, 在<code>root</code>目录下创建一个新的PHP文件，内容是:
+</p>
+<pre>&lt;?php phpinfo(); ?&gt;
+</pre>
+<p>把这个文件用浏览器打开，你应该就可以看到现在的PHP配置的信息页了.
+</p>
+<h4>
+<span id="CGI_.E5.AE.9E.E7.8E.B0"></span><span class="mw-headline" id="CGI_实现">CGI 实现</span>
+</h4>
+<p>这个实现是CGI程序所需要的.
+</p>
+<h5><span class="mw-headline" id="fcgiwrap">fcgiwrap</span></h5>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fcgiwrap">fcgiwrap</a></span>. 配置文件是 <code>/usr/lib/systemd/system/fcgiwrap.socket</code>. <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">Enable</a> 并且 <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>fcgiwrap.socket</code>.
+</p>
+<h6>
+<span id=".E5.A4.9A.E4.B8.AA.E5.B7.A5.E4.BA.BA.E7.BA.BF.E7.A8.8B"></span><span class="mw-headline" id="多个工人线程">多个工人线程</span>
+</h6>
+<p>如果你想生成多个工人线程建议你使用<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/multiwatch/">multiwatch</a></span><sup><small>AUR</small></sup>, 它会处理崩溃的子进程. 如果你需要使用<code>spawn-fcgi</code> 来创建Unix套接字,因为multiwatch无法处理systemd创建的套接字，尽管fcgiwarp它自己在单元文件中直接调用页没有任何问题.
+</p>
+<p>从 <code>/usr/lib/systemd/system/fcgiwrap.service</code> 复制单元文件到 <code>/etc/systemd/system/fcgiwrap.service</code> (和<code>fcgiwrap.socket</code> 单元, 如果存在的话), 修改<code>ExecStart</code>行到满足你需要的地方. 下面是使用<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/multiwatch/">multiwatch</a></span><sup><small>AUR</small></sup>的单元文件. 确保<code>fcgiwrap.socket</code> 没有被start（开始）或enable（启用）, 因为他会和这些单元冲突:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/fcgiwrap.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Simple CGI Server
+After=nss-user-lookup.target
+
+[Service]
+ExecStartPre=/bin/rm -f /run/fcgiwrap.socket
+ExecStart=/usr/bin/spawn-fcgi -u http -g http -s /run/fcgiwrap.sock -n -- /usr/bin/multiwatch -f 10 -- /usr/sbin/fcgiwrap
+ExecStartPost=/usr/bin/chmod 660 /run/fcgiwrap.sock
+PrivateTmp=true
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target</pre>
+<p>可以自定义 <code>-f 10</code> 来改变生成的子进程的数量.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <code>ExecStartPost</code>行是需要的，因为当为<code>spawn-fcgi</code>使用<code>-M 660</code>参数选项时会出现奇怪的情况.这有可能是一个Bug</div>
+<h5>
+<span id="nginx.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="nginx配置">nginx配置</span>
+</h5>
+<p>在每个服务了一个CGI程序的<code>server</code> 块内都应该有一个像下面的 <code>location</code> 块:
+</p>
+<pre>location ~ \.cgi$ {
+     root           /path/to/server/cgi-bin;
+     fastcgi_pass   unix:/run/fcgiwrap.sock;
+     include        fastcgi.conf;
+}
+</pre>
+<pre><code>fcgiwrap</code> 的默认套接字文件是 <code>/run/fcgiwrap.sock</code>.
+</pre>
+<p>如果你一直出现 <code>502 - bad Gateway</code> 错误,你应该检查你的CGI程序是否宣告了下面内容的mime类型。如果是html，他应该是<code>Content-type: text/html</code>.
+</p>
+<h2>
+<span id=".E5.9C.A8chroot.E7.8E.AF.E5.A2.83.E4.B8.8B.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="在chroot环境下安装">在chroot环境下安装</span>
+</h2>
+<p>在<a href="../en/Chroot.html" title="Chroot">chroot</a>环境里运行nginx是有一个额外的安全层的.为了最大化安全性chroot环境应该只包括nginx服务器需要的文件，并且所有的文件都应该尽可能有严格的权限，比如像<code>/usr/bin</code>这样的文件夹应该不可读和不可写.
+</p>
+<p>Arch默认有一个<code>http</code>用户和组来运行服务器chroot将会在<code>/srv/http</code>.
+</p>
+<p>创建这个监狱（指chroot环境）的Perl脚本能在<a rel="nofollow" class="external text" href="https://gist.github.com/4365696">jail.pl gist</a>找到. 你可以直接用那个脚本或者跟着这篇文章的指示继续阅读下去. 它应该用root运行. 你需要在它起作用之前取消一行注释.
+</p>
+<h3>
+<span id=".E5.88.9B.E5.BB.BA.E5.BF.85.E8.A6.81.E7.9A.84.E8.AE.BE.E5.A4.87"></span><span class="mw-headline" id="创建必要的设备">创建必要的设备</span>
+</h3>
+<p>nginx需要 <code>/dev/null</code>, <code>/dev/random</code>, 和 <code>/dev/urandom</code>. 为了安装这些需要在chroot环境下创建 <code>/dev/</code> 目录和用<i>mknod</i>添加设备尽量别挂载所有的<code>/dev/</code>来确保, 尽管在chroot受到攻击的情况下, 攻击者必须突破chroot来获取像<code>/dev/sda1</code>的重要文件.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 确保 <code>/srv/http</code> 挂载了并且没有nodev选项</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 查看 <span class="plainlinks archwiki-template-man" title="$ man 1 mknod"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mknod.1">mknod(1)</a></span> 和 <code>ls -l /dev/{null,random,urandom}</code> 来更好的理解<i>mknod</i>选项.</div>
+<pre># export JAIL=/srv/http
+# mkdir $JAIL/dev
+# mknod -m 0666 $JAIL/dev/null c 1 3
+# mknod -m 0666 $JAIL/dev/random c 1 8
+# mknod -m 0444 $JAIL/dev/urandom c 1 9
+</pre>
+<h3>
+<span id=".E5.88.9B.E5.BB.BA.E5.BF.85.E8.A6.81.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="创建必要目录">创建必要目录</span>
+</h3>
+<p>nginx需要大量文件来运转正常. 在把它们拷贝过去之前创建一个文件夹来存储它们。假设你的nginx文档目录在 <code>/srv/http/www</code>.
+</p>
+<pre># mkdir -p $JAIL/etc/nginx/logs
+# mkdir -p $JAIL/usr/{lib,bin}
+# mkdir -p $JAIL/usr/share/nginx
+# mkdir -p $JAIL/var/{log,lib}/nginx
+# mkdir -p $JAIL/www/cgi-bin
+# mkdir -p $JAIL/{run,tmp}
+# cd $JAIL; ln -s usr/lib lib
+# cd $JAIL; ln -s usr/lib lib64
+# cd $JAIL/usr; ln -s lib lib64
+</pre>
+<p>然后挂载 <code>$JAIL/tmp</code> 和 <code>$JAIL/run</code> 作为tmpfs. 大小应该限制确保攻击者无法吃掉所有的内存.
+</p>
+<pre># mount -t tmpfs none $JAIL/run -o 'noexec,size=1M'
+# mount -t tmpfs none $JAIL/tmp -o 'noexec,size=100M'
+</pre>
+<p>为了在重启后保留挂载，下面的入口应该被添加到<code>/etc/fstab</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> tmpfs   /srv/http/run   tmpfs   rw,noexec,relatime,size=1024k   0       0
+ tmpfs   /srv/http/tmp   tmpfs   rw,noexec,relatime,size=102400k 0       0
+</pre>
+<h3>
+<span id=".E5.A1.AB.E5.85.85chroot"></span><span class="mw-headline" id="填充chroot">填充chroot</span>
+</h3>
+<p>首先把简单的文件复制过去.
+</p>
+<pre># cp -r /usr/share/nginx/* $JAIL/usr/share/nginx
+# cp -r /usr/share/nginx/html/* $JAIL/www
+# cp /usr/bin/nginx $JAIL/usr/bin/
+# cp -r /var/lib/nginx $JAIL/var/lib/nginx
+</pre>
+<p>然后复制必要的库过去。使用<i>ldd</i>来把它们列出来然后复制到正确的地方。最好是复制而不是链接来确保就算攻击者获取的写权限也服务法修改真实的系统文件.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ldd /usr/bin/nginx</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">linux-vdso.so.1 (0x00007fffc41fe000)
+libpthread.so.0 =&gt; /usr/lib/libpthread.so.0 (0x00007f57ec3e8000)
+libcrypt.so.1 =&gt; /usr/lib/libcrypt.so.1 (0x00007f57ec1b1000)
+libstdc++.so.6 =&gt; /usr/lib/libstdc++.so.6 (0x00007f57ebead000)
+libm.so.6 =&gt; /usr/lib/libm.so.6 (0x00007f57ebbaf000)
+libpcre.so.1 =&gt; /usr/lib/libpcre.so.1 (0x00007f57eb94c000)
+libssl.so.1.0.0 =&gt; /usr/lib/libssl.so.1.0.0 (0x00007f57eb6e0000)
+libcrypto.so.1.0.0 =&gt; /usr/lib/libcrypto.so.1.0.0 (0x00007f57eb2d6000)
+libdl.so.2 =&gt; /usr/lib/libdl.so.2 (0x00007f57eb0d2000)
+libz.so.1 =&gt; /usr/lib/libz.so.1 (0x00007f57eaebc000)
+libGeoIP.so.1 =&gt; /usr/lib/libGeoIP.so.1 (0x00007f57eac8d000)
+libgcc_s.so.1 =&gt; /usr/lib/libgcc_s.so.1 (0x00007f57eaa77000)
+libc.so.6 =&gt; /usr/lib/libc.so.6 (0x00007f57ea6ca000)
+/lib64/ld-linux-x86-64.so.2 (0x00007f57ec604000)</pre>
+<p>对于 <code>/usr/lib</code> 你可以使用下面的命令:
+</p>
+<pre># cp $(ldd /usr/bin/nginx | grep /usr/lib/ | sed -sre 's/(.+)(\/usr\/lib\/\S+).+/\2/g') $JAIL/usr/lib
+</pre>
+<p>用下面的命令来复制 <code>ld-linux-x86-64.so</code>:
+</p>
+<pre># cp /lib64/ld-linux-x86-64.so.2 $JAIL/lib
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 不要尝试复制 <code>linux-vdso.so</code>: 他不是真实存在的库，不在<code>/usr/lib</code>文件夹里.</div>
+<p>复制一些复杂但必要的库和系统文件.
+</p>
+<pre># cp /usr/lib/libnss_* $JAIL/usr/lib
+# cp -rfvL /etc/{services,localtime,nsswitch.conf,nscd.conf,protocols,hosts,ld.so.cache,ld.so.conf,resolv.conf,host.conf,nginx} $JAIL/etc
+</pre>
+<p>为chroot创建严格的 user/group文件. 这样只有chroot正常工作所需要的用户才会被chroot知道，其他的users/groups并不会被泄露给攻击者，如果他们已经获取chroot权限的话.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$JAIL/etc/group</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http:x:33:
+nobody:x:99:
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$JAIL/etc/passwd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http:x:33:33:http:/:/bin/false
+nobody:x:99:99:nobody:/:/bin/false
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$JAIL/etc/shadow</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http:x:14871::::::
+nobody:x:14871::::::
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$JAIL/etc/gshadow</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http:::
+nobody:::
+</pre>
+<pre># touch $JAIL/etc/shells
+# touch $JAIL/run/nginx.pid
+</pre>
+<p>最后设置权限。应该尽可能把权限设置为不可写 be owned by root and set unwritable.
+</p>
+<pre># chown -R root:root $JAIL/
+
+# chown -R http:http $JAIL/www
+# chown -R http:http $JAIL/etc/nginx
+# chown -R http:http $JAIL/var/{log,lib}/nginx
+# chown http:http $JAIL/run/nginx.pid
+
+# find $JAIL/ -gid 0 -uid 0 -type d -print | xargs chmod -rw
+# find $JAIL/ -gid 0 -uid 0 -type d -print | xargs chmod +x
+# find $JAIL/etc -gid 0 -uid 0 -type f -print | xargs chmod -x
+# find $JAIL/usr/bin -type f -print | xargs chmod ug+rx
+# find $JAIL/ -group http -user http -print | xargs chmod o-rwx
+# chmod +rw $JAIL/tmp
+# chmod +rw $JAIL/run
+</pre>
+<p>如果你的端口绑定为 80 (或者其他在 [1-1023]范围内的端口),给chroot无需root就可绑定的权限.
+</p>
+<pre># setcap 'cap_net_bind_service=+ep' $JAIL/usr/bin/nginx
+</pre>
+<h3>
+<span id=".E4.BF.AE.E6.94.B9nginx.service.E6.9D.A5.E5.BC.80.E5.90.AFchroot"></span><span class="mw-headline" id="修改nginx.service来开启chroot">修改nginx.service来开启chroot</span>
+</h3>
+<p>在修改<code>nginx.service</code>单元文件之前, 把它复制进 <code>/etc/systemd/system/</code> 因为这里的单元文件的优先级比 <code>/usr/lib/systemd/system/</code>高. 这样更新nginx救护不爱修改你自定义的 <i>.service</i> 文件.
+</p>
+<pre># cp /usr/lib/systemd/system/nginx.service /etc/systemd/system/nginx.service
+</pre>
+<p>systemd单元必须在开启chroot里的nginx之前修改，以http用户的身份，将pid文件放到chroot里.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 我不确定pid文件是否需要被放到chroot里.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> [Unit]
+ Description=A high performance web server and a reverse proxy server
+ After=syslog.target network.target
+ 
+ [Service]
+ Type=forking
+ PIDFile=/srv/http/run/nginx.pid
+ ExecStartPre=/usr/bin/chroot --userspec=http:http /srv/http /usr/bin/nginx -t -q -g 'pid /run/nginx.pid; daemon on; master_process on;'
+ ExecStart=/usr/bin/chroot --userspec=http:http /srv/http /usr/bin/nginx -g 'pid /run/nginx.pid; daemon on; master_process on;'
+ ExecReload=/usr/bin/chroot --userspec=http:http /srv/http /usr/bin/nginx -g 'pid /run/nginx.pid; daemon on; master_process on;' -s reload
+ ExecStop=/usr/bin/chroot --userspec=http:http /srv/http /usr/bin/nginx -g 'pid /run/nginx.pid;' -s quit
+ 
+ [Install]
+ WantedBy=multi-user.target</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 用pacman升级nginx并不会升级chroot里的nginx。如果你要升级的话可能需要手动重复上面的步骤。不要忘记更新它链接的库.</div>
+<p>你现在可以安全的写在非chroot环境下的nginx安装.
+</p>
+<pre># pacman -Rsc nginx
+</pre>
+<p>如果你不移除非chroot环境的nginx安装，你可能想要确认运行的nginx是不是chroot环境里的, 你可以查询 <code>/proc/<i>PID</i>/root</code> 链接到哪里. 如果链接到 <code>/srv/http</code>  而不是<code>/</code>那运行的就是chroot环境下的nginx.
+</p>
+<pre># ps -C nginx | awk '{print $1}' | sed 1d | while read -r PID; do ls -l /proc/$PID/root; done
+</pre>
+<h2>
+<span id=".E5.BB.BA.E8.AE.AE.E5.92.8C.E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="建议和技巧">建议和技巧</span>
+</h2>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8_systemd.E6.97.A0.E6.9D.83.E9.99.90.E8.BF.90.E8.A1.8C"></span><span class="mw-headline" id="使用_systemd无权限运行">使用 <a href="../en/Systemd.html" title="Systemd">systemd</a>无权限运行</span>
+</h3>
+<p><a href="../en/Systemd.html#Editing_provided_units" title="Systemd">编辑 nginx.service</a> 并在 <code>[Service]</code>下设置 <code>User</code>，还可可选的设置 <code>Group</code> :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service.d/user.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+User=<i>user</i>
+Group=<i>group</i></pre>
+<p>我们可以通过强化服务以防止提升特权:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service.d/user.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+...
+NoNewPrivileges=yes</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 查看 <a rel="nofollow" class="external text" href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#User=">systemd.exec(5)</a> 获取更多限权选项.</div>
+<p>然后我们需要确保 <code><i>user</i></code>（即前面设置的用户）有权限做它需要做的事:
+</p>
+<dl>
+<dt>Port</dt>
+<dd>
+Linux默认不允许非<code>root</code>用户的进程绑定低于1024的端口，高于1024的端口可以用:
+
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server {
+        listen 8080;
+}
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 如果你想nginx可以访问80或者443端口，配置你的<a href="../en/Category:Firewalls.html" class="mw-redirect" title="Firewall">firewall</a>（防火墙）来重定向从80或者443的请求刀nginx监听的端口.</div>
+<p>或者你可以提升nginx进程的CAP_NET_BIND_SERVICE权限，它能允许绑定低于1024的端口:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service.d/user.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+...
+CapabilityBoundingSet=
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=
+AmbientCapabilities=CAP_NET_BIND_SERVICE</pre>
+</dd>
+
+<dt>PID文件</dt>
+
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx">nginx</a></span> 默认使用 <code>/run/nginx.pid</code> . 我们可以创建一个文件夹，<i>user</i>有写权限，然后八我们的PID文件放到那里. 一个使用<a href="../en/Systemd.html#Temporary_files" title="Systemd">systemd-tmpfiles</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>的例子:
+
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/tmpfiles.d/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">d /run/nginx 0775 root <i>group</i> - -</pre>
+<p>运行配置:
+</p>
+<pre># systemd-tmpfiles --create
+</pre>
+<p>基于最初的<code>nginx.service</code><a href="../en/Systemd.html#Editing_provided_units" class="mw-redirect" title="Edit">Edit</a>（编辑）PID的值:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service.d/user.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+...
+PIDFile=/run/nginx/nginx.pid
+ExecStart=
+ExecStart=/usr/bin/nginx -g 'pid /run/nginx/nginx.pid; error_log stderr;' 
+ExecReload=
+ExecReload=/usr/bin/nginx -s reload -g 'pid /run/nginx/nginx.pid;'</pre>
+
+
+<dt><code>/var/lib/nginx/*</code></dt>
+<dd>
+一些<code>/var/lib/nginx</code>下面的目录需要被以 <code>root</code> 运行的nginx的引导. 所以有必要启动整个服务器老这么做, nginx会在一次简单的 <a href="#%E9%85%8D%E7%BD%AE%E9%AA%8C%E8%AF%81">#配置验证</a>之后自己这么做. 所以只要运行这些中的一个就好啦.
+</dd>
+
+<dt>日志文件&amp; 目录权限</dt>
+<dd>
+运行配置测试的步骤会创建一个悬空的<code>root</code>拥有的日志文件. 移除<code>/var/log/nginx</code>下面的日志文件开始刷新.
+<br> 
+启用nginx服务的用户需要<code>/var/log/nginx</code>的写权限. 这可能需要 <a href="../en/File_permissions_and_attributes.html#Changing_permissions" title="File permissions and attributes">改变权限</a> 和/或 你系统这个目录的所有权. 
+</dd>
+</dl>
+<p>现在一切都好了。开始<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a>（启动） nginx, 然后就可以想用你的非root下的nginx了.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 同样的配置可能还要针对你的 <a href="#FastCGI">FastCGI server</a> 再做一次.</div>
+<h3>
+<span id=".E9.92.88.E5.AF.B9systemd.E7.9A.84.E5.8F.AF.E9.80.89.E8.84.9A.E6.9C.AC"></span><span class="mw-headline" id="针对systemd的可选脚本">针对systemd的可选脚本</span>
+</h3>
+<p>在纯systemd的情况下，你可以享受chroot + systemd的好处. <a rel="nofollow" class="external autonumber" href="http://0pointer.de/blog/projects/changing-roots.html">[3]</a> 基于在下面的文件设置 <a rel="nofollow" class="external text" href="http://wiki.nginx.org/CoreModule#user">用户组</a>一个 pid :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">user http;
+pid /run/nginx.pid;</pre>
+<p>文件的就绝对路径是<code>/srv/http/etc/nginx/nginx.conf</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=nginx (Chroot)
+After=syslog.target network.target
+
+[Service]
+Type=forking
+PIDFile=/srv/http/run/nginx.pid
+RootDirectory=/srv/http
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx.conf
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx.conf
+ExecReload=/usr/sbin/nginx -c /etc/nginx/nginx.conf -s reload
+ExecStop=/usr/sbin/nginx -c /etc/nginx/nginx.conf -s stop
+
+[Install]
+WantedBy=multi-user.target</pre>
+<p>没必要设置默认路径，nginx默认加载<code> -c /etc/nginx/nginx.conf</code>,二这也是一个好主意.
+</p>
+<p>作为可选项，你可以在chroot环境下<b>仅仅</b>运行 <code>ExecStart</code>，<code>RootDirectoryStartOnly</code>参数要调成，查看 <code>yes</code> <a rel="nofollow" class="external text" href="https://www.freedesktop.org/software/systemd/man/systemd.service.html">systemd服务手册</a> 或者在挂载点生效前启用它，或者一个 <a rel="nofollow" class="external text" href="https://www.freedesktop.org/software/systemd/man/systemd.path.html">systemd路径</a>也行.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/nginx.path</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=nginx (Chroot) path
+[Path]
+PathExists=/srv/http/site/Public_html
+[Install]
+WantedBy=default.target</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">Enable</a>（启用）创建的<code>nginx.path</code> 然后把 <code>/etc/systemd/system/nginx.service</code>里的<code>WantedBy=default.target</code> 变成 <code>WantedBy=nginx.path</code> .
+</p>
+<p>单元文件里的<code>PID文件</code>允许systemd监控进程(需要绝对路径). 如果这不是你想要的, 你可以改变默认的“一击”类型, 然后删除单元文件里的参照.
+</p>
+<h3>
+<span id="Nginx_Beautifier_.EF.BC.88nginx.E7.BE.8E.E5.8C.96.E5.99.A8.EF.BC.89"></span><span class="mw-headline" id="Nginx_Beautifier_（nginx美化器）">Nginx Beautifier （nginx美化器）</span>
+</h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nginxbeautifier/">nginxbeautifier</a></span><sup><small>AUR</small></sup> 是一个命令行工具，用来美化和格式化nginx配置文件.
+</p>
+<h3>
+<span id=".E6.9B.B4.E5.A5.BD.E7.9A.84.E5.A4.B4.E6.96.87.E4.BB.B6.E7.AE.A1.E7.90.86"></span><span class="mw-headline" id="更好的头文件管理">更好的头文件管理</span>
+</h3>
+<p>Nginx有一个非常不直观的头文件管理系统，头文件只能在一个上下文中定义, 任何其它的头文件都会被忽略. 为了补救这个，我们可以安装 <a rel="nofollow" class="external text" href="https://github.com/openresty/headers-more-nginx-module#more_set_headers">headers-more-nginx</a> 模块.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> （安装） <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx-mod-headers-more">nginx-mod-headers-more</a></span> 包. 这样会把模块安装到<code>/usr/lib/nginx/modules</code> 目录下.
+</p>
+<p>如果要加载模块把下面加入到你的nginx配置文件的第一行.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">load_module "/usr/lib/nginx/modules/ngx_http_headers_more_filter_module.so";
+...</pre>
+<h2>
+<span id=".E6.95.85.E9.9A.9C.E6.8E.92.E9.99.A4"></span><span class="mw-headline" id="故障排除">故障排除</span>
+</h2>
+<h3>
+<span id=".E9.85.8D.E7.BD.AE.E9.AA.8C.E8.AF.81"></span><span class="mw-headline" id="配置验证">配置验证</span>
+</h3>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># nginx -t</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+ nginx: configuration file /etc/nginx/nginx.conf test is successful
+</pre>
+<h3>
+<span id=".E6.8E.A5.E5.85.A5.E6.9C.AC.E5.9C.B0IP.E9.87.8D.E5.AE.9A.E5.90.91.E5.88.B0_localhost"></span><span class="mw-headline" id="接入本地IP重定向到_localhost">接入本地IP重定向到 localhost</span>
+</h3>
+<p>Arch Linux <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=780561#p780561">论坛</a>的解决方案.
+</p>
+<p>在 <code>/etc/nginx/nginx.conf</code>有一行<code>server_name localhost</code> ，前面没有 <code>#</code>, 把下面的加入到这一行之下:
+</p>
+<pre>server_name_in_redirect off;
+</pre>
+<p>默认行为事nginx将任何请求重定向到配置里<code>server_name</code>给定的值里.
+</p>
+<h3>
+<span id="Error:_The_page_you_are_looking_for_is_temporarily_unavailable._Please_try_again_later._.28502_Bad_Gateway.29"></span><span class="mw-headline" id="Error:_The_page_you_are_looking_for_is_temporarily_unavailable._Please_try_again_later._(502_Bad_Gateway)">Error: The page you are looking for is temporarily unavailable. Please try again later. (502 Bad Gateway)</span>
+</h3>
+<p>这是因为FastCGI服务器还没有开启，或者套接字有错误的权限.
+</p>
+<p>试一试 <a rel="nofollow" class="external text" href="https://stackoverflow.com/questions/4252368/nginx-502-bad-gateway/16497957#16497957">这个回答</a> 来解决502问题.
+</p>
+<p>在Archlinux, 上面提到的配置文件在 <code>/etc/php/php-fpm.conf</code>.
+</p>
+<h3><span class="mw-headline" id="Error:_No_input_file_specified">Error: No input file specified</span></h3>
+<p>1. 确定<code>/etc/php/php.ini</code>里的 <code>open_basedir</code>变量包含正确的路径，要和 <code>nginx.conf</code> (通常在<code>/usr/share/nginx/</code>)里的<code>root</code>变量一致. 当使用<a rel="nofollow" class="external text" href="http://php-fpm.org/">PHP-FPM</a> 作为PHP的FastCGI服务器时, 你可以添加 <code>fastcgi_param PHP_ADMIN_VALUE "open_basedir=$document_root/:/tmp/:/proc/";</code> 到<code>nginx.conf</code>里的 <code>location</code> 代码块里，它能处理PHP文件.
+</p>
+<p>2. 另一种情况是, <code>nginx.conf</code>文件里，<code>location ~ \.php$</code>代码块里的错误的 <code>root</code> 变量. 确保<code>root</code> 指向相同服务器里的<code>location /</code>的同样的目录. 或者你直接把root设为全局，不要把它定义到任何地方
+</p>
+<p>3. 检查权限: 比如. <code>http</code> 是用户/组,  <code>755</code> 是目录权限，<code>644</code> 是文件权限. 记住，到<code>html</code>目录的路径目录也必须有相同的权限. 可以查看 <a href="../en/File_permissions_and_attributes.html#Bulk_chmod" title="File permissions and attributes">File permissions and attributes#Bulk chmod</a> 来批量修改大量文件夹的权限. 
+</p>
+<p>4. 你没有让 <code>SCRIPT_FILENAME</code> 包含你脚本的全部路径. 如果nginx的配置 (<code>fastcgi_param SCRIPT_FILENAME</code>) 是对的的话, 这种错误意味着PHP无法加载请求的脚本. 通常它知识简单的权限问题, 你可以用root运行php-cgi:
+</p>
+<pre># spawn-fcgi -a 127.0.0.1 -p 9000 -f /usr/bin/php-cgi
+</pre>
+<p>或者你应该创建一个组和用户来开启php-cgi:
+</p>
+<pre># groupadd www
+# useradd -g www www
+# chmod +w /srv/www/nginx/html
+# chown -R www:www /srv/www/nginx/html
+# spawn-fcgi -a 127.0.0.1 -p 9000 -u www -g www -f /usr/bin/php-cgi
+</pre>
+<p>5. 如果你是在chroot的环境下的nginx运行php-fpm，确保<code>/etc/php-fpm/php-fpm.d/www.conf</code>里的<code>chroot</code> 设置正确(或者 <code>/etc/php-fpm/php-fpm.conf</code> 如果是旧版本的话)
+</p>
+<h3><span class="mw-headline" id="Warning:_Could_not_build_optimal_types_hash">Warning: Could not build optimal types_hash</span></h3>
+<p>当开启 <code>nginx.service</code>, 进程可能会有下面的日志信息:
+</p>
+<pre>[warn] 18872#18872: could not build optimal types_hash, you should increase either types_hash_max_size: 1024 or types_hash_bucket_size: 64; ignoring types_hash_bucket_size
+</pre>
+<p>解决这个警告, 提升<code>http</code>代码块的下面的键的值 <a rel="nofollow" class="external autonumber" href="http://nginx.org/en/docs/http/ngx_http_core_module.html#types_hash_max_size">[4]</a> <a rel="nofollow" class="external autonumber" href="http://nginx.org/en/docs/http/server_names.html">[5]</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nginx/nginx.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http {
+    types_hash_max_size 4096;
+    server_names_hash_bucket_size 128;
+    ...
+}
+</pre>
+<h3>
+<span id=".E4.B8.8D.E8.83.BD.E6.8C.87.E5.AE.9A.E8.AF.B7.E6.B1.82.E5.9C.B0.E5.9D.80"></span><span class="mw-headline" id="不能指定请求地址">不能指定请求地址</span>
+</h3>
+<p>来自<code>systemctl status nginx.service</code>的全部错误是
+</p>
+<pre>[emerg] 460#460: bind() to A.B.C.D:443 failed (99: Cannot assign requested address)
+</pre>
+<p>尽管,你的单元文件配置为用systemd运行在 <code>network.target</code> , nginx可能还是企图监听一个配置了但没添加到任何接口的地址. 确保这种情况下手动<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> （启动） nginx (从而确保IP地址配置正确). 配置 nginx监听任何地址都会解决这个问题. 如果你的情况是需要监听特定的地址, 一个可能的解决方案是重新配置systemd.
+</p>
+<p>在所有网络配置工作和指定IP地址都结束后开启nginx, 在<code>nginx.service</code>里附加 <code>network-online.target</code> 到 <code>After=</code> 然后 <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>systemd-networkd-wait-online.service</code>.
+</p>
+<h2>
+<span id=".E5.8F.82.E8.A7.81"></span><span class="mw-headline" id="参见">参见</span>
+</h2>
+<ul>
+<li><a href="../en/WebDAV.html#Nginx" title="WebDAV">WebDAV with nginx</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/">nginx configuration pitfalls</a></li>
+<li><a rel="nofollow" class="external text" href="https://calomel.org/nginx.html">Very good in-depth 2014 look at nginx security and Reverse Proxying</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.tecmint.com/install-nginx-php-mysql-with-mariadb-engine-and-phpmyadmin-in-arch-linux/">Installing LEMP (nginx, PHP, MySQL with MariaDB engine and PhpMyAdmin) in Arch Linux</a></li>
+<li><a href="../en/Certbot.html" class="mw-redirect" title="Let’s Encrypt">Using SSL certificates generated with Let's Encrypt</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Web_server.html" title="Category:Web server (简体中文)">Web server (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Nginx_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=629686">https://wiki.archlinux.org/index.php?title=Nginx_(简体中文)&amp;oldid=629686</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 August 2020, at 06:56.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

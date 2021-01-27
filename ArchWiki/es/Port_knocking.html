@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Port knocking (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Port_knocking_Español rootpage-Port_knocking_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Port knocking (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>Este artículo o sección necesita ser <a href="../es/ArchWiki:Contributing.html#Traducir_contenido" title="ArchWiki:Contributing (Español)">traducido</a>.</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notas:</b> desactualizada (Discusión en <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Port_knocking_(Espa%C3%B1ol)">Talk:Port knocking (Español)#</a>)</div>
+</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> Port knocking debe ser usado como parte de una estrategia de seguridad, no como la unica proteccion. Eso seria un fragil sistema de  <a href="https://en.wikipedia.org/wiki/Security_through_obscurity" class="extiw" title="wikipedia:Security through obscurity">Seguridad mediante obscuridad</a>. En caso de proteccion SSH, vea <a href="../en/SSH_keys.html" title="SSH keys">SSH keys</a> por un metodo fuerte que se puede usar junto con port knocking.</div>
+<p>Port knocking (Tocar puertos) es un metodo discreto de abrir puertos que, por default, el firewall mantiene cerrado.  Funciona requiriendo intentos de conexion a una serie de puertos predefinidos cerrados.
+Cuando la sequencia correcta de "toquidos" a puertos (intentos de coneccion) es recibida, el firewall abre entonces cierto(s) puerto(s).
+</p>
+<p>El beneficio es que, en un escaneo de puertos normal, pareceria que el servicio del puerto simplemente no esta disponible.
+</p>
+<p>Una sesion con port knocking podria lucir asi:
+</p>
+<pre>$ ssh usuario@servidor # No hay respuesta (Ctrl+c para salir)
+^C
+$ nmap -PN --host_timeout 201 --max-retries 0  -p 1111 servidor #tocando el puerto 1111
+$ nmap -PN --host_timeout 201 --max-retries 0  -p 2222 servidor #tocando el puerto 2222
+$ ssh usuario@servidor # Ahore si esta permitido logearse
+usuario@servidor's password:
+</pre>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Instalacion"><span class="tocnumber">1</span> <span class="toctext">Instalacion</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Metodo_con_daemon"><span class="tocnumber">2</span> <span class="toctext">Metodo con daemon</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Metodo_con_solo-iptables"><span class="tocnumber">3</span> <span class="toctext">Metodo con solo-iptables</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#reglas_de_iptables"><span class="tocnumber">3.1</span> <span class="toctext">reglas de iptables</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Script_de_port_knocking"><span class="tocnumber">3.2</span> <span class="toctext">Script de port knocking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Advertencia"><span class="tocnumber">4</span> <span class="toctext">Advertencia</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Instalacion">Instalacion</span></h2>
+<p>Necesitas tener <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables">iptables</a></span> instalado, lee la pagina de la wiki de <a href="../en/Iptables.html" title="Iptables">iptables</a> para mas detalles.
+</p>
+<p><a href="../en/Pacman.html" title="Pacman">Instala</a> el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables">iptables</a></span> desde los <a href="../en/Official_repositories.html" title="Official repositories">repositorios oficiales</a>.
+</p>
+<p>A continuacion, agrega <code>iptables</code> a la <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">lista de DAEMONS</a> en <code>/etc/<a href="../en/SysVinit.html" class="mw-redirect" title="Rc.conf">rc.conf</a></code> para que carge tu configuracion al inicio:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/rc.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+
+DAEMONS=(... <b>iptables</b> network ...)</pre>
+<h2><span class="mw-headline" id="Metodo_con_daemon">Metodo con daemon</span></h2>
+<p>Puedes usar un daemon para que haga todo el trabajo por ti. En <b>Simple stateful firewall</b><a href="../en/Simple_stateful_firewall.html#Port_knocking" title="Simple stateful firewall">Simple stateful firewall#Port knocking</a> puedes leer un metodo para eso.
+</p>
+<h2><span class="mw-headline" id="Metodo_con_solo-iptables">Metodo con solo-iptables</span></h2>
+<h3><span class="mw-headline" id="reglas_de_iptables">reglas de iptables</span></h3>
+<p>El modulo <b>recent</b> en iptables es usado para crear una lista dinamico de direcciones ip basadas en sus (existosas o no) conexiones a puertos.
+</p>
+<p>Usando <b>recent</b> podemos averiguar si cierta IP a tocado los puertos correctos y, si el el caso, abrir cierto(s) puerto(s).
+</p>
+<p>A continuacion se representa el contenido de un archivo <code>iptables.rules</code> . En este ejemplo, el puerto para ser abierto es el 22 (default para SSH)
+Este ejemplo tiene comentarios que explican como funciona.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/iptables/iptables.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">*filter
+ :INPUT ACCEPT [0:0]
+ :FORWARD ACCEPT [0:0]
+ :OUTPUT ACCEPT [0:0]
+ :TRAFFIC - [0:0]
+ :SSH-INPUT - [0:0]
+ :SSH-INPUTTWO - [0:0]
+ -A INPUT -j TRAFFIC
+ -A FORWARD -j TRAFFIC
+ 
+ # Conexiones aceptadas por default
+ 
+ -A TRAFFIC -i lo -j ACCEPT
+ -A TRAFFIC -s 192.168.0.0/24 -j ACCEPT
+ -A TRAFFIC -p icmp --icmp-type any -j ACCEPT
+ -A TRAFFIC -m state --state ESTABLISHED,RELATED -j ACCEPT
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+ 
+ # Port Knocking -- la secuencio correcta es 8881 -&gt; 7777 -&gt; 9991;  cualquier otra secuencia cerrara el puerto 22
+ 
+ # Si la ip esta en la lista SSH2, el puerto 22 estara abierto por 30 segundos,
+ # despues de eso, se cerrara de nuevo (pero solo para conexiones nuevos, las ya establecidas no se cerraran)
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 22 -m recent --rcheck --seconds 30 --name SSH2 -j ACCEPT
+ 
+ # Ahora borramos la ip de la lista SSH2 (si esta presente)
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp -m recent --name SSH2 --remove -j DROP
+ 
+ # Esto llama a SSH-INPUTTWO si la ip esta presente en la lista SSH1 y el puerto tocado es 9991
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 9991 -m recent --rcheck --name SSH1 -j SSH-INPUTTWO
+ 
+ # Ahora borramos la ip de la lista SSH1 (si esta presente)
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp -m recent --name SSH1 --remove -j DROP
+ 
+ # Esto llama a SSH-INPUT si la ip esta presente en la lista SSH0 y el puerto tocado es 7777
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 7777 -m recent --rcheck --name SSH0 -j SSH-INPUT
+ 
+ # Ahora borramos la ip de la lista SSH0 (si esta presente)
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp -m recent --name SSH0 --remove -j DROP
+ 
+ # Esto agrega la ip a la lista SSH0 si el puerto tocado es 8881
+ -A TRAFFIC -m state --state NEW -m tcp -p tcp --dport 8881 -m recent --name SSH0 --set -j DROP
+ 
+ # SSH-INPUT agrega la ip a la lista SSH1 
+ -A SSH-INPUT -m recent --name SSH1 --set -j DROP
+
+ # SSH-INPUTTWO agrega la ip a la lista SSH2
+ -A SSH-INPUTTWO -m recent --name SSH2 --set -j DROP 
+ 
+ # El resto del trafico es rechazado
+ -A TRAFFIC -j DROP
+ COMMIT
+ # puedes agregar reglas nat, etc aqui</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Por razones de seguridad, los puertos <code>8881</code>, <code>7777</code> y <code>9991</code> usados en el ejemplo anterior deben ser cambiados. Por favor, use un set unico de numeros de puertos.</div>
+<h3><span class="mw-headline" id="Script_de_port_knocking">Script de port knocking</span></h3>
+<p>Ahora podemos usar un simple shell script (<code>knock.sh</code>) para que los toque:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">knock.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+HOST=$1
+shift
+for ARG in "$@"
+do
+        nmap -PN --host_timeout 201 --max-retries 0 -p $ARG $HOST
+done</pre>
+<p>Aqui esta como funcionaria el script:
+</p>
+<pre>$ ssh username@hostname # No hay respuesta (Ctrl+c para salir)
+^C
+$ sh knock.sh hostname 8881 7777 9991
+$ history -r
+$ ssh username@hostname # Ahora esta permitido logearse
+username@hostname's password:
+</pre>
+<h2><span class="mw-headline" id="Advertencia">Advertencia</span></h2>
+<p>La segurida obtenida por usar la informacion anterior, no puede ser garantizada. Esto solo es una forma de enmascarar en servicio en cierto puerto. Otras medidas de seguridad deben ser usadas. Si decide usar la informacion anterior para cualquier proposito, es bajo su propio riesgo.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Firewalls.html" title="Category:Firewalls (Español)">Firewalls (Español)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../es/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme (Español)">Pages or sections flagged with Template:Translateme (Español)</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Port_knocking_(Espa%C3%B1ol)&amp;oldid=533960">https://wiki.archlinux.org/index.php?title=Port_knocking_(Español)&amp;oldid=533960</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2018, at 20:10.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

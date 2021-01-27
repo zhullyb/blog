@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Network Time Protocol daemon (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Network_Time_Protocol_daemon_简体中文 rootpage-Network_Time_Protocol_daemon_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Network Time Protocol daemon (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../zh-CN/System_time.html" class="mw-redirect" title="Time (简体中文)">Time (简体中文)</a></li>
+<li><a href="../en/Systemd-timesyncd.html" title="Systemd-timesyncd">systemd-timesyncd</a></li>
+<li><a href="../en/OpenNTPD.html" title="OpenNTPD">OpenNTPD</a></li>
+<li><a href="../en/Chrony.html" title="Chrony">Chrony</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Network_Time_Protocol_daemon.html" title="Network Time Protocol daemon">Network_Time_Protocol_daemon</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-04-22。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Network_Time_Protocol_daemon&amp;diff=0&amp;oldid=446540">更改</a>，则您可以帮助同步翻译。</div> 
+<p><a href="https://en.wikipedia.org/wiki/Network_Time_Protocol" class="extiw" title="wikipedia:Network Time Protocol">Network Time Protocol</a> （网络时间协议）是 GNU/Linux 系统通过互联网时间服务器同步系统<a href="../zh-CN/System_time.html" class="mw-redirect" title="Time (简体中文)">软件时钟</a>的最常见方法。设计时考虑到了各种网络延迟，通过公共网络同步时，误差可以降低到10毫秒以内；通过本地网络同步时，误差可以降低到 1 毫秒。
+</p>
+<p><a rel="nofollow" class="external text" href="http://support.ntp.org/bin/view/Main/WebHome#The_NTP_Project">NTP 项目</a>提供了一个名为简单 NTP 的参考实现。本文介绍如何设置和运行服务器和客户端 NTP 进程。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">1</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">2</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%E8%BF%9E%E6%8E%A5%E5%88%B0_NTP_%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="tocnumber">2.1</span> <span class="toctext">连接到 NTP 服务器</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#NTP_%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%A8%A1%E5%BC%8F"><span class="tocnumber">2.2</span> <span class="toctext">NTP 服务器模式</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#%E4%BD%BF%E7%94%A8"><span class="tocnumber">3</span> <span class="toctext">使用</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#%E5%90%AF%E5%8A%A8%E6%97%B6%E5%90%AF%E7%94%A8_ntpd"><span class="tocnumber">3.1</span> <span class="toctext">启动时启用 ntpd</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#%E6%AF%8F%E6%AC%A1%E5%90%AF%E5%8A%A8%E5%90%8C%E6%AD%A5%E4%B8%80%E6%AC%A1"><span class="tocnumber">3.2</span> <span class="toctext">每次启动同步一次</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#%E6%8A%80%E5%B7%A7"><span class="tocnumber">4</span> <span class="toctext">技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#%E6%9C%89%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%97%B6%E5%80%99%E5%90%AF%E5%8A%A8ntpd"><span class="tocnumber">4.1</span> <span class="toctext">有网络连接的时候启动ntpd</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#%E5%9C%A8GPS%E4%B8%AD%E4%BD%BF%E7%94%A8NTP"><span class="tocnumber">4.2</span> <span class="toctext">在GPS中使用NTP</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#%E5%9C%A8_chroot_%E5%BA%95%E4%B8%8B%E8%BF%90%E8%A1%8C"><span class="tocnumber">4.3</span> <span class="toctext">在 chroot 底下运行</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12">
+<a href="#%E6%8E%92%E9%94%99"><span class="tocnumber">5</span> <span class="toctext">排错</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#%E6%97%A0%E6%B3%95%E5%88%86%E9%85%8D%E8%AF%B7%E6%B1%82%E5%9C%B0%E5%9D%80"><span class="tocnumber">5.1</span> <span class="toctext">无法分配请求地址</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#%E5%8F%82%E8%A7%81"><span class="tocnumber">6</span> <span class="toctext">参见</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntp">ntp</a></span> 软件包。如果不做任何配置， <i>ntpd</i> 默认工作于客户端模式。如果使用 Arch Linux 默认的配置，请跳转到 <a href="#%E4%BD%BF%E7%94%A8">#使用</a>。作为服务器的配置，请参阅 <a href="#NTP_%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%A8%A1%E5%BC%8F">#NTP 服务器模式</a>。
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>主要的后台进程是 <i>ntpd</i>, 可以通过 <code>/etc/ntp.conf</code> 配置。详细信息可以参考手册 <span class="plainlinks archwiki-template-man" title="$ man 5 ntp.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ntp.conf.5">ntp.conf(5)</a></span> 和相关的 <code>man {ntpd|ntp_auth|ntp_mon|ntp_acc|ntp_clock|ntp_misc}</code>.
+</p>
+<h3>
+<span id=".E8.BF.9E.E6.8E.A5.E5.88.B0_NTP_.E6.9C.8D.E5.8A.A1.E5.99.A8"></span><span class="mw-headline" id="连接到_NTP_服务器">连接到 NTP 服务器</span>
+</h3>
+<p>NTP 服务器通过一个层级系统进行分类，不同的层级称为 <i>strata</i>；独立的时间源为<i>stratum 0</i>；直接连接到 <i>stratum 0</i> 的设备为 <i>stratum 1</i>；直接连接到 <i>stratum 1</i> 的源为 <i>stratum 2</i>，以此类推。
+</p>
+<p>服务器的 stratum 并不能完全等同于它的精度和可靠度。通常的时间同步都使用 stratum 2 服务器。通过<a rel="nofollow" class="external text" href="http://www.pool.ntp.org/">pool.ntp.org</a> 服务器或<a rel="nofollow" class="external text" href="http://support.ntp.org/bin/view/Servers/NTPPoolServers">这个链接</a> 可以选择比较近的服务器池。
+</p>
+<p>下面几行仅仅是例子：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server 0.fr.pool.ntp.org iburst
+server 1.fr.pool.ntp.org iburst
+server 2.fr.pool.ntp.org iburst
+server 3.fr.pool.ntp.org iburst
+</pre>
+<p>推荐使用<code>iburst</code>选项，如果第一次尝试无法建立连接，程序会发送一系列的包。<code>burst</code> 选项则总是发送一系列的包，即使第一次也是这样。如果没有明确的允许的话不要使用 <i>burst</i> 选项，有可能被封禁。
+</p>
+<h3>
+<span id="NTP_.E6.9C.8D.E5.8A.A1.E5.99.A8.E6.A8.A1.E5.BC.8F"></span><span class="mw-headline" id="NTP_服务器模式">NTP 服务器模式</span>
+</h3>
+<p>如果建立一个 NTP 服务器，你需要添加 <a rel="nofollow" class="external text" href="http://www.ntp.org/ntpfaq/NTP-s-refclk.htm#Q-LOCAL-CLOCK"><i>local clock</i></a> 作为一个服务器，这样，即便它失去网络连接，它也可以继续为网络提供服务;添加 <i>local clock</i> 作为一个 stratum 10 服务器 (使用 <i>fudge</i> 命令)这样它就只会在失去连接时使用本地时钟：
+</p>
+<pre>server 127.127.1.0
+fudge  127.127.1.0 stratum 10
+</pre>
+<p>下一步，定义规则允许客户端连接你的服务(<i>localhost</i> 也被认为是一个客户端)。使用 <i>restrict</i> 命令；你应该在文件中已经有一行：
+</p>
+<pre>restrict default nomodify nopeer noquery
+</pre>
+<p>这限制了每个人做任何修改并阻止每个人请求你的时间服务器状态：<code>nomodify</code> 防止重新配置你的ntpd（使用<i>ntpq</i> 或 <i>ntpdc</i> ），<code>noquery</code> 防止从你的nptd（或是<i>ntpq</i> 和 <i>ntpdc</i>）获取状态数据。
+</p>
+<p>你也能添加其它选项：
+</p>
+<pre>restrict default kod nomodify notrap nopeer noquery
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 这会允许其他人查询你的时间服务器。你需要添加 <code>noserve</code> 来停止提供时间。</div>
+<p>"restrict"选项的完整文档可以从 <span class="plainlinks archwiki-template-man" title="$ man 5 ntp.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ntp.conf.5">ntp.conf(5)</a></span> 中查找到。详见 <a rel="nofollow" class="external free" href="https://support.ntp.org/bin/view/Support/AccessRestrictions">https://support.ntp.org/bin/view/Support/AccessRestrictions</a> 。
+</p>
+<p>你需要在这一行之后告诉 <i>ntpd</i> 什么可以访问你的服务器；如果你不是在配置一台 NTP 服务器的话，下面一行就足够了。
+</p>
+<pre>restrict 127.0.0.1
+</pre>
+<p>如果你想要强制DNS解析到IPv6域名，在IP地址或域名前写上 <code>-6</code>（<code>-4</code> 则强制使用IPv4域名），例如:
+</p>
+<pre>restrict -6 default kod nomodify notrap nopeer noquery
+restrict -6 ::1    # ::1 is the IPv6 equivalent for 127.0.0.1
+</pre>
+<p>最后，指定drift文件（它能时刻监控你的时钟的时间漂移）和log文件的位置：
+</p>
+<pre>driftfile /var/lib/ntp/ntp.drift
+logfile /var/log/ntp.log
+</pre>
+<p>一份基础的配置文件是这样的：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+server 2.pool.ntp.org iburst
+server 3.pool.ntp.org iburst
+
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+restrict 127.0.0.1
+restrict -6 ::1  
+
+driftfile /var/lib/ntp/ntp.drift
+logfile /var/log/ntp.log
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 定义日志文件不是必须的，但是它对于反馈 <i>ntpd</i> 操作是有好处的。</div>
+<h2>
+<span id=".E4.BD.BF.E7.94.A8"></span><span class="mw-headline" id="使用">使用</span>
+</h2>
+<p>软件包默认包含客户端模式的配置，并且使用单独的用户和群组，启动时就会移除 root 权限。如果在终端中启动，请使用 <code>-u</code> 选项:
+</p>
+<pre># ntpd -u ntp:ntp
+</pre>
+<p>systemd 服务默认使用 <code>-u</code> 选项和 <code>-g</code> 选项禁用一个阈值(<i>panic-gate</i>). 这样即使 ntp-server 的时间和系统时间的差异超过阈值，依然会同步时间。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 使用 panic-gate 的原因是某些后台任务或服务会引起时间跳跃. 如果系统的时间从来没有同步过，请考虑先禁用其他服务再进行同步。</div>
+<p>两个服务都依赖系统网络状况，会在检测到网络连接时开始同步。
+</p>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E6.97.B6.E5.90.AF.E7.94.A8_ntpd"></span><span class="mw-headline" id="启动时启用_ntpd">启动时启用 ntpd</span>
+</h3>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">启用</a> <code>ntpd.service</code> 服务. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> systemd 命令 <i>timedatectl</i> 仅可以控制 <a href="../en/Systemd-timesyncd.html" title="Systemd-timesyncd">systemd-timesyncd</a>, 用 root 执行 <code>timedatectl set-ntp 1</code> 会停止运行中的 <code>ntpd.service</code>.<a rel="nofollow" class="external autonumber" href="https://lists.freedesktop.org/archives/systemd-devel/2015-April/030277.html">[1]</a>
+</div>
+<p>用 <i>ntpq</i> 可以查看同步的状态： 
+</p>
+<pre>$ ntpq -p
+</pre>
+<p>delay, offset 和 jitter 不应该为零，<i>ntpd</i> 同步的服务器前有星号，<i>ntpd</i> 可能等待很多分钟后才会进行同步，请等 17 分钟 (1024 秒).
+</p>
+<h3>
+<span id=".E6.AF.8F.E6.AC.A1.E5.90.AF.E5.8A.A8.E5.90.8C.E6.AD.A5.E4.B8.80.E6.AC.A1"></span><span class="mw-headline" id="每次启动同步一次">每次启动同步一次</span>
+</h3>
+<p>另一种方式是 <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">启用</a> <code>ntpdate.service</code> 服务，每次启动都同步一次(<code>-q</code>) 并且是 non-forking (<code>-n</code>), 进程不会在后台运行。如果是服务器或者很多天才会重启一次，不建议使用此方式。
+</p>
+<p>如果需要把同步到的时间写入硬件时钟，请按照 <a href="../en/Systemd.html#Editing_provided_units" title="Systemd">这里</a> 的说明修改服务并启动:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/ntpdate.service.d/hwclock.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+ExecStart=/usr/bin/hwclock -w</pre>
+<h2>
+<span id=".E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="技巧">技巧</span>
+</h2>
+<h3>
+<span id=".E6.9C.89.E7.BD.91.E7.BB.9C.E8.BF.9E.E6.8E.A5.E7.9A.84.E6.97.B6.E5.80.99.E5.90.AF.E5.8A.A8ntpd"></span><span class="mw-headline" id="有网络连接的时候启动ntpd">有网络连接的时候启动ntpd</span>
+</h3>
+<p><i>ntpd</i> 可以由你的网络管理器启动, 所以ntp这个守护进程只有在计算机有网络连接的时候才会启动.
+</p>
+<dl><dt>Netctl</dt></dl>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>本文或本节需要<a href="../zh-CN/ArchWiki:Contributing.html#%E7%BF%BB%E8%AF%91" title="ArchWiki:Contributing (简体中文)">翻译</a>。要贡献翻译，请访问<a href="../zh-CN/ArchWiki:Translation_Team.html" class="mw-redirect" title="ArchWiki Translation Team (简体中文)">简体中文翻译团队</a>。</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>附注：</b> 英文页面风格不好。添加 <code>-u</code> 参数以及<a href="#%E4%BD%BF%E7%94%A8">“使用”</a>中提及的可选参数，或尽可能使用 systemctl 。（在 <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Network_Time_Protocol_daemon_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Network Time Protocol daemon (简体中文)#</a> 中讨论）</div>
+</div>
+<p>给你的 <a href="../en/Netctl.html" title="Netctl">netctl</a> 配置文件添加如下这几行:
+</p>
+<pre>ExecUpPost='/usr/bin/ntpd || true'
+ExecDownPre='killall ntpd || true'
+</pre>
+<dl><dt>NetworkManager</dt></dl>
+<p>通过网络管理器的 <a href="../en/NetworkManager.html#Network_services_with_NetworkManager_dispatcher" title="NetworkManager">dispatcher</a> 脚本，可以同网络连接一起启动/终止<i>ntpd</i> 守护进程。 安装<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/networkmanager-dispatcher-ntpd/">networkmanager-dispatcher-ntpd</a></span><sup><small>AUR</small></sup> 预配置包 <a href="#Start_ntpd_at_boot">ntpd service</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 来让网络连接同步ntp启动/终止.
+</p>
+<dl><dt>Wicd</dt></dl>
+<p>对 <a href="../en/Wicd.html" title="Wicd">Wicd</a> 来说, 要在 <code>postconnect</code> 目录创建一个启动脚本，在 <code>predisconnect</code> 目录创建一个终止脚本。 记住要把他们设为可执行的哦:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/wicd/scripts/postconnect/ntpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+systemctl start ntpd &amp;
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/wicd/scripts/predisconnect/ntpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+systemctl stop ntpd &amp;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 根据 <a href="#Usage">#Usage</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> 对<i>ntpd</i> 这个命令的说明，你可以自由设置自己的配置选项。</div>
+<p>参照 <a href="../en/Wicd.html#Scripts" title="Wicd">Wicd#Scripts</a>.
+</p>
+<dl><dt>KDE</dt></dl>
+<p>在KDE中，通过右击桌面选择 <i>Adjust date/time</i>，可以使用 NTP (别忘了安装NTP)。 注意, 在配置KDE中配置NTP之前，先要把 ntp 守护进程设置为  <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Disable">disabled</a> 状态. <a rel="nofollow" class="external autonumber" href="https://bugs.kde.org/show_bug.cgi?id=178968">[2]</a>
+</p>
+<h3>
+<span id=".E5.9C.A8GPS.E4.B8.AD.E4.BD.BF.E7.94.A8NTP"></span><span class="mw-headline" id="在GPS中使用NTP">在GPS中使用NTP</span>
+</h3>
+<p>大多数联网的交通工具要通过(共享内存) 方式让 <i>ntpd</i> 从GPS中接收时间。 但是, 从 <i>ntpd</i> 4.2.8版本开始，一个 <i>更好</i> 的办法出现了----直接与 <i>gpsd</i>守护进程交互。这个要先安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gpsd">gpsd</a></span> .
+</p>
+<p>在 <code>/etc/ntp.conf</code> 配置文件中添加下面这几行:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/ntp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#=========================================================
+#  GPSD native ntpd driver
+#=========================================================
+# This driver exists from at least ntp version 4.2.8
+# Details at
+#   <a rel="nofollow" class="external free" href="https://www.eecis.udel.edu/~mills/ntp/html/drivers/driver46.html">https://www.eecis.udel.edu/~mills/ntp/html/drivers/driver46.html</a>
+server 127.127.46.0 
+fudge 127.127.46.0 time1 0.0 time2 0.0 refid GPS</pre>
+<p>只要 <i>gpsd</i> 一直起着，ntp就会一直正常运行。 ntp会通过一个本地套接字同 <i>gpsd</i> 连接, 搜索 <i>gpsd</i> 返回的 "gpsd_json" 对象.
+</p>
+<p>要检验安装的话, 首先要检查 <i>gpsd</i> 是不是正常运行:
+</p>
+<pre> $ cgps -s 
+</pre>
+<p>然后等个几分钟运行 <code>ntpq -p</code>. 这个会显示 <i>ntpd</i> 是否已经跟 <i>gpsd</i> 建立连接了:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ntpq -p</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">remote           refid            st t when poll reach   delay   offset  jitter
+ ==================================================================================
+*GPSD_JSON(0)    .GPS.            0 l   55   64  377    0.000    2.556  14.109</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果 <i>reach</i> 这列是0的话, 这就说明 <i>ntpd</i>  还没有同 <i>gpsd</i> 建立连接。 等几分钟再试一次。 有时 <i>ntpd</i> 要花点时间来跟<i>gpsd</i> 建立连接。</div>
+<h3>
+<span id=".E5.9C.A8_chroot_.E5.BA.95.E4.B8.8B.E8.BF.90.E8.A1.8C"></span><span class="mw-headline" id="在_chroot_底下运行">在 chroot 底下运行</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 在试图把 <i>ntpd</i> 放到chroot目录下面之前，<i>ntpd</i> 应该在正常路径下启动 (默认在 Arch Linux 安装路径下)。 因为在相对以root身份运行的进程，chroots的用户相对没有啥权限的。</div>
+<p>创建一个新目录（如果还没创建的话） <code>/etc/systemd/system/ntpd.service.d/</code>，并添加在里面添加文件 <code>customexec.conf</code> ,内容如下:
+</p>
+<pre>[Service]
+ExecStart=
+ExecStart=/usr/bin/ntpd -g -i /var/lib/ntp -u ntp:ntp -p /run/ntpd.pid
+</pre>
+<p>然后, 编辑 <code>/etc/ntp.conf</code> 来改变 driftfile 路径来让跟它跟 chroot 路径保持一致, 而不是还用原先的普通路径。修改
+</p>
+<pre>driftfile       /var/lib/ntp/ntp.drift
+</pre>
+<p>为
+</p>
+<pre>driftfile       /ntp.drift
+</pre>
+<p>通过root创建永久目录和文件，作为一个合适的 chroot 环境来支持 getaddrinfo() :
+</p>
+<pre># mkdir /var/lib/ntp/etc /var/lib/ntp/lib /var/lib/ntp/proc
+# touch /var/lib/ntp/etc/resolv.conf /var/lib/ntp/etc/services
+</pre>
+<p>然后通过修改 <i>fstab</i> 绑定前面提到的文件:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+#ntpd chroot mounts
+/etc/resolv.conf  /var/lib/ntp/etc/resolv.conf none bind 0 0
+/etc/services	  /var/lib/ntp/etc/services none bind 0 0
+/lib		  /var/lib/ntp/lib none bind 0 0
+/proc		  /var/lib/ntp/proc none bind 0 0
+</pre>
+<pre># mount -a
+</pre>
+<p>最后, 再一次重启 <code>ntpd</code> 监控进程。 一旦重启完成你就可以通过检查 <code>/proc/{PID}/root</code> 的软连接来判断监控进程是不是在 chrooted 下面工作: 
+</p>
+<pre># ps -C ntpd | awk '{print $1}' | sed 1d | while read -r PID; do ls -l /proc/$PID/root; done
+</pre>
+<p>正常应该链接到 <code>/var/lib/ntp</code> 而不是 <code>/</code>.
+</p>
+<p>不用等一段时间就要确定 driftfile 配置是否工作正常是比较困难的, 因为 <i>ntpd</i> 不会经常读写。 如果配置错误的话，log里面会打印一个error; 如果配置正确的话, 时间戳会更新的。 可以通过等一天来判断，如果没有log中没有错误打印，并且log的时间戳还更新了，那么说明配置成功了。
+</p>
+<h2>
+<span id=".E6.8E.92.E9.94.99"></span><span class="mw-headline" id="排错">排错</span>
+</h2>
+<h3>
+<span id=".E6.97.A0.E6.B3.95.E5.88.86.E9.85.8D.E8.AF.B7.E6.B1.82.E5.9C.B0.E5.9D.80"></span><span class="mw-headline" id="无法分配请求地址">无法分配请求地址</span>
+</h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>本文或本节需要<a href="../zh-CN/ArchWiki:Contributing.html#%E7%BF%BB%E8%AF%91" title="ArchWiki:Contributing (简体中文)">翻译</a>。要贡献翻译，请访问<a href="../zh-CN/ArchWiki:Translation_Team.html" class="mw-redirect" title="ArchWiki Translation Team (简体中文)">简体中文翻译团队</a>。</b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>附注：</b> 英文章不正。对需要或必须使用 IPv6 的用户而言，此方案不可行。（在 <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Network_Time_Protocol_daemon_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Network Time Protocol daemon (简体中文)#</a> 中讨论）</div>
+</div>
+<p>如果收到下列<i>无法分配请求地址</i>的报错信息：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ journalctl -u ntpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ntpd[2130]: bind(21) AF_INET6 fe80::6ef0:49ff:fe51:4946%2#123 flags 0x11 failed: Cannot assign requested address
+ntpd[2130]: unable to create socket on eth0 (5) for fe80::6ef0:49ff:fe51:4946%2#123
+ntpd[2130]: failed to init interface for address fe80::6ef0:49ff:fe51:4946%2</pre>
+<p>可以禁用 IPv6 解决。做法是：<a href="../zh-CN/Systemd.html#%E4%BF%AE%E6%94%B9%E7%8E%B0%E5%AD%98%E5%8D%95%E5%85%83%E6%96%87%E4%BB%B6" title="Systemd (简体中文)">编辑</a> <code>ntpd.service</code> 添加 <code>-4</code> 参数：
+</p>
+<pre>[Service]
+ExecStart=
+ExecStart=/usr/bin/ntpd -g -u ntp:ntp <b>-4</b>
+</pre>
+<h2>
+<span id=".E5.8F.82.E8.A7.81"></span><span class="mw-headline" id="参见">参见</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://www.ntp.org/">http://www.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="http://support.ntp.org/">http://support.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="http://www.pool.ntp.org/">http://www.pool.ntp.org/</a></li>
+<li><a rel="nofollow" class="external free" href="http://www.eecis.udel.edu/~mills/ntp/html/index.html">http://www.eecis.udel.edu/~mills/ntp/html/index.html</a></li>
+<li><a rel="nofollow" class="external free" href="http://www.akadia.com/services/ntp_synchronize.html">http://www.akadia.com/services/ntp_synchronize.html</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Network_Time_Protocol.html" title="Category:Network Time Protocol (简体中文)">Network Time Protocol (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../zh-CN/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme (简体中文)">Pages or sections flagged with Template:Translateme (简体中文)</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Network_Time_Protocol_daemon_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=629322">https://wiki.archlinux.org/index.php?title=Network_Time_Protocol_daemon_(简体中文)&amp;oldid=629322</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 14:05.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

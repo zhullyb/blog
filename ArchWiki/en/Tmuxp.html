@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>tmuxp - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Tmuxp rootpage-Tmuxp skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">tmuxp</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Tmux.html" title="Tmux">tmux</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://tmuxp.git-pull.com">tmuxp</a> is a session manager for the <a href="../en/Tmux.html" title="Tmux">tmux</a> terminal multiplexer. Compare to <a rel="nofollow" class="external text" href="https://github.com/tmuxinator/tmuxinator">tmuxinator</a> or <a rel="nofollow" class="external text" href="https://github.com/remiprev/teamocil">teamocil</a>.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tmuxp">tmuxp</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Configurations">Configurations</span></h2>
+<p><i>tmuxp</i> accepts both JSON and YAML configurations. The YAML markup is similar to <i>tmuxinator'</i>s.
+</p>
+<p>You can put configurations in any directory to access them via 3 ways:
+</p>
+<ol>
+<li>Via absolute or relative file path <code>tmuxp load <i>file</i></code>, <code>tmuxp load ../<i>myconfig</i></code>
+</li>
+<li>tmuxp checks for files in <code>$XDG_CONFIG_HOME/tmuxp</code> (usually <code>$HOME/.config/tmuxp</code>), and <code>$TMUXP_CONFIGDIR</code> path (default <code>$HOME/.tmuxp</code>). Files inside can be loaded via filename, e.g. <code>tmuxp load <i>basename</i></code>. So <code>$HOME/.tmuxp/<i>myconfig</i>.yaml</code> would be loadable via <code>tmuxp load myconfig</code>.</li>
+<li>Via <code>.tmuxp.yaml</code> in a project or directory (so you can store configs in a VCS per-project / folder. And then <code>tmuxp load <i>path/to/dir</i></code>
+</li>
+</ol>
+<p>A sample YAML configuration with 4 panes:
+</p>
+<pre>session_name: 4-pane-split
+windows:
+- window_name: dev window
+  layout: tiled
+  shell_command_before:
+    - cd ~/                    # run as a first command in all panes
+  panes:
+    - shell_command:           # pane no. 1
+        - cd /var/log          # run multiple commands in this pane
+        - ls -al | grep \.log
+    - echo second pane         # pane no. 2
+    - echo third pane          # pane no. 3
+    - echo forth pane          # pane no. 4
+</pre>
+<p><i>tmuxp</i> is also capable of running arbitrary scripts before building <i>tmux</i> sessions via <code>before_script</code>. In this example, <a rel="nofollow" class="external text" href="https://github.com/tony/tmuxp/blob/master/.tmuxp.yaml">from the tmuxp project itself</a>, a <a rel="nofollow" class="external text" href="https://github.com/tony/tmuxp/blob/master/bootstrap_env.py">bootstrap script</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-04-03 ⓘ]</sup> runs which creates a <a href="../en/Python/Virtual_environment.html" class="mw-redirect" title="Virtualenv">virtualenv</a> (python package environment) for the project and installs dependency packages. In addition, the session configures all panes to source the project's <i>virtualenv</i>:
+</p>
+<pre>session_name: tmuxp
+start_directory: ./ # load session relative to config location (project root).
+before_script: ./bootstrap_env.py # ./ to load relative to project root.
+windows:
+- window_name: tmuxp
+  focus: True
+  layout: main-horizontal
+  options:
+    main-pane-height: 35
+  shell_command_before:
+    - '[ -d .venv -a -f .venv/bin/activate ] &amp;&amp; source .venv/bin/activate'
+  panes:
+  - focus: true
+  - pane 
+  - make watch_test
+- window_name: docs
+  layout: main-horizontal
+  options:
+    main-pane-height: 35
+  start_directory: doc/
+  shell_command_before: 
+    - '[ -d ../.venv -a -f ../.venv/bin/activate ] &amp;&amp; source ../.venv/bin/activate'
+  panes:
+  - focus: true
+  - pane
+  - make serve
+  - make watch
+</pre>
+<p><a rel="nofollow" class="external text" href="https://tmuxp.git-pull.com/en/latest/examples.html">More examples</a> are available in the documentation showcasing YAML, as well as JSON configurations.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://tmuxp.git-pull.com">Official Homepage</a>, including documentation and examples</li>
+<li><a rel="nofollow" class="external text" href="https://www.github.com/tony/tmuxp">GitHub</a></li>
+<li><a rel="nofollow" class="external text" href="https://pypi.org/project/tmuxp/">PyPI package</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Terminal_emulators.html" title="Category:Terminal emulators">Terminal emulators</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Tmuxp&amp;oldid=631982">https://wiki.archlinux.org/index.php?title=Tmuxp&amp;oldid=631982</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 August 2020, at 15:54.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

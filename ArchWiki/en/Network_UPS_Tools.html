@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Network UPS Tools - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Network_UPS_Tools rootpage-Network_UPS_Tools skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Network UPS Tools</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This document describes how to install the <a rel="nofollow" class="external text" href="https://networkupstools.org/">Network UPS Tools (NUT)</a>. Network UPS Tools is compatible with thousands models of UPS. You can check the <a rel="nofollow" class="external text" href="https://networkupstools.org/stable-hcl.html">Hardware Compatibility List</a> to see if your UPS is supported.  
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation_of_Network_UPS_Tools"><span class="tocnumber">1</span> <span class="toctext">Installation of Network UPS Tools</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#Driver_configuration"><span class="tocnumber">2.1</span> <span class="toctext">Driver configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#Can't_claim_USB_device_error"><span class="tocnumber">2.1.1</span> <span class="toctext">Can't claim USB device error</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5"><a href="#upsd_configuration"><span class="tocnumber">2.2</span> <span class="toctext">upsd configuration</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#upsmon_configuration"><span class="tocnumber">2.3</span> <span class="toctext">upsmon configuration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#NUT-Monitor"><span class="tocnumber">3</span> <span class="toctext">NUT-Monitor</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation_of_Network_UPS_Tools">Installation of Network UPS Tools</span></h2>
+<p>You can <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> network-ups-tools with the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nut">nut</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>NUT has 3 daemons associated with it:
+</p>
+<ul>
+<li>The driver which communicates with the UPS.</li>
+<li>A server (upsd) which uses the driver to report out the status of the UPS.</li>
+<li>A monitoring daemon (upsmon) which monitors the upsd server and takes action based on information it receives.</li>
+</ul>
+<p>The idea is that if you have multiple systems connected to the UPS, one can communicate the status of the UPS over the network and the others can monitor that status by running their own upsmon services.  NUT has <a rel="nofollow" class="external text" href="https://networkupstools.org/docs/user-manual.chunked/ar01s06.html#_configuring_and_using">extensive documentation on the configuration</a> however this is going to walk through a simple setup of a USB UPS and the associated server and monitor all in one system (common desktop configuration).  
+</p>
+<h3><span class="mw-headline" id="Driver_configuration">Driver configuration</span></h3>
+<p>The configuration here will depend on the type of UPS you have. Consult the previously mentioned Hardware Compatibility List to find what driver will likely work for your UPS. You can run the tool <span class="plainlinks archwiki-template-man" title="$ man 8 nut-scanner"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nut-scanner.8">nut-scanner(8)</a></span> which will detect NUT-compatible devices attached to your system.
+</p>
+<p>For many UPS connected by USB, use the <span class="plainlinks archwiki-template-man" title="$ man 8 usbhid-ups"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/usbhid-ups.8">usbhid-ups(8)</a></span> driver.
+For UPS with serial port, use <code>port=/dev/ttySX</code>, where X is the number of serial port (Example:/dev/ttyS1). For UPS with USB port, use <code>port=auto</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nut/ups.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+[<i>upsname</i>]
+    driver = usbhid-ups
+    port = auto
+</pre>
+<p>You can name the UPS device whatever you like. <span class="plainlinks archwiki-template-man" title="$ man 5 ups.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ups.conf.5">ups.conf(5)</a></span>
+</p>
+<p>Start the driver as root with <code>upsdrvctl start</code>. If there's no errors, you should see a message like this one for the driver <code>usbhid-ups</code>:
+</p>
+<pre>Network UPS Tools - Generic HID driver 0.34 (2.4.1)
+USB communication driver 0.31
+Using subdriver: MGE HID 1.12
+Detected EATON - Ellipse MAX 1100 [ADKK22008]
+</pre>
+<p>If the driver doesn’t start cleanly, make sure you have picked the right one for your hardware. You might need to try other drivers by changing the "driver=" value in ups.conf.
+</p>
+<h4>
+<span id="Can.27t_claim_USB_device_error"></span><span class="mw-headline" id="Can't_claim_USB_device_error">Can't claim USB device error</span>
+</h4>
+<p>If you receive an error message like this one:
+</p>
+<pre>Can't claim USB device [XXXX:YYYY]: could not detach kernel driver from
+interface 0: Operation not permitted
+Driver failed to start (exit status=1)</pre>
+<p>Or a less specific one:
+</p>
+<pre>USB communication driver 0.33
+No matching HID UPS found
+Driver failed to start (exit status=1)</pre>
+<p>It's most likely a problem with permissions for accessing the device. You can fix that by specifying an udev rule that sets the correct group:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-ups.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SUBSYSTEM=="usb", ATTR{idVendor}=="XXXX", ATTR{idProduct}=="YYYY", SYMLINK+="ups0", GROUP="nut"
+</pre>
+<p>Where <code>idVendor</code> and <code>idProduct</code> are the device manufacturer and product ID. You can see these either in the error output <code>[XXXX:YYYY]</code> or by using <code>lsusb</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <i>SYMLINK</i> here is an optional rule for adding a symlink to the device for convenience (in this case it will show up in <code>/dev/ups0</code> when connected).</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <i>nut</i> group is added by the NUT AUR package. If you used different installation method (or the package perhaps changed) you may need to correct the group. Alternatively you could also set the device accessible by anyone with <code>MODE="0666"</code>.</div>
+<p>After this is done, reload and retrigger udev rules by issuing this command:
+</p>
+<pre># udevadm control --reload-rules &amp;&amp; udevadm trigger</pre>
+<h3><span class="mw-headline" id="upsd_configuration">upsd configuration</span></h3>
+<p>By default upsd listens only on localhost and this is fine for our purpose. Though it is not necessary for following this guide, you can configure upsd beyond the defaults by editing <code>/etc/nut/upsd.conf</code>. See <span class="plainlinks archwiki-template-man" title="$ man 5 upsd.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/upsd.conf.5">upsd.conf(5)</a></span>.
+</p>
+<p>You will need to add a user for a monitor to connect to the server and issue commands. See <span class="plainlinks archwiki-template-man" title="$ man 5 upsd.users"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/upsd.users.5">upsd.users(5)</a></span>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nut/upsd.users</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+[<i>upsuser</i>]
+     password = <i>password</i>
+     upsmon master
+     actions = SET
+     instcmds = ALL
+</pre>
+<p>At this point you should be able to <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>nut-server.service</code> which will automatically start nut-driver.
+</p>
+<p>If it has started successfully, you can run <code>upsc &lt;upsname&gt;</code> to get information from the UPS. Example output from the command:
+</p>
+<pre>battery.charge: 100
+battery.charge.low: 10
+battery.charge.warning: 20
+battery.mfr.date: CPS
+battery.runtime: 5550
+battery.runtime.low: 300
+battery.type: PbAcid
+battery.voltage: 13.5
+battery.voltage.nominal: 12
+device.mfr: CPS
+device.model: UPS CP1000AVRLCD
+device.type: ups
+driver.name: usbhid-ups
+driver.parameter.pollfreq: 30
+driver.parameter.pollinterval: 2
+driver.parameter.port: auto
+driver.parameter.synchronous: no
+driver.version: 2.7.4
+driver.version.data: CyberPower HID 0.4
+driver.version.internal: 0.41
+input.transfer.high: 140
+input.transfer.low: 90
+input.voltage: 122.0
+input.voltage.nominal: 120
+output.voltage: 122.0
+ups.beeper.status: disabled
+ups.delay.shutdown: 20
+ups.delay.start: 30
+ups.load: 0
+ups.mfr: CPS
+ups.model: UPS CP1000AVRLCD
+ups.productid: 0501
+ups.realpower.nominal: 600
+ups.status: OL
+ups.test.result: Done and passed
+ups.timer.shutdown: -60
+ups.timer.start: 0
+ups.vendorid: 0764
+</pre>
+<h3><span class="mw-headline" id="upsmon_configuration">upsmon configuration</span></h3>
+<p>The last step is to configure upsmon to listen to upsd and take action on events.
+</p>
+<p>Add the following line to <code>/etc/nut/upsmon.conf</code>:
+</p>
+<pre>MONITOR <i>upsname</i>@localhost 1 <i>upsduser</i> <i>password</i> master
+</pre>
+<p>Here <i>upsname</i> is the name of the UPS, and <i>upsduser</i> and <i>password</i> is the user and its password you set in <code>/etc/nut/upsd.users</code>.
+</p>
+<p>You can also configure what alerts are sent, where they are sent, what action is taken when the battery is low, and more. See <span class="plainlinks archwiki-template-man" title="$ man 5 upsmon.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/upsmon.conf.5">upsmon.conf(5)</a></span>.
+</p>
+<p>Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>nut-monitor.service</code>.
+</p>
+<p>Your logs should show upsmon starting and monitoring the UPS.
+</p>
+<h2><span class="mw-headline" id="NUT-Monitor">NUT-Monitor</span></h2>
+<p><a rel="nofollow" class="external text" href="https://networkupstools.org/projects.html#_a_href_http_www_lestat_st_en_informatique_projets_nut_monitor_nut_monitor_a">NUT-Monitor</a> is a graphical user interface to monitor and manage devices connected to the Network UPS Tools server.
+</p>
+<p>You can <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> nut-monitor with the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nut-monitor/">nut-monitor</a></span><sup><small>AUR</small></sup> package.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Power_management.html" title="Category:Power management">Power management</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Network_UPS_Tools&amp;oldid=627511">https://wiki.archlinux.org/index.php?title=Network_UPS_Tools&amp;oldid=627511</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 31 July 2020, at 19:21.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

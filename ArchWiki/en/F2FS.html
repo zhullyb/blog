@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>F2FS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-F2FS rootpage-F2FS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">F2FS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/File_systems.html" title="File systems">File systems</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/F2FS" class="extiw" title="wikipedia:F2FS">F2FS</a> (Flash-Friendly File System) is a file system intended for NAND-based flash memory equipped with Flash Translation Layer. Unlike JFFS or UBIFS it relies on FTL to handle write distribution. It is supported from kernel 3.8 onwards.
+</p>
+<p>An FTL is found in all flash memory with a SCSI/SATA/PCIe/NVMe interface <a rel="nofollow" class="external autonumber" href="https://accelazh.github.io/ssd/A-Summary-On-SSD-And-FTL">[1]</a>, opposed to bare NAND Flash and SmartMediaCards <a rel="nofollow" class="external autonumber" href="http://www.linux-mtd.infradead.org/archive/tech/nand.html">[2]</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The data contained on F2FS partitions can become unusable if the kernel version on the running machine is <i>older</i> than the kernel version used to create the partition.  For example, this limitation can manifest if users created a F2FS partition on a mainline kernel provided by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> and have a need to downgrade to an older series of kernels provided by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span>.  See <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/69363">FS#69363</a>.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Creating_a_F2FS_file_system"><span class="tocnumber">1</span> <span class="toctext">Creating a F2FS file system</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Compression"><span class="tocnumber">1.1</span> <span class="toctext">Compression</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#File-based_encryption_support"><span class="tocnumber">1.2</span> <span class="toctext">File-based encryption support</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Mounting_a_F2FS_file_system"><span class="tocnumber">2</span> <span class="toctext">Mounting a F2FS file system</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Implementation_of_discard"><span class="tocnumber">2.1</span> <span class="toctext">Implementation of discard</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Checking_and_repair"><span class="tocnumber">3</span> <span class="toctext">Checking and repair</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Grow_an_F2FS_file_system"><span class="tocnumber">4</span> <span class="toctext">Grow an F2FS file system</span></a></li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Known_issues"><span class="tocnumber">5</span> <span class="toctext">Known issues</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#fsck_failures"><span class="tocnumber">5.1</span> <span class="toctext">fsck failures</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Long_running_fsck_delays_boot"><span class="tocnumber">5.2</span> <span class="toctext">Long running fsck delays boot</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Creating_a_F2FS_file_system">Creating a F2FS file system</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Separate userspace tool installation and file system creation. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:F2FS">Talk:F2FS#</a>)</div>
+</div>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=f2fs-tools">f2fs-tools</a></span>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following is a minimum recommended set of options to help <code>f2fs.fsck</code> detect and fix some types of filesystem corruption. See <span class="plainlinks archwiki-template-man" title="$ man 8 mkfs.f2fs"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mkfs.f2fs.8">mkfs.f2fs(8)</a></span> for all available options.</div>
+<p>For example, to create a file system on <code><i>/dev/sdxY</i></code>, run:
+</p>
+<pre># mkfs.f2fs -l mylabel -O extra_attr,inode_checksum,sb_checksum <i>/dev/sdxY</i>
+</pre>
+<h3><span class="mw-headline" id="Compression">Compression</span></h3>
+<p>To use compression, include the <code>compression</code> option. Example:
+</p>
+<pre># mkfs.f2fs -l mylabel -O extra_attr,inode_checksum,sb_checksum,<b>compression</b> <i>/dev/sdxY</i>
+</pre>
+<p>When mounting the filesystem, specify <code>compress_algorithm=(lzo|lz4|zstd|lzo-rle)</code>. Using <code>compress_extension=txt</code> will cause all txt files to be compressed by default.
+</p>
+<p>In order to tell F2FS to compress a file or a directory, use :
+</p>
+<pre>$ chattr -R +c [FOLDER]
+</pre>
+<h3><span class="mw-headline" id="File-based_encryption_support">File-based encryption support</span></h3>
+<p>Since Linux 4.2, F2FS natively supports file encryption.  Encryption is applied at the directory level, and different directories can use different encryption keys.  This is different from both <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a>, which is block-device level encryption, and from <a href="../en/ECryptfs.html" title="ECryptfs">eCryptfs</a>, which is a stacked cryptographic filesystem.  To use F2FS's native encryption support, see the <a href="../en/Fscrypt.html" title="Fscrypt">fscrypt</a> article.  Create the file system with
+</p>
+<pre> # mkfs.f2fs -l mylabel -O extra_attr,inode_checksum,sb_checksum,<b>encrypt</b> <i>/dev/sdxY</i>
+</pre>
+<p>or add encryption capability at a later time with <code>fsck.f2fs -O encrypt /dev/sdxY</code>.
+</p>
+<h2><span class="mw-headline" id="Mounting_a_F2FS_file_system">Mounting a F2FS file system</span></h2>
+<p>The file system can then be mounted manually or via other mechanisms:
+</p>
+<pre># mount /dev/sdxY /mnt/foo
+</pre>
+<h3><span class="mw-headline" id="Implementation_of_discard">Implementation of discard</span></h3>
+<p>By default, F2FS is mounted using a hybrid TRIM mode which behaves as <a href="../en/Solid_state_drive.html#Continuous_TRIM" title="Solid state drive">continuous TRIM</a>.  This implementation creates asynchronous discard threads to alleviate long discarding latency among RW IOs.  It keeps candidates in memory, and the thread issues them in idle time <a rel="nofollow" class="external autonumber" href="https://sourceforge.net/p/linux-f2fs/mailman/message/36957687">[3]</a>.  As a result of this, users wanting <a href="../en/Solid_state_drive.html#Periodic_TRIM" title="Solid state drive">periodic TRIM</a> will need to implicitly set the <code>nodiscard</code> mount option in <code>/etc/fstab</code> or pass it to <a href="../en/File_systems.html#Mount_a_file_system" class="mw-redirect" title="Mount">mount</a> if mounting manually.
+</p>
+<h2><span class="mw-headline" id="Checking_and_repair">Checking and repair</span></h2>
+<p>Checking and repairs to f2fs file systems are accomplished with <code>fsck.f2fs</code> provided by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=f2fs-tools">f2fs-tools</a></span>. See <span class="plainlinks archwiki-template-man" title="$ man 8 fsck.f2fs"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/fsck.f2fs.8">fsck.f2fs(8)</a></span> for available switches.  Example:
+</p>
+<pre># fsck.f2fs -f <i>/dev/sdxY</i>
+</pre>
+<h2><span class="mw-headline" id="Grow_an_F2FS_file_system">Grow an F2FS file system</span></h2>
+<p>When the filesystem is unmounted, it can be grown if the partition is expanded. <a rel="nofollow" class="external text" href="https://www.mail-archive.com/linux-f2fs-devel@lists.sourceforge.net/msg04247.html">Shrinking is not currently supported</a>.
+</p>
+<p>First use a <a href="../en/Partitioning.html#Partitioning_tools" title="Partitioning">partition tool</a> to resize the partition: for example, suppose the output of the <code>print</code> command in the <code>parted</code> console is the following:
+</p>
+<pre>Number  Start   End     Size        File system     Name                  Flag
+ 1      1049kB  106MB   105MB       fat32           EFI system partition  boot, esp
+ 2      106MB   11,0GB  10,9GB      ext4
+ 3      11,0GB  12,3GB  1322MB      f2fs
+ 4      31,0GB  31,3GB  261MB       ext4
+</pre>
+<p>To resize the <code>f2fs</code> partition to occupy all the space up to the fourth one, just give <code>resizepart 3 31GB</code> and <code>exit</code>. Now expand the filesystem to fill the new partition using:
+</p>
+<pre># resize.f2fs <i>/dev/sdxY</i>
+</pre>
+<p>where <code><i>/dev/sdxY</i></code> is the target F2FS volume to grow. See <span class="plainlinks archwiki-template-man" title="$ man 8 resize.f2fs"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/resize.f2fs.8">resize.f2fs(8)</a></span> for supported options.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If using GPT, the partition's GUID (seen in <code>/dev/disk/by-partuuid/</code>) might change, but the filesystem UUID (seen in <code>/dev/disk/by-uuid/</code>) should stay the same.</div>
+<h2><span class="mw-headline" id="Known_issues">Known issues</span></h2>
+<h3><span class="mw-headline" id="fsck_failures">fsck failures</span></h3>
+<p>F2FS has a weak fsck that can lead to data loss in case of a sudden power loss.<a rel="nofollow" class="external autonumber" href="https://www.usenix.org/system/files/atc19-jaffer.pdf">[4]</a><a rel="nofollow" class="external autonumber" href="https://web.archive.org/web/20200925120546/https://archived.forum.manjaro.org/t/record-fsync-data-failed-on-f2fs-file-system-how-to-fix-foregt-the-help-i-reinstalled-its-just-easier/121051">[5]</a>
+</p>
+<p>If power losses are frequent, consider an alternative <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a>.
+</p>
+<h3><span class="mw-headline" id="Long_running_fsck_delays_boot">Long running fsck delays boot</span></h3>
+<p>If the kernel version has changed between boots, the <i>fsck.f2fs</i> utility will perform a full file system check which will take longer to finish<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=245702">[6]</a>.
+</p>
+<p>This may be mitigated in the future thanks to a recent commit <a rel="nofollow" class="external autonumber" href="https://www.mail-archive.com/linux-f2fs-devel@lists.sourceforge.net/msg17224.html">[7]</a>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=F2FS&amp;oldid=649278">https://wiki.archlinux.org/index.php?title=F2FS&amp;oldid=649278</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 January 2021, at 15:34.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

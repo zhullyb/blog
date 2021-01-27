@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Samba (Česky) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Samba_Česky rootpage-Samba_Česky skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Samba (Česky)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Toto je popis jak jsem rozběhl SAMBU na svém počítači. Rozhodně negarantuji, že podle tohoto návodu to půjde bez problémů i vám.</div>
+<p>Nejprve - ujistěte se zda a jakou máte pracovní skupinu ve vaší domácí síti pro sdílení. Přijde na ní řada později.
+</p>
+<p>Nyní nainstalujeme sambu. Přihlašte se jako root, aktualizujte seznam balíčků a nainstalujte nejnovější sambu následujícím způsobem.<br>
+</p>
+<pre>pacman -S samba
+</pre>
+<p>Nyní nastavíme sdílení dat. Stále jako root se přepněte do adresáře kde je soubor smb.conf file (Tento soubor obsahuje nastavení samby)
+</p>
+<pre>cd /etc/samba
+</pre>
+<p>Ted začneme tento soubor editovat (ručně samozřejmě)
+</p>
+<pre>nano smb.conf
+</pre>
+<p>Můžete klidně použít jiný editor než je nano. Varianty jsou:
+</p>
+<ul>
+<li>nano</li>
+<li>pico</li>
+<li>vi</li>
+<li>gedit (toto není editor pro příkazovou řádku, musíte ho otevřít v novém okně)</li>
+</ul>
+<p>Nyní k editaci. První sekce se jmenuje Global Parameters. Ta odkazuje na "blanketing" nastavení pro Sambu - většina editace bude hotova předtím.
+Zde je sekce Global Parametsrs z mého smb.conf pro příklad:
+</p>
+<pre>#Global Parameters
+workgroup = HOME
+netbios name = Bennett-DSLIN
+encrypt passwords = yes
+</pre>
+<p>Workgroup name (pracovní skupina) znamená jakou pracovní skupinu chceme používat. (Pro Windows XP je většinou MSHOME a WORKGROUP.)<br>
+V "encrypt passwords" (šifrovat hesla) můžeme nechat nastaveno "yes". Můžete to změnit pokud nějaký počítač používá Windows 95 nebo Windows 98, nějaká dřívější vydání nepoužívají šifrování.<br>
+"netbios name" (název netbiosu) je nastavení jak bude váš počítač vidět v "Sítovém okolí" (nebo "Moje místa v síti" u Windows XP).
+</p>
+<p>Je čas nastavit sdílení. Nejjednoduší je nastavit sdílení /home adresáře uživatele. Takto se nastaví i s možností zápisu:
+</p>
+<pre>[homes]
+browseable = no
+read only = no
+</pre>
+<p>Jestli chcete aby všichni viděli vaše soubory ale jen některá skupina mohla zapisovat (všichni mohou číst, pouze skupina "staff" může zapisovat) pak sekce bude vypadat takto:
+</p>
+<pre>[homes]
+public = yes
+writable = yes
+write list = @staff
+</pre>
+<p>Pokud chcete aby uživatelé Windows viděli "čistý" /home (a nebyli zmateni tečkami před názvy adresářů (např ~/.bashrc),  pak sekce bude vypadat takto:
+</p>
+<pre>[homes]
+path = /home/%u/smb
+browseable = no
+read only = no
+</pre>
+<p>Přesouvání sdílení do domovského adresáře není zrovna praktické. Pokud chceme u několika uživatelů udělat vyjímku a povolit jim i jiný adresář:
+</p>
+<pre>[music]
+path = /mnt/windows/Music/
+browseable = yes
+read only = yes
+valid users = Bryan, Michael, David, Jane
+</pre>
+<p>"Path" je samozřejmě cesta k sdílenému adresáři. Skvěle jednoduché ne?
+</p>
+<p>Pokud je smb.conf nastaven jak chceme uložíme ho a ukončíme editor. (To je Ctrl+O v nano a Ctrl+X pro konec) <br> Ted nastavíme "valid users" do seznamu uživatelů samby. Udělejte to takto:
+</p>
+<pre>smbpasswd -a &lt;uzivatel&gt;
+</pre>
+<p>Uživatelé a hesla musí být ve windows totožná !
+</p>
+<p>Takto restartujeme sambu (zastavíme a znova spustíme):
+</p>
+<pre>/etc/rc.d/samba stop
+/etc/rc.d/samba start
+</pre>
+<p>Vše je nastaveno a nezbývá než používat. U počítačů s Windows bude zřejmě nutné systém restartovat.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../cs/Category:Networking.html" title="Category:Networking (Česky)">Networking (Česky)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Samba_(%C4%8Cesky)&amp;oldid=502456">https://wiki.archlinux.org/index.php?title=Samba_(Česky)&amp;oldid=502456</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 December 2017, at 22:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

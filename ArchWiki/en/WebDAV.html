@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>WebDAV - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-WebDAV rootpage-WebDAV skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">WebDAV</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a href="https://en.wikipedia.org/wiki/WebDAV" class="extiw" title="wikipedia:WebDAV">WebDAV</a> <i>(Web Distributed Authoring and Versioning)</i> is an extension of HTTP 1.1 and therefore can be considered to be a protocol. It contains a set of concepts and accompanying extension methods to allow read and write across the HTTP 1.1 protocol. Instead of using <a href="../en/NFS.html" title="NFS">NFS</a> or <a href="../en/Samba.html" class="mw-redirect" title="SMB">SMB</a>, WebDAV offers file transfers via HTTP. 
+</p>
+<p>The goal of this how to is to setup a simple WebDAV configuration using a <a href="../en/List_of_applications/Internet.html#Web_servers" class="mw-redirect" title="Web server">web server</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Server"><span class="tocnumber">1</span> <span class="toctext">Server</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Apache"><span class="tocnumber">1.1</span> <span class="toctext">Apache</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Nginx"><span class="tocnumber">1.2</span> <span class="toctext">Nginx</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#rclone"><span class="tocnumber">1.3</span> <span class="toctext">rclone</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Client"><span class="tocnumber">2</span> <span class="toctext">Client</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Cadaver"><span class="tocnumber">2.1</span> <span class="toctext">Cadaver</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Thunar"><span class="tocnumber">2.2</span> <span class="toctext">Thunar</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Nautilus"><span class="tocnumber">2.3</span> <span class="toctext">Nautilus</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Authentication"><span class="tocnumber">3</span> <span class="toctext">Authentication</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Apache_2"><span class="tocnumber">3.1</span> <span class="toctext">Apache</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Server">Server</span></h2>
+<h3><span class="mw-headline" id="Apache">Apache</span></h3>
+<p>Install the <a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a>.
+</p>
+<p>Uncomment the modules for DAV:
+</p>
+<pre>LoadModule dav_module modules/mod_dav.so
+LoadModule dav_fs_module modules/mod_dav_fs.so
+LoadModule dav_lock_module modules/mod_dav_lock.so
+</pre>
+<p>Add the following line to <code>/etc/httpd/conf/httpd.conf</code>.
+</p>
+<pre>DAVLockDB /home/httpd/DAV/DAVLock
+</pre>
+<p>Make sure you add it outside of any other directives, for instance right under the <code>DocumentRoot</code> definition.
+</p>
+<p>Next, add the following (also outside of any directives):
+</p>
+<pre>Alias /dav "/home/httpd/html/dav"
+
+&lt;Directory "/home/httpd/html/dav"&gt;
+  DAV On
+  AllowOverride None
+  Options Indexes FollowSymLinks
+  Require all granted
+&lt;/Directory&gt;
+</pre>
+<p>Create the directory:
+</p>
+<pre># mkdir -p /home/httpd/DAV
+</pre>
+<p>Check the permissions of DavLockDB's directory and ensure it is writable by the webserver <a href="../en/Users_and_groups.html" class="mw-redirect" title="User">user</a> <code>http</code>:
+</p>
+<pre># chown -R http:http /home/httpd/DAV
+# mkdir -p /home/httpd/html/dav
+# chown -R http:http /home/httpd/html/dav
+</pre>
+<h3><span class="mw-headline" id="Nginx">Nginx</span></h3>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nginx-mainline">nginx-mainline</a></span> (the mainline variant of <a href="../en/Nginx.html" title="Nginx">nginx</a>) and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nginx-mainline-mod-dav-ext/">nginx-mainline-mod-dav-ext</a></span><sup><small>AUR</small></sup>.
+</p>
+<p>At the top of your <code>/etc/nginx/nginx.conf</code> and outside any blocks, add
+</p>
+<pre>load_module /usr/lib/nginx/modules/ngx_http_dav_ext_module.so;
+</pre>
+<p>Add a new <code>location</code> for WebDAV to your <code>server</code> block, for example:
+</p>
+<pre>location /dav {
+    root   /srv/http;
+
+    dav_methods PUT DELETE MKCOL COPY MOVE;
+    dav_ext_methods PROPFIND OPTIONS;
+
+    # Adjust as desired:
+    dav_access user:rw group:rw all:r;
+    client_max_body_size 0;
+    create_full_put_path on;
+    client_body_temp_path /srv/client-temp;
+    autoindex on;
+
+    allow 192.168.178.0/24;
+    deny all;
+}
+</pre>
+<p>The above example requires the directories <code>/srv/http/dav</code> and <code>/srv/client-temp</code> to exist.
+</p>
+<p>You may want to use bind mounts to make other directories accessible via WebDAV.
+</p>
+<h3><span class="mw-headline" id="rclone">rclone</span></h3>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rclone">rclone</a></span>. It supports exporting a remote or local directory <a rel="nofollow" class="external text" href="https://rclone.org/commands/rclone_serve_webdav/">using webdav</a>.
+</p>
+<p>To serve the contents of <code>/srv/http</code> with no authentication:
+</p>
+<pre>rclone serve webdav /srv/http
+</pre>
+<h2><span class="mw-headline" id="Client">Client</span></h2>
+<h3><span class="mw-headline" id="Cadaver">Cadaver</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cadaver">cadaver</a></span>.
+</p>
+<p>After installation, test the WebDAV server:
+</p>
+<pre># cadaver <a rel="nofollow" class="external free" href="http://localhost/dav">http://localhost/dav</a>
+dav:/dav/&gt; mkcol test
+Creating `test': succeeded.
+dav:/dav/&gt; ls
+Listing collection `/dav/': succeeded.
+Coll: test
+</pre>
+<h3><span class="mw-headline" id="Thunar">Thunar</span></h3>
+<p>In <a href="../en/Thunar.html" title="Thunar">Thunar</a> just press <code>Ctrl+l</code> and enter the address with <i>dav</i> or <i>davs</i> protocol specified:
+</p>
+<pre>davs://webdav.yandex.ru
+</pre>
+<h3><span class="mw-headline" id="Nautilus">Nautilus</span></h3>
+<p>In <a href="../en/GNOME/Files.html" class="mw-redirect" title="Nautilus">Nautilus</a> just choose "connect to server" and enter the address with <i>dav://</i> or <i>davs://</i> protocol specified:
+</p>
+<pre>dav://127.0.0.1/dav
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you get a "HTTP Error: Moved permanently" with <i>dav://</i> try to use <i>davs://</i> as the protocol instead</div>
+<h2><span class="mw-headline" id="Authentication">Authentication</span></h2>
+<p>There are numerous different protocols you can use:
+</p>
+<ul>
+<li>plain</li>
+<li>digest</li>
+<li>others</li>
+</ul>
+<h3><span class="mw-headline" id="Apache_2">Apache</span></h3>
+<p>Using digest:
+</p>
+<pre># basic form: htdigest -c /path/to/file AuthName username
+htdigest -c /etc/httpd/conf/passwd WebDAV <b>username</b>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Make sure digest authentication is enabled in <code>httpd.conf</code> by the presence of this entry: <code>LoadModule auth_digest_module modules/mod_auth_digest.so</code>
+</div>
+<p>Using plain:
+</p>
+<pre># basic form: htpasswd -c /path/to/file username
+htpasswd -c /etc/httpd/conf/passwd <b>username</b>
+</pre>
+<p>Next, <code>httpd.conf</code> must be edited to enable authentication. One method would be to require the user <code>foo</code> for everything:
+</p>
+<pre>&lt;Directory "/home/httpd/html/dav"&gt;
+  DAV On
+  AllowOverride None
+  Options Indexes FollowSymLinks
+  AuthType Digest # substitute "Basic" for "Digest" if you used htpasswd above
+  AuthName "WebDAV"
+  AuthUserFile /etc/httpd/conf/passwd
+  Require user foo
+&lt;/Directory&gt;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <code>AuthName</code> must match the name passed when using the <code>htdigest</code> command for digest authentication. For basic/plain authentication, this line may be removed. Also, make sure that the <code>AuthUserFile</code> path matches that used with the <code>htdigest</code> or <code>htpasswd</code> commands above</div>
+<p>If you want to permit everybody to read, you could use this in your httpd.conf
+</p>
+<pre>&lt;Directory "/home/httpd/html/dav"&gt;
+  DAV On
+  AllowOverride None
+  Options Indexes FollowSymLinks
+  AuthType Digest # substitute "Basic" for "Digest" if you used htpasswd above
+  AuthName "WebDAV"
+  AuthUserFile /etc/httpd/conf/passwd
+  Require all granted
+  &lt;LimitExcept GET HEAD OPTIONS PROPFIND&gt;
+    Require user foo
+  &lt;/LimitExcept&gt;
+&lt;/Directory&gt;
+</pre>
+<p>Do not forget to restart apache after making changes:
+</p>
+<pre># systemctl restart httpd
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  If you get an 405 error with apache use <code>DirectoryIndex disabled</code> in your Directory config</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:WebDAV.html" title="Category:WebDAV">WebDAV</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=WebDAV&amp;oldid=641697">https://wiki.archlinux.org/index.php?title=WebDAV&amp;oldid=641697</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 16 November 2020, at 12:31.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

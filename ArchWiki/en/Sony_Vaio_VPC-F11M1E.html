@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Sony Vaio VPC-F11M1E - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Sony_Vaio_VPC-F11M1E rootpage-Sony_Vaio_VPC-F11M1E skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Sony Vaio VPC-F11M1E</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><br>
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Xorg"><span class="tocnumber">1</span> <span class="toctext">Xorg</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Display_backlight_regulation"><span class="tocnumber">2</span> <span class="toctext">Display backlight regulation</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Special_Keys"><span class="tocnumber">3</span> <span class="toctext">Special Keys</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Using_udev"><span class="tocnumber">3.1</span> <span class="toctext">Using udev</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Using_the_kernel_tool_setkeycodes"><span class="tocnumber">3.2</span> <span class="toctext">Using the kernel tool setkeycodes</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Suspend_to_RAM"><span class="tocnumber">4</span> <span class="toctext">Suspend to RAM</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#DTS/AC3_Over_HDMI_with_ALSA"><span class="tocnumber">5</span> <span class="toctext">DTS/AC3 Over HDMI with ALSA</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#DTS/AC3_Over_HDMI_with_PULSE"><span class="tocnumber">6</span> <span class="toctext">DTS/AC3 Over HDMI with PULSE</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Sources"><span class="tocnumber">7</span> <span class="toctext">Sources</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Xorg">Xorg</span></h2>
+<p>X server works with the standard <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nvidia">nvidia</a></span> package but shows a blank screen when exiting the X server or just switching terminals using Ctrl+Alt+Fx.
+</p>
+<p>To resolve the blank screen issue you need to use <a href="../en/Uvesafb.html" title="Uvesafb">vesafb</a>.
+</p>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/v86d/">v86d</a></span><sup><small>AUR</small></sup> and remove any vga=&lt;foo&gt; kernel boot parameters.
+</p>
+<p>Next ensure that  <code>/etc/modprobe.d/uvesafb.conf</code> contains:
+</p>
+<pre>options uvesafb mode_option=1280x800-32 scroll=ywrap
+</pre>
+<p>This isn't the largest resolution available (1280x1024-32 is) but it best fits the aspect ratio of the screen.
+</p>
+<p>Finally add the v86d hook to HOOKS in mkinitcpio.conf:
+</p>
+<pre>HOOKS="base udev v86d ..."
+</pre>
+<p>and regenerate your initramfs with mkinitcpio (adjust the following command to your setup):
+</p>
+<pre>mkinitcpio -p linux
+</pre>
+<h2><span class="mw-headline" id="Display_backlight_regulation">Display backlight regulation</span></h2>
+<p>I found this solution - <a rel="nofollow" class="external free" href="http://code.google.com/p/vaio-f11-linux/wiki/NVIDIASetup">http://code.google.com/p/vaio-f11-linux/wiki/NVIDIASetup</a>. It's for Vaio F11, but it works for my F13 too.
+</p>
+<p>I've added this line in section "Device" in /etc/X11/xorg.conf :
+</p>
+<pre>Option    "RegistryDwords"    "EnableBrightnessControl=1;PowerMizerEnable=0x1;PerfLevelSrc=0x3333;PowerMizerLevel=0x3;PowerMizerDefault=0x3;PowerMizerDefaultAC=0x3"
+</pre>
+<p>Plus I use module <b>sony_laptop</b> .. MODULES=(sony_laptop) in /etc/rc.conf
+</p>
+<h2><span class="mw-headline" id="Special_Keys">Special Keys</span></h2>
+<p>The 'Display Off' and media keys work out of the box.
+</p>
+<p>The 'ASSIST', 'S1' and 'VAIO' keys require configuring the appropriate keymap.
+</p>
+<h3><span class="mw-headline" id="Using_udev">Using udev</span></h3>
+<p>Firstly run:
+</p>
+<pre>$ /lib/udev/findkeyboards
+</pre>
+<p>Then do:
+</p>
+<pre># /lib/udev/keymap -i input/eventX
+</pre>
+<p>BUT switch <code>input/eventX</code> for the keyboard outputted in the first command. I got 'AT keyboard' and 'module' from the first command. 'AT keyboard' is the normal keyboard for mapping 'Fn+X' and 'module' is the hotkey keyboard.
+</p>
+<p>After doing the second command you need to press the buttons that you want to map, then Control-C to exit <code>keymap</code>.
+</p>
+<p>Then edit /lib/udev/keymaps/module-sony, adding the relevant scan code from the second command and then the event you want. All valid events are listed in <a rel="nofollow" class="external free" href="https://hal.freedesktop.org/quirk/quirk-keymap-list.txt">https://hal.freedesktop.org/quirk/quirk-keymap-list.txt</a>
+</p>
+<p>Here is an example module-sony keymap file for the VPC-F11M1E:
+</p>
+<pre>0xA0 mute # Fn+F2
+0xAE volumedown # Fn+F3
+0xB0 volumeup # Fn+F4
+0x10 brightnessdown # Fn+F5
+0x11 brightnessup # Fn+F6
+0x12 switchvideomode # Fn+F7
+0x14 zoomout # Fn+F9
+0x15 zoomin # Fn+F10
+0x17 suspend # Fn+F12
+0x28 help #Assist
+0x20 prog1 #S1
+0x49 vendor #VAIO Hotkey
+</pre>
+<h3><span class="mw-headline" id="Using_the_kernel_tool_setkeycodes">Using the kernel tool <code>setkeycodes</code></span></h3>
+<p><i>See the detailed article: <a href="../en/Map_scancodes_to_keycodes.html" class="mw-redirect" title="Setkeycodes">setkeycodes</a>.</i>
+</p>
+<h2><span class="mw-headline" id="Suspend_to_RAM">Suspend to RAM</span></h2>
+<p>Out of the box, a "sudo pm-suspend" will result in a proper suspending but a failure to resume, resulting in a new reboot. The solution is to add the following parameter to your kernel (into the line )
+</p>
+<pre>acpi_sleep=nonvs</pre>
+<p>Your grub kernel entry should look like this
+</p>
+<pre>linux /boot/vmlinuz-linux-sony root=/dev/dm-1 acpi_sleep=nonvs</pre>
+<h2>
+<span id="DTS.2FAC3_Over_HDMI_with_ALSA"></span><span class="mw-headline" id="DTS/AC3_Over_HDMI_with_ALSA">DTS/AC3 Over HDMI with ALSA</span>
+</h2>
+<p>Make sure you installed ALSA.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ aplay -l</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">**** List of PLAYBACK Hardware Devices ****
+card 0: Intel [HDA Intel], device 0: ALC275 Analog [ALC275 Analog]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 0: Intel [HDA Intel], device 1: ALC275 Digital [ALC275 Digital]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 3: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 7: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 8: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 9: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+</pre>
+<p>The right ALSA device to use to get a working sound over HDMI is the device <b>7</b>. 
+</p>
+<p>To get mplayer to use it, 
+</p>
+<pre>mplayer -ao alsa:device=hw=1.7 -channels 8 -ac hwdts,hwac3, &lt;file&gt;</pre>
+<p>The comma after hwac3 is not a typo. 
+</p>
+<h2>
+<span id="DTS.2FAC3_Over_HDMI_with_PULSE"></span><span class="mw-headline" id="DTS/AC3_Over_HDMI_with_PULSE">DTS/AC3 Over HDMI with PULSE</span>
+</h2>
+<p>After installing <b>pulseaudio</b>, you will need to edit 
+</p>
+<pre>/etc/pulse/default.pa
+</pre>
+<p>and add the following line
+</p>
+<pre>load-module module-alsa-sink device=hw:1,7 channels=8</pre>
+<p>Put channels to the highest number of <b>channels</b> supported by the combination of your hardware (computer + receiver/TV).
+</p>
+<h2><span class="mw-headline" id="Sources">Sources</span></h2>
+<p><a rel="nofollow" class="external free" href="http://code.google.com/p/vaio-f11-linux/w/list?q=label:State-Solution">http://code.google.com/p/vaio-f11-linux/w/list?q=label:State-Solution</a>
+</p>
+<p><a href="../en/Map_scancodes_to_keycodes.html" title="Map scancodes to keycodes">Map scancodes to keycodes</a>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Sony.html" title="Category:Sony">Sony</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Sony_Vaio_VPC-F11M1E&amp;oldid=629470">https://wiki.archlinux.org/index.php?title=Sony_Vaio_VPC-F11M1E&amp;oldid=629470</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 15:50.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

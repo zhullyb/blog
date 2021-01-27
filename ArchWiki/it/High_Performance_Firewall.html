@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>High Performance Firewall (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-High_Performance_Firewall_Italiano rootpage-High_Performance_Firewall_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">High Performance Firewall (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><br>
+La guida è stata realizzata basandosi su un esperienza reale di un utente, quindi il tutto è basato sulla configurazione dell'utente stesso.
+</p>
+<p>Immaginate questo, avete più di due reti separate da un protocollo di Virtual Lan (IEEE 802.1q) o VLAN, a cui fate accesso tramite uno switch con una linea trunk 10/100/1000 MB HD/FD (naturalmente la migliore è 1000 MB FD).
+</p>
+<p>Dovete condividere la rete con un numero MOLTO GRANDE di host, e mantenere delle buone prestazioni. La prima scelta è di separare le reti in altrettante porte e magari con altrettanti firewall. Magari non è la migliore idea per i costi, ma funziona.
+</p>
+<p>La seconda scelta è quella spiegata qui.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#I_fatti:"><span class="tocnumber">1</span> <span class="toctext">I fatti:</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Il_lavoro"><span class="tocnumber">2</span> <span class="toctext">Il lavoro</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Supporto_delle_VLAN"><span class="tocnumber">2.1</span> <span class="toctext">Supporto delle VLAN</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Il_firewall"><span class="tocnumber">2.2</span> <span class="toctext">Il firewall</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Il_NAT_round_robin"><span class="tocnumber">2.2.1</span> <span class="toctext">Il NAT round robin</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Trucchi"><span class="tocnumber">2.2.2</span> <span class="toctext">Trucchi</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#Aumentare_le_performance"><span class="tocnumber">2.3</span> <span class="toctext">Aumentare le performance</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Iproute2"><span class="tocnumber">2.4</span> <span class="toctext">Iproute2</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Conclusioni"><span class="tocnumber">3</span> <span class="toctext">Conclusioni</span></a></li>
+</ul>
+</div>
+
+<h3><span class="mw-headline" id="I_fatti:">I fatti:</span></h3>
+<dl><dd>Abbiamo circa 4 netmask 21 ex. ognuna con 8 classi di tipo C!!! Abbiamo quindi tantissimi MAC address e altrettanti pericolosi BROADCAST.</dd></dl>
+<dl><dd>Abbiamo inoltre 30 IP pubblici in 3 gruppi</dd></dl>
+<dl><dd>E una piccola macchina ...solo per fare test.</dd></dl>
+<dl><dd>Più in la verrà aggiunga una rete di classe C con molte altre subnet.</dd></dl>
+<h1><span class="mw-headline" id="Il_lavoro">Il lavoro</span></h1>
+<h2><span class="mw-headline" id="Supporto_delle_VLAN">Supporto delle VLAN</span></h2>
+<p>First, create sub-network as in page <a href="../en/VLAN.html" title="VLAN">VLAN</a>.
+</p>
+<h2><span class="mw-headline" id="Il_firewall">Il firewall</span></h2>
+<p>Può essere realizzato un firewall/nat con <i>iptables</i> in maniera semplice e ci sono molte guide su questo...
+</p>
+<p>Pensate che dovrete lavorare con molto traffico, questo vuol dire un uso massivo di CPU, quindi mantenete poche regole, solo le strette necessarie.
+Accept all per default per fare NAT.
+Probabilmente è meglio favorire alcune porte, (80,443,25,110,21,20,53 etc), ricordatevi che ogni pacchetto che passa per il vostro firewall deve attraversare tutte le regole fino a che non ne trova una che lo riguarda, altrimenti cade nella politica di default.
+</p>
+<h3><span class="mw-headline" id="Il_NAT_round_robin">Il NAT round robin</span></h3>
+<p>Supponiamo di avere un ip: 200.aaa.bbb.6 e il nostro gateway è 200.aaa.bbb.1. Possiamo tranquillamente mettere questi parametri di default nella nostra configurazione.
+</p>
+<p>Abbiamo detto che abbiamo 3 gruppi con 10 IP ognuno ... definiamo quindi il NEXT HOP nel nostro firewall:
+</p>
+<pre>Gr1='200.AAA.CCC.10-200.AAA.CCC.20'
+Gr2='200.AAA.DDD.10-200.AAA.DDD.20'
+Gr3='200.AAA.EEE.10-200.AAA.EEE.20'
+</pre>
+<p><b>Le prossime righe necessarie sono:</b>
+</p>
+<pre>iptables -t nat -A POSTROUTING -s 192.168.0.0/21  -j SNAT --to $Gr1 #ACCESS VLAN 10
+iptables -t nat -A POSTROUTING -s 192.168.8.0/21  -j SNAT --to $Gr2 #ACCESS VLAN 20
+iptables -t nat -A POSTROUTING -s 192.168.15.0/21  -j SNAT --to $Gr1 #ACCESS VLAN 30
+.... etc
+</pre>
+<p>Potrete ripetere i gruppi per gli accessi, suddividete le reti ETC, iptables userà una politica round robin su Gr1, Gr2 e Gr3 per default, non sono necessarie ulteriori modifiche.
+</p>
+<p>Non è necessario creare un interfaccia virtuale (alias) per ogni IP del gruppo.
+</p>
+<p>E' importante che ogni router conosca ogni gruppo e diffonda questo via BGP (o simile) ai vicini.
+</p>
+<h3><span class="mw-headline" id="Trucchi">Trucchi</span></h3>
+<p>Per favorire alcune porte potreste mettere queste regole in cima alla catena di FORWARD
+</p>
+<pre>iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p icmp -o eth0 -j ACCEPT
+iptables -A FORWARD -p tcp -m multiport --dports 80,443,110,53 -j ACCEPT  # FAST FAST FAST 
+iptables -A FORWARD -p udp  --dport 53 -j ACCEPT
+</pre>
+<p>Che voglio dire:
+</p>
+<ul>
+<li>I pacchetti passano la regola 1 se fanno parte di una connessione già aperta.</li>
+<li>I pacchetti passano la regola 2 se fanno parte del protocollo icmp (PING o similari)</li>
+<li>I pacchetti passano la regola 3 se il loro protocollo è http, mail o simile</li>
+<li>e le richieste al DNS attraverseranno 3 o 4 regolo prima di pasare</li>
+</ul>
+<p>I virus potrebbero infastidire al nostra macchina.. quindi...
+</p>
+<pre> #VIRUS
+iptables -A FORWARD -p tcp --dport 135:139 -j DROP
+iptables -A FORWARD -p tcp --dport 445 -j DROP
+iptables -A FORWARD -p udp --dport 135:139 -j DROP
+iptables -A FORWARD -p udp --dport 445 -j DROP
+</pre>
+<h2><span class="mw-headline" id="Aumentare_le_performance">Aumentare le performance</span></h2>
+<p>Siamo arrivate alla parte importate di questo howto.
+</p>
+<p>Abbiamo dimenticato qualcosa durante la nostra corsa
+</p>
+<ol>
+<li>Abbiamo dimenticato che vi è solo un NICs con potenzialmente più di 8000 indirizzi Mac. La memoria della scheda di rete non è adatta per questo!!!</li>
+<li>Per default iptable non è in grado di gestire tutte queste richieste contemporaneamente !!!!!</li>
+</ol>
+<p>Quindi... 
+</p>
+<p>Per il primo problema...
+La soluzione è questa.. <b>aumentare la soglia di memoria per i vicini.</b>
+Date questo comando e leggete:
+</p>
+<pre># cat /proc/sys/net/ipv4/neigh/default/gc_thresh1 
+128
+# cat /proc/sys/net/ipv4/neigh/default/gc_thresh2 
+512
+# cat /proc/sys/net/ipv4/neigh/default/gc_thresh3 
+1024
+</pre>
+<p>Dopo di che mettete queste righe nel vostro /etc/sysctrl.conf
+</p>
+<pre>net.ipv4.neigh.default.gc_thresh1 = 512
+net.ipv4.neigh.default.gc_thresh2 = 1024
+net.ipv4.neigh.default.gc_thresh3 = 2048
+</pre>
+<p>e date <i>sysctl -p</i> per portarle al doppio!!! (non serve riavviare) con questi non si dovrebbero avere errori!!!!
+</p>
+<p>La prossima parte richiede una comprensione su buckets e conntracks e hashsize (il modo in cui iptable gestisce le connessione nat).
+Esiste un buon documento su questo <a rel="nofollow" class="external text" href="http://www.wallfire.org/misc/netfilter_conntrack_perf.txt">qui</a> (in Inglese). L'autore consiglia di leggerlo!!!!
+Qualcosa è cambiato da quanto IPtables è conosciuto come Netfilter.
+</p>
+<p>In breve!!!
+Mettete questo nella sezione MODULES:
+</p>
+<pre>MODULES=(8021q 'nf_conntrack hashsize=1048576' nf_conntrack_ftp 
+                               ...e gli altri nf_stuff .......)
+</pre>
+<p>L'ultima è solo per evitare alcuni problemi che abbiamo con con le connessioni ftp.
+</p>
+<p>'<b>nf_conntrack hashsize=1048576'</b> aumenta il numero dell' hashsize (aumenta la memoria dedicata al NAT) (è necessario riavviare o <b>ricaricare il modulo</b> :-) controllate con  <i>dmesg | grep conntrack</i>)
+</p>
+<p>Poi mettiamo qualcosa di simile nel file <i>/etc/sysctl.d/99-sysctl.conf</i>
+</p>
+<pre>...
+net.netfilter.nf_conntrack_max = 1048576
+...
+</pre>
+<p>E diamo il comando
+</p>
+<pre># sysctl --system
+</pre>
+<p>Nel nostro caso i numeri sono gli stessi, ciò vuol dire che ho 1 connessione per bucket!!!!
+</p>
+<p>Nel nostro caso abbiamo circa 600.000 connessioni simultanee in 2 schede da 1 Giga, potrete verificare ciò con il comando
+</p>
+<pre># cat /proc/sys/net/netfilter/nf_conntrack_count
+</pre>
+<p>E mettete questo in un demone snmpd per avere un grafico.
+</p>
+<p>Un esempio <a rel="nofollow" class="external text" href="http://carlost.890m.com/conntrack.png">qui</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-02]</sup>.
+</p>
+<h2><span class="mw-headline" id="Iproute2">Iproute2</span></h2>
+<p>Abbiamo 3 grandi accessi ad Internet!!! Questo perchè abbiamo a che fare con 3 gruppi di IP di classe C. Quindi abbiamo 3 traffici in entrata da gestire, ma solo uno in uscita!!! Il nostro gateway di default.
+</p>
+<p>Per prima cosa dobbiamo mettere delle nuove tabelle nel file <i>/etc/iproute2/rt_tables</i>
+</p>
+<pre># echo 200 PRO_1 &gt;&gt; /etc/iproute2/rt_tables
+# echo 205 PRO_2 &gt;&gt; /etc/iproute2/rt_tables
+# echo 210 PRO_3 &gt;&gt; /etc/iproute2/rt_tables
+</pre>
+<p>Possono essere più o meno a seconda del traffico.
+</p>
+<p>Secondo.. dobbiamo dare un gateway di default per queste tabelle.
+</p>
+<pre># ip route add default via 200.aaa.bbb.2 table PRO_1
+# ip route add default via 200.aaa.bbb.3 table PRO_2
+# ip route add default via 200.aaa.bbb.4 table PRO_3
+</pre>
+<p>E' raccomandato ma non necessario mettere una interfaccia di rete per ogni tabella. Se non inserite le prossime righe, non avrete risposta ai ping nella rete locale. 
+</p>
+<pre># ip route add 192.168.0.0/21 via 192.168.0.1 table PRO_1
+# ip route add 192.168.8.0/21 via 192.168.8.1 table PRO_1
+# ip route add 192.168.15.0/21 via 192.168.15.1 table PRO_1
+.....
+lo stesso per PRO_2, e per PRO_3
+</pre>
+<p>L'ultima cosa da fare è dare un ordine ai pacchetti
+</p>
+<pre># ip rule add from 192.168.0.0/21 table PRO_1
+....
+....
+</pre>
+<p>Potreste utilizzare PRO_X e persino con mask e submask.
+Per esempio vogliamo dare solo una classe C all'uscita con PRO_3
+</p>
+<pre># ip rule add from 192.168.1.0/24 table PRO_3
+</pre>
+<p>Da mettere prima di &lt;NET&gt;/21
+</p>
+<p>PROVIAMO IL TUTTO
+</p>
+<p>prendete un PC Windows in una delle reti private e fate un traceroute verso qualcuno!!
+</p>
+<p>Prima potreste andare su qualche sito tipo www.whatismyip.com e vedere il vostro ip attuale, rifarlo dopo un po e vedere che l'ip è cambiato ETC...
+</p>
+<h1><span class="mw-headline" id="Conclusioni">Conclusioni</span></h1>
+<p>Ora lo scrittore della guida sta usando un PC con 2G di ram, Intel Pentium 4 2.8GHz Dual e 2 NICs 1Gb (una integrata e una PCI-E), l'utilizzo della CPU non va oltre picchi all'80%...
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../it/Category:Networking.html" title="Category:Networking (Italiano)">Networking (Italiano)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=High_Performance_Firewall_(Italiano)&amp;oldid=628644">https://wiki.archlinux.org/index.php?title=High_Performance_Firewall_(Italiano)&amp;oldid=628644</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 August 2020, at 07:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

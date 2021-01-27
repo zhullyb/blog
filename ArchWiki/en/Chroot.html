@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>chroot - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Chroot rootpage-Chroot skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">chroot</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/PRoot.html" title="PRoot">PRoot</a></li>
+<li><a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a></li>
+<li><a href="../en/Systemd-nspawn.html" title="Systemd-nspawn">systemd-nspawn</a></li>
+</ul>
+</div>
+<p>A <a href="https://en.wikipedia.org/wiki/Chroot" class="extiw" title="wikipedia:Chroot">chroot</a> is an operation that changes the apparent root directory for the current running process and their children. A program that is run in such a modified environment cannot access files and commands outside that environmental directory tree.  This modified environment is called a <i>chroot jail</i>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Reasoning"><span class="tocnumber">1</span> <span class="toctext">Reasoning</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Requirements"><span class="tocnumber">2</span> <span class="toctext">Requirements</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Usage"><span class="tocnumber">3</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#Using_arch-chroot"><span class="tocnumber">3.1</span> <span class="toctext">Using arch-chroot</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Enter_a_chroot"><span class="tocnumber">3.1.1</span> <span class="toctext">Enter a chroot</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Run_a_single_command_and_exit"><span class="tocnumber">3.1.2</span> <span class="toctext">Run a single command and exit</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#Using_chroot"><span class="tocnumber">3.2</span> <span class="toctext">Using chroot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Run_graphical_applications_from_chroot"><span class="tocnumber">4</span> <span class="toctext">Run graphical applications from chroot</span></a></li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Without_root_privileges"><span class="tocnumber">5</span> <span class="toctext">Without root privileges</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#PRoot"><span class="tocnumber">5.1</span> <span class="toctext">PRoot</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Fakechroot"><span class="tocnumber">5.2</span> <span class="toctext">Fakechroot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Reasoning">Reasoning</span></h2>
+<p>Changing root is commonly done for performing system maintenance on systems where booting and/or logging in is no longer possible. Common examples are:
+</p>
+<ul>
+<li>Reinstalling the <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Bootloader">bootloader</a>.</li>
+<li>Rebuilding the <a href="../en/Mkinitcpio.html" title="Mkinitcpio">initramfs image</a>.</li>
+<li>Upgrading or <a href="../en/Downgrading_packages.html" title="Downgrading packages">downgrading packages</a>.</li>
+<li>Resetting a <a href="../en/Reset_lost_root_password.html" class="mw-redirect" title="Password recovery">forgotten password</a>.</li>
+<li>Building packages in a clean chroot, see <a href="../DeveloperWiki:Building_in_a_clean_chroot.html" title="DeveloperWiki:Building in a clean chroot">DeveloperWiki:Building in a clean chroot</a>.</li>
+</ul>
+<p>See also <a href="https://en.wikipedia.org/wiki/Chroot#Limitations" class="extiw" title="wikipedia:Chroot">Wikipedia:Chroot#Limitations</a>.
+</p>
+<h2><span class="mw-headline" id="Requirements">Requirements</span></h2>
+<ul>
+<li>Root privilege.</li>
+<li>Another Linux environment, e.g. a LiveCD or USB flash media, or from another existing Linux distribution.</li>
+<li>Matching architecture environments; i.e. the chroot from and chroot to.  The architecture of the current environment can be discovered with: <code>uname -m</code> (e.g. i686 or x86_64).</li>
+<li>Kernel modules loaded that are needed in the chroot environment.</li>
+<li>
+<a href="../en/Swap.html" title="Swap">Swap</a> enabled if needed: <pre># swapon /dev/sd<i>xY</i></pre>
+</li>
+<li>Internet connection established if needed.</li>
+</ul>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>Some <a href="../en/Systemd.html" title="Systemd">systemd</a> tools such as <i>hostnamectl</i>, <i>localectl</i> and <i>timedatectl</i> can not be used inside a chroot, as they require an active <a href="../en/D-Bus.html" class="mw-redirect" title="Dbus">dbus</a> connection. <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/798#issuecomment-126568596">[1]</a>
+</li>
+<li>The file system that will serve as the new root (<code>/</code>) of your chroot must be accessible (i.e., decrypted, mounted).</li>
+</ul>
+</div>
+<p>There are two main options for using chroot, described below.
+</p>
+<h3><span class="mw-headline" id="Using_arch-chroot">Using arch-chroot</span></h3>
+<p>The bash script <code>arch-chroot</code> is part of the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span> package.  Before it runs <code>/usr/bin/chroot</code>, the script mounts API filesystems like <code>/proc</code> and makes <code>/etc/resolv.conf</code> available from the chroot.
+</p>
+<h4><span class="mw-headline" id="Enter_a_chroot">Enter a chroot</span></h4>
+<p>Run arch-chroot with the new root directory as first argument:
+</p>
+<pre># arch-chroot <i>/location/of/new/root</i>
+</pre>
+<p>For example, in the <a href="../en/Installation_guide.html" title="Installation guide">installation guide</a> this directory would be <code>/mnt</code>:
+</p>
+<pre># arch-chroot /mnt
+</pre>
+<p>To exit the chroot simply use:
+</p>
+<pre># exit
+</pre>
+<h4><span class="mw-headline" id="Run_a_single_command_and_exit">Run a single command and exit</span></h4>
+<p>To run a command from the chroot, and exit again append the command to the end of the line:
+</p>
+<pre># arch-chroot <i>/location/of/new/root</i> <i>mycommand</i>
+</pre>
+<p>For example, to run <code>mkinitcpio -p linux</code> for a chroot located at <code>/mnt/arch</code> do:
+</p>
+<pre># arch-chroot /mnt/arch mkinitcpio -p linux
+</pre>
+<h3><span class="mw-headline" id="Using_chroot">Using chroot</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> When using <code>--rbind</code>, some subdirectories of <code>dev/</code> and <code>sys/</code> will not be unmountable. Attempting to unmount with <code>umount -l</code> in this situation will break your session, requiring a reboot. If possible, use <code>-o bind</code> instead.</div>
+<p>In the following example <code><i>/location/of/new/root</i></code> is the directory where the new root resides.
+</p>
+<p>First, mount the temporary API filesystems:
+</p>
+<pre># cd <i>/location/of/new/root</i>
+# mount -t proc /proc proc/
+# mount -t sysfs /sys sys/
+# mount --rbind /dev dev/
+</pre>
+<p>And optionally:
+</p>
+<pre># mount --rbind /run run/
+</pre>
+<p>If you are running a UEFI system you will also need access to EFI variables. Otherwise, when installing GRUB you will receive a message similar to: <code>UEFI variables not supported on this machine</code>:
+</p>
+<pre># mount --rbind /sys/firmware/efi/efivars sys/firmware/efi/efivars/
+</pre>
+<p>Next, in order to use an internet connection in the chroot environment copy over the DNS details:
+</p>
+<pre># cp /etc/resolv.conf etc/resolv.conf
+</pre>
+<p>Finally, to change root into <code><i>/location/of/new/root</i></code> using a bash shell:
+</p>
+<pre># chroot <i>/location/of/new/root</i> /bin/bash
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you see the error:
+<ul>
+<li>
+<code>chroot: cannot run command '/usr/bin/bash': Exec format error</code>, it is likely that the architectures of the host environment and chroot environment do not match.</li>
+<li>
+<code>chroot: '/usr/bin/bash': permission denied</code>, remount with the execute permission: <code>mount -o remount,exec <i>/location/of/new/root</i></code>.
+<ul><li>if checking this didn't help, then <a rel="nofollow" class="external text" href="https://www.tldp.org/LDP/LG/issue52/okopnik.html">make sure</a> the base components of the new enviroment are intact (if it's an Arch root try <code>paccheck --root=<i>/location/of/new/root</i> --files --file-properties --md5sum glibc filesystem</code>, from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pacutils">pacutils</a></span>)</li></ul>
+</li>
+</ul>
+</div>
+<p>After chrooting it may be necessary to load the local bash configuration:
+</p>
+<pre># source /etc/profile
+# source ~/.bashrc
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Optionally, create a unique prompt to be able to differentiate your chroot environment:
+<pre># export PS1="(chroot) $PS1"</pre>
+</div>
+<p>When finished with the chroot, you can exit it via:
+</p>
+<pre># exit
+</pre>
+<p>Then unmount the temporary file systems:
+</p>
+<pre># cd /
+# umount --recursive <i>/location/of/new/root</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If there is an error mentioning something like: <code>umount: /path: device is busy</code> this usually means that either: a program (even a shell) was left running in the chroot or that a sub-mount still exists.  Quit the program and use <code>findmnt -R <i>/location/of/new/root</i></code> to find and then <code>umount</code> sub-mounts. It may be tricky to <code>umount</code> some things and one can hopefully have <code>umount --force</code> work, as a last resort use <code>umount --lazy</code> which just releases them. In either case to be safe, <code>reboot</code> as soon as possible if these are unresolved to avoid possible future conflicts.</div>
+<h2><span class="mw-headline" id="Run_graphical_applications_from_chroot">Run graphical applications from chroot</span></h2>
+<p>If you have an <a href="../en/Xorg.html" class="mw-redirect" title="X server">X server</a> running on your system, you can start graphical applications from the chroot environment.
+</p>
+<p>To allow the chroot environment to connect to an X server, open a virtual terminal inside the X server (i.e. inside the desktop of the user that is currently logged in), then run the <a href="../en/Xhost.html" title="Xhost">xhost</a> command, which gives permission to anyone to connect to the user's X server (see also <a href="../en/Xhost.html" title="Xhost">Xhost</a>):
+</p>
+<pre>$ xhost +local:
+</pre>
+<p>Then, to direct the applications to the X server from chroot, set the DISPLAY environment variable inside the chroot to match the DISPLAY variable of the user that owns the X server. So for example, run:
+</p>
+<pre>$ echo $DISPLAY
+</pre>
+<p>as the user that owns the X server to see the value of DISPLAY. If the value is ":0" (for example), then in the chroot environment run:
+</p>
+<pre># export DISPLAY=:0
+</pre>
+<h2><span class="mw-headline" id="Without_root_privileges">Without root privileges</span></h2>
+<p>Chroot requires root privileges, which may not be desirable or possible for the user to obtain in certain situations. There are, however, various ways to simulate chroot-like behavior using alternative implementations.
+</p>
+<h3><span class="mw-headline" id="PRoot">PRoot</span></h3>
+<p><a href="../en/PRoot.html" title="PRoot">PRoot</a> may be used to change the apparent root directory and use <code>mount --bind</code> without root privileges. This is useful for confining applications to a single directory or running programs built for a different CPU architecture, but it has limitations due to the fact that all files are owned by the user on the host system. PRoot provides a <code>--root-id</code> argument that can be used as a workaround for some of these limitations in a similar (albeit more limited) manner to <i>fakeroot</i>.
+</p>
+<h3><span class="mw-headline" id="Fakechroot">Fakechroot</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fakechroot">fakechroot</a></span> is a library shim which intercepts the chroot call and fakes the results. It can be used in conjunction with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fakeroot">fakeroot</a></span> to simulate a chroot as a regular user. 
+</p>
+<pre># fakechroot fakeroot chroot ~/my-chroot bash
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://help.ubuntu.com/community/BasicChroot">Basic Chroot</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:System_recovery.html" title="Category:System recovery">System recovery</a></li>
+<li><a href="../en/Category:Sandboxing.html" title="Category:Sandboxing">Sandboxing</a></li>
+<li><a href="../en/Category:Commands.html" title="Category:Commands">Commands</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Chroot&amp;oldid=648866">https://wiki.archlinux.org/index.php?title=Chroot&amp;oldid=648866</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 January 2021, at 16:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

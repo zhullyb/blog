@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>APC UPS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-APC_UPS rootpage-APC_UPS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">APC UPS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This document describes how to install the APC UPS daemon. The APC UPS can communicate with the Linux system through either a RS-232 or USB serial connection. In the event of a prolonged power outage, should the APC UPS lose most of its battery capacity, it can tell the Linux box to perform a safe shutdown.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Install_the_package"><span class="tocnumber">1</span> <span class="toctext">Install the package</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Configure_APC_UPS"><span class="tocnumber">2</span> <span class="toctext">Configure APC UPS</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Test"><span class="tocnumber">3</span> <span class="toctext">Test</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Hibernating_instead_of_shutting_down"><span class="tocnumber">4</span> <span class="toctext">Hibernating instead of shutting down</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Create_the_hibernate_script"><span class="tocnumber">4.1</span> <span class="toctext">Create the hibernate script</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Link_the_hibernate_script_for_apcupsd_to_use_it"><span class="tocnumber">4.2</span> <span class="toctext">Link the hibernate script for apcupsd to use it</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Make_apcupsd_kill_UPS_power_once_the_hibernate_is_done"><span class="tocnumber">4.3</span> <span class="toctext">Make apcupsd kill UPS power once the hibernate is done</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#The_desktop_environment_will_also_sense_the_UPS_if_connected_by_USB_cable"><span class="tocnumber">5.1</span> <span class="toctext">The desktop environment will also sense the UPS if connected by USB cable</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#hid-generic_:_control_queue_full"><span class="tocnumber">5.2</span> <span class="toctext">hid-generic : control queue full</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Install_the_package">Install the package</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=apcupsd">apcupsd</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Configure_APC_UPS">Configure APC UPS</span></h2>
+<p>The main configuration file for the APC UPS daemon can be found in <code>/etc/apcupsd/apcupsd.conf</code>.
+</p>
+<p>In the following example, the lines of text are changed to support a USB style cable:
+</p>
+<p>Before:
+</p>
+<pre>UPSCABLE smart
+
+UPSTYPE smartups
+
+DEVICE /dev/ttyS0
+</pre>
+<p>After:
+</p>
+<pre>UPSCABLE usb
+
+UPSTYPE usb
+# For USB UPSes, leave the DEVICE directive blank.
+DEVICE
+</pre>
+<h2><span class="mw-headline" id="Test">Test</span></h2>
+<p>First, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and start <code>apcupsd.service</code>.
+</p>
+<p>Next, wait about a minute and confirm the daemon is running and properly monitoring the battery:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># apcaccess status</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">APC      : 001,033,0819
+DATE     : Sat Mar 05 SOMETIME 2005
+HOSTNAME : somehostname
+RELEASE  : 3.10.16
+VERSION  : 3.10.16 (04 November 2004) unknown
+UPSNAME  : somehostname
+CABLE    : USB Cable
+MODEL    : Back-UPS ES 725
+UPSMODE  : Stand Alone
+STARTTIME: Sat Mar SOMETIME 2005
+STATUS   : ONLINE
+LINEV    : 119.0 Volts
+LOADPCT  :  23.0 Percent Load Capacity
+BCHARGE  : 100.0 Percent
+TIMELEFT :  30.5 Minutes
+MBATTCHG : 5 Percent
+MINTIMEL : 3 Minutes
+MAXTIME  : 0 Seconds
+LOTRANS  : 088.0 Volts
+HITRANS  : 138.0 Volts
+ALARMDEL : Always
+BATTV    : 13.5 Volts
+NUMXFERS : 0
+TONBATT  : 0 seconds
+CUMONBATT: 0 seconds
+XOFFBATT : N/A
+STATFLAG : 0x02000008 Status Flag
+MANDATE  : 2002-12-02
+SERIALNO : QB0249360043
+BATTDATE : 2000-00-00
+NOMBATTV :  12.0
+FIRMWARE : 02.n2.D USB FW:n2
+APCMODEL : Back-UPS ES 725
+END APC  : Sat SOMETIME 2005
+</pre>
+<p>To fully test your setup:
+</p>
+<ol>
+<li>Change <code>TIMEOUT</code> from <code>0</code> to <code>1</code> in the <code>/etc/apcupsd/apcupsd.conf</code> file.</li>
+<li>Remove wall power from the UPS.</li>
+<li>Observe that your Linux box powers down, in short order.</li>
+<li>Plug the UPS back into the wall.</li>
+<li>Power on your Linux box.</li>
+<li>Change <code>TIMEOUT</code> from <code>1</code> back to <code>0</code> in the <code>/etc/apcupsd/apcupsd.conf</code> file.</li>
+</ol>
+<p>When everything is ok, all that is left to do is enable the <code>apcupsd</code> service.
+</p>
+<h2><span class="mw-headline" id="Hibernating_instead_of_shutting_down">Hibernating instead of shutting down</span></h2>
+<p>You can make your system hibernate instead of shutting down. First, make sure the system hibernates cleanly. To set up hibernation, see <a href="../en/Power_management/Suspend_and_hibernate.html" title="Power management/Suspend and hibernate">Power management/Suspend and hibernate</a>.
+</p>
+<h3><span class="mw-headline" id="Create_the_hibernate_script">Create the hibernate script</span></h3>
+<p>Create this in <code>/usr/local/bin/hibernate</code> as root:
+</p>
+<pre>#!/bin/bash
+# Hibernate the system - designed to be called via symlink from /etc/apcupsd
+# directory in case of apcupsd initiating a shutdown/reboot.  Can also be used
+# interactively or from any script to cause a hibernate.
+
+# Do the hibernate
+/usr/bin/systemctl hibernate
+
+# At this point system should be hibernated - when it comes back, we resume this script here
+
+# On resume, tell controlling script (/etc/apcupsd/apccontrol) NOT to continue with default action (i.e. shutdown).
+exit 99
+</pre>
+<p>Make it executable by running:
+</p>
+<pre># chmod +x /usr/local/bin/hibernate
+</pre>
+<h3><span class="mw-headline" id="Link_the_hibernate_script_for_apcupsd_to_use_it">Link the hibernate script for apcupsd to use it</span></h3>
+<p>Create a symbolic link from the <code>/etc/apcupsd</code> directory to the script. The result is the apcupd's apccontrol script, in this directory, will call the hibernate script instead of doing the default shutdown action for these operations.
+</p>
+<pre># ln -s /usr/local/bin/hibernate /etc/apcupsd/doshutdown
+</pre>
+<p>If you are running apcupsd as a client to another machine running apcupsd as a server and want your machine to hibernate if the sever is shutdown or if communication to the server is lost then you may also wish to add:
+</p>
+<pre># ln -s /usr/local/bin/hibernate /etc/apcupsd/remotedown
+</pre>
+<h3><span class="mw-headline" id="Make_apcupsd_kill_UPS_power_once_the_hibernate_is_done">Make apcupsd kill UPS power once the hibernate is done</span></h3>
+<p>Once the PC has hibernated successfully, it is common practice to switch off the UPS in order to conserve battery charge and prevent full battery drain. This can be achieved through a power suspend event in systemd.
+</p>
+<p>Create <code>/usr/lib/systemd/system-sleep/ups-kill</code> and put the following contents in it:
+</p>
+<pre>#!/bin/bash
+
+case $2 in
+
+  # In the event the computer is hibernating.
+  hibernate)
+    case $1 in
+
+       # Going into a hibernate state.
+       pre)
+
+         # See if this is a powerfail situation.
+         if [ -f /etc/apcupsd/powerfail ]; then
+           echo
+           echo "ACPUPSD will now power off the UPS"
+           echo
+           /etc/apcupsd/apccontrol killpower
+           echo
+           echo "Please ensure that the UPS has powered off before rebooting"
+           echo "Otherwise, the UPS may cut the power during the reboot!!!"
+           echo
+         fi
+       ;;
+
+       # Coming out of a hibernate state.
+       post)
+
+         # If there are remnants from a powerfail situation, remove them.
+         if [ -f /etc/apcupsd/powerfail ]; then
+           rm /etc/apcupsd/powerfail
+         fi
+
+         # This may also exist, need to remove it.
+         if [ -f /etc/nologin ]; then
+           rm /etc/nologin
+         fi
+
+	 # Restart the daemon; otherwise it may be unresponsive in a
+         # second powerfailure situation.
+	 systemctl restart apcupsd
+       ;;
+    esac
+  ;;
+esac
+</pre>
+<p>Make the script executable by doing:
+</p>
+<pre># chmod +x /usr/lib/systemd/system-sleep/ups-kill
+</pre>
+<p>Now you can <a href="#Test">test your setup</a>.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="The_desktop_environment_will_also_sense_the_UPS_if_connected_by_USB_cable">The desktop environment will also sense the UPS if connected by USB cable</span></h3>
+<p>For example, the default KDE setting is to put the computer in sleep if it has been on UPS battery for more than 10 minutes and the mouse has not moved. On many computers this causes a crash. This can be changed from <i>KDE System Settings &gt; Power Management &gt; On battery</i>.
+</p>
+<h3><span class="mw-headline" id="hid-generic_:_control_queue_full">hid-generic : control queue full</span></h3>
+<p>If you are using a <a href="../en/Mkinitcpio.html#Common_hooks" title="Mkinitcpio">systemd-based initramfs</a> you might run into the "control queue full" log message happening many times every second. You will want to add <code>hid-generic</code> to you <code>modules</code> and regenerate your initramfs.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.apcupsd.org/">Apcupsd home page</a></li>
+<li><a rel="nofollow" class="external text" href="https://ubuntuforums.org/showthread.php?p=4302102">Forcing hibernate</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.apcupsd.com/manual/manual.html">apcupsd manual</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Power_management.html" title="Category:Power management">Power management</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=APC_UPS&amp;oldid=565210">https://wiki.archlinux.org/index.php?title=APC_UPS&amp;oldid=565210</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 29 January 2019, at 09:22.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

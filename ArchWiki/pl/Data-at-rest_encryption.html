@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Data-at-rest encryption (Polski) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Data-at-rest_encryption_Polski rootpage-Data-at-rest_encryption_Polski skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Data-at-rest encryption (Polski)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../pl/Dm-crypt.html" title="Dm-crypt (Polski)">dm-crypt (Polski)</a></li>
+<li><a href="../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a></li>
+<li><a href="../en/ECryptfs.html" title="ECryptfs">eCryptfs</a></li>
+<li><a href="../en/EncFS.html" title="EncFS">EncFS</a></li>
+<li><a href="../en/Tomb.html" title="Tomb">Tomb</a></li>
+<li><a href="../en/Tcplay.html" title="Tcplay">tcplay</a></li>
+<li><a href="../en/GnuPG.html" title="GnuPG">GnuPG</a></li>
+<li><a href="../en/Self-encrypting_drives.html" class="mw-redirect" title="Self-Encrypting Drives">Self-Encrypting Drives</a></li>
+</ul>
+</div>
+<p>W tym artykule omówiono wspólne techniki szyfowania dostępne w Arch Linux do kryptograficznej ochrony logicznej części dysku twardego (folder, partycja, cały dysk, ...), dzięki czemu wszystkie zapisane w nim dane są automatycznie szyfrowane i odszyfrowywane w locie po ponownym odczytaniu.
+</p>
+<p>Dyski do przechowywania "w tym kontekście mogą być dyskami twardymi komputera, urządzeniami zewnętrznymi, takimi jak dyski flash USB lub dyski DVD, a także dyskami wirtualnymi, takimi jak urządzenia loop-back devices lub Chmura publiczna. (o ile Arch Linux może go adresować jako urządzenie blokowe lub system plików).
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Po_co_u%C5%BCywa%C4%87_szyfrowania?"><span class="tocnumber">1</span> <span class="toctext">Po co używać szyfrowania?</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Szyfrowanie_danych_vs_szyfrowanie_systemu"><span class="tocnumber">2</span> <span class="toctext">Szyfrowanie danych vs szyfrowanie systemu</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Dost%C4%99pne_metody"><span class="tocnumber">3</span> <span class="toctext">Dostępne metody</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#U%C5%82o%C5%BCone_szyfrowania_systemu_plik%C3%B3w"><span class="tocnumber">3.1</span> <span class="toctext">Ułożone szyfrowania systemu plików</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#blokowe_szyfrowanie_dysk%C3%B3w"><span class="tocnumber">3.2</span> <span class="toctext">blokowe szyfrowanie dysków</span></a></li>
+<li class="toclevel-2 tocsection-6">
+<a href="#Tabela_por%C3%B3wnawcza"><span class="tocnumber">3.3</span> <span class="toctext">Tabela porównawcza</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7"><a href="#Podsumowanie"><span class="tocnumber">3.3.1</span> <span class="toctext">Podsumowanie</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Podstawowa_klasyfikacja"><span class="tocnumber">3.3.2</span> <span class="toctext">Podstawowa klasyfikacja</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#praktyczne_implikacje"><span class="tocnumber">3.3.3</span> <span class="toctext">praktyczne implikacje</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Usability_features"><span class="tocnumber">3.3.4</span> <span class="toctext">Usability features</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#Funkcje_zabezpiecze%C5%84"><span class="tocnumber">3.3.5</span> <span class="toctext">Funkcje zabezpieczeń</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#Funkcje_wydajno%C5%9Bci"><span class="tocnumber">3.3.6</span> <span class="toctext">Funkcje wydajności</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Block_device_encryption_specific"><span class="tocnumber">3.3.7</span> <span class="toctext">Block device encryption specific</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Skumulowane_szyfrowanie_systemu_plik%C3%B3w"><span class="tocnumber">3.3.8</span> <span class="toctext">Skumulowane szyfrowanie systemu plików</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Zgodno%C5%9B%C4%87_i_rozpowszechnienie"><span class="tocnumber">3.3.9</span> <span class="toctext">Zgodność i rozpowszechnienie</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Przygotowanie"><span class="tocnumber">4</span> <span class="toctext">Przygotowanie</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#Wyb%C3%B3r_konfiguracji"><span class="tocnumber">4.1</span> <span class="toctext">Wybór konfiguracji</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Przyk%C5%82ady"><span class="tocnumber">4.2</span> <span class="toctext">Przykłady</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Wybieranie_silnego_has%C5%82a"><span class="tocnumber">4.3</span> <span class="toctext">Wybieranie silnego hasła</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#Przygotowanie_dysku"><span class="tocnumber">4.4</span> <span class="toctext">Przygotowanie dysku</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Jak_dzia%C5%82a_szyfrowanie"><span class="tocnumber">5</span> <span class="toctext">Jak działa szyfrowanie</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#Podstawowa_zasada"><span class="tocnumber">5.1</span> <span class="toctext">Podstawowa zasada</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#Klucze,_pliki_kluczy_i_has%C5%82a"><span class="tocnumber">5.2</span> <span class="toctext">Klucze, pliki kluczy i hasła</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Kryptograficzne_metadane"><span class="tocnumber">5.3</span> <span class="toctext">Kryptograficzne metadane</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#Szyfry_i_tryby_dzia%C5%82ania"><span class="tocnumber">5.4</span> <span class="toctext">Szyfry i tryby działania</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id="Po_co_u.C5.BCywa.C4.87_szyfrowania.3F"></span><span class="mw-headline" id="Po_co_używać_szyfrowania?">Po co używać szyfrowania?</span>
+</h2>
+<p>Szyfrowanie dysku zapewnia, że pliki są zawsze przechowywane na dysku w postaci zaszyfrowanej. Pliki będą dostępne tylko dla systemu operacyjnego i aplikacji w czytelnej formie, podczas gdy system jest uruchomiony i odblokowane przez zaufanego użytkownika. Nieautoryzowana osoba, patrząc bezpośrednio na zawartość dysku, znajdzie tylko losowo wyglądające dane zamiast rzeczywistych plików.
+</p>
+<p>Na przykład może to zapobiec nieautoryzowanemu przeglądaniu danych, gdy komputer lub dysk twardy jest:
+</p>
+<ul>
+<li>znajduje się w miejscu, do którego niezaufani ludzie mogą uzyskać dostęp, gdy jesteś nieobecny</li>
+<li>zgubione lub skradzione, tak jak w przypadku laptopów, netbooków lub zewnętrznych urządzeń pamięci masowej</li>
+<li>w warsztacie naprawczym</li>
+<li>wyrzucony po zakończeniu eksploatacji</li>
+</ul>
+<p>Ponadto szyfrowanie dysku może również służyć do zabezpieczenia przed nieautoryzowanymi próbami manipulowania systemem operacyjnym - na przykład instalowaniem keyloggerów lub koni trojańskich przez atakujących, którzy mogą uzyskać fizyczny dostęp do systemu, gdy jesteś nieobecny.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Szyfrowanie dysku nie chroni danych przed wszystkimi zagrożeniami.</div>
+<p>Nadal będziesz narażony na:
+</p>
+<ul>
+<li>Atakujący, którzy mogą włamać się do twojego systemu (np. Przez Internet) podczas jego działania i po odblokowaniu i zamontowaniu zaszyfrowanych części dysku.</li>
+<li>Atakujący, którzy mogą uzyskać fizyczny dostęp do komputera podczas jego pracy (nawet jeśli używasz screenlockera) lub bardzo krótko po jego uruchomieniu, jeśli mają zasoby do wykonania</li>
+<li>Podmiot rządowy, który ma nie tylko zasoby do łatwego zlikwidowania powyższych ataków, ale może również po prostu zmusić cię do oddania kluczy / haseł przy użyciu różnych technik przymusu. W większości krajów nie-demokratycznych na świecie, a także w Stanach Zjednoczonych i Wielkiej Brytanii, organy odpowiedzialne za egzekwowanie prawa mogą być zgodne z prawem, jeśli mają podejrzenia, że możesz ukrywać coś interesującego.</li>
+</ul>
+<p>Bardzo silna konfiguracja szyfrowania dysku (np. Pełne szyfrowanie systemu z weryfikacją autentyczności i brak partycji rozruchowej tekstowej) jest niezbędna, aby mieć szansę przed profesjonalnymi atakującymi, którzy mogą manipulować systemem przed jego użyciem. I nawet wtedy wątpliwe jest, czy naprawdę może zapobiec wszelkim manipulacjom (np. Keyloggerom sprzętowym).
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Szyfrowanie dysku również nie chroni przed uszkodzeniem dysku. Zalecane są regularne kopie zapasowe, aby zapewnić bezpieczeństwo danych.</div>
+<h2><span class="mw-headline" id="Szyfrowanie_danych_vs_szyfrowanie_systemu">Szyfrowanie danych vs szyfrowanie systemu</span></h2>
+<dl><dt>Szyfrowanie danych</dt></dl>
+<dl><dd>Zdefiniowane jako szyfrujące tylko same dane użytkownika (często znajdujące się w katalogu / home lub na nośnikach wymiennych, takich jak płyty DVD z danymi), szyfrowanie danych jest najprostszym i najmniej inwazyjnym zastosowaniem szyfrowania dysku, ale ma pewne znaczące wady.</dd></dl>
+<dl><dd>W nowoczesnych systemach komputerowych istnieje wiele procesów w tle, które mogą przechowywać informacje o danych użytkownika lub częściach danych w niezabezpieczonych obszarach dysku twardego, takie jak:</dd></dl>
+<dl><dd><ul><li>partycje wymiany
+<ul><li>(potencjalne środki zaradcze: wyłączyć wymianę lub skorzystać z szyfrowanej wymiany)</li></ul>
+</li></ul></dd></dl>
+<dl><dd><ul><li>
+<code>/tmp</code> (pliki tymczasowe utworzone przez aplikacje użytkowników)
+<ul><li>potencjalne środki zaradcze: unikaj takich wniosków; mount / tmp wewnątrz ramdyska</li></ul>
+</li></ul></dd></dl>
+<dl><dd><ul><li>
+<code>/var</code> (pliki dzienników i bazy danych i takie, na przykład mlocate przechowuje indeks wszystkich nazw plików w <code>/var/lib/mlocate/mlocate.db</code>)</li></ul></dd></dl>
+<dl><dd>Ponadto zwykłe szyfrowanie danych pozostawia zagrożenie atakom manipulacyjnym w systemie offline (np. Ktoś instalujący ukryty program, który rejestruje hasła używane do odblokowania zaszyfrowanych danych lub oczekuje na jego odblokowanie, a następnie potajemnie kopiuje / wysyła niektóre dane do miejsca, w którym osoba atakująca może ją pobrać).</dd></dl>
+<dl><dt>Szyfrowanie systemu</dt></dl>
+<dl><dd>Zdefiniowane jako szyfrowanie danych systemu operacyjnego i danych użytkownika, szyfrowanie systemu pomaga rozwiązać niektóre niedociągnięcia szyfrowania danych.</dd></dl>
+<dl><dd>Korzyści:</dd></dl>
+<dl><dd><ul>
+<li>zapobiega nieautoryzowanemu fizycznemu dostępowi do plików systemu operacyjnego (i manipulowaniu nimi) (ale patrz ostrzeżenie powyżej)</li>
+<li>zapobiega nieautoryzowanemu dostępowi fizycznemu do prywatnych danych, które mogą być przechowywane w pamięci podręcznej przez system</li>
+</ul></dd></dl>
+<dl><dd>Niedogodności:</dd></dl>
+<dl><dd><ul><li>odblokowanie zaszyfrowanych części dysku może się nie zdarzyć w trakcie logowania użytkownika lub po nim; to musi się teraz zdarzyć w czasie rozruchu</li></ul></dd></dl>
+<p>W praktyce nie zawsze jest jasna granica między szyfrowaniem danych a szyfrowaniem systemu, a wiele różnych kompromisów i dostosowanych ustawień są możliwe.
+</p>
+<p>W każdym razie szyfrowanie dysku powinno być postrzegane jedynie jako uzupełnienie istniejących mechanizmów bezpieczeństwa systemu operacyjnego - skoncentrowane na zabezpieczeniu fizycznego dostępu w trybie offline, przy jednoczesnym wykorzystaniu "innych" elementów systemu w celu zapewnienia bezpieczeństwa sieci i kontrolą dostępu użytkowników.
+</p>
+<p>Zobacz też <a href="https://en.wikipedia.org/wiki/Disk_encryption" class="extiw" title="wikipedia:Disk encryption">Wikipedia:Disk encryption</a>.
+</p>
+<h2>
+<span id="Dost.C4.99pne_metody"></span><span class="mw-headline" id="Dostępne_metody">Dostępne metody</span>
+</h2>
+<p>Wszystkie metody szyfrowania dysków działają w taki sposób, że nawet jeśli dysk ma rzeczywiście zaszyfrowane dane, system operacyjny i aplikacje "widzą" go jako odpowiednie, czytelne dane, o ile kontener kryptograficzny (tj. Logiczna część dysku, zaszyfrowane dane) został "odblokowany" i zamontowany.
+</p>
+<p>W tym celu należy podać "informacje tajne" (zwykle w postaci pliku z kluczami i / lub hasła), z którego można uzyskać klucz szyfrujący (i przechowywane w kluczu jądra na czas trwania sesji).
+</p>
+<p>Jeśli nie jesteś całkowicie obeznany z tego rodzaju operacją, przeczytaj również część #Jak działa sekcja szyfrowania poniżej.
+</p>
+<p>Dostępne metody szyfrowania dysków można rozdzielić na dwa typy:
+</p>
+<h3>
+<span id="U.C5.82o.C5.BCone_szyfrowania_systemu_plik.C3.B3w"></span><span class="mw-headline" id="Ułożone_szyfrowania_systemu_plików">Ułożone szyfrowania systemu plików</span>
+</h3>
+<p>Ujednolicone rozwiązania szyfrowania plików są implementowane jako warstwa, która układa się na wierzchu istniejącego systemu plików, powodując, że wszystkie pliki zapisane w folderze z włączoną szyfrowaniem mają być szyfrowane w locie przed podstawowym systemem plików zapisywanym na dysku i odszyfrowywane w każdym przypadku, gdy system plików odczytuje je z dysku. W ten sposób pliki są przechowywane w systemie plików hostów w zaszyfrowanej formie (co oznacza, że ich zawartość, a zwykle również ich nazwy plików / folderów, zastępuje się losowo wyglądającymi danymi o przybliżonej długości), ale inne niż to, które wciąż istnieją w tym systemie plików, bez szyfrowania, jako zwykłe pliki / symlink / hardlinks / etc.
+</p>
+<p>Sposób, w jaki jest zaimplementowany, polega na tym, że aby odblokować folder przechowujący surowe zaszyfrowane pliki w systemie plików hosta ("katalog dolny"), jest on montowany (za pomocą specjalnego stosowego pseudo-systemu plików) na sobie lub opcjonalnie w innej lokalizacji ("górny katalog"), gdzie te same pliki pojawiają się w czytelnej formie - dopóki nie zostanie odmontowany ponownie lub system zostanie wyłączony.
+</p>
+<p>Dostępne rozwiązania w tej kategorii to:
+</p>
+<h3>
+<span id="blokowe_szyfrowanie_dysk.C3.B3w"></span><span class="mw-headline" id="blokowe_szyfrowanie_dysków">blokowe szyfrowanie dysków</span>
+</h3>
+<p>Z drugiej strony, metody szyfrowania urządzeń blokowych działają pod warstwą systemu plików i zapewniają, że wszystko zapisane na określonym urządzeniu blokowym (np. Cały dysk, partycja lub plik działający jako urządzenie z pętlą zwrotną) jest zaszyfrowane . Oznacza to, że podczas gdy urządzenie blokowe jest w trybie offline, cała jego zawartość wygląda na dużą porcję danych losowych, bez możliwości określenia, jaki rodzaj systemu plików i danych zawiera. Uzyskanie dostępu do danych odbywa się ponownie poprzez zamontowanie zabezpieczonego kontenera (w tym przypadku urządzenia blokowego) w dowolnym miejscu w specjalny sposób.
+</p>
+<p>Następujące "szyfrowanie urządzeń blokowych" są dostępne w Arch Linux:
+</p>
+<dl>
+<dt>loop-AES</dt>
+<dd>jest potomkiem cryptoloop i jest bezpiecznym i szybkim rozwiązaniem do szyfrowania systemu. Jednak pętla AES jest uważana za mniej przyjazną dla użytkownika niż inne opcje, ponieważ wymaga niestandardowego wsparcia jądra.</dd>
+</dl>
+<p><br>
+</p>
+<dl>
+<dt>dm-crypt</dt>
+<dd>dm-crypt to standardowa funkcja szyfrowania urządzenia-odwzorowania dostarczana przez jądro Linux. Może być używany bezpośrednio przez tych, którzy lubią mieć pełną kontrolę nad wszystkimi aspektami partycjonowania i zarządzania kluczami. Zarządzanie dm-crypt odbywa się za pomocą narzędzia przestrzeni użytkownika cryptsetup. Może być używany do następujących typów szyfrowania urządzeń blokowych: LUKS (domyślnie), zwykły i ma ograniczone funkcje dla urządzeń loopAES i Truecrypt.</dd>
+</dl>
+<p>LUKS, used by default, is an additional convenience layer which stores all of the needed setup information for dm-crypt on the disk itself and abstracts partition and key management in an attempt to improve ease of use and cryptographic security. 
+</p>
+<dl><dd><ul><li>Dodatkowym udogodnieniem jest LUKS, używane domyślnie, która w celu zwiększenia łatwości obsługi i bezpieczeństwa kryptograficznego zapisuje wszystkie informacje potrzebne do konfiguracji dm-crypt na samej partycji dysku i zarządzania w celu poprawy łatwości obsługi i bezpieczeństwa kryptograficznego.</li></ul></dd></dl>
+<dl><dd><ul><li>zwykły tryb dm-crypt, będący oryginalną funkcjonalnością jądra, nie wykorzystuje warstwy wygody. Trudniej jest zastosować taką samą siłę kryptograficzną. W ten sposób powstają dłuższe klucze (hasła lub pliki kluczy). Ma jednak inne zalety, opisane w poniższej tabeli porównawczej.</li></ul></dd></dl>
+<dl><dt>TrueCrypt</dt></dl>
+<p>Należy zauważyć, że twórcy TrueCrypt zakończyła wsparcie dla niego w maju 2014 r.
+</p>
+<p>Dla praktycznych implikacji wybranej warstwy działania, patrz tabela porównania poniżej, a także ogólny zapis do eCryptfs. Zobacz Kategoria: Szyfrowanie w celu uzyskania dostępnej zawartości omawianych metod, a także innych narzędzi nieuwzględnionych w tabeli.
+</p>
+<h3>
+<span id="Tabela_por.C3.B3wnawcza"></span><span class="mw-headline" id="Tabela_porównawcza">Tabela porównawcza</span>
+</h3>
+<p>Kolumna "dm-crypt +/- LUKS" oznacza funkcje cryptu dm dla LUKS ("+") i zwykłych ("-") trybów szyfrowania. Jeśli określona funkcja wymaga użycia LUKS, oznacza to "(z LUKS)". Podobnie "(bez LUKS)" wskazuje, że użycie LUKS jest przeciwny do osiągnięcia tej funkcji i powinien używać trybu zwykłego.
+</p>
+<table class="wikitable" style="text-align:center; cell-padding:100px;">
+<tbody>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5><span class="mw-headline" id="Podsumowanie">Podsumowanie</span></h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Rodzaj
+</th>
+<td>block device encryption
+</td>
+<td>block device encryption
+</td>
+<td>block device encryption
+</td>
+<td>stacked filesystem encryption
+</td>
+<td>stacked filesystem encryption
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Główne zalety
+</th>
+<td>longest-existing one; possibly the fastest; works on legacy systems
+</td>
+<td>de-facto standard for block device encryption on Linux; very flexible
+</td>
+<td>very portable, well-polished, self-contained solution
+</td>
+<td>slightly faster than EncFS; individual encrypted files portable between systems
+</td>
+<td>easiest one to use; supports non-root administration
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Dostępność w Arch Linux
+</th>
+<td>musi ręcznie skompilować niestandardowe jądro
+</td>
+<td>
+<i>kernel modules:</i> already shipped with default kernel; <i>tools:</i> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=device-mapper">device-mapper</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cryptsetup">cryptsetup</a></span> [core]
+</td>
+<td>
+<a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages/commit/efe03070990f9e3554508bd982b1bd5a654aa095">truecrypt 7.1a-2</a> [extra] (read-only features in later versions)
+</td>
+<td>
+<i>kernel module:</i> already shipped with default kernel; <i>tools:</i> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ecryptfs-utils">ecryptfs-utils</a></span> [community]
+</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=encfs">encfs</a></span> [community]
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Licencja
+</th>
+<td>GPL
+</td>
+<td>GPL
+</td>
+<td>custom<br><a href="#See_also">[1</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+<td>GPL
+</td>
+<td>GPL
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5><span class="mw-headline" id="Podstawowa_klasyfikacja">Podstawowa klasyfikacja</span></h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Szyfruje
+</th>
+<td>całe urządzenia blokowe
+</td>
+<td>całe urządzenia blokowe
+</td>
+<td>całe urządzenia blokowe
+</td>
+<td>pliki
+</td>
+<td>pliki
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Pojemnik do szyfrowania danych może być ...
+</th>
+<td>partycja dysku lub dysk / plik działający jako partycja wirtualna
+</td>
+<td>partycja dysku lub dysk / plik działający jako partycja wirtualna
+</td>
+<td>partycja dysku lub dysk / plik działający jako partycja wirtualna
+</td>
+<td>katalog w istniejącym systemie plików
+</td>
+<td>katalog w istniejącym systemie plików
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Odniesienie do systemu plików
+</th>
+<td>działa pod warstwą systemu plików: nie obchodzi, czy zawartość zaszyfrowanego urządzenia blokowego to system plików, tabela partycji, konfiguracja LVM lub cokolwiek innego
+</td>
+<td>działa pod warstwą systemu plików: nie obchodzi, czy zawartość zaszyfrowanego urządzenia blokowego to system plików, tabela partycji, konfiguracja LVM lub cokolwiek innego
+</td>
+<td>działa pod warstwą systemu plików: nie obchodzi, czy zawartość zaszyfrowanego urządzenia blokowego to system plików, tabela partycji, konfiguracja LVM lub cokolwiek innego
+</td>
+<td>dodaje dodatkową warstwę do istniejącego systemu plików, aby automatycznie szyfrować / deszyfrować pliki
+</td>
+<td>dodaje dodatkową warstwę do istniejącego systemu plików, aby automatycznie szyfrować / deszyfrować pliki
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Szyfrowanie zaimplementowane w...
+</th>
+<td>w przestrzeni jądra
+</td>
+<td>w przestrzeni jądra
+</td>
+<td>w przestrzeni jądra
+</td>
+<td>w przestrzeni jądra
+</td>
+<td>w przestrzeni użytkownika (za pomocą FUSE)
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Metadane kryptograficzne przechowywane w...
+</th>
+<td>?
+</td>
+<td>w LUKS: LUKS Header
+</td>
+<td>begin/end of (decrypted) device (<a rel="nofollow" class="external text" href="http://www.truecrypt.org/docs/volume-format-specification">format</a>)
+</td>
+<td>nagłówek każdego zaszyfrowanego pliku
+</td>
+<td>plik kontrolny na najwyższym poziomie każdego kontenera EncF
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">klucz do szyfrowania przechowywany w.
+</th>
+<td>?
+</td>
+<td>w LUKS: LUKS header
+</td>
+<td>begin/end of (decrypted) device (<a rel="nofollow" class="external text" href="http://www.truecrypt.org/docs/volume-format-specification">format</a>)
+</td>
+<td>kluczowy plik, który może być przechowywany w dowolnym miejscu
+</td>
+<td>kluczowy plik, który może być przechowywany w dowolnym miejscu
+<p><a rel="nofollow" class="external autonumber" href="https://github.com/rfjakob/encfs/blob/next/encfs/encfs.pod#environment-variables">[1]</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-22 ⓘ]</sup><a rel="nofollow" class="external autonumber" href="https://github.com/vgough/encfs/issues/48#issuecomment-69301831">[2]</a>
+</p>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5><span class="mw-headline" id="praktyczne_implikacje">praktyczne implikacje</span></h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Metadane pliku (liczba plików, struktura dir, rozmiary plików, uprawnienia, mtimes itp.) Są szyfrowane
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span><br>(nazwy plików i katalogów można zaszyfrować)
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span><br>(nazwy plików i katalogów można zaszyfrować
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Może być używany do szyfrowania całego dysku twardego (w tym tablic partycji)
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Może być używany do szyfrowania przestrzeni wymiany
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+</tr>
+
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Może być używany bez wcześniejszego przydzielenia określonej ilości miejsca dla zaszyfrowanego kontenera danych
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Może być używany do ochrony istniejących systemów plików bez blokowania dostępu do urządzenia, np. NFS lub Samba, przechowywanie w chmurze itp.
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span><br><a href="#See_also">[2</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Umożliwia kopie zapasowe zaszyfrowanego pliku w trybie offline
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5><span class="mw-headline" id="Usability_features">Usability features</span></h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Wsparcie dla automatyzacji podczas logowania
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługa automatycznego odmontowania w przypadku braku aktywności
+</th>
+<td>?
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Użytkownicy niebędący administratorami mogą tworzyć / usuwać kontenery w celu szyfrowania danych
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>limited
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Zapewnia GUI
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+<p><a rel="nofollow" class="external autonumber" href="http://www.libertyzero.com/GEncfsM/">[3]</a><a rel="nofollow" class="external autonumber" href="https://launchpad.net/gencfsm">[4]</a>
+</p>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5>
+<span id="Funkcje_zabezpiecze.C5.84"></span><span class="mw-headline" id="Funkcje_zabezpieczeń">Funkcje zabezpieczeń</span>
+</h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługiwane szyfry
+</th>
+<td>AES
+</td>
+<td>AES, Anubis, CAST5/6, Twofish, Serpent, Camellia, Blowfish,… (every cipher the kernel Crypto API offers)
+</td>
+<td>AES, Twofish, Serpent
+</td>
+<td>AES, Blowfish, Twofish...
+</td>
+<td>AES, Blowfish, Twofish, and any other ciphers available on the system
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Wsparcie dla solenia
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br>(with LUKS)
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługa kaskadowania wielu szyfrów
+</th>
+<td>?
+</td>
+<td>Not in one device, but blockdevices can be cascaded
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Wsparcie dla dyfuzji kluczy
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br>(with LUKS)
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>?
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Ochrona przed key scrubbing
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br>(without LUKS)
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>?
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Support for multiple (independently revocable) keys for the same encrypted data
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br>(with LUKS)
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5>
+<span id="Funkcje_wydajno.C5.9Bci"></span><span class="mw-headline" id="Funkcje_wydajności">Funkcje wydajności</span>
+</h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługa wielowątkowości
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br><a href="#See_also">[8</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+<td>?
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">wsparcie szyfrowania sprzętowa akceleracja
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br><a href="#See_also">[13</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5><span class="mw-headline" id="Block_device_encryption_specific">Block device encryption specific</span></h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługa ręcznej zmiany rozmiaru zaszyfrowanego urządzenia blokowego w miejscu
+</th>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5>
+<span id="Skumulowane_szyfrowanie_systemu_plik.C3.B3w"></span><span class="mw-headline" id="Skumulowane_szyfrowanie_systemu_plików">Skumulowane szyfrowanie systemu plików</span>
+</h5>
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługiwane systemy plików
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<td>ext3, ext4, xfs (with caveats), jfs, nfs...
+</td>
+<td>ext3, ext4, xfs (with caveats), jfs, nfs, cifs...
+<p><a rel="nofollow" class="external autonumber" href="https://github.com/vgough/encfs">[5]</a>
+</p>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Możliwość szyfrowania nazw plików
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Możliwość "nie" szyfrowania nazw plików
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Zoptymalizowana obsługa niewielkich plików
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<th style="background:#ddd">
+</th>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+</tr>
+<tr>
+<th style="text-align:left; background:#ddd">
+<h5>
+<span id="Zgodno.C5.9B.C4.87_i_rozpowszechnienie"></span><span class="mw-headline" id="Zgodność_i_rozpowszechnienie">Zgodność i rozpowszechnienie</span>
+</h5>
+</th>
+<th style="background:#ddd">Loop-AES
+</th>
+<th style="background:#ddd">dm-crypt +/- LUKS
+</th>
+<th style="background:#ddd">Truecrypt
+</th>
+<th style="background:#ddd">eCryptfs
+</th>
+<th style="background:#ddd">EncFs
+</th>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Obsługiwane wersje jądra Linux
+</th>
+<td>2.0 lub nowszy
+</td>
+<td>CBC-mode since 2.6.4, ESSIV 2.6.10, LRW 2.6.20, XTS 2.6.24
+</td>
+<td>?
+</td>
+<td>?
+</td>
+<td>2.4 lub nowszy
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Szyfrowane dane można również uzyskać z poziomu systemu Windows
+</th>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br>(with <a href="#See_also">[3</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>], <a href="#See_also">[14</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>])
+</td>
+<td>?<br>(with <a href="#See_also">[4</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>], <a href="#See_also">[14</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>])
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+<td>?<br><a href="#See_also">[9</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Zaszyfrowane dane można również uzyskać z systemu Mac OS X.
+</th>
+<td>?
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span>
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br><a href="#See_also">[5</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+</tr>
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Szyfrowane dane można również uzyskać z FreeBSD
+</th>
+<td>?
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#f00; font-size:2em">✖</span>
+</td>
+<td>?
+</td>
+<td>
+<span style="color:#080; font-size:2em">✔</span><br><a href="#See_also">[6</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]
+</td>
+</tr>
+
+<tr>
+<th style="text-align:left; font-weight:normal; background:#eee">Używany przez
+</th>
+<td>?
+</td>
+<td>Debian/Instalator Ubuntu (szyfrowanie systemu)<br>Instalator Fedory
+</td>
+<td>?
+</td>
+<td>Instalator Ubuntu (home dir encryption)<br>Chromium OS (encryption of cached user data <a href="#See_also">[7</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>])
+</td>
+<td>?
+</td>
+</tr>
+</tbody>
+</table>
+<h2><span class="mw-headline" id="Przygotowanie">Przygotowanie</span></h2>
+<h3>
+<span id="Wyb.C3.B3r_konfiguracji"></span><span class="mw-headline" id="Wybór_konfiguracji">Wybór konfiguracji</span>
+</h3>
+<p>Która konfiguracja szyfrowania dysków jest odpowiednia, ponieważ zależy to od swoich celów (przeczytaj <a href="#Po_co_u%C5%BCywa%C4%87_szyfrowania?">#Po co używać szyfrowania?</a> Powyżej i parametrów systemu.
+</p>
+<p>Między innymi będziesz musiał odpowiedzieć na następujące pytania:
+</p>
+<dl><dt>Jakiego "napastnika" chcesz chronić?</dt></dl>
+<dl><dd><ul>
+<li>Dorywczo użytkownik komputera śledzi twój dysk, gdy twój system jest wyłączony / skradziony / itp.</li>
+<li>Profesjonalny kryptolog, który może uzyskać wielokrotne odczytywanie / zapisywanie dostępu do systemu przed i po jego użyciu</li>
+<li>Coś pomiędzy nimi</li>
+</ul></dd></dl>
+<dl><dt>Jaką strategię szyfrowania należy zastosować?</dt></dl>
+<dl><dd><ul>
+<li>Szyfrowanie danych</li>
+<li>Szyfrowanie systemu</li>
+<li>Coś między nimi</li>
+</ul></dd></dl>
+<dl><dt>Jak należy się troszczyć o swap, / tmp, itd.?</dt></dl>
+<dl><dd><ul>
+<li>Ignorować i mam nadzieję, żadne dane nie wyciekły</li>
+<li>Wyłącz lub zamontuj jako ramdisk</li>
+<li>Szyfruj (jako część pełnego szyfrowania dysku lub osobno)</li>
+</ul></dd></dl>
+<dl><dt>Jak powinny być odblokowane szyfrowane części dysku?</dt></dl>
+<dl><dd><ul>
+<li>Hasło (takie samo jak hasło logowania lub oddzielne)</li>
+<li>Plik Keyfile (np. Na pendrive'ie USB, przechowywany w bezpiecznym miejscu lub nosić ze sobą)</li>
+<li>Obie</li>
+</ul></dd></dl>
+<dl><dt>Kiedy należy odblokować zaszyfrowane części dysku?</dt></dl>
+<dl><dd><ul>
+<li>Przed startem</li>
+<li>Podczas rozruchu</li>
+<li>Przy logowaniu</li>
+<li>Ręcznie na żądanie (po zalogowaniu)</li>
+</ul></dd></dl>
+<dl><dt>Jak powinno się pomieścić wielu użytkowników?</dt></dl>
+<dl><dd><ul>
+<li>Ani trochę</li>
+<li>Korzystanie ze wspólnego hasła / klucza</li>
+<li>Niezależnie wydane i odwołane hasła / klucze do tej samej szyfrowanej części dysku</li>
+<li>Oddzielne zaszyfrowane części dysku dla różnych użytkowników</li>
+</ul></dd></dl>
+<dl>
+<dt>Następnie możesz przejść do dokonania wymaganych wyborów technicznych (patrz #Dostępne metody powyżej i #Jak szyfrowanie działa poniżej), dotyczące</dt>
+<dd></dd>
+</dl>
+<dl><dd><ul>
+<li>ułożone szyfrowanie systemu plików a szyfrowanie blokowe</li>
+<li>zarządzanie kluczami</li>
+<li>szyfr i tryb pracy</li>
+<li>przechowywanie metadanych</li>
+<li>lokalizacja "niższego katalogu" (w przypadku ułożonego szyfrowania systemu plików)</li>
+</ul></dd></dl>
+<h3>
+<span id="Przyk.C5.82ady"></span><span class="mw-headline" id="Przykłady">Przykłady</span>
+</h3>
+<p>W praktyce mogłoby się okazać, że coś takiego:
+</p>
+<dl>
+<dt>Przykład 1</dt>
+<dd>Proste szyfrowanie danych (wewnętrzny dysk twardy) za pomocą folderu wirtualnego o nazwie <code>~/Private</code> w katalogu domowym użytkownika szyfrowanym EncFS <br>└──&gt; zaszyfrowane wersje plików przechowywanych na dysku w <code>~/.Private</code> <br>└──&gt; odblokowywane na żądanie z dedykowanym hasłem</dd>
+</dl>
+<dl>
+<dt>Przykład 2</dt>
+<dd>Częściowe szyfrowanie systemu za pomocą katalogu domowego każdego użytkownika zaszyfrowanego za pomocą ECryptfs <br>└──&gt; odblokowany przy logowaniu użytkownika, używając hasła logowania <br>└──&gt; <code>swap</code> i <code>/tmp</code> partycje szyfrowane z Dm-crypt z LUKS, używając automatycznie generowanego klucza na sesję <br>└──&gt; indeksowanie / buforowanie zawartości <code>home</code> przez slocate (i podobne aplikacje) są wyłączone.</dd>
+</dl>
+<dl>
+<dt>Przykład 3</dt>
+<dd>Szyfrowanie systemu - cały dysk twardy z wyjątkiem partycji rozruchowej (jednak / boot może być szyfrowany przez GRUB) zaszyfrowane za pomocą Dm-crypt z LUKS <br>└──&gt; odblokowany podczas ładowania, używając haseł lub pamieci USB z plikami kluczowymi <br>└──&gt; Może różne hasła / klucze na użytkownika - niezależnie odwołalne <br>└──&gt; Może szyfrowanie obejmujące wiele dysków lub elastyczność układu partycji z LUKS na LVM</dd>
+</dl>
+<dl>
+<dt>Przykład 4</dt>
+<dd>Ukryte / zwykłe szyfrowanie systemu - cały dysk twardy zaszyfrowany zwykłą dm-crypt <br>└──&gt; USB-boot, używając dedykowanych haseł i pamięci USB z plikiem kluczowym <br>└──&gt;  integralność danych sprawdzona przed montowaniem <br>└──&gt; <code>boot</code> partycja znajduje się na wspomnianej pamięci USB</dd>
+</dl>
+<p>Oczywiście możliwe jest wiele innych kombinacji. Należy dokładnie zaplanować, jaki rodzaj instalacji będzie odpowiedni dla twojego systemu.
+</p>
+<h3>
+<span id="Wybieranie_silnego_has.C5.82a"></span><span class="mw-headline" id="Wybieranie_silnego_hasła">Wybieranie silnego hasła</span>
+</h3>
+<p>Zobacz <a href="../en/Security.html#Passwords" title="Security">Security#Passwords</a>.
+</p>
+<h3><span class="mw-headline" id="Przygotowanie_dysku">Przygotowanie dysku</span></h3>
+<p>Przed skonfigurowaniem szyfrowania dysku na dysku (częściowym) należy najpierw najpierw wyczyścić dysk. Składa się z nadpisania całego dysku lub partycji strumieniem zero bajtów lub bajtów losowych i jest wykonywany z jednego lub obu z następujących powodów:
+</p>
+<dl><dt>Zapobieganie odzyskiwaniu wcześniej zapisanych danych</dt></dl>
+<p>Szyfrowanie dysków nie zmienia faktu, że poszczególne sektory są zastępowane tylko na żądanie, gdy system plików tworzy lub modyfikuje dane, które poszczególne sektory posiadają (zobacz <a href="#How_the_encryption_works">#How the encryption works</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> poniżej). Sektory, które system plików uważa za "nie aktualnie używane", nie są dotykane i mogą zawierać resztki danych z poprzednich systemów plików. Jedynym sposobem, aby upewnić się, że wszystkie dane, które zostały wcześniej zapisane na dysku nie można odzyskać ma to ręcznie usunąć. W tym celu nie ma znaczenia, czy użyto zero bajtów czy losowych bajtów (chociaż przecieranie zerowymi bajtami będzie znacznie szybsze).
+</p>
+<dl><dt>Zapobiegaj ujawnianiu wzorców użytkowania na zaszyfrowanym dysku</dt></dl>
+<p>ajlepiej byłoby, gdyby cała zaszyfrowana część dysku była nieodróżnialna od jednolicie losowych danych. W ten sposób żadna nieuprawniona osoba nie może wiedzieć, która i ile sektorów rzeczywiście zawiera zaszyfrowane dane - co może być pożądanym celem samym w sobie (w ramach prawdziwej poufności), a także służy jako dodatkowa bariera dla napastników próbujących złamać szyfrowanie. Aby osiągnąć ten cel, ważne jest wyczyszczenie dysku za pomocą wysokiej jakości losowych bajtów.
+</p>
+<p>Drugi cel ma sens tylko w połączeniu z szyfrowaniem urządzeń blokowych, ponieważ w przypadku stosowego szyfrowania systemu plików zaszyfrowane dane mogą być łatwo zlokalizowane (w postaci odrębnych zaszyfrowanych plików w systemie plików hosta). Zauważ też, że nawet jeśli chcesz zaszyfrować tylko określony folder, będziesz musiał usunąć całą partycję, jeśli chcesz pozbyć się plików, które były wcześniej przechowywane w tym folderze w formie niezaszyfrowanej (z powodu fragmentacji dysku). Jeśli na tej samej partycji znajdują się inne foldery, będziesz musiał wykonać ich kopię zapasową i przenieść później.
+</p>
+<p>Po określeniu, jaki rodzaj skasowania dysku chcesz wykonać, zapoznaj się z artykułem <a href="#Securely_wipe_disk">#Securely wipe disk</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> w celu uzyskania instrukcji technicznych.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Podejmując decyzję, która metoda ma być używana do bezpiecznego wymazywania dysku twardego, pamiętaj, że nie musi to być wykonywane więcej niż jeden raz tak długo, jak dysk jest używany jako szyfrowany dysk.</div>
+<h2>
+<span id="Jak_dzia.C5.82a_szyfrowanie"></span><span class="mw-headline" id="Jak_działa_szyfrowanie">Jak działa szyfrowanie</span>
+</h2>
+<p>Ta sekcja jest przeznaczona jako wprowadzenie na wysokim poziomie do koncepcji i procesów, które są w centrum zwykłych konfiguracji szyfrowania dysku.
+</p>
+<p>Nie zawiera szczegółów technicznych ani matematycznych (należy sięgnąć po odpowiednią literaturę), ale powinien zapewnić administratorowi systemu zrozumienie, w jaki sposób różne opcje konfiguracji (szczególnie w zakresie zarządzania kluczami) mogą wpływać na użyteczność i bezpieczeństwo
+</p>
+<h3><span class="mw-headline" id="Podstawowa_zasada">Podstawowa zasada</span></h3>
+<p>Do celów szyfrowania dysków każda jednostka blokowa (lub pojedynczy plik w przypadku skumulowanego szyfrowania systemu plików) dzieli się na "" sektory "" o równej długości, na przykład 512 bajtów (4096 bitów). Szyfrowanie / odszyfrowywanie odbywa się wtedy w zależności od sektora, więc sektor n-tego pliku bloku / pliku na dysku przechowuje zaszyfrowaną wersję n-tego sektora oryginalnych danych.
+</p>
+<p>Gdy system operacyjny lub aplikacja zażąda pewnego fragmentu danych z pliku blokowego / pliku, cały sektor (lub sektory) zawierający dane będzie odczytywany z dysku, odszyfrowany w locie i tymczasowo przechowywany w pamięci:
+</p>
+<pre>        ╔═══════╗
+ sector 1 ║"???.."║
+          ╠═══════╣         ╭┈┈┈┈┈╮
+ sector 2 ║"???.."║         ┊ key ┊
+          ╠═══════╣         ╰┈┈┬┈┈╯
+          :       :            │
+          ╠═══════╣            ▼             ┣┉┉┉┉┉┉┉┫
+ sector n ║"???.."║━━━━━━━(decryption)━━━━━━▶┋"abc.."┋ sector n
+          ╠═══════╣                          ┣┉┉┉┉┉┉┉┫
+          :       :
+          ╚═══════╝
+ 
+          encrypted                          unencrypted
+     blockdevice or                          data in RAM
+       file on disk
+</pre>
+<p>Podobnie, przy każdej operacji zapisu wszystkie sektory, których dotyczy problem, muszą zostać całkowicie zaszyfrowane (podczas gdy pozostałe sektory pozostają nienaruszone).
+</p>
+<p>Aby móc de / szyfrować dane, system szyfrowania dysku musi znać unikatowy "klucz" związany z tym. Kiedy ma być zamontowany zaszyfrowane urządzenie blokowe lub folder, należy podać odpowiedni klucz (zwany odtąd "kluczem głównym").
+</p>
+<p>Entropia klucza ma kluczowe znaczenie dla bezpieczeństwa szyfrowania. Losowo wygenerowany ciąg bajtów o określonej długości, na przykład 32 bajtów (256 bitów) ma pożądane właściwości, ale nie jest możliwe, aby pamiętać i zastosować ręcznie podczas montowania.
+</p>
+<p>Z tego powodu dwie techniki są używane jako pomocnicy. Pierwszym z nich jest zastosowanie kryptografii, aby zwiększyć entropową właściwość klucza głównego, zwykle z użyciem osobnego przyjaznego dla człowieka hasła. W przypadku różnych typów szyfrowania tabela #Comparison zawiera listę odpowiednich funkcji. Druga metoda polega na utworzeniu pliku klucza o wysokiej entropii i przechowywaniu go na nośniku innym niż dysk danych, który ma być zaszyfrowany.
+</p>
+<p>Zobacz też <a href="https://en.wikipedia.org/wiki/Authenticated_encryption" class="extiw" title="wikipedia:Authenticated encryption">Wikipedia:Authenticated encryption</a>.
+</p>
+<p><br>
+</p>
+<h3>
+<span id="Klucze.2C_pliki_kluczy_i_has.C5.82a"></span><span class="mw-headline" id="Klucze,_pliki_kluczy_i_hasła">Klucze, pliki kluczy i hasła</span>
+</h3>
+<p>Oto przykłady jak przechowywać i kryptograficznie zabezpieczyć klucz główny kluczem:
+</p>
+<dl><dt>Przechowywany w pliku kluczy w postaci zwykłego tekstu</dt></dl>
+<p>Najprostszym rozwiązaniem jest przechowywanie klucza głównego w pliku (w formie czytelnej). Plik - nazywany "plikiem kluczowym" - może być umieszczony na pamięci USB przechowywanej w bezpiecznej lokalizacji i łączyć się tylko z komputerem, jeśli chcesz zamontować szyfrowane części dysku (np. Podczas ładowania lub logowania).
+</p>
+<dl><dt>Przechowywany w formie chronionej przed frazą w pliku klucza lub na dysku</dt></dl>
+<p>Klucz główny (a tym samym zaszyfrowane dane) można chronić tajnym hasłem, które trzeba pamiętać i wprowadzić za każdym razem, gdy chcesz zamontować zaszyfrowane urządzenie blokowe lub folder. Aby uzyskać szczegółowe informacje, zapoznaj się z poniżej opisanych metadanych.
+</p>
+<dl><dt>Losowo generowane w locie dla każdej sesji</dt></dl>
+<p>W niektórych przypadkach, np. podczas szyfrowania przestrzeni wymiany lub partycji a / tmp nie trzeba utrzymywać stałego klucza głównego. Nowy klucz może być generowany losowo dla każdej sesji bez konieczności interakcji z użytkownikiem. Oznacza to, że po odmontowaniu wszystkie pliki zapisane w danej partycji nigdy nie mogą być odszyfrowane przez nikogo, co w tych szczególnych przypadkach jest w porządku.
+</p>
+<h3><span class="mw-headline" id="Kryptograficzne_metadane">Kryptograficzne metadane</span></h3>
+<p>Często techniki szyfrowania wykorzystują funkcje kryptograficzne w celu zwiększenia bezpieczeństwa samego klucza głównego. Na górze zaszyfrowanego urządzenia przekazywane jest hasło lub plik klucza, a tylko wynik może odblokować klucz główny w celu odszyfrowania danych.
+</p>
+<p>Wspólną konfiguracją jest zastosowanie tzw. "Rozciągania kluczy" do hasła (za pomocą "funkcji wywolania kluczy") i użycie wynikowych poprawek jako klucza do deszyfrowania faktycznego klucza głównego (który był wcześniej przechowywany w postaci zaszyfrowanej)
+</p>
+<p><br>
+</p>
+<pre>╭┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈╮                         ╭┈┈┈┈┈┈┈┈┈┈┈╮
+┊ mount passphrase ┊━━━━━⎛key derivation⎞━━━▶┊ mount key ┊
+╰┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈╯ ,───⎝   function   ⎠    ╰┈┈┈┈┈┬┈┈┈┈┈╯
+╭──────╮            ╱                              │
+│ salt │───────────´                               │
+╰──────╯                                           │
+╭─────────────────────╮                            ▼         ╭┈┈┈┈┈┈┈┈┈┈┈┈╮
+│ encrypted master key│━━━━━━━━━━━━━━━━━━━━━━(decryption)━━━▶┊ master key ┊
+╰─────────────────────╯                                      ╰┈┈┈┈┈┈┈┈┈┈┈┈╯
+</pre>
+<p>Funkcja wyprowadzania kluczy (na przykład PBKDF2 lub szyfrowanie) jest umyślnie zwolniona (dotyczy wielu iteracji funkcji mieszania, na przykład 1000 iteracji HMAC-SHA-512), dzięki czemu ataki brutalnej siły, aby znaleźć frazę, są niewykonalne. W przypadku zwykłego użytkownika konieczne będzie tylko obliczenie raz na sesję, więc małe spowolnienie nie jest problemem. Pobiera także dodatkową blob danych, tzw. "Sól" jako argument - jest losowo generowana raz podczas konfigurowania szyfrowania dysku i przechowywana w niezabezpieczonej części metadanych kryptograficznych. Ponieważ każda konfiguracja będzie inna, to powoduje, że napastnicy przyspieszają ataki brutalnych sił, używając prekompetentów tabel do funkcji wyprowadzania kluczowych.
+</p>
+<p>Zaszyfrowany klucz główny może być przechowywany na dysku razem z zaszyfrowanymi danymi. W ten sposób poufność zaszyfrowanych danych zależy całkowicie od tajnego hasła.
+</p>
+<p>Zazwyczaj nie jest on używany do de / szyfrowania danych na dysku bezpośrednio. Na przykład w przypadku ułożenia szyfrowania plików każdy plik może zostać automatycznie przypisany do własnego klucza szyfrowania. Kiedy tylko plik ma być odczytany / zmodyfikowany, klucz ten musi najpierw zostać odszyfrowany przy użyciu klucza głównego, zanim będzie mógł zostać użyty do de / zaszyfrowania zawartości pliku:
+</p>
+<p><br>
+</p>
+<pre>                          ╭┈┈┈┈┈┈┈┈┈┈┈┈╮
+                          ┊ master key ┊
+  <i>file on disk:</i>           ╰┈┈┈┈┈┬┈┈┈┈┈┈╯
+ ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐        │
+ ╎╭───────────────────╮╎        ▼          ╭┈┈┈┈┈┈┈┈┈┈╮
+ ╎│ encrypted file key│━━━━(decryption)━━━▶┊ file key ┊
+ ╎╰───────────────────╯╎                   ╰┈┈┈┈┬┈┈┈┈┈╯
+ ╎┌───────────────────┐╎                        ▼           ┌┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┐
+ ╎│ encrypted file    │◀━━━━━━━━━━━━━━━━━(de/encryption)━━━▶┊ readable file ┊
+ ╎│ contents          │╎                                    ┊ contents      ┊
+ ╎└───────────────────┘╎                                    └┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┘
+ └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+</pre>
+<p>W podobny sposób można użyć oddzielnego klucza (na przykład jednego w folderze) do szyfrowania nazw plików w przypadku skumulowanego szyfrowania systemu plików.
+</p>
+<p>W przypadku szyfrowania urządzenia blokowego stosuje się jeden klucz główny na urządzenie, a zatem wszystkie dane. Niektóre metody oferują funkcje do przypisywania wielu haseł / plików kluczowych dla tego samego urządzenia, a inne nie. Niektórzy używają wyżej wymienionych funkcji, aby zabezpieczyć klucz główny, a inni zapewniają pełną kontrolę nad kluczowym zabezpieczeniem dla użytkownika. Dwa przykłady są wyjaśnione przez parametry kryptograficzne używane przez dm-crypt w trybach zwykłych lub LUKS.
+</p>
+<p>Porównując parametry używane przez oba tryby, zauważymy, że tryb zwykłego trybu kryptograficznego dm-crypt zawiera parametry odnoszące się do lokalizacji pliku kluczy 
+</p>
+<p>Dodatkowe zabezpieczenia można osiągnąć, zamiast tego przechować zaszyfrowany klucz główny w pliku kluczowym, na przykład na przykład. kij USB. Zapewnia to uwierzytelnianie dwuskładnikowe: dostęp do zaszyfrowanych danych wymaga obecnie tylko jednego elementu (hasła), a dodatkowo tylko jednego (plik klucza).
+</p>
+<p>Innym sposobem uzyskania uwierzytelnienia dwuskładnikowego jest rozszerzenie powyższego schematu pobierania kluczy w celu matematycznego "połączenia" hasła z danymi bajtowymi odczytanymi z jednego lub więcej plików zewnętrznych (zlokalizowanych na pendrivie USB lub podobnym), przed przekazaniem go do wyprowadzenia klucza Funkcje. Pliki, o których mowa, mogą być cokolwiek, np normalne obrazy JPEG, które mogą być korzystne dla #Nieprawdopodobnego zaprzeczenia. W tym kontekście wciąż są one nazywane "kluczowymi plikami".
+</p>
+<p>Po wyprowadzeniu klucz główny jest bezpiecznie przechowywany w pamięci (na przykład w kluczu jądra), tak długo, jak jest zamontowane zaszyfrowane urządzenie blokowe lub folder. (np. <code>--keyfile-size</code>, <code>--keyfile-offset</code>). Tryb LUKS-u kryptografii nie jest potrzebny, ponieważ każda jednostka blokowa zawiera nagłówek z metadanymi kryptograficznymi na początku. Nagłówek zawiera szyfr używany, zaszyfrowany klucz główny i parametry wymagane do jego deszyfrowania. Te ostatnie parametry z kolei wynikają z opcji używanych podczas wstępnego szyfrowania klucza głównego (np. <code>--iter-time</code>, <code>--use-random</code>).
+</p>
+<p>Aby zapoznać się z zaletami różnych technik, odnieś się do tabeli #Comparison lub przejrzyj poszczególne strony.
+</p>
+<h3>
+<span id="Szyfry_i_tryby_dzia.C5.82ania"></span><span class="mw-headline" id="Szyfry_i_tryby_działania">Szyfry i tryby działania</span>
+</h3>
+<p>Algorytm używany do tłumaczenia pomiędzy niezabezpieczonymi i zaszyfrowanymi danymi (tzw. "Plaintext" i "ciphertext"), które odpowiadają sobie nawzajem w odniesieniu do danego klucza szyfrującego, nazywa się "szyfrem".
+</p>
+<p>Szyfrowanie dysków wykorzystuje "szyfry blokowe", które działają na blokach danych o stałej długości, np. 16 bajtów (128 bitów). W czasie pisania tego artykułu najczęściej używanymi są:
+</p>
+<table class="wikitable" style="margin:0 5em 1.5em 5em;">
+<tbody>
+<tr>
+<th scope="col" style="text-align:left">
+</th>
+<th scope="col" style="text-align:left">block size
+</th>
+<th scope="col" style="text-align:left">key size
+</th>
+<th scope="col" style="text-align:left">comment
+</th>
+</tr>
+<tr>
+<th scope="row" style="text-align:right">
+<a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" class="extiw" title="wikipedia:Advanced Encryption Standard">AES</a>
+</th>
+<td>128 bitów
+</td>
+<td>128, 192 i 256 bitów
+</td>
+<td>
+<i>zatwierdzony przez NSA do ochrony informacji poufnych "SECRET" i "TOP SECRET" w USA (przy użyciu klucza o rozmiarze 192 lub 256 bitów</i>
+</td>
+</tr>
+<tr>
+<th scope="row" style="text-align:right">
+<a href="https://en.wikipedia.org/wiki/Blowfish_(cipher)" class="extiw" title="wikipedia:Blowfish (cipher)">Blowfish</a>
+</th>
+<td>64 bitów
+</td>
+<td>32–448 bitów
+</td>
+<td>
+<i>jeden z pierwszych bezpiecznych szyfrów, które stały się publicznie dostępne, a więc bardzo dobrze rozwinięty w Linuksie</i>
+</td>
+</tr>
+<tr>
+<th scope="row" style="text-align:right">
+<a href="https://en.wikipedia.org/wiki/Twofish" class="extiw" title="wikipedia:Twofish">Twofish</a>
+</th>
+<td>128 bitów
+</td>
+<td>128, 192 i 256 bitów
+</td>
+<td>
+<i>rozwinięty jako następca Blowfish, ale nie osiągnął tak powszechnego wykorzystania</i>
+</td>
+</tr>
+<tr>
+<th scope="row" style="text-align:right">
+<a href="https://en.wikipedia.org/wiki/Serpent_(cipher)" class="extiw" title="wikipedia:Serpent (cipher)">Serpent</a>
+</th>
+<td>128 bitów
+</td>
+<td>128, 192 i 256 bitów
+</td>
+<td>Uważany za najbardziej bezpieczny z pięciu finalistów konkursu AES<a href="#See_also">[10</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]<a href="#See_also">[11</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>]<a href="#See_also">[12</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>].
+</td>
+</tr>
+</tbody>
+</table>
+<p>Szyfrowanie / odszyfrowywanie sektora (patrz wyżej) uzyskuje się przez podzielenie go na małe bloki odpowiadające rozmiarowi bloku szyfru i po pewnym zestawie reguł (tak zwanym "trybie działania"), jak nałożyć kolejno szyfr na poszczególne bloki
+</p>
+<p>Po prostu zastosowanie go do każdego bloku osobno, bez modyfikacji (nazwanego trybem "elektroniczna książka kodowa (ECB)") nie byłoby bezpieczne, ponieważ jeśli te same 16 bajtów tekstu jawnego zawsze generuje te same 16 bajtów tekstu zaszyfrowanego, osoba atakująca może łatwo rozpoznać wzorzec w tekstu zaszyfrowanego na przechowywanym dysku.
+</p>
+<p>Najbardziej podstawowym (i wspólnym) trybem działania w praktyce jest "szyfrowanie łańcucha (CBC)". Podczas szyfrowania sektora w tym trybie każdy blok danych prostokątnych łączy się w sposób matematyczny z szyfrem z poprzednim blokiem, przed szyfrowaniem za pomocą szyfru. W pierwszym bloku, ponieważ nie ma poprzedniego szyfrogramu, używany jest specjalny wstępnie wygenerowany blok danych przechowywany w metadanych kryptograficznych sektora i nazywany "wektorem inicjującym (IV)":
+</p>
+<p><br>
+</p>
+<pre>                                  ╭──────────────╮
+                                  │initialization│
+                                  │vector        │
+                                  ╰────────┬─────╯
+          ╭  ╠══════════╣        ╭─key     │      ┣┉┉┉┉┉┉┉┉┉┉┫        
+          │  ║          ║        ▼         ▼      ┋          ┋         . START
+          ┴  ║"????????"║◀━━━━(cipher)━━━━(+)━━━━━┋"Hello, W"┋ block  ╱╰────┐
+    sector n ║          ║                         ┋          ┋ 1      ╲╭────┘
+  of file or ║          ║──────────────────╮      ┋          ┋         ' 
+ blockdevice ╟──────────╢        ╭─key     │      ┠┈┈┈┈┈┈┈┈┈┈┨
+          ┬  ║          ║        ▼         ▼      ┋          ┋
+          │  ║"????????"║◀━━━━(cipher)━━━━(+)━━━━━┋"orld !!!"┋ block
+          │  ║          ║                         ┋          ┋ 2
+          │  ║          ║──────────────────╮      ┋          ┋
+          │  ╟──────────╢                  │      ┠┈┈┈┈┈┈┈┈┈┈┨
+          │  ║          ║                  ▼      ┋          ┋
+          :  :   ...    :        ...      ...     :   ...    : ...
+ 
+               ciphertext                         plaintext
+                  on disk                         in RAM
+</pre>
+<p>Podczas odszyfrowywania procedura jest odwracana analogicznie.
+</p>
+<p>Warto zwrócić uwagę na generowanie unikalnego wektora inicjalizacyjnego dla każdego sektora. Najprostszym wyborem jest obliczenie go w przewidywalny sposób z łatwo dostępnej wartości, takiej jak numer sektora. Może to jednak umożliwić osobie atakującej wielokrotny dostęp do systemu w celu przeprowadzenia tak zwanego ataku znaku wodnego. Aby temu zapobiec, można użyć metody o nazwie "Zaszyfrowany wektor inicjalizacji sektora soli (ESSIV)" w celu wygenerowania wektorów inicjalizacji w sposób, który sprawia, że wyglądają zupełnie losowo na potencjalnego napastnika.
+</p>
+<p>Istnieje również wiele innych, bardziej skomplikowanych trybów operacji dostępnych dla szyfrowania dysku, które już zapewniają wbudowane zabezpieczenia przed takimi atakami (a więc nie wymagają ESSIV). Niektóre mogą dodatkowo gwarantować autentyczność zaszyfrowanych danych (tj. Potwierdzić, że nie zostały zmodyfikowane / uszkodzone przez osobę, która nie ma dostępu do klucza).
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../pl/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption (Polski)">Data-at-rest encryption (Polski)</a></li>
+<li><a href="../pl/Category:File_systems.html" title="Category:File systems (Polski)">File systems (Polski)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Data-at-rest_encryption_(Polski)&amp;oldid=646374">https://wiki.archlinux.org/index.php?title=Data-at-rest_encryption_(Polski)&amp;oldid=646374</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 22 December 2020, at 22:10.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

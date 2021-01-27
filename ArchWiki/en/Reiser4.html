@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Reiser4 - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Reiser4 rootpage-Reiser4 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Reiser4</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/File_systems.html" title="File systems">File systems</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Reiser4" class="extiw" title="wikipedia:Reiser4">Reiser4</a> is the successor filesystem for <a href="https://en.wikipedia.org/wiki/ReiserFS" class="extiw" title="wikipedia:ReiserFS">ReiserFS</a>, initially designed and developed entirely from scratch by <a href="https://en.wikipedia.org/wiki/Namesys" class="extiw" title="wikipedia:Namesys">Namesys</a> and <a href="https://en.wikipedia.org/wiki/Hans_Reiser" class="extiw" title="wikipedia:Hans Reiser">Hans Reiser</a>. 
+It is very efficient in handling many files (often used in <code>/var</code> for this purpose) and includes a plugin-based design with plugins with features such as intelligent transparent compression, both inline data and meta-data checksums through the <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check#CRC-32_algorithm" class="extiw" title="wikipedia:Cyclic redundancy check">crc32c</a> algorithm with added optional <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/Reiser4_Mirrors_and_Failover">mirrors and failover</a> support through its own implementation of subvolumes. 
+</p>
+<p>Reiser4 supports different <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/Reiser4_transaction_models">transaction models</a> optimized for different types of storage devices. These include <b>Write-Anywhere</b> (or <b>CoW</b>), <b>journal</b> and a unique combination of the two called <b>hybrid</b>.
+Reiser4's main goals is performance as well as the modular nature which can expand features of the file system more easily, as well as the implementations that make it less prone to both data loss and corruption because of it's atomic approach in regards to every transaction that it performs.
+In the hybrid transaction model, Reiser4 heuristically alternates between journaling and Write-Anywhere/Copy-on-Write and is also the default if no mount option is specificed and this transaction model is optimized primarily for performance for rotating disks (while Write-Anywhere is aimed towards SSDs). 
+However, in <b>hybrid</b> mode, it will result in more fragmentation compared to the <b>journal</b> transaction model over time.
+</p>
+<p>However, Reiser4's journaling model (in both hybrid or journal modes) is more efficient than regular journaling file systems in that instead of traditional journaling, Reiser4 uses a more advanced technique known as <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/V4#Wandering_Logs"><b>wandering logs</b></a> which provides journaling without having to write data to the disk twice thus reducing writes. 
+In many cases, Reiser4 can write journal data to a disk block, then atomically swap the journal block into the file itself which avoids having to write the data twice by changing one's definition of where the log area and the committed area are instead of moving the data from the log to the committed area.
+</p>
+<p>Another unique feature is the implementation of a special technique for SSD users called <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/PreciseDiscard"><b>Precise Asynchronous Discard</b></a>. 
+This implementation means that in Reiser4, issuing discard requests is a delayed action, which is performed on a per-atom basis at transaction commit time. 
+It allows to reduce number of discard requests issued (because the merging of extents, which needs to be discarded) and eliminates the need for issuing discards periodically as well, thus removing the need to set up an external tool like <b>fstrim</b> through a cron daemon which issues discard requests on a schedule.
+</p>
+<p>Additionally, it also features block suballocation and is built on the <a href="https://en.wikipedia.org/wiki/Dancing_tree" class="extiw" title="wikipedia:Dancing tree">dancing tree</a> design, which was exclusively invented for the use with Reiser4 and is also one of the several unique but also fundamental differences when compared to every other file system in general.
+The idea behind the <b>dancing tree</b> approach is to speed up file system operations by delaying optimization/balancing of the tree and only writing to disk when necessary, as writing to disk is much slower than writing to memory. 
+Because this optimization is done less often than with other tree data structures like <a href="https://en.wikipedia.org/wiki/B%2B_tree" class="extiw" title="wikipedia:B+ tree">B+ tree's</a> or <a href="https://en.wikipedia.org/wiki/B-tree" class="extiw" title="wikipedia:B-tree">B- tree's</a>, the optimizations and performance gains can be more extensive.
+</p>
+<p>Because it is designed as an atomic file system, "your file system operations either entirely occur, or they entirely don't, and they do not corrupt due to half occurring."
+What this means in practice is that all operations in Reiser4 are atomic. In the case of very long writes, Reiser4 is forced to close transactions to free dirty pages in a response to memory pressure and thus, long writes in Reiser4 are split into a number of atomic writes to maintain is atomicity.
+However, current lead developer, mathematician and programmer <b>PhD Edward Shishkin</b> has <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/Why_Reiser4">suggested</a> a change to full atomicity (atomic writes of any length) in the <b>Write-Anywhere</b> transaction model, where atoms can be flushed without closing a transaction.
+</p>
+<p>It's core design is very modular and allows for easy integration of new modules (called "plugins"). 
+According to the developers, because of the modular design, Reiser4 can quite easily be ported to other operating systems like <a href="https://en.wikipedia.org/wiki/FreeBSD" class="extiw" title="wikipedia:FreeBSD">FreeBSD</a>. As of 2019, Linux is still the only operating system Reiser4 is known to be compatible with.
+</p>
+<p>Synthetic benchmarks and speed comparisons between <b>Reiser4</b>, <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> and <a href="../en/Ext4.html" title="Ext4">Ext4</a> are <a rel="nofollow" class="external text" href="https://www.phoronix.com/scan.php?page=article&amp;item=reiser4_benchmarks&amp;num=1">available</a>, as well as <a rel="nofollow" class="external text" href="https://openbenchmarking.org/result/1510278-BE-REISER4VS69">benchmarks</a> that include comparisons between the different <b>transaction models</b> and with/without the <b>cryptcompress</b> plugin.
+</p>
+<p><br>
+More information about the features, plugins, design and mkfs or mount options is described in detail <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/Main_Page">here</a>.
+</p>
+<p><br>
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Important_Notes"><span class="tocnumber">1</span> <span class="toctext">Important Notes</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Packages"><span class="tocnumber">2</span> <span class="toctext">Packages</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Moving_to_Reiser4"><span class="tocnumber">3</span> <span class="toctext">Moving to Reiser4</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Sample_system"><span class="tocnumber">3.1</span> <span class="toctext">Sample system</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Formatting"><span class="tocnumber">3.2</span> <span class="toctext">Formatting</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Copy_system"><span class="tocnumber">3.3</span> <span class="toctext">Copy system</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#/etc/fstab:"><span class="tocnumber">3.4</span> <span class="toctext">/etc/fstab:</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Bootloader_Examples"><span class="tocnumber">4</span> <span class="toctext">Bootloader Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#/boot/grub/grub.cfg:"><span class="tocnumber">4.1</span> <span class="toctext">/boot/grub/grub.cfg:</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#/etc/lilo.conf:"><span class="tocnumber">4.2</span> <span class="toctext">/etc/lilo.conf:</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Important_Notes">Important Notes</span></h2>
+<ul>
+<li>Reiser4 requires a patched kernel.</li>
+<li>It consumes a little more CPU than other filesystems (just like <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a>). To avoid having issues on laptops using <a href="../en/TLP.html" title="TLP">TLP</a> for power saving, it is recommended to disable the options for <b>SATA Link</b> power saving in <b>/etc/default/tlp</b> (again, as with <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a>).</li>
+<li>Even <a href="../en/LILO.html" title="LILO">LILO</a> as the only bootloader officially supporting Reiser4 seems to have issues with it when <code>/boot</code> is formatted as Reiser4</li>
+<li>It is still not included in the official Linux kernel, but patches for <b>Linux-5.x</b> is already available.</li>
+<li>
+<a href="../en/Access_Control_Lists.html" title="Access Control Lists">Access Control Lists</a> is not implemented and as of linux-5.x.x requires that <a href="../en/Systemd/Journal.html" title="Systemd/Journal">Systemd/Journal</a> either logs to a seperate logging <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a> or to <a href="../en/Tmpfs.html" title="Tmpfs">Tmpfs</a>. Another workaround is to compile systemD by source without ACL support, but is not recommended.</li>
+</ul>
+<p><br>
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external text" href="http://gparted.sourceforge.net/livecd.php">Gparted LiveCD</a> is a small Linux distribution booting straight into Gparted. It also supports Reiser4 and can be used to migrate from an existing filesystem to Reiser4</div>
+<h2><span class="mw-headline" id="Packages">Packages</span></h2>
+<p>1. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/reiser4progs/">reiser4progs</a></span><sup><small>AUR</small></sup> package which provides utilities for creating, fsck'ing and debugging Reiser4 volumes.
+</p>
+<p>2. You will need a Reiser4 patched kernel. Patches can be found <a rel="nofollow" class="external text" href="https://sourceforge.net/projects/reiser4/files/">here</a> or at the more recently created Git <a rel="nofollow" class="external text" href="https://github.com/edward6/reiser4">repository</a> which is maintained by it's current lead developer, the mathematician and programmer <b>Edward Shishkin</b>.
+</p>
+<p>3. Bootloader <i>(Optional, only needed if you want to format your <code>/</code> (root, including <b>/boot</b>) as <b>Reiser4</b>)</i>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Backing up your bootloader configuration file should be considered if one is going to have /boot residing on a Reiser4 volume.</div>
+<p>a) <b>Recommended:</b> make a small (as mentioned above, 20-200mb) partition for <code>/boot</code> with a filesystem other than Reiser4 with <a href="../en/Parted.html" class="mw-redirect" title="GParted">GParted</a>, and then copy your <code>/boot</code> folder to the partition. Update your bootloader config accordingly, eg. with <a href="../en/GRUB.html" class="mw-redirect" title="Grub2">Grub2</a> do:
+</p>
+<pre># grub-mkconfig -o /boot/grub/grub.cfg. 
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="EFI">EFI</a> systems in general require a <a href="../en/FAT.html" class="mw-redirect" title="FAT32">FAT32</a> partition for booting the kernel and thus it may be advantageous or unproblematic to have the /boot directory residing on that partition instead of only the EFI directory. Many EFI-users have their whole /boot directory on their <a href="../en/EFI_system_partition.html" class="mw-redirect" title="ESP">ESP</a>
+</div>
+<p>b) If you do not use <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="EFI">EFI</a> and wish to put everything including <code>/boot</code> on a Reiser4 partition (not recommended) you will need to use <a href="../en/LILO.html" title="LILO">LILO</a>. This is not advised, as you will probably get an error when trying to update <code>lilo.conf</code>:
+</p>
+<pre># lilo
+</pre>
+<p>4. Reboot
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following steps are for using Reiser4 as your / (root, including /boot). If you just want to use Reiser4 as root with /boot mounted on the <a href="../en/EFI_system_partition.html" class="mw-redirect" title="ESP">ESP</a> you should modify the following instructions according to your needs.</div>
+<h2><span class="mw-headline" id="Moving_to_Reiser4">Moving to Reiser4</span></h2>
+<p>In the next steps we will copy the data from your current root partition to the new Reiser4 partitions. Make
+sure you have enough disk space on the Reiser4 partition with:
+</p>
+<pre># df -h
+</pre>
+<h3><span class="mw-headline" id="Sample_system">Sample system</span></h3>
+<pre># fdisk -l
+* /dev/sda1: (10 Gb, 5 Gb free); Reiserfs /mnt/reiser4
+* /dev/sda2: (10 Gb, 10 Gb free); Reiser4 /
+* /dev/sda3: (200 Mb, 180 Mb free); ext2 /boot
+</pre>
+<h3><span class="mw-headline" id="Formatting">Formatting</span></h3>
+<p>Since Reiser4 supports different transaction models optimized for different types of storage media (SSDs, HDDs), the options used while formatting and mounting will differ.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For users with traditional HDDs, the defaults listed below will be enough.
+<p>Keep in mind that the defaults for mkfs.reiser4 includes enabled compression with the default algorithm being Zstd.
+</p>
+If one wishes to use either lzo or gzip instead of Zstd, it is needed to append <pre>-o compress=lzo1</pre> or <pre>-o compress=gzip1</pre>
+<p>If one wishes to disable compression altogether, one must append: 
+</p>
+<pre>-o create=reg40</pre> to the <pre>mkfs.reiser4</pre> command.
+Additionally, the inline checksum plugin can be enabled with <pre>-o node=node41</pre>
+More information about the features, plugins and options is available <a rel="nofollow" class="external text" href="https://reiser4.wiki.kernel.org/index.php/Reiser4_Howto">here.</a>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> With <b>X</b> being your partition number!</div>
+<pre>mkfs.reiser4 /dev/sdaX
+mkdir /mnt/reiser4
+mount -t reiser4 -o txmod=journal,noatime,onerror=remount-ro /dev/sdaX /mnt/reiser4
+</pre>
+<p>It is recommended and also the default to use the <b>Cryptcompress</b> plugin by formatting with the following options:
+</p>
+<p> mkfs.reiser4 -o create=ccreg40 /dev/sda<b>X</b>
+</p>
+<p>Since Reiser4 also has options specifically for SSD users as well, it is recommended to discard the partition upon creation of the filesystem,
+the <b>-d</b> switch can be applied as shown below:
+</p>
+<pre>mkfs.reiser4 -d -o create=ccreg40,compress=Zstd1 /dev/nvme0n1X
+</pre>
+<p>For drives with controllers already having hardware compression (like SandForce ones), it may be better to to disable the compression plugin.
+</p>
+<p>For HDDs:
+</p>
+<pre>mkfs.reiser4 -o create=reg40,node=node41 /dev/sdX</pre>
+<p>For SSDs:
+</p>
+<pre>mkfs.reiser4 -d -o create=reg40,node=node41 /dev/nvme0n1pX</pre>
+<h3><span class="mw-headline" id="Copy_system">Copy system</span></h3>
+<p>Once the partition is formatted, copy you current system to the new partition and create the system directories. You may either do this from Arch Linux, or <b>to make it easier</b> (so that you do not have to use makedev later), just <b>boot up with the <a rel="nofollow" class="external text" href="http://gparted.sourceforge.net/livecd.php">Gparted LiveCD</a> and mount both your new Reiser4 partition and your current root partition. Then, just copy everything over (as root) like so:</b>
+</p>
+<pre>cd /mnt
+mkdir oldroot
+mkdir reiser4
+mount /dev/sdaX oldroot
+</pre>
+<p>Depending on what transaction model one wish to use which are optimized for different types of storage media, the mount option <b>txmod=wa</b> (for SSDs), <b>txmod=journal</b> (for HDDs) must be defined when mounting the partitions through the <b>-o</b> switch. The default is <b>txmod=hybrid</b> which heuristically alternates between the "wa" (write-anywhere) and "journal" models for optimized performance on rotating disks while trying to avoid excess fragmentation at the same time.
+</p>
+<pre>mount -t reiser4 -o txmod=hybrid,noatime,onerror=remount-ro /dev/sdaY reiser4 (the Reiser4 partition)
+cp -R -a /mnt/oldroot/* /mnt/reiser4/
+</pre>
+<p>Then, you need to mount your <code>/boot</code> partition, and if you have not already, copy <code>/boot</code> from your original root partition over to it.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is suggested to empty your /boot from the Reiser4 partition to use it as a mountpoint, which is reflected later in your fstab</div>
+<pre>mkdir bootpart
+mount /dev/sdaZ bootpart
+cp -R -a /mnt/oldroot/boot/* /mnt/bootpart/
+</pre>
+<p>Do not forget to edit your bootloader's config appropriately (see examples at the bottom of the article). 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> In case you upgraded grub before rebooting you may need to manually install grub to your /boot partition, otherwise, things may break and prevent you from booting. In this case using a LiveCD to Chroot and would be your last hope.</div>
+<h3>
+<span id=".2Fetc.2Ffstab:"></span><span class="mw-headline" id="/etc/fstab:">/etc/fstab:</span>
+</h3>
+<p>Note: If you can confirm that Reiser4 works for you, you should format the old root partition.
+</p>
+<pre>#
+# /etc/fstab: static file system information
+#
+# &lt;file system&gt;	&lt;dir&gt;	      &lt;type&gt;  &lt;options&gt;	         &lt;dump&gt;	&lt;pass&gt;
+
+/dev/nvme0n1p1  /             reiser4 noatime,txmod=wa,onerror=remount-ro,discard 0   1
+/dev/sda2       /mnt/oldroot  ext4    defaults                                    0   0
+/dev/sda3       /boot         ext2    defaults                                    0   1</pre>
+<h2><span class="mw-headline" id="Bootloader_Examples">Bootloader Examples</span></h2>
+<h4>
+<span id=".2Fboot.2Fgrub.2Fgrub.cfg:"></span><span class="mw-headline" id="/boot/grub/grub.cfg:">/boot/grub/grub.cfg:</span>
+</h4>
+<pre># (0) Arch Linux
+title  Arch Linux
+set root=(hd0,msdos3)
+kernel /vmlinuz-linux root=/dev/sda3 ro rootfstype=reiser4 rootflags=noatime,txmod=journal,onerror=remount-ro init=/usr/bin/bootchartd
+initrd /initramfs-linux.img
+
+# (1) Arch Linux
+title  Arch Linux Fallback
+set root=(hd0,msdos3)
+kernel /vlinuz-linux root=/dev/sda3 ro rootfstype=reiser4 rootflags=noatime,txmod=journal,onerror=remount-ro
+initrd /initramfs-linux-fallback.img</pre>
+<p>Run <code>grub-mkconfig</code> to update your config:
+</p>
+<pre># grub-mkconfig -o /boot/grub/grub.cfg
+</pre>
+<h4>
+<span id=".2Fetc.2Flilo.conf:"></span><span class="mw-headline" id="/etc/lilo.conf:">/etc/lilo.conf:</span>
+</h4>
+<pre>#
+# /etc/lilo.conf
+#
+
+boot=/dev/hda
+# This line often fixes L40 errors on bootup
+# disk=/dev/hda bios=0x80
+
+default=Arch4
+timeout=20
+lba32
+prompt
+compact
+
+image=/boot/vmlinuz-linux
+        label=Arch4
+        root=/dev/hda5
+        append="video=vesafb:1024x768-24@56,ywrap,mtrr splash=verbose,theme:darch console=tty1 resume2=swap:/dev/hdb1"
+initrd=/boot/initramfs-linux.img
+read-only
+
+image=/boot/vmlinuz-linux
+        label=Arch
+        root=/dev/hda3
+        append="video=vesafb:1024x768-24@56,ywrap,mtrr splash=verbose,theme:darch console=tty1 resume2=swap:/dev/hdb1"
+initrd=/boot/initramfs-linux.img
+read-only
+</pre>
+<p>Run <b>lilo</b> to update your config:
+</p>
+<pre># lilo
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<ul>
+<li>Permissions: chown -R username.group &lt;userdir&gt;</li>
+<li>If you have problem with <b>su</b> command after the change of fs, you should reinstall <b>coreutils</b> package.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Reiser4&amp;oldid=623992">https://wiki.archlinux.org/index.php?title=Reiser4&amp;oldid=623992</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 July 2020, at 15:02.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

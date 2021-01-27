@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Ext3 - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Ext3 rootpage-Ext3 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Ext3</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/File_systems.html" title="File systems">File systems</a></li>
+<li><a href="../en/Ext4.html" title="Ext4">Ext4</a></li>
+</ul>
+</div>
+<p>There are many strengths to the Third Extended ("ext3") filesystem. Its in-kernel and userspace code has been tried, tested, fixed, and improved upon more than almost every other Linux-compatible filesystem. It is simple, robust, and extensible. This article explains some tips that can improve both the performance and the reliability of the filesystem.
+</p>
+<p>In this document <code>/dev/hdXY</code> will be used as a generic partition. You should replace this with the actual device node for your partition, such as <code>/dev/hdb1</code> for the first partition of the primary slave disk or <code>/dev/sda2</code> for the second partition of your first SCSI or Serial ATA disk.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Using_tune2fs_and_e2fsck"><span class="tocnumber">1</span> <span class="toctext">Using tune2fs and e2fsck</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Using_directory_indexing"><span class="tocnumber">2</span> <span class="toctext">Using directory indexing</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Enable_full_journaling"><span class="tocnumber">3</span> <span class="toctext">Enable full journaling</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Disable_lengthy_boot_time_checks"><span class="tocnumber">4</span> <span class="toctext">Disable lengthy boot time checks</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Reclaim_reserved_filesystem_space"><span class="tocnumber">5</span> <span class="toctext">Reclaim reserved filesystem space</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Assigning_a_label"><span class="tocnumber">6</span> <span class="toctext">Assigning a label</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Using_tune2fs_and_e2fsck">Using tune2fs and e2fsck</span></h2>
+<p>Before we begin, we need to make sure you are comfortable with using the tune2fs utility to alter the filesystem options of an ext2 or ext3 partition (or <a href="../en/Ext4.html#Migrating_from_ext2/ext3_to_ext4" class="mw-redirect" title="Convert ext2 to ext3">convert ext2 to ext3</a>). Please read the <b>tune2fs</b> man page.
+</p>
+<p>It's generally a good idea to run a filesystem check using the <b>e2fsck</b> utility after you've completed the alterations you wish to make on your filesystem. This will verify that your filesystem is clean and fix it if needed. You should also read the manual page for the <b>e2fsck</b> utility if you have not yet done so.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <b>Only run unmounted!</b> Make sure any filesystems are cleanly unmounted before altering them with the <b>tune2fs</b> or <b>e2fsck</b> utilities! Altering or tuning a filesystem while it is mounted can cause severe corruption! Consider booting from a LiveCD such as <a rel="nofollow" class="external text" href="http://partedmagic.com/doku.php">Parted Magic</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup> or the Arch Linux one.
+</div>
+<h2><span class="mw-headline" id="Using_directory_indexing">Using directory indexing</span></h2>
+<p>This feature improves file access in large directories or directories containing many files by using hashed binary trees to store the directory information. It's perfectly safe to use, and it provides a fairly substantial improvement in most cases; so it's a good idea to enable it:
+</p>
+<pre># tune2fs -O dir_index /dev/hdXY
+</pre>
+<p>This will only take effect with directories created on that filesystem after <b>tune2fs</b> is run. In order to apply this to currently existing directories, we must run the <b>e2fsck</b> utility to optimize and reindex the directories on the filesystem:
+</p>
+<pre># e2fsck -D -f /dev/hdXY
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>This should work with ext2, ext3 and ext4 filesystems. Depending on the size of your filesystem, this could take a long time.</li>
+<li>Directory indexing is activated by default in Arch Linux via <code>/etc/mke2fs.conf</code>.</li>
+</ul>
+</div>
+<h2><span class="mw-headline" id="Enable_full_journaling">Enable full journaling</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <a href="../en/Ext4.html" title="Ext4">ext4</a> partitions will not mount if both delayed allocation and full journaling (e.g. <code>journal=data</code>) are enabled.</div>
+<p>By default, ext3 partitions mount with the 'ordered' data mode. In this mode, all data is written to the main filesystem and its metadata is committed to the journal, whose blocks are logically grouped into transactions to decrease disk I/O. This tends to be a good default for most people. However, I've found a method that increases both reliability and performance (in some situations): journaling everything, including the file data itself (known as 'journal' data mode). Normally, one would think that journaling all data would decrease performance, because the data is written to disk twice: once to the journal then later committed to the main filesystem, but this does not seem to be the case. I've enabled it on all nine of my partitions and have only seen a minor performance loss in deleting large files. In fact, doing this can actually improve performance on a filesystem where much reading and writing is to be done simultaneously. See <a rel="nofollow" class="external text" href="https://www.ibm.com/developerworks/linux/library/l-fs8/index.html#4">this article</a> written by Daniel Robbins on IBM's website for more information.
+</p>
+<p>There are two different ways to activate journal data mode. The first is by adding data=journal as a mount option in /etc/fstab. If you do it this way and want your root filesystem to also use it, you should also pass rootflags=data=journal as a kernel parameter in your bootloader's configuration. In the second method, you will use tune2fs to modify the default mount options in the filesystem's superblock:
+</p>
+<pre># tune2fs -O has_journal -o journal_data /dev/hdXY
+</pre>
+<p>Please note that the second method may not work for older kernels. Especially Linux 2.4.20 and below will likely disregard the default mount options on the superblock. If you're feeling adventurous you may also want to tweak the journal size. (I've left the journal size at the default.) A larger journal may give you better performance (at the cost of more disk space and longer recovery times). Please be sure to read the relevant section of the tune2fs manual before doing so:
+</p>
+<pre># tune2fs -J size=$SIZE /dev/hdXY
+</pre>
+<h2><span class="mw-headline" id="Disable_lengthy_boot_time_checks">Disable lengthy boot time checks</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Only do this on a journaling filesystem such as ext3/4. This may or may not work on other journaling filesystems such as ReiserFS or XFS, but has not been tested. Doing so may damage or otherwise corrupt other filesystems. You do this <b>at your own risk</b>.</div>
+<p>It seems that our ext3 filesystems are still being checked every 30 mounts or so. This is a good default for many because it helps prevent filesystem corruption when you have hardware issues, such as bad IDE/SATA/SCSI cabling, power supply failures, etc. One of the driving forces for creating journaling filesystems was that the filesystem could easily be returned to a consistent state by recovering and replaying the needed journaled transactions. Therefore, we can safely disable these mount-count- and time-dependent checks if we are certain the filesystem will be quickly checked to recover the journal if needed to restore filesystem and data consistency. Before you do this please make sure your filesystem entry in /etc/fstab has a positive integer in its 6th field (pass) so that it is checked at boot time automatically. You may do so using the following command:
+</p>
+<pre># tune2fs -c 0 -i 0 /dev/hdXY
+</pre>
+<p>If you just want to limit the checks to happen less often without totally disabling them (for peace of mind).  A great method is to change from a number of count's check to a time frame check. See the man page. Here is once every month:
+</p>
+<pre># tune2fs -c 0 -i 1m /dev/hdXY
+</pre>
+<h2><span class="mw-headline" id="Reclaim_reserved_filesystem_space">Reclaim reserved filesystem space</span></h2>
+<p>Ext3 partition contain a used space of 5% for special reasons by default.  The main reason is to help with less fragmentation on the filesystem.  The other reason for such space is so root can log in even when the filesystem becomes 100% used.  Without this option, the root user might not be able to log in to "clean up" because the system could become unstable, trying to write logs to a 100% full system for example.  
+</p>
+<p>The issue with this is that hard drives are getting so big the 5% can add up to be quite a large amount of wasted space. (eg. 100 GB = 5 GB reserved).  Now if you separate your filesystems to like /home for example it might be a good idea to adjust these and reclaim that wasted space on long-term archive partitions (see <a rel="nofollow" class="external text" href="http://www.redhat.com/archives/ext3-users/2009-January/msg00026.html">this email</a> for more info).  It's a safe bet to leave your / filesystem at 5% reserved just in case.  Leave reserved space for filesystems containing /var and /tmp also or else you'll end up with problems.
+</p>
+<p>Now to change your reserved space to 1% of the drive, which is fair for non-root filesystems.
+</p>
+<pre># tune2fs -m 1 /dev/sdXY
+</pre>
+<h2><span class="mw-headline" id="Assigning_a_label">Assigning a label</span></h2>
+<p>Once you have created and formated a partition, you can assign it a label using the e2label command. This allows you to add the partition to /etc/fstab using a label instead of using a device path (usefull for an USB drive). To add a label to a partition, type the following command as root: 
+</p>
+<pre># e2label /dev/sdXY <i>new-label</i>
+</pre>
+<p>If the optional argument <i>new-label</i> is not present, e2label will simply display the current filesystem label. If the optional argument <i>new-label</i> is present, then e2label will set the filesystem label to be <i>new-label</i>q. Ext2 and ext3 filesystem labels can be at most 16 characters long; if new-label  is longer than 16 characters, e2label will truncate it and print a warning message.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Ext3&amp;oldid=623460">https://wiki.archlinux.org/index.php?title=Ext3&amp;oldid=623460</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 July 2020, at 16:25.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

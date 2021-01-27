@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>LIRC - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-LIRC rootpage-LIRC skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">LIRC</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/LIRC/Quick_start_guide.html" title="LIRC/Quick start guide">LIRC/Quick start guide</a></li>
+</ul>
+</div>
+<p>From the <a rel="nofollow" class="external text" href="http://lirc.org/">official website</a>:
+</p>
+<dl><dd>
+<b>LIRC</b> (Linux Infrared Remote Control) is a package that decodes and sends infra-red signals of many (but not all) commonly used remote controls.</dd></dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Since 4.18 the kernel can decode the signals of some IR remote controls using BPF, making LIRC sometimes redundant.<a rel="nofollow" class="external autonumber" href="https://lwn.net/Articles/759188/">[1]</a>
+</div>
+<p>This article covers setup and usage of LIRC with serial or USB infrared devices.
+</p>
+<p>LIRC is a daemon that can translate key presses on a supported remote into program specific commands. In this context, the term, "program specific" means that a key press can do different things depending on which program is running and taking commands from LIRC.
+</p>
+<ol>
+<li>A button on the remote is pressed causing it to transmit an IR or RF signal.</li>
+<li>The signal is received by the receiver connected to the Linux computer.</li>
+<li>The kernel (via the correct module) use presents pulse data from the remote on a device like <code>/dev/lirc0</code>, <code>/dev/input/eventX</code>, <code>/dev/ttyUSBX</code> or <code>/dev/ttyS0</code>.</li>
+<li>
+<code>/usr/bin/lircd</code> uses the information from <code>/etc/lirc/lircd.conf.d/foo.conf</code> to convert the pulse data into button press information.</li>
+<li>Programs that use LIRC translate the button press info from <code>/usr/bin/lircd</code> into user-defined actions according to <code>~/.config/lircrc</code> or to program-specific mappings.</li>
+</ol>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#Receiver_and_transmitter_configuration"><span class="tocnumber">2.1</span> <span class="toctext">Receiver and transmitter configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#Serial_port"><span class="tocnumber">2.1.1</span> <span class="toctext">Serial port</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href="#Sound_card"><span class="tocnumber">2.1.2</span> <span class="toctext">Sound card</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6">
+<a href="#Remote_configuration"><span class="tocnumber">2.2</span> <span class="toctext">Remote configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7"><a href="#Searching_for_remote_configuration"><span class="tocnumber">2.2.1</span> <span class="toctext">Searching for remote configuration</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Creating_remote_configuration"><span class="tocnumber">2.2.2</span> <span class="toctext">Creating remote configuration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9"><a href="#Application-specific_actions"><span class="tocnumber">2.3</span> <span class="toctext">Application-specific actions</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Running_as_a_regular_user_rather_than_as_root"><span class="tocnumber">2.4</span> <span class="toctext">Running as a regular user rather than as root</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Testing"><span class="tocnumber">3</span> <span class="toctext">Testing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Receiving_commands"><span class="tocnumber">3.1</span> <span class="toctext">Receiving commands</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Transmitting_commands"><span class="tocnumber">3.2</span> <span class="toctext">Transmitting commands</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15">
+<a href="#Remote_functions_as_a_keyboard"><span class="tocnumber">4.1</span> <span class="toctext">Remote functions as a keyboard</span></a>
+<ul>
+<li class="toclevel-3 tocsection-16"><a href="#When_using_Xorg"><span class="tocnumber">4.1.1</span> <span class="toctext">When using Xorg</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#On_an_ARM_device_not_using_Xorg"><span class="tocnumber">4.1.2</span> <span class="toctext">On an ARM device not using Xorg</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18">
+<a href="#Changing_default_configuration"><span class="tocnumber">4.2</span> <span class="toctext">Changing default configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-19"><a href="#Example"><span class="tocnumber">4.2.1</span> <span class="toctext">Example</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lirc">lirc</a></span> package. If you need <i>audio</i> driver, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/lirc-git/">lirc-git</a></span><sup><small>AUR</small></sup>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="Receiver_and_transmitter_configuration">Receiver and transmitter configuration</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This section is a quick summary. Complete documentation is available <a rel="nofollow" class="external text" href="http://lirc.sourceforge.net/lirc.org/html/index.html">upstream</a>.</div>
+<p>The <i>driver</i> and/or the <i>device</i> for the LIRC service may need to be specified in order to run properly. Look for messages like these in the <a href="../en/Systemd/Journal.html" class="mw-redirect" title="Journalctl">journalctl</a> output if the service abruptly stops while running LIRC-dependent programs such as <i>irrecord</i>:
+</p>
+<pre>Driver `devinput' not found or not loadable (wrong or missing -U/--plugindir?).
+readlink() failed for "auto": No such file or directory
+</pre>
+<p>Set these in the config file and then restart the service.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lirc/lirc_options.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[lircd]
+driver = <i>driver-name</i>
+device = /dev/<i>path-to-dev</i></pre>
+<h4><span class="mw-headline" id="Serial_port">Serial port</span></h4>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> For DIY schematic refer to serial port <a rel="nofollow" class="external text" href="http://www.lirc.org/receivers.html">receivers</a> and <a rel="nofollow" class="external text" href="http://www.lirc.org/transmitters.html">transmitters</a> documentation. Note that serial port device much more reliable than <i>audio_alsa</i> or <i>audio</i>.</div>
+<p>Modern kernel has <i>serial_ir</i> module, which supersedes older <i>lirc_serial</i> driver. It supports even DIY receivers and transmitters, connected to the motherboard's serial port. Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/setserial/">setserial</a></span><sup><small>AUR</small></sup> and run:
+</p>
+<pre># setserial /dev/ttyS0 uart none
+# modprobe serial_ir
+</pre>
+<p>After loading <i>serial_ir</i> module, device <code>/dev/lirc0</code> will be <a rel="nofollow" class="external text" href="https://github.com/torvalds/linux/blob/master/drivers/media/rc/serial_ir.c">created</a> by kernel. If not, check <code>dmesg | grep serial</code> for errors. An LIRC config example for serial device:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lirc/lirc_options.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[lircd]
+driver          = default
+device          = auto
+
+[modinit]
+code = /usr/bin/setserial /dev/ttyS0 uart none
+code1 = /usr/sbin/modprobe serial_ir</pre>
+<h4><span class="mw-headline" id="Sound_card">Sound card</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Using sound card as infrared device has plenty pitfalls and doesn't gives advantage over other hardware setup.</div>
+<p>Sound card with connected external DIY circuits can be used to <a rel="nofollow" class="external text" href="http://www.lirc.org/ir-audio.html">receive</a> and <a rel="nofollow" class="external text" href="https://web.archive.org/web/20150511192459/http://www.lirc.org:80/html/audio.html">transmit</a> IR codes.
+</p>
+<p><i>audio_alsa</i> <a rel="nofollow" class="external text" href="http://www.lirc.org/html/audio-alsa.html">driver</a> included in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lirc">lirc</a></span>, but supports only reception.
+</p>
+<p>Unmute microphone input with <code>alsamixer</code> and set enough gain. You can check waveform and gain with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=audacity">audacity</a></span>. There should be distinguishable square pulses: not flatlined, nor overloaded. Also good demodulated pulses easily perceptible by ear. Note that LIRC and <code>irrecord</code> reads <i>positive pulses in right audio channel</i>. Negative pulses won't work.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lirc/lirc_options.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">driver          = audio_alsa
+device          = default</pre>
+<p><i>audio</i> <a rel="nofollow" class="external text" href="https://web.archive.org/web/20150511192459/http://www.lirc.org:80/html/audio.html">driver</a> included in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/lirc-git/">lirc-git</a></span><sup><small>AUR</small></sup> and supports both reception and transmission. Note, that default latency around 0.02 can cause "Warning: Output underflow" and corrupted transmission - receiver won't respond to it. Try a higher value like 0.05.
+</p>
+<p>Increase sound card output loudness, otherwise LED signal will be weak and range is low. LED flash can be detected with smartphone camera, as it sensitive to infrared wavelengths.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lirc/lirc_options.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">driver          = audio
+device          = ALSA:default@48000:0.05</pre>
+<h3><span class="mw-headline" id="Remote_configuration">Remote configuration</span></h3>
+<p>Directory <code>/etc/lirc/lircd.conf.d/</code> contains system-wide configuration files for remotes. Each <i>*.conf</i> file corresponds to one device and describes it's protocol, scancodes and keycodes. It allows LIRC receive and send signals for specific hardware. These files aren't included in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lirc">lirc</a></span> package and should be found somewhere or created by user.
+</p>
+<h4><span class="mw-headline" id="Searching_for_remote_configuration">Searching for remote configuration</span></h4>
+<p>Plenty of configuration files can be found in the <a rel="nofollow" class="external text" href="http://lirc-remotes.sourceforge.net/remotes-table.html">LIRC remotes database</a>. Follow the url or use <span class="plainlinks archwiki-template-man" title="$ man 1 irdb-get"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/irdb-get.1">irdb-get(1)</a></span> to search the database.
+</p>
+<p>An example using <code>irdb-get</code> to find a config file for a "Streamzap" remote:
+</p>
+<pre>$ irdb-get find stream
+atiusb/atiusb.lircd.conf
+digital_stream/DTX9900.lircd.conf
+snapstream/Firefly-Mini.lircd.conf
+streamzap/PC_Remote.lircd.conf
+streamzap/streamzap.lircd.conf
+x10/atiusb.lircd.conf
+
+$ irdb-get download streamzap/streamzap.lircd.conf 
+Downloaded sourceforge.net/p/lirc-remotes/code/ci/master/tree/remotes/streamzap/streamzap.lircd.conf as streamzap.lircd.conf
+</pre>
+<p>Once identified, copy the needed conf to <code>/etc/lirc/lircd.conf.d/</code> to allow the daemon to initialize support for it.
+</p>
+<pre># cp streamzap.lircd.conf /etc/lirc/lircd.conf.d/
+</pre>
+<h4><span class="mw-headline" id="Creating_remote_configuration">Creating remote configuration</span></h4>
+<p>Remote control configurations can be created using <span class="plainlinks archwiki-template-man" title="$ man 1 irrecord"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/irrecord.1">irrecord(1)</a></span>, which guides users trough the process. If using a detected remote, invoke it like so:
+</p>
+<pre># irrecord --device=/dev/lirc0 MyRemote
+</pre>
+<p>The program will instruct user to begin hitting keys on the remote in an attempt to learn it, ultimately mapping out every button and it's corresponding scancode. When finished, save the resulting file to <code>/etc/lirc/lircd.conf.d/foo.conf</code> and proceed. Consider sharing configuration file with others.
+</p>
+<h3><span class="mw-headline" id="Application-specific_actions">Application-specific actions</span></h3>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Many application-specific lircrc files are available on the internet.</div>
+<p>Bind keycodes to application-specific actions by placing their respective configuration files in <code>~/.config/lircrc/</code> which should be created manually if desired, see <span class="plainlinks archwiki-template-man" title="$ man 5 lircrc"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/lircrc.5">lircrc(5)</a></span>.  This only works for LIRC-aware applications, like <a href="../en/MPlayer.html" title="MPlayer">MPlayer</a>, <a href="../en/VLC_media_player.html" class="mw-redirect" title="VLC">VLC</a>, <a href="../en/MythTV.html" title="MythTV">MythTV</a> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=totem">totem</a></span> (<a href="../en/Kodi.html" title="Kodi">Kodi</a> also supports LIRC but does so in a non-standard way, see <a href="../en/Kodi.html#Using_a_remote_control" title="Kodi">Kodi#Using a remote control</a>).
+</p>
+<p>Define these application-specific configurations in separate files and include them in <i>lircrc</i>, like:
+</p>
+<pre>include "~/.config/lircrc/mplayer"
+include "~/.config/lircrc/mythtv"
+include "~/.config/lircrc/vlc"
+</pre>
+<h3><span class="mw-headline" id="Running_as_a_regular_user_rather_than_as_root">Running as a regular user rather than as root</span></h3>
+<p>By default, lircd runs as user root.  However, for increased stability and security, upstream recommends running it as a regular user.  See Appendix 14 at <a rel="nofollow" class="external text" href="http://www.lirc.org/html/configuration-guide.html">this</a> link.
+</p>
+<p>To do this, create and provision a lirc user:
+</p>
+<pre># groupadd -r lirc
+# useradd -r -g lirc -d /var/lib/lirc -s /usr/bin/nologin -c "LIRC daemon user" lirc
+# usermod -a -G lock,input lirc
+</pre>
+<p>Augment the package-providing service unit by creating a lircd <a href="../en/Systemd.html#Drop-in_files" title="Systemd">Systemd#Drop-in files</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># systemctl edit lircd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+User=lirc
+Group=lirc
+
+CapabilityBoundingSet=CAP_SETEUID
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+</pre>
+<p>To allow <code>/dev/lirc*</code> devices to be accessible for the lirc group and to grant r/w access for the lirc group to USB devices using ACLs, copy the following udev rule into place:
+</p>
+<pre># cp /usr/share/lirc/contrib/60-lirc.rules /etc/udev/rules.d/
+</pre>
+<p>To allow access to the lirc group to be able to create a PID file, create the following lircd tmpfile which will supersede the package provided one (which makes ownership only to root):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/tmpfiles.d/lirc.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">d /run/lirc 0755 lirc lirc -
+</pre>
+<p>Reboot the system to verify expected function.
+</p>
+<h2><span class="mw-headline" id="Testing">Testing</span></h2>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">Start/enable</a> <code>lircd.service</code>.
+</p>
+<h3><span class="mw-headline" id="Receiving_commands">Receiving commands</span></h3>
+<p>Run <span class="plainlinks archwiki-template-man" title="$ man 1 irw"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/irw.1">irw(1)</a></span>, point remote to the receiver and press some buttons. Received codes will be printed to stdout.
+</p>
+<pre>$ irw
+000000037ff07bfe 00 One mceusb
+000000037ff07bfd 00 Two mceusb
+000000037ff07bfd 01 Two mceusb
+000000037ff07bf2 00 Home mceusb
+000000037ff07bf2 01 Home mceusb
+</pre>
+<p>If <code>irw</code> gives no output:
+</p>
+<ul>
+<li>Run <i>mode2</i> or <i>xmode2</i> to see if LIRC actually read something from IR sensor, if no - check the hardware</li>
+<li>If <i>mode2</i> receives pulse data, check the config files in <code>/etc/lirc/lircd.conf.d/</code> for errors</li>
+</ul>
+<h3><span class="mw-headline" id="Transmitting_commands">Transmitting commands</span></h3>
+<p>List registered remotes (config files):
+</p>
+<pre>$ irsend LIST "" ""
+LG_6710CMAP01A
+</pre>
+<p>List available codes for the specific device:
+</p>
+<pre>$ irsend LIST LG_6710CMAP01A ""
+0000000000007887 KEY_POWER
+000000000000f807 KEY_MUTE
+000000000000e817 KEY_VOLUMEUP
+...
+</pre>
+<p>Choose discovered device <code>LG_6710CMAP01A</code> and send command <code>KEY_POWER</code>:
+</p>
+<pre>$ irsend SEND_ONCE LG_6710CMAP01A KEY_POWER
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Remote_functions_as_a_keyboard">Remote functions as a keyboard</span></h3>
+<h4><span class="mw-headline" id="When_using_Xorg">When using Xorg</span></h4>
+<p><a href="../en/Xorg.html" title="Xorg">Xorg</a> detects some remotes, such as the Streamzap USB PC Remote, as a Human Interface Device (HID) which means some or all of the keys will show up as key strokes as if entered from the physical keyboard. This behavior will present problems if LIRC is to be used to manage the device.
+</p>
+<p>To disable, create the following file and restart X:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/X11/xorg.conf.d/90-streamzap.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Section "InputClass"
+  Identifier "Ignore Streamzap IR"
+  MatchProduct "Streamzap"
+  MatchIsKeyboard "true"
+  Option "Ignore" "true"
+EndSection</pre>
+<p>Do not forget to alter the <code>MatchProduct</code> property according to one shown in <code>Name</code> from output of 
+</p>
+<pre>$ cat /proc/bus/input/devices | grep -e IR
+</pre>
+<p>For example <code>WinFast</code> for <code>N: Name="cx88 IR (WinFast DTV2000 H rev."</code>
+</p>
+<h4><span class="mw-headline" id="On_an_ARM_device_not_using_Xorg">On an ARM device not using Xorg</span></h4>
+<p>Blacklist the offending modules by creating <code>/etc/modprobed.d/streamzap.conf</code> to suppress this behavior. An example is provided for the Streamzap remote.
+</p>
+<pre>install ir_sharp_decoder /bin/false
+install ir_xmp_decoder /bin/false
+install ir_rc5_decoder /bin/false
+install ir_nec_decoder /bin/false
+install ir_sony_decoder /bin/false
+install ir_mce_kbd_decoder /bin/false
+install ir_jvc_decoder /bin/false
+install ir_rc6_decoder /bin/false
+install ir_sanyo_decoder /bin/false
+</pre>
+<h3><span class="mw-headline" id="Changing_default_configuration">Changing default configuration</span></h3>
+<p>Users not getting any output from <code>irw</code> may have the default configuration in <code>/etc/lirc/lirc_options.conf</code> incorrectly setup (or might have been overwritten by an update).
+</p>
+<p>First, check if <code>/dev/lirc0</code> is present:
+</p>
+<pre>$ mode2 --driver default --device /dev/lirc0
+</pre>
+<p>Watch the output while pressing buttons on the remote. If output is present, edit <code>/etc/lirc/lirc_options.conf</code> changing the  <b>driver</b> and <b>device</b> appropriately.
+</p>
+<p>If no output is presented, the task becomes locating the correct driver/device combination. First check what combination lirc detected by default. Run <code>ir-keytable</code> from the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=v4l-utils">v4l-utils</a></span> package. and check the output. It will look similar to this:
+</p>
+<pre> Found /sys/class/rc/rc0/ (/dev/input/event5) with:
+       Driver ite-cir, table rc-rc6-mce
+       Supported protocols: unknown other lirc rc-5 jvc sony nec sanyo mce-kbd rc-6 sharp xmp
+       Enabled protocols: lirc
+       Extra capabilities: &lt;access denied&gt;
+</pre>
+<p>In this case, LIRC automatically detected <code>/dev/input/event5</code> as the IR device, which uses the <code>devinput</code> driver. Check if this combination is working by running:
+</p>
+<pre>$ mode2 --driver devinput --device /dev/input/event5
+</pre>
+<p>Now try pressing buttons on the remote. If there is no output, try different driver and device combinations.  Once a working combination has been identified, change <b>driver</b> and <b>device</b> in <code>/etc/lirc/lirc_options.conf</code> appropriately.
+</p>
+<h4><span class="mw-headline" id="Example">Example</span></h4>
+<p>An example configuration for a MCE RC6 compatible receiver:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lirc/lirc_options.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[lircd]
+nodaemon        = False
+driver          = default
+device          = /dev/lirc0
+output          = /var/run/lirc/lircd
+pidfile         = /var/run/lirc/lircd.pid
+plugindir       = /usr/lib/lirc/plugins
+permission      = 666
+allow-simulate  = No
+repeat-max      = 600
+
+[lircmd]
+uinput          = False
+nodaemon        = False</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://sf.net/p/lirc">Project site</a></li>
+<li><a rel="nofollow" class="external text" href="http://lirc.sourceforge.net/lirc.org/html/index.html">Upstream documentation</a></li>
+<li><a rel="nofollow" class="external text" href="http://lirc.org/html/configuration-guide.html">Upstream Configuration Guide</a></li>
+<li><a rel="nofollow" class="external text" href="http://lirc-remotes.sourceforge.net/remotes-table.html">Remotes database</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.mythtv.org/wiki/Category:Remote_Controls">MythTV Wiki:Remotes article</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/graysky2/streamzap">Linux Streamzap config files</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Hardware.html" title="Category:Hardware">Hardware</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=LIRC&amp;oldid=616898">https://wiki.archlinux.org/index.php?title=LIRC&amp;oldid=616898</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 29 May 2020, at 17:06.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

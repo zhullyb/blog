@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Create root filesystem snapshots with LVM (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Create_root_filesystem_snapshots_with_LVM_简体中文 rootpage-Create_root_filesystem_snapshots_with_LVM_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Create root filesystem snapshots with LVM (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+<li><a href="../en/Full_system_backup_with_tar.html" class="mw-redirect" title="Full System Backup with tar">Full System Backup with tar</a></li>
+</ul>
+</div>
+<p>本文描述如何在系统启动时为root文件系统做LVM快照，这些快照可以用来在最短时间内进行<a href="../en/Full_system_backup_with_tar.html" title="Full system backup with tar">全系统备份</a>，或者是测试系统的更新以便于按需回滚。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6"><span class="tocnumber">1</span> <span class="toctext">前提条件</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#%E5%AE%89%E8%A3%85"><span class="tocnumber">2</span> <span class="toctext">安装</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#%E7%94%A8%E6%B3%95"><span class="tocnumber">3</span> <span class="toctext">用法</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#%E5%A4%87%E4%BB%BD"><span class="tocnumber">3.1</span> <span class="toctext">备份</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#%E6%9B%B4%E6%96%B0%E5%9B%9E%E6%BB%9A"><span class="tocnumber">3.2</span> <span class="toctext">更新回滚</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#%E5%B7%B2%E7%9F%A5%E7%9A%84%E9%97%AE%E9%A2%98"><span class="tocnumber">4</span> <span class="toctext">已知的问题</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.89.8D.E6.8F.90.E6.9D.A1.E4.BB.B6"></span><span class="mw-headline" id="前提条件">前提条件</span>
+</h2>
+<p>你需要一个root文件系统为<a href="../en/LVM.html" title="LVM">LVM</a>分区并且利用<a href="../en/Systemd.html" title="Systemd">systemd</a>进行引导的系统，确认<a href="../en/LVM.html#Snapshots" title="LVM">LVM快照</a>相关的前提条件已经正确安装。
+</p>
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p>在系统启动过程中，利用一个新的systemd service创建一个干净的root卷的快照，创建<code>/etc/systemd/system/mk-lvm-snapshots.service</code> 包含以下内容:
+</p>
+<pre>[Unit]
+Description=make LVM snapshots
+Requires=local-fs-pre.target
+DefaultDependencies=no
+Conflicts=shutdown.target
+After=local-fs-pre.target
+Before=local-fs.target
+
+[Install]
+WantedBy=make-snapshots.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/lvcreate -L10G -n snap-root -s lvmvolume/root</pre>
+<p>将上述<code>lvcreate</code>命令中的root卷的卷组名和卷名改成你系统中的相关名字，如有必要修改上述快照的大小。如果还有其它的文件系统需要进行快照，则将上述<code>ExecStart</code>属性扩展为多条命令，用分号隔开(注意在分号前后均要留有一个空格，详见<a rel="nofollow" class="external text" href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines">systemd service manual</a>)。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 你可以在运行的系统上测试一下<code># lvcreate</code>命令直到得到的结果如你所需。可以用<code># lvremove</code>删除此快照。在运行的系统上做的快照不如在单用户模式下或是在系统启动时做的快照一致性更好。</div>
+<p>创建一个新的systemd target <code>/etc/systemd/system/make-snapshots.target</code>:
+</p>
+<pre>[Unit]
+Description=Make Snapshots
+Requires=multi-user.target</pre>
+<p>如果<code>multi-user.target</code>不是你的缺省target，则进行相应的修改。
+</p>
+<p>将此新的服务生效：<code># systemctl enable mk-lvm-snapshots.service</code>。
+</p>
+<p>如果系统启动一个新的target，LVM快照会在挂载完本地文件系统后进行创建，为此，创建一个<a href="../en/GRUB.html" title="GRUB">GRUB</a> menu entry来启动这个新的target，基于正常启动的<code>grub.cfg</code>创建<code>/boot/grub/custom.cfg</code>，并在其中传递给内核启动<code>make-snapshots.target</code>的参数。
+</p>
+<pre>### make snapshots ###
+menuentry 'Arch GNU/Linux, make snapshots' --class arch --class gnu-linux --class gnu --class os {
+...
+        echo    'Loading Linux core repo kernel ...'
+        linux   /boot/vmlinuz-linux root=/dev/mapper/lvmvolume-root ro <b>systemd.unit=make-snapshots.target</b>
+        echo    'Loading initial ramdisk ...'
+        initrd  /boot/initramfs-linux.img
+} </pre>
+<p>如果{{ic|grub.cfg}发生了变更，记着相应修正<code>custom.cfg</code>。
+</p>
+<p>系统通过此grub entry启动后<code># lvs</code>应该可以看到新创建的快照。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 利用<code># journalctl -u mk-lvm-snapshots.service</code>命令可以看到新的服务启动过程的相关输出。</div>
+<h2>
+<span id=".E7.94.A8.E6.B3.95"></span><span class="mw-headline" id="用法">用法</span>
+</h2>
+<h3>
+<span id=".E5.A4.87.E4.BB.BD"></span><span class="mw-headline" id="备份">备份</span>
+</h3>
+<p>如要进行全系统的备份，首先以上述创建快照的target重启系统，挂载快照卷（and further volumes, if required)，最好以只读的方式 (<tt>-o</tt>) 挂载，便可以进行全系统备份，例如可以采用<a href="../en/Full_system_backup_with_tar.html" title="Full system backup with tar">Full system backup with tar</a>文章中的办法进行备份。
+</p>
+<p>在备份的过程中并不影响现有系统的使用，因为所有正常卷的修改都反应在了快照里了。备份完后不要忘记删除这个快照，copy-on-write的快照模式会使正常root卷的所有修改用光你的快照卷空间。如果快照卷空间用光，LVM并不能自动增长快照空间，则LVM会拒绝进一步向正常卷中写入数据或者直接丢掉快照，都应该避免。
+</p>
+<h3>
+<span id=".E6.9B.B4.E6.96.B0.E5.9B.9E.E6.BB.9A"></span><span class="mw-headline" id="更新回滚">更新回滚</span>
+</h3>
+<p>另外一个LVM快照的用法是进行系统更新的测试和回滚，即为已知正常使用的系统先做一个快照，再进行更新。
+</p>
+<p>如果想要固化更新的内容，则可以通过<code># lvremove</code>删除快照的方式；如果想要回滚到更新前的状态，可以通过<code># lvconvert --merge</code>恢复快照，在下次系统启动时快照会被合并到正常卷中，创建快照之后所有对正常卷的修改均被撤消。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 快照合并会快照卷也将不复存在，如果想进一步测试则必须再创建一个快照卷。</div>
+<h2>
+<span id=".E5.B7.B2.E7.9F.A5.E7.9A.84.E9.97.AE.E9.A2.98"></span><span class="mw-headline" id="已知的问题">已知的问题</span>
+</h2>
+<p>根据<a rel="nofollow" class="external text" href="https://bugzilla.redhat.com/show_bug.cgi?id=681582">bug 681582</a>关闭一个有活动的快照卷的系统会很长时间（目前是1..3分钟）。有个变通的方法，在<code>/etc/systemd/system</code>中创建一个<code>/usr/lib/systemd/system/dmeventd.service</code>的拷由，并插入以下内容：
+</p>
+<p><code>JobTimeoutSec=10</code>:
+</p>
+<pre>[Unit]
+Description=Device-mapper event daemon
+Documentation=man:dmeventd(8)
+Requires=dmeventd.socket
+After=dmeventd.socket
+DefaultDependencies=no
+<b>JobTimeoutSec=10</b>
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/dmeventd
+ExecReload=/usr/sbin/dmeventd -R
+Environment=SD_ACTIVATION=1
+PIDFile=/run/dmeventd.pid
+OOMScoreAdjust=-1000</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:System_recovery.html" title="Category:System recovery (简体中文)">System recovery (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Create_root_filesystem_snapshots_with_LVM_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=629049">https://wiki.archlinux.org/index.php?title=Create_root_filesystem_snapshots_with_LVM_(简体中文)&amp;oldid=629049</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 07:56.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

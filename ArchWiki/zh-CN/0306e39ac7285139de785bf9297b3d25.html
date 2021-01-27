@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>pacman (简体中文)/Package signing (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Pacman_简体中文_Package_signing_简体中文 rootpage-Pacman_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">pacman (简体中文)/Package signing (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">Pacman (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/GnuPG.html" title="GnuPG">GnuPG</a></li>
+<li><a href="../DeveloperWiki:Package_signing.html" title="DeveloperWiki:Package signing">DeveloperWiki:Package signing</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Pacman/Package_signing.html" title="Pacman/Package signing">Pacman/Package_signing</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-10-17。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Pacman/Package_signing&amp;diff=0&amp;oldid=490037">更改</a>，则您可以帮助同步翻译。</div>
+<p>为了保证软件包来自开发者, Pacman 使用<a rel="nofollow" class="external text" href="http://www.gnupg.org/gph/en/manual.html#AEN385">信任网络</a>中的 <a rel="nofollow" class="external text" href="http://www.gnupg.org/">GnuPG 密钥</a>进行软件包验证。目前 Archlinux 的主要签名密钥在<a rel="nofollow" class="external text" href="https://archlinux.org/master-keys/">这里</a>。
+其中至少三个主密匙被用来签署官方开发者和授信用户自己的密钥，而他们将用这些密钥签署自己的包。用户在设置pacman-key时也会生成一个自己的密钥。所以信任网络也会把用户的密钥连接到五大主密钥上面。
+</p>
+<p>密钥也可以用来签名其它的密钥，也就是说签名密钥的所有者能够保证被签名密钥的安全性。要信任一个软件包，需要在用户自己的 PGP 密钥和软件包签名间建立一个密钥链。在 Arch 的密钥结构中，有三种方式：
+</p>
+<ul>
+<li>
+<b>自定义软件包</b>: 用户自己构建软件包并用自己的密钥签名认证。</li>
+<li>
+<b>非官方软件包</b>: 开发者构建软件包并签名它。用户需要用自己的密钥签名开发者的密钥，将其变为可信。</li>
+<li>
+<b>官方软件包</b>: 开发者构建软件包，而开发者的密钥已经被 Arch 主密钥签名。最终用户用自己的密钥签名主密钥，这样就能信任所有官方开发者。</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> HKP协议使用11371/tcp端口用来通信。为了从服务器得到签署的密钥（使用pacman-key），这个端口必须打开。</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 
+<p>关于此问题的背景，请访问博客 <a rel="nofollow" class="external autonumber" href="http://allanmcrae.com/2011/08/pacman-package-signing-1-makepkg-and-repo-add/">[1]</a><a rel="nofollow" class="external autonumber" href="http://allanmcrae.com/2011/08/pacman-package-signing-2-pacman-key/">[2]</a><a rel="nofollow" class="external autonumber" href="http://allanmcrae.com/2011/08/pacman-package-signing-3-pacman/">[3]</a><a rel="nofollow" class="external autonumber" href="http://allanmcrae.com/2011/12/pacman-package-signing-4-arch-linux/">[4]</a> 和 <a href="../en/Package_Signing_Proposal_for_Pacman.html" class="mw-redirect" title="Package Signing Proposal for Pacman">软件包签名提议</a> wiki 页面。
+</p>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E9%85%8D%E7%BD%AE"><span class="tocnumber">1</span> <span class="toctext">配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%E9%85%8D%E7%BD%AE_pacman"><span class="tocnumber">1.1</span> <span class="toctext">配置 pacman</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%AF%86%E9%92%A5%E7%8E%AF"><span class="tocnumber">1.2</span> <span class="toctext">初始化密钥环</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%E7%AE%A1%E7%90%86%E5%AF%86%E9%92%A5"><span class="tocnumber">2</span> <span class="toctext">管理密钥</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#%E9%AA%8C%E8%AF%81%E4%B8%BB%E5%AF%86%E9%92%A5"><span class="tocnumber">2.1</span> <span class="toctext">验证主密钥</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#%E5%AE%98%E6%96%B9%E5%BC%80%E5%8F%91%E8%80%85%E5%AF%86%E9%92%A5"><span class="tocnumber">2.2</span> <span class="toctext">官方开发者密钥</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#%E5%AF%BC%E5%85%A5%E9%9D%9E%E5%AE%98%E6%96%B9%E5%AF%86%E9%92%A5"><span class="tocnumber">2.3</span> <span class="toctext">导入非官方密钥</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#%E7%94%A8GPG%E8%B0%83%E8%AF%95"><span class="tocnumber">2.4</span> <span class="toctext">用GPG调试</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="tocnumber">3</span> <span class="toctext">问题解决</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#%E5%A6%82%E4%BD%95%E6%94%B6%E9%9B%86%E7%86%B5"><span class="tocnumber">3.1</span> <span class="toctext">如何收集熵</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#%E5%AF%86%E9%92%A5%E5%AF%BC%E5%85%A5%E5%A4%B1%E8%B4%A5"><span class="tocnumber">3.2</span> <span class="toctext">密钥导入失败</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#%E7%A6%81%E7%94%A8%E7%AD%BE%E5%90%8D%E6%A3%80%E6%9F%A5"><span class="tocnumber">3.3</span> <span class="toctext">禁用签名检查</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#%E9%87%8D%E7%BD%AE%E6%89%80%E6%9C%89%E5%AF%86%E9%92%A5"><span class="tocnumber">3.4</span> <span class="toctext">重置所有密钥</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#%E5%88%A0%E9%99%A4%E9%99%88%E6%97%A7%E7%9A%84%E5%8C%85"><span class="tocnumber">3.5</span> <span class="toctext">删除陈旧的包</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E6%9B%B4%E6%96%B0%E5%AF%86%E9%92%A5"><span class="tocnumber">3.6</span> <span class="toctext">通过代理更新密钥</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16"><a href="#%E5%8F%82%E9%98%85"><span class="tocnumber">4</span> <span class="toctext">参阅</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<h3>
+<span id=".E9.85.8D.E7.BD.AE_pacman"></span><span class="mw-headline" id="配置_pacman">配置 pacman</span>
+</h3>
+<p>首先通过 <code>/etc/pacman.conf</code> 中的 <code>SigLevel</code> 确定要使用的检查级别。文件的注释中列出了几个可选设置， <a rel="nofollow" class="external text" href="https://archlinux.org/pacman/pacman.conf.5.html#_package_and_database_signature_checking"><code>pacman.conf</code>手册页面</a> 有详细介绍。
+</p>
+<p>签名检查可以设成全局的或针对每个仓库的。如果 <code>SigLevel</code> 在 [options] 节中进行了全局设置，那么所有的包都必须签名。包括你自己编译构建的包，也需要使用 <code>makepkg</code> 进行签名。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 尽管所有的官方软件包现在都进行了签名，但是在2012年6月的时候签名数据库还在开发。如果设置了 <code>Required</code> ，那么 <code>DatabaseOptional</code> 也应该被设置。</div>
+<p>默认的设置下，系统只安装被授信的密钥签署的软件包。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SigLevel = Required DatabaseOptional</pre> 
+<p>因为 <code>TrustOnly</code> 是一个已经被编译进pacman的默认设置。
+</p>
+<p>所以上面这些的效果和下面是一样的：
+</p>
+<pre>SigLevel = Required DatabaseOptional TrustedOnly
+</pre>
+<p>上面这些也可以在仓库内部进行设置，比如：
+</p>
+<pre>[core]
+SigLevel = PackageRequired # ’Optional’ here would turn off a global ’Required’ for this repository
+Include = /etc/pacman.d/mirrorlist</pre>
+<p>软件仓库中的软件启用了签名验证，但是并不要求仓库数据库也被签名了。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> SigLevel <code>TrustAll</code> 设置仅仅为了测试而存在，使用它会信任未被验证的密钥。对于所有的官方软件源你应该使用 <code>TrustedOnly</code> 。</div>
+<h3>
+<span id=".E5.88.9D.E5.A7.8B.E5.8C.96.E5.AF.86.E9.92.A5.E7.8E.AF"></span><span class="mw-headline" id="初始化密钥环">初始化密钥环</span>
+</h3>
+<p>关于初始化，<a href="https://en.wikipedia.org/wiki/Entropy_(computing)" class="extiw" title="wikipedia:Entropy (computing)">收集熵</a> 是必须的。
+随意移动鼠标，随即按键盘或者运行一些磁盘级别的操作（比如在其他终端运行<code>ls -R /</code>或者<code>find / -name foo</code> 或者 <code>dd if=/dev/sda8 of=/dev/tty7</code>之类的)应该会收集足够的熵。如果你的系统没有足够的熵，这项工作需要好几个小时，但是如果你有，那么就会快多了。
+</p>
+<p>要初始化 pacman 密钥:
+</p>
+<pre># pacman-key --init
+</pre>
+<p>这会在 <code>/etc/pacman.d/gnupg</code> 建立新密钥并生成系统主密钥。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果<code>pacman-key --init</code>运行时系统没有足够的熵，可能会需要很长时间。请在目标机器上安装 <a href="../en/Haveged.html" title="Haveged">haveged</a> 或 <a href="../en/Rng-tools.html" title="Rng-tools">rng-tools</a>。然后在用 root 权限执行<code>pacman-key --init</code> 前<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">启动</a> <code>haveged.service</code>。</div>
+<h2>
+<span id=".E7.AE.A1.E7.90.86.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="管理密钥">管理密钥</span>
+</h2>
+<h3>
+<span id=".E9.AA.8C.E8.AF.81.E4.B8.BB.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="验证主密钥">验证主密钥</span>
+</h3>
+<p>通过以下命令进行配置：
+</p>
+<pre># pacman-key --populate archlinux
+</pre>
+<p>该命令对 <a rel="nofollow" class="external text" href="https://archlinux.org/master-keys/">Master Signing Keys</a> 进行验证，when prompted as these are used to co-sign (and therefore trust) all other packager's keys.
+</p>
+<p>PGP 通常很长(2048 位或更长)，不太容易使用，所以通常创建一个40位十六进制指纹，最后八位被称为密钥 ID，是密钥的名字。长签名可以用来检测两个密钥是否相同。
+</p>
+<h3>
+<span id=".E5.AE.98.E6.96.B9.E5.BC.80.E5.8F.91.E8.80.85.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="官方开发者密钥">官方开发者密钥</span>
+</h3>
+<p>官方开发者和 TU 的密钥已经被主密钥签名认证，所以不需要用 pacman-key 认证它们。pacman 遇到不认识的签名时，它将会询问是否从密钥服务器（设置在<code>/etc/pacman.d/gnupg/gpg.conf</code>文件中，或在命令行中使用<code>--keyserver</code>选项）下载。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> Wikipedia maintains a <a href="https://en.wikipedia.org/wiki/Key_server_(cryptographic)" class="extiw" title="wikipedia:Key server (cryptographic)">list of keyservers</a>.</div>
+<p>下载开发者密钥后，以后都不需要下载。以后会用它验证所有这个开发者构建的软件包。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<p>如果开发者和 TU 的密钥是较早之前导入，它们的签名可能还不存在于本地数据库，用下面命令更新：
+</p>
+<pre># pacman-key --refresh-keys
+</pre>
+ 当使用<code>--refresh-keys</code> 时，本地签名也会被远程查找，并收到未找到的消息，这是正常的。</div>
+<h3>
+<span id=".E5.AF.BC.E5.85.A5.E9.9D.9E.E5.AE.98.E6.96.B9.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="导入非官方密钥">导入非官方密钥</span>
+</h3>
+<p>有两种方法可以实现：
+</p>
+<ul>
+<li>在pacman密钥环中添加你自己的密钥</li>
+<li>或者启用一个已签名的<a href="../zh-CN/Unofficial_user_repositories.html" title="Unofficial user repositories (简体中文)">非官方软件仓库</a>
+</li>
+</ul>
+<p>首先从密钥持有者手中拿到密钥 ID(<code><i>keyid</i></code>)，然后把密钥加入密钥环：
+</p>
+<ul><li>如果密钥位于密钥服务器，通过下面命令导入：<pre># pacman-key -r <i>keyid</i></pre>
+</li></ul>
+<ul><li>如果提供了地址，先下载，然后用下面密钥导入：<pre># pacman-key --add <i>/path/to/downloaded/keyfile</i></pre>
+</li></ul>
+<p>对于所有要签名的密钥，都通过指纹进行验证：
+</p>
+<pre>$ pacman-key -f <i>keyid</i>
+</pre>
+<p>最后，本地签名导入的密钥：
+</p>
+<pre># pacman-key --lsign-key <i>keyid</i>
+</pre>
+<p>现在可以用这个密钥签名软件包了。
+</p>
+<h3>
+<span id=".E7.94.A8GPG.E8.B0.83.E8.AF.95"></span><span class="mw-headline" id="用GPG调试">用GPG调试</span>
+</h3>
+<p>如果需要，可以直接使用GPG调试pacman钥匙环，例如：
+</p>
+<pre># gpg --homedir /etc/pacman.d/gnupg --list-keys
+</pre>
+<h2>
+<span id=".E9.97.AE.E9.A2.98.E8.A7.A3.E5.86.B3"></span><span class="mw-headline" id="问题解决">问题解决</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> Pacman-key 依赖于 <a href="../zh-CN/System_time.html" class="mw-redirect" title="Time (简体中文)">Time (简体中文)</a>. 如果系统时间是错误的，将会获得一个报错：
+<pre>error: PackageName: signature from "User &lt;email@archlinux.org&gt;" is invalid
+error: failed to commit transaction (invalid or corrupted package (PGP signature))
+Errors occured, no packages were upgraded.</pre>
+</div>
+<h3>
+<span id=".E5.A6.82.E4.BD.95.E6.94.B6.E9.9B.86.E7.86.B5"></span><span class="mw-headline" id="如何收集熵">如何收集熵</span>
+</h3>
+<p>移动鼠标、不停的随机按键盘按键或者执行磁盘操作例如 <code>updatedb</code> 可以生成足够的熵，可能需要一段时间，请保持耐心。Alt+F2-6 到第二个终端不起作用。
+</p>
+<p>如果需要通过 ssh 运行 pacman-key --init，请在目标机器编译安装  <a href="../zh-CN/Arch_User_Repository.html" class="mw-redirect" title="AUR (简体中文)">AUR</a> 中的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rng-tools">rng-tools</a></span> 软件包，通过 ssh 连接并运行:
+</p>
+<pre># sed -i 's/0/10/' /etc/conf.d/rngd
+# rngd -f -r /dev/urandom &amp;
+# pacman-key --init
+</pre>
+<p>pacman-key 成功运行后停止 rngd 并删除软件包。
+</p>
+<pre># killall rngd
+# pacman -Rns rng-tools
+</pre>
+<h3>
+<span id=".E5.AF.86.E9.92.A5.E5.AF.BC.E5.85.A5.E5.A4.B1.E8.B4.A5"></span><span class="mw-headline" id="密钥导入失败">密钥导入失败</span>
+</h3>
+<p>有三种可能的情况导致这个问题：
+</p>
+<ul>
+<li>过期的<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=archlinux-keyring">archlinux-keyring</a></span> 包。</li>
+<li>不正确的系统时间。</li>
+<li>你的ISP屏蔽了用于导入 PGP keys 的端口。</li>
+<li>
+<i>pacman</i> 缓存中包含之前的未签名软件包</li>
+<li>未正确设置 <code>dirmngr</code>
+</li>
+</ul>
+<p>过期的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=archlinux-keyring">archlinux-keyring</a></span> 包可能会导致这个问题，你应该首先尝试 <a href="../zh-CN/Pacman.html#%E5%8D%87%E7%BA%A7%E8%BD%AF%E4%BB%B6%E5%8C%85" title="Pacman (简体中文)">升级系统</a> 能否解决这个问题。
+</p>
+<p>请确保 <code>/root/.gnupg/dirmngr_ldapservers.conf</code> 文件存在，<code># dirmngr</code> 可以正常运行. 如果没有，创建一个空文件，并执行 <code># dirmngr</code>。
+</p>
+<p>如果这样没有起作用，并且系统时间是正确的，你可以尝试切换到 MIT 提供的公钥服务器(keyserver)：编辑 <code>/etc/pacman.d/gnupg/gpg.conf</code> 将 <code>keyserver hkp://keys.gnupg.net</code> 替换为
+</p>
+<pre>keyserver hkp://pgp.mit.edu:11371
+</pre>
+<p>如果这样也不可以，可以切换到 kjsl 提供的公钥服务器，它使用 80 端口（通常是HTTP协议的端口，一般ISP不会屏蔽）提供了服务。
+如果这样没有起作用，可以把 keyserver 设置为 kjsl 提供的公钥服务器（使用 HTTP 协议的 80 端口，一般不会被屏蔽）：
+</p>
+<pre>keyserver hkp://keyserver.kjsl.com:80
+</pre>
+<p>如果你关闭了 IPv6 ，GPG 在发现 IPv6 地址时会出错。出现这种情况是尝试使用 IPv4-only 的公钥服务器，例如：
+</p>
+<pre>keyserver hkp://ipv4.pool.sks-keyservers.net:11371</pre>
+<p>如果 80 端口也关闭了，可以使用加密端口
+</p>
+<pre>keyserver hkps://hkps.pool.sks-keyservers.net:443
+</pre>
+<p>如果你忘记了执行 <code>pacman-key --populate archlinux</code> 在你导入公钥的时候可能会遇到一些错误。
+</p>
+<p>如果上面方法都不起作用，pacman 缓存 <code>/var/cache/pacman/pkg/</code> 可以包含之前下载的未签名软件包，手动清空缓存：
+</p>
+<pre># pacman -Sc
+</pre>
+<h3>
+<span id=".E7.A6.81.E7.94.A8.E7.AD.BE.E5.90.8D.E6.A3.80.E6.9F.A5"></span><span class="mw-headline" id="禁用签名检查">禁用签名检查</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 小心使用，禁用签名检查，pacman 会自动安装不信任的软件包。</div>
+<p>如果不在意软件包签名，可以完全禁用 PGP 签名检查，编辑 <code>/etc/pacman.conf</code> 并取消注释 [options] 下的如下行:
+</p>
+<pre>SigLevel = Never
+</pre>
+<p>需要同时注释掉软件源的 SigLevel 设置，因为他们会覆盖全局设置。
+</p>
+<p>这样就不会进行任何签名检查，和 pacman 4 之前一样。如果这样，就不需要用 pacman-key 建立密钥环。
+</p>
+<h3>
+<span id=".E9.87.8D.E7.BD.AE.E6.89.80.E6.9C.89.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="重置所有密钥">重置所有密钥</span>
+</h3>
+<p>如果要删除或重置系统，删除 <code>/etc/pacman.d/gnupg</code> 目录并重新运行 <code>pacman-key --init</code>。你可以通过 <code>pacman-key --populate archlinux</code>以重新添加默认密钥
+</p>
+<h3>
+<span id=".E5.88.A0.E9.99.A4.E9.99.88.E6.97.A7.E7.9A.84.E5.8C.85"></span><span class="mw-headline" id="删除陈旧的包">删除陈旧的包</span>
+</h3>
+<p>如果相同的包持续构建失败，并且你确定你执行的与 pacman-key 有关的操作是正确的，可以尝试移除它们 <code>rm /var/cache/pacman/pkg/badpackage*</code>  然后可以它们将会被重新下载构建。
+</p>
+<p>这样可能可以解决在升级时遇到的<code>error: linux: signature from "Some Person &lt;Some.Person@example.com&gt;" is invalid</code> 或者相似的报错 (i.e. you might not be the victim of a MITM attack after all, your downloaded file was simply corrupt).
+</p>
+<h3>
+<span id=".E9.80.9A.E8.BF.87.E4.BB.A3.E7.90.86.E6.9B.B4.E6.96.B0.E5.AF.86.E9.92.A5"></span><span class="mw-headline" id="通过代理更新密钥">通过代理更新密钥</span>
+</h3>
+<p>要使用代理更新密钥，必须同时在 <code>/etc/gnupg/dirmngr.conf</code> 和 <code>/etc/pacman.d/gnupg/dirmngr.conf</code> 中设置 <code>honor-http-proxy</code> 选项。更多信息请阅读 <a href="../en/GnuPG.html#Use_a_keyserver" title="GnuPG">GnuPG#Use a keyserver</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 如果 <i>pacman-key</i> 没有用 <code>honor-http-proxy</code> 选项，执行失败，重启可能能够解决问题。</div>
+<h2>
+<span id=".E5.8F.82.E9.98.85"></span><span class="mw-headline" id="参阅">参阅</span>
+</h2>
+<ul>
+<li><a href="../en/Package_Signing_Proposal_for_Pacman.html" class="mw-redirect" title="Package Signing Proposal for Pacman">DeveloperWiki:Package Signing Proposal for Pacman</a></li>
+<li><a rel="nofollow" class="external text" href="http://allanmcrae.com/2011/08/pacman-package-signing-1-makepkg-and-repo-add/">Pacman Package Signing – 1: Makepkg and Repo-add</a></li>
+<li><a rel="nofollow" class="external text" href="http://allanmcrae.com/2011/08/pacman-package-signing-2-pacman-key/">Pacman Package Signing – 2: Pacman-key</a></li>
+<li><a rel="nofollow" class="external text" href="http://allanmcrae.com/2011/08/pacman-package-signing-3-pacman/">Pacman Package Signing – 3: Pacman</a></li>
+<li><a rel="nofollow" class="external text" href="http://allanmcrae.com/2011/12/pacman-package-signing-4-arch-linux/">Pacman Package Signing – 4: Arch Linux</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Package_management.html" title="Category:Package management (简体中文)">Package management (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Pacman_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Package_signing_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=647012">https://wiki.archlinux.org/index.php?title=Pacman_(简体中文)/Package_signing_(简体中文)&amp;oldid=647012</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:22.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

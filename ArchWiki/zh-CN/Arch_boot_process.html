@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch boot process (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_boot_process_简体中文 rootpage-Arch_boot_process_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch boot process (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../zh-CN/Arch_boot_process.html#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8" class="mw-redirect" title="Boot loaders (简体中文)">Boot loaders (简体中文)</a></li>
+<li><a href="../zh-CN/Partitioning.html" class="mw-redirect" title="Master Boot Record (简体中文)">Master Boot Record (简体中文)</a></li>
+<li><a href="../zh-CN/Partitioning.html" class="mw-redirect" title="GUID Partition Table (简体中文)">GUID Partition Table (简体中文)</a></li>
+<li><a href="../zh-CN/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface (简体中文)">Unified Extensible Firmware Interface (简体中文)</a></li>
+<li><a href="../zh-CN/Mkinitcpio.html" title="Mkinitcpio (简体中文)">mkinitcpio (简体中文)</a></li>
+<li><a href="../en/Init.html" title="Init">init</a></li>
+<li><a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd (简体中文)</a></li>
+<li><a href="../zh-CN/Fstab.html" title="Fstab (简体中文)">fstab (简体中文)</a></li>
+<li><a href="../en/Autostarting.html" title="Autostarting">Autostarting</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Arch_boot_process.html" title="Arch boot process">Arch boot process</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2017-09-01。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Arch_boot_process&amp;diff=0&amp;oldid=477810">更改</a>，则您可以帮助同步翻译。</div>
+<p>为了启动 Arch Linux，一个与 Linux 兼容的 <a href="../zh-CN/Arch_boot_process.html#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8" class="mw-redirect" title="Boot loaders (简体中文)">启动引导器</a>，比如 <a href="../zh-CN/GRUB.html" title="GRUB (简体中文)">GRUB</a> 或者 <a href="../zh-CN/Syslinux.html" title="Syslinux (简体中文)">Syslinux</a> 必须事先被安装到<a href="../zh-CN/Partitioning.html" class="mw-redirect" title="主引导记录">主引导记录</a>或者 <a href="../zh-CN/Partitioning.html" class="mw-redirect" title="GUID Partition Table (简体中文)">GUID 分区表</a>。启动引导程序负责在初始化启动进程之前，加载好内核和 <a href="../zh-CN/Mkinitcpio.html" title="Mkinitcpio (简体中文)">initial ramdisk</a>。具体过程因 <a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a> 和 <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> 系统而异，细节在正文中给出。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E5%9B%BA%E4%BB%B6%E7%A7%8D%E7%B1%BB"><span class="tocnumber">1</span> <span class="toctext">固件种类</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#BIOS"><span class="tocnumber">1.1</span> <span class="toctext">BIOS</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#UEFI"><span class="tocnumber">1.2</span> <span class="toctext">UEFI</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%E7%B3%BB%E7%BB%9F%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="tocnumber">2</span> <span class="toctext">系统初始化</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#BIOS_2"><span class="tocnumber">2.1</span> <span class="toctext">BIOS</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#UEFI_2"><span class="tocnumber">2.2</span> <span class="toctext">UEFI</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#UEFI_%E7%9A%84%E5%A4%9A%E9%87%8D%E5%BC%95%E5%AF%BC"><span class="tocnumber">2.3</span> <span class="toctext">UEFI 的多重引导</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8"><span class="tocnumber">3</span> <span class="toctext">启动加载器</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#%E5%8A%9F%E8%83%BD%E6%AF%94%E8%BE%83"><span class="tocnumber">3.1</span> <span class="toctext">功能比较</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#%E5%86%85%E6%A0%B8"><span class="tocnumber">4</span> <span class="toctext">内核</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#initramfs"><span class="tocnumber">5</span> <span class="toctext">initramfs</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Init_%E6%B5%81%E7%A8%8B"><span class="tocnumber">6</span> <span class="toctext">Init 流程</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#Getty"><span class="tocnumber">7</span> <span class="toctext">Getty</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#%E6%98%BE%E7%A4%BA%E7%AE%A1%E7%90%86%E5%99%A8"><span class="tocnumber">8</span> <span class="toctext">显示管理器</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#Login"><span class="tocnumber">9</span> <span class="toctext">Login</span></a></li>
+<li class="toclevel-1 tocsection-16"><a href="#Shell"><span class="tocnumber">10</span> <span class="toctext">Shell</span></a></li>
+<li class="toclevel-1 tocsection-17"><a href="#GUI%E3%80%81_xinit_%E6%88%96%E8%80%85_wayland"><span class="tocnumber">11</span> <span class="toctext">GUI、 xinit 或者 wayland</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#%E5%8F%82%E8%A7%81"><span class="tocnumber">12</span> <span class="toctext">参见</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.9B.BA.E4.BB.B6.E7.A7.8D.E7.B1.BB"></span><span class="mw-headline" id="固件种类">固件种类</span>
+</h2>
+<h3><span class="mw-headline" id="BIOS">BIOS</span></h3>
+<p>所谓 <a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a>，即基本输入输出系统，是开机时被执行的第一个程序（固件）。一般来说它储存在主板上的一块闪存中，与其他系统存储无关。
+</p>
+<h3><span class="mw-headline" id="UEFI">UEFI</span></h3>
+<p><a href="../zh-CN/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI (简体中文)">UEFI</a>，即统一可扩展固件界面，支持读取分区表和文件系统。UEFI 不会执行主引导记录中的<a href="../zh-CN/Partitioning.html#%E5%BC%95%E5%AF%BC%E8%AE%B0%E5%BD%95" title="Partitioning (简体中文)">启动加载程序</a>，而是从 UEFI 的<a href="https://en.wikipedia.org/wiki/Non-volatile_random-access_memory" class="extiw" title="wikipedia:Non-volatile random-access memory">非易失性闪存</a>（NVRAM）中读取引导条目。
+</p>
+<p>UEFI 规范要求支持 FAT12，FAT16 和 FAT32 文件系统(请参考<a rel="nofollow" class="external text" href="https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf#G17.1019485">UEFI 规范 2.8 版本，第 13.3.1.1 小节</a>)，但每个符合条件的供应商可以选择性地添加对其他文件系统的支持。比如说，苹果公司的 <a href="../zh-CN/Mac.html" title="Mac (简体中文)">Mac</a> 中的提供的固件支持 HFS+ 文件系统。UEFI 的实现还支持光盘的ISO-9660文件系统。
+</p>
+<p>UEFI 会启动 EFI 应用程序。比如说<a href="#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8">启动加载器</a>，引导管理器和<a href="../zh-CN/Unified_Extensible_Firmware_Interface.html#UEFI_Shell" title="Unified Extensible Firmware Interface (简体中文)">UEFI Shell</a>。这些应用程序通常作为文件存储在 <a href="../zh-CN/EFI_system_partition.html" title="EFI system partition (简体中文)">EFI 系统分区</a>中。供应商通常会将其特定文件存储在 EFI 系统分区中的 <code>/EFI/<i>vendor_name</i></code> 文件夹下。可以通过将引导条目添加到非易失性闪存，或通过 UEFI Shell 来启动这些应用程序。
+</p>
+<p>UEFI 规范通过 <a href="https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface#CSM_booting" class="extiw" title="wikipedia:Unified Extensible Firmware Interface">兼容性支持模块</a>(Compatibility Support Module, CSM)来支持传统 BIOS 引导。如果 UEFI 配置中启用了 UEFI， UEFI 会为每一个磁盘建立一个传统 BIOS 引导条目。如果选择了这种条目，UEFI 的兼容性支持模块会试图加载这个磁盘的主引导记录中的启动加载程序。
+</p>
+<h2>
+<span id=".E7.B3.BB.E7.BB.9F.E5.88.9D.E5.A7.8B.E5.8C.96"></span><span class="mw-headline" id="系统初始化">系统初始化</span>
+</h2>
+<h3><span class="mw-headline" id="BIOS_2">BIOS</span></h3>
+<ol>
+<li>开机时<a href="https://en.wikipedia.org/wiki/Power-on_self-test" class="extiw" title="wikipedia:Power-on self-test">加电自检</a>。</li>
+<li>加电自检后，BIOS 初始化一些必要的硬件以准备引导，比如硬盘和键盘等。</li>
+<li>BIOS 执行在「BIOS 硬盘顺序」中的第一块硬盘上的前 440 字节代码，即<a href="../zh-CN/Partitioning.html" class="mw-redirect" title="主引导记录">主引导记录</a>。</li>
+<li>MBR 接管后，执行它之后的第二阶段代码，如果后者存在的话，它一般就是<a href="../zh-CN/Arch_boot_process.html#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8" class="mw-redirect" title="Boot loaders (简体中文)">启动引导器</a>。启动位置是以下任意一个：
+<ul>
+<li>MBR之后的下一个磁盘扇区，即所谓的MBR后的间隙(post-MBR)（仅在MBR分区表上有）</li>
+<li>一个分区或者一个无分区磁盘<a href="https://en.wikipedia.org/wiki/Volume_boot_record" class="extiw" title="wikipedia:Volume boot record">volume boot record (VBR)</a>
+</li>
+<li>
+<a href="../zh-CN/GRUB.html#GUID%E5%88%86%E5%8C%BA%E8%A1%A8_(GPT)_%E7%89%B9%E6%AE%8A%E6%93%8D%E4%BD%9C" title="GRUB (简体中文)">BIOS启动分区</a> （仅在BIOS/GPT配置下的<a href="../zh-CN/GRUB.html" title="GRUB (简体中文)">GRUB (简体中文)</a> 上有）</li>
+</ul>
+</li>
+<li>第二阶段代码会读取它的支持文件和配置文件。</li>
+</ol>
+<h3><span class="mw-headline" id="UEFI_2">UEFI</span></h3>
+<ol>
+<li>系统开机 - 上电自检（Power On Self Test 或 POST）。</li>
+<li>UEFI 固件被加载，并由它初始化启动要用的硬件。</li>
+<li>固件读取其引导管理器以确定从何处（比如，从哪个硬盘及分区）加载哪个 UEFI 应用。</li>
+<li>固件按照引导管理器中的启动项目，加载UEFI 应用。</li>
+<li>已启动的 UEFI 应用还可以启动其他应用（对应于 UEFI shell 或 rEFInd 之类的引导管理器的情况）或者启动内核及initramfs（对应于GRUB之类引导器的情况），这取决于 UEFI 应用的配置。</li>
+</ol>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 在有些 UEFI 系统中，唯一可行的启动时（如果应用没有在 UEFI 启动菜单定制条目的话）加载 UEFI 应用的方法是把它放在此固定位置：<code>&lt;EFI SYSTEM PARTITION&gt;/EFI/boot/bootx64.efi</code> （对于 64 位的 x86 系统）</div>
+<h3>
+<span id="UEFI_.E7.9A.84.E5.A4.9A.E9.87.8D.E5.BC.95.E5.AF.BC"></span><span class="mw-headline" id="UEFI_的多重引导">UEFI 的多重引导</span>
+</h3>
+<p>因为每个操作系统或者提供者都可以维护自己的 EFI 系统分区中的文件，同时不影响其他系统，所以 UEFI 的多重启动只是简单的运行不同的UEFI 程序，对应于特定操作系统的引导程序。这避免了依赖 chainloading 机制（通过一个<a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">启动引导程序</a>加载另一个引导程序，来切换操作系统）。
+</p>
+<p>参阅 <a href="../en/Dual_boot_with_Windows.html" title="Dual boot with Windows">Dual boot with Windows</a>.
+</p>
+<h2>
+<span id=".E5.90.AF.E5.8A.A8.E5.8A.A0.E8.BD.BD.E5.99.A8"></span><span class="mw-headline" id="启动加载器">启动加载器</span>
+</h2>
+<p>启动加载器（boot loader）是由计算机固件（<a href="https://en.wikipedia.org/wiki/BIOS" class="extiw" title="wikipedia:BIOS">BIOS</a> 或 <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>）启动的程序。它负责根据配置文件加载所需的<a href="../en/Kernel_parameters.html" title="Kernel parameters">内核参数</a>和<a href="../zh-CN/Mkinitcpio.html" title="Mkinitcpio (简体中文)">初始内存</a>。对于 UEFI，内核本身可以由 UEFI 使用 EFI boot stub 直接启动，也可以使用单独的引导加载程序或引导管理器来在引导之前编辑内核参数。
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 启动加载器必须能够访问内核和 initramfs 映像，否则系统将无法引导。因此，在典型设置中，它必须支持访问 <code>/boot</code>。也就是说，启动加载器需要兼容内核和 initramfs 所处的位置的文件系统。</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 加载<a href="../zh-CN/Microcode.html" title="Microcode (简体中文)">处理器微码</a>补丁要求调整启动加载器的配置。详情请参考<a rel="nofollow" class="external autonumber" href="https://archlinux.org/news/changes-to-intel-microcodeupdates/">[1]</a>。</div>
+<h3>
+<span id=".E5.8A.9F.E8.83.BD.E6.AF.94.E8.BE.83"></span><span class="mw-headline" id="功能比较">功能比较</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>因为 GPT 是 UEFI 规范的一部分，所以所有的 UEFI 启动加载器都支持 GPT 磁盘。在 BIOS上 使用 GPT 磁盘也是可行的，要么根据<a rel="nofollow" class="external text" href="https://www.rodsbooks.com/gdisk/hybrid.html">Hybrid MBR</a>使用混合启动，要么使用新的 <a rel="nofollow" class="external text" href="http://repo.or.cz/syslinux.git/blob/HEAD:/doc/gpt.txt">GPT-only</a> 协议。但是这个协议可能在某些 BIOS 实现上会出问题，详情请参考 <a rel="nofollow" class="external text" href="http://www.rodsbooks.com/gdisk/bios.html#bios">rodsbooks</a>。</li>
+<li>在文件系统支持中提到的“加密”是<a href="https://en.wikipedia.org/wiki/Filesystem-level_encryption" class="extiw" title="wikipedia:Filesystem-level encryption">文件系统级别加密</a>，和<a href="../en/Dm-crypt.html" title="Dm-crypt">块级别加密</a>没有任何关系。</li>
+</ul>
+</div>
+<table class="wikitable sortable">
+<tbody>
+<tr>
+<th rowspan="2">名称
+</th>
+<th colspan="2">固件类型
+</th>
+<th colspan="2">
+<a href="../zh-CN/Partitioning.html#%E5%88%86%E5%8C%BA%E8%A1%A8" title="Partitioning (简体中文)">分区表</a>
+</th>
+<th rowspan="2">多重启动
+</th>
+<th colspan="5">
+<a href="../zh-CN/File_systems.html" title="File systems (简体中文)">文件系统</a>
+</th>
+<th rowspan="2">备注
+</th>
+</tr>
+<tr>
+<th>BIOS</th>
+<th>
+<a href="../zh-CN/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI (简体中文)">UEFI</a>
+</th>
+<th><a href="../zh-CN/Partitioning.html#Master_Boot_Record" title="Partitioning (简体中文)">MBR</a></th>
+<th>
+<a href="../zh-CN/Partitioning.html#GUID_%E5%88%86%E5%8C%BA%E8%A1%A8" title="Partitioning (简体中文)">GPT</a>
+</th>
+<th><a href="../zh-CN/Btrfs.html" title="Btrfs (简体中文)">Btrfs</a></th>
+<th><a href="../zh-CN/Ext4.html" title="Ext4 (简体中文)">ext4</a></th>
+<th>ReiserFS</th>
+<th><a href="../en/FAT.html" class="mw-redirect" title="VFAT">VFAT</a></th>
+<th>
+<a href="../zh-CN/XFS.html" title="XFS (简体中文)">XFS</a>
+</th>
+</tr>
+<tr>
+<th>
+<a href="../en/EFISTUB.html" title="EFISTUB">EFISTUB</a>
+</th>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">从固件继承<sup>1</sup>
+</td>
+<td data-sort-value="5" style="background: inherit; color: inherit; vertical-align: middle; text-align: center;">–
+</td>
+<td>内核会变为一个 EFI 可执行文件来被 <a href="../zh-CN/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI (简体中文)">UEFI</a> 固件或者其他启动加载器加载。
+</td>
+</tr>
+<tr>
+<th>
+<a href="../zh-CN/Clover.html" title="Clover (简体中文)">Clover</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">模拟 UEFI</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是<sup>2</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持加密</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">从固件继承<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td>修改版的 rEFIt，用来运行<a href="https://en.wikipedia.org/wiki/Hackintosh" class="extiw" title="wikipedia:Hackintosh">黑苹果</a>。
+</td>
+</tr>
+<tr>
+<th>
+<a href="../zh-CN/GRUB.html" title="GRUB (简体中文)">GRUB</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td>在 BIOS/GPT 配置下需要一个 <a href="../zh-CN/GRUB.html#GUID%E5%88%86%E5%8C%BA%E8%A1%A8_(GPT)_%E7%89%B9%E6%AE%8A%E6%93%8D%E4%BD%9C" title="GRUB (简体中文)">BIOS启动分区</a>。<br>支持RAID, LUKS1 和 LVM (但是不支持精简配置卷)。
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/REFInd.html" title="REFInd">rEFInd</a>
+</th>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是<sup>2</sup>
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持加密和 zstd 压缩</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持加密</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持 tail-packing 功能</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">从固件继承<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td>支持自动寻找内核和确定内核参数而不需要手动配置。
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/Syslinux.html" title="Syslinux">Syslinux</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/Syslinux.html#Limitations_of_UEFI_Syslinux_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)" title="Syslinux">有限支持</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/Syslinux.html#Chainloading_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)" title="Syslinux">有限支持</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持: 跨设备卷、压缩、加密</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持加密</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">仅限MBR；不支持稀疏索引节点
+</td>
+<td>不支持某些 <a href="../zh-CN/File_systems.html" title="File systems (简体中文)">文件系统</a> 功能 <a rel="nofollow" class="external autonumber" href="https://wiki.syslinux.org/wiki/index.php?title=Filesystem">[2]</a> <br>启动加载器只能够访问它所处的文件系统。<a rel="nofollow" class="external autonumber" href="https://bugzilla.syslinux.org/show_bug.cgi?id=33">[3]</a>
+</td>
+</tr>
+<tr>
+<th>
+<a href="../en/Systemd-boot.html" title="Systemd-boot">systemd-boot</a>
+</th>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;"><a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/1125">仅限手动安装</a></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是<sup>2</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">从固件继承<sup>1</sup>
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td>无法启动<a href="../zh-CN/EFI_system_partition.html" title="EFI system partition (简体中文)">ESP</a>以外的分区上的二进制文件。
+</td>
+</tr>
+<tr>
+<th style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../zh-CN/GRUB_Legacy.html" title="GRUB Legacy (简体中文)">GRUB Legacy</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">仅 v4
+</td>
+<td>
+<a rel="nofollow" class="external text" href="https://www.gnu.org/software/grub/grub-legacy.html">停止开发</a>，新版本为 GRUB。
+</td>
+</tr>
+<tr>
+<th style="background: #ddd; color: inherit; vertical-align: middle; text-align: center;">
+<a href="../en/LILO.html" title="LILO">LILO</a>
+</th>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否
+</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是
+</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">否</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">不支持加密</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">是</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">
+<a rel="nofollow" class="external text" href="http://xfs.org/index.php/XFS_FAQ#Q:_Does_LILO_work_with_XFS.3F">是</a>
+</td>
+<td>因为某些局限性 (如 Btrfs, GPT, RAID)，已经<a rel="nofollow" class="external text" href="https://web.archive.org/web/20180323163248/http://lilo.alioth.debian.org/">停止开发</a>。
+</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>文件系统的支持是从固件继承的。UEFI 规范要求支持 FAT12，FAT16 和 FAT32 文件系统<a rel="nofollow" class="external autonumber" href="https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf#G17.1345080">[4]</a>，但供应商可以选择性地添加对其他文件系统的支持。比如说，苹果公司的 <a href="../zh-CN/Mac.html" title="Mac (简体中文)">Mac</a> 中的提供的固件支持 HFS+ 文件系统。而如果固件提供在启动时加载 <a href="../en/Unified_Extensible_Firmware_Interface.html#UEFI_drivers" title="Unified Extensible Firmware Interface">UEFI 驱动程序</a>的接口，则可以通过加载单独的文件系统驱动程序来添加对其他文件系统的支持。</li>
+<li>一种只能启动其他 EFI 应用程序的 <a rel="nofollow" class="external text" href="https://www.rodsbooks.com/efi-bootloaders/principles.html">启动管理器</a>。例如，使用 <code>CONFIG_EFI_STUB=y</code> 参数编译的 Linux 内核镜像和 Windows 中的 <code>bootmgfw.efi</code>。</li>
+</ol>
+<p>更多信息，参见 <a href="https://en.wikipedia.org/wiki/Comparison_of_boot_loaders" class="extiw" title="wikipedia:Comparison of boot loaders">Wikipedia:Comparison of boot loaders</a>。
+</p>
+<h2>
+<span id=".E5.86.85.E6.A0.B8"></span><span class="mw-headline" id="内核">内核</span>
+</h2>
+<p>内核是操作系统的核心。它运行于一个叫「内核空间」的底层上，负责机器硬件和应用程序之间的交流。为了尽可能充分地压榨 CPU 性能，内核使用调度器，通过一定的优先级算法将 CPU 按照时间动态的分配给各个程序。让我们感觉就像所有程序都在同时使用 CPU 一样。
+</p>
+<h2><span class="mw-headline" id="initramfs">initramfs</span></h2>
+<p>在 <a href="../zh-CN/Arch_boot_process.html#%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8" class="mw-redirect" title="Boot loaders (简体中文)">boot loader(启动引导器)</a>加载 kernel 和可用的 initramfs 文件，并执行 kernel 之后，kernel 将 initramfs（初始RAM文件系统）压缩包解压缩到（然后清空）rootfs（初始根文件系统，特别是ramfs或tmpfs）。首先提取的 initramfs 是在 kernel 构建过程中嵌入 kernel 二进制Update translation.的 initramfs，然后提取可用的外部 initramfs 文件。因此，外部 initramfs 中的文件会覆盖嵌入式 initramfs 中具有相同名称的文件。然后， kernel 执行 <code>/init</code> （在rootfs中）作为第一个进程。<i>early userspace</i>开始。
+</p>
+<p>Arch Linux 对内置的 initramfs 使用一个空的存档（在构建Linux时是默认的）。有关外部 initramfs 的更多信息和 Arch 特定的信息，请参见 <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a>。
+</p>
+<p>initramfs 之所以存在，是为了帮系统访问真正的根文件系统（参见 <a href="../zh-CN/Frequently_asked_questions.html" class="mw-redirect" title="Arch filesystem hierarchy (简体中文)">Arch filesystem hierarchy (简体中文)</a>）。也就是说，那些硬件 IDE, SCSI, SATA, USB/FW 所要求的 kernel 模块，如果并没有内置在 kernel 里，就会被 initramfs 负责加载。一旦通过 <a href="../zh-CN/Udev.html" title="Udev (简体中文)">udev (简体中文)</a> 之类的程序或脚本加载好模块，启动流程才会继续下去。所以，initramfs 只要有能够让系统访问真实根文件系统的模块就可以了，不用尽可能地包含一切模块。当然，其它真正有用的模块之后会在 init 流程中被 udev 加载好。
+</p>
+<h2>
+<span id="Init_.E6.B5.81.E7.A8.8B"></span><span class="mw-headline" id="Init_流程">Init 流程</span>
+</h2>
+<p>在「早期用户空间」的最终环节里，<b>真正</b>的根文件系统被挂载好后，就会替换掉原来的<b>伪</b>根文件系统。接着 <code>/sbin/init</code> 被执行，同样也替换掉原来的 <code>/init</code> 进程。Arch 御用的 <a href="../en/Init.html" title="Init">init</a> 就是 <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd (简体中文)</a>.
+</p>
+<h2><span class="mw-headline" id="Getty">Getty</span></h2>
+<p><a href="../en/Init.html" title="Init">init</a> 为每一个 <a href="https://en.wikipedia.org/wiki/Virtual_console" class="extiw" title="wikipedia:Virtual console">虚拟终端</a> 调用 <a href="../en/Getty.html" title="Getty">getty</a>，前者一般有六个，每个虚拟终端都会初始化 tty 并请求输入用户名和密码。当在某虚拟终端输入用户名和密码后，其 getty 会通过 <code>/etc/passwd</code> 检查是否正确，如果正确，就接着调用 <a href="#Login">login</a>, 此外 getty 也可能会改启动一个显示管理器。
+</p>
+<h2>
+<span id=".E6.98.BE.E7.A4.BA.E7.AE.A1.E7.90.86.E5.99.A8"></span><span class="mw-headline" id="显示管理器">显示管理器</span>
+</h2>
+<p><a href="../zh-CN/Display_manager.html" title="Display manager (简体中文)">显示管理器</a>, 可以配置为代替原来的 getty 登录命令行提示符。
+</p>
+<p>为了在引导后自动初始化显示管理器，必须通过<a href="../en/Systemd.html" title="Systemd">systemd</a>手动启用服务单元。 有关启用和启动服务单元的更多信息，请参见<a href="/index.php?title=Systemd%EF%BC%83%E4%BD%BF%E7%94%A8%E5%8D%95%E5%85%83&amp;action=edit&amp;redlink=1" class="new" title="Systemd＃使用单元 (page does not exist)">systemd＃使用单元</a>。
+</p>
+<h2><span class="mw-headline" id="Login">Login</span></h2>
+<p>所谓的 <i>login</i> 程序会为用户启动一个设置了环境变量的「会话」，接着根据 <code>/etc/passwd</code> 的配置启动用户专用 shell。
+</p>
+<p>在成功登录后，刚刚启动登录 shell 之前，<i>login</i> 程序显示 <a href="https://en.wikipedia.org/wiki/motd_(Unix)" class="extiw" title="wikipedia:motd (Unix)">/etc/motd</a> (<i>m</i>essage <i>o</i>f <i>t</i>he <i>d</i>ay) 。在这里，您可以显示服务条款，以提醒用户您的本地政策或您想告诉他们的任何内容。
+</p>
+<h2><span class="mw-headline" id="Shell">Shell</span></h2>
+<p>一旦用户专用的 <a href="../en/Command-line_shell.html" class="mw-redirect" title="Shell">shell</a> 启动了，它会在显示命令行提示符前，执行一个「有可执行性的配置文件」，比如 <a href="../en/Bash.html#Configuration_files" class="mw-redirect" title=".bashrc">.bashrc</a>. 如果用户有设定了 <a href="../en/Xinit.html#Autostart_X_at_login" class="mw-redirect" title="Start X at login">Start X at login</a>, 原来那个「有可执行性的配置文件」会调用 <a href="../en/Xinit.html" class="mw-redirect" title="Startx">startx</a> or <a href="../en/Xinit.html" title="Xinit">xinit</a>.
+</p>
+<h2>
+<span id="GUI.E3.80.81_xinit_.E6.88.96.E8.80.85_wayland"></span><span class="mw-headline" id="GUI、_xinit_或者_wayland">GUI、 xinit 或者 wayland</span>
+</h2>
+<p><a href="../en/Xinit.html" title="Xinit">xinit</a> 也会调用用户的 <a href="../en/Xinit.html#xinitrc" class="mw-redirect" title=".xinitrc">.xinitrc</a> 这个「有可执行性的配置文件」，后者一般用来启动一个 <a href="../zh-CN/Window_manager.html" title="Window manager (简体中文)">窗口管理器</a>。如果用户退出了窗口管理器、xinit、 startx 和 shell login 就会先后中断，返回到 <a href="#Getty">getty</a>.
+</p>
+<h2>
+<span id=".E5.8F.82.E8.A7.81"></span><span class="mw-headline" id="参见">参见</span>
+</h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://archlinux.me/brain0/2010/02/13/early-userspace-in-arch-linux/">Early Userspace in Arch Linux</a><sup title="最后检查状态：domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-02 ⓘ]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://www.ibm.com/developerworks/linux/library/l-linuxboot/">Inside the Linux boot process</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.linuxjournal.com/article/4622">Boot with GRUB</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linux_startup_process" class="extiw" title="wikipedia:Linux startup process">Wikipedia:Linux startup process</a></li>
+<li><a href="https://en.wikipedia.org/wiki/initrd" class="extiw" title="wikipedia:initrd">Wikipedia:initrd</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.cyberciti.biz/faq/grub-boot-into-single-user-mode/">Boot Linux Grub Into Single User Mode</a></li>
+<li><a rel="nofollow" class="external text" href="https://neosmart.net/wiki/mbr-boot-process/">NeoSmart: The BIOS/MBR Boot Process</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../zh-CN/Category:Boot_process.html" title="Category:Boot process (简体中文)">Boot process (简体中文)</a></li>
+<li><a href="../zh-CN/Category:About_Arch.html" title="Category:About Arch (简体中文)">About Arch (简体中文)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_boot_process_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=646691">https://wiki.archlinux.org/index.php?title=Arch_boot_process_(简体中文)&amp;oldid=646691</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 11:49.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

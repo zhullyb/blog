@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Install Arch Linux from existing Linux (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Install_Arch_Linux_from_existing_Linux_Русский rootpage-Install_Arch_Linux_from_existing_Linux_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Install Arch Linux from existing Linux (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Ссылки по теме</p>
+<ul>
+<li><a href="../ru/Install_Arch_Linux_via_SSH.html" class="mw-redirect" title="Install from SSH (Русский)">Install from SSH (Русский)</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a><b>Эта статья или раздел нуждается в <a href="../ru/ArchWiki:Contributing.html#%D0%9F%D0%B5%D1%80%D0%B5%D0%B2%D0%BE%D0%B4" title="ArchWiki:Contributing (Русский)">переводе</a></b><a href="../File:Tango-preferences-desktop-locale.png" class="image"><img alt="Tango-preferences-desktop-locale.png" src="../File:Tango-preferences-desktop-locale.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Примечания:</b> Устаревший контент был заменён английским на момент 21 февраля 2015. (обсуждение: <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Install_Arch_Linux_from_existing_Linux_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)">Talk:Install Arch Linux from existing Linux (Русский)#</a>)</div>
+</div>
+<p>Этот документ описывает bootstrapping process, нужный для того, чтобы установить Arch Linux из уже работающего хоста Linux.
+После bootstrapping, установка продолжается так, как описано в <a href="../ru/Installation_guide.html" title="Installation guide (Русский)">руководстве по установке</a> Arch Linux.
+</p>
+<p>Установка Arch Linux из-под другого Linux полезна для:
+</p>
+<ul>
+<li>беспроводной установки Arch Linux, например для виртуального сервера</li>
+<li>замены существующего Linux без LiveCD (смотрите <a href="#%D0%97%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0_%D1%83%D0%B6%D0%B5_%D1%81%D1%83%D1%89%D0%B5%D1%81%D1%82%D0%B2%D1%83%D1%8E%D1%89%D0%B5%D0%B9_%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B_%D0%B1%D0%B5%D0%B7_LiveCD">#Замена уже существующей системы без LiveCD</a>)</li>
+<li>создания нового дистрибутива Linux или LiveCD основанного на Arch Linux</li>
+<li>создания chroot окружения Arch Linux, например для контейнеров Docker</li>
+<li><a href="../en/Diskless_system.html" class="mw-redirect" title="Diskless network boot NFS root">rootfs-over-NFS для бездисковых систем</a></li>
+</ul>
+<p>Цель процедуры начальной загрузки в том, чтобы настроить окружение, из которого можно будет запустить <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span> (содержит такие скрипты как <code>pacstrap</code> и <code>arch-root</code>). Установить <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span> нужно на самой хост-системе или настройкой chroot основанного на Arch Linux.
+</p>
+<p>Если хост работает под Arch Linux, сразу установите <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Этот гайд расчитан на то, что имеющийся хост может запускать программы архитектуры нового Arch Linux. В случае с x86_64 хостом, можно даже использовать i686-pacman при сборке 32-битного окружения chroot. Смотрите <a href="../en/ArchWiki:Archive.html" class="mw-redirect" title="Arch64 Install bundled 32bit system">Arch64 - установка встроенной 32-битной системы</a>.</div> 
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Arch_Linux-based_chroot"><span class="tocnumber">1</span> <span class="toctext">Arch Linux-based chroot</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D1%91%D0%BC_chroot"><span class="tocnumber">1.1</span> <span class="toctext">Создаём chroot</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#%D0%A1%D0%BF%D0%BE%D1%81%D0%BE%D0%B1_1:_%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_Bootstrap_%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%B0_(%D1%80%D0%B5%D0%BA%D0%BE%D0%BC%D0%B5%D0%BD%D0%B4%D1%83%D0%B5%D1%82%D1%81%D1%8F)"><span class="tocnumber">1.1.1</span> <span class="toctext">Способ 1: Использование Bootstrap образа (рекомендуется)</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#%D0%A1%D0%BF%D0%BE%D1%81%D0%BE%D0%B1_2:_%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D1%8F_%D0%BE%D0%B1%D1%80%D0%B0%D0%B7_LiveCD"><span class="tocnumber">1.1.2</span> <span class="toctext">Способ 2: Используя образ LiveCD</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5">
+<a href="#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC_%D0%BD%D0%B0%D1%88%D0%B5_chroot_%D0%BE%D0%BA%D1%80%D1%83%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5"><span class="tocnumber">1.2</span> <span class="toctext">Используем наше chroot окружение</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#%D0%9D%D0%B0%D1%87%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_%D1%85%D1%80%D0%B0%D0%BD%D0%B8%D0%BB%D0%B8%D1%89%D0%B0_%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%B9_pacman"><span class="tocnumber">1.2.1</span> <span class="toctext">Начальная настройка хранилища ключей pacman</span></a></li>
+<li class="toclevel-3 tocsection-7">
+<a href="#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0"><span class="tocnumber">1.2.2</span> <span class="toctext">Установка</span></a>
+<ul>
+<li class="toclevel-4 tocsection-8"><a href="#%D0%A5%D0%BE%D1%81%D1%82_Debian"><span class="tocnumber">1.2.2.1</span> <span class="toctext">Хост Debian</span></a></li>
+<li class="toclevel-4 tocsection-9"><a href="#%D0%A5%D0%BE%D1%81%D1%82_Fedora"><span class="tocnumber">1.2.2.2</span> <span class="toctext">Хост Fedora</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-10"><a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B"><span class="tocnumber">1.2.3</span> <span class="toctext">Настройка системы</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#%D0%97%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0_%D1%83%D0%B6%D0%B5_%D1%81%D1%83%D1%89%D0%B5%D1%81%D1%82%D0%B2%D1%83%D1%8E%D1%89%D0%B5%D0%B9_%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B_%D0%B1%D0%B5%D0%B7_LiveCD"><span class="tocnumber">2</span> <span class="toctext">Замена уже существующей системы без LiveCD</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Arch_Linux-based_chroot">Arch Linux-based chroot</span></h2>
+<p>Идея состоит в том, чтобы как бы запустить Arch Linux внутри уже имеющейся системы.
+Настоящая установка, которая будет содержаться внутри chroot, будет затем запущена из этой Arch системы.
+Есть два способа настроить и войти в chroot, они представлены ниже.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Хост-система должна использовать Linux 2.6.32 или новее.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Используйте только один из двух способов, и не забудьте дочитать эту статью до конца, чтобы закончить установку.</div>
+<h3>
+<span id=".D0.A1.D0.BE.D0.B7.D0.B4.D0.B0.D1.91.D0.BC_chroot"></span><span class="mw-headline" id="Создаём_chroot">Создаём chroot</span>
+</h3>
+<h4>
+<span id=".D0.A1.D0.BF.D0.BE.D1.81.D0.BE.D0.B1_1:_.D0.98.D1.81.D0.BF.D0.BE.D0.BB.D1.8C.D0.B7.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5_Bootstrap_.D0.BE.D0.B1.D1.80.D0.B0.D0.B7.D0.B0_.28.D1.80.D0.B5.D0.BA.D0.BE.D0.BC.D0.B5.D0.BD.D0.B4.D1.83.D0.B5.D1.82.D1.81.D1.8F.29"></span><span class="mw-headline" id="Способ_1:_Использование_Bootstrap_образа_(рекомендуется)">Способ 1: Использование Bootstrap образа (рекомендуется)</span>
+</h4>
+<p>Скачиваем образ bootstrap с <a rel="nofollow" class="external text" href="https://archlinux.org/download">любого желаемого зеркала</a>, либо сразу используя прямую ссылку на нужный вам образ (с зеркала kernel.org):
+<br>Образ x86_64:
+</p>
+<pre> $ curl -O <a rel="nofollow" class="external free" href="https://mirrors.kernel.org/archlinux/iso/2016.04.01/archlinux-bootstrap-2016.04.01-x86_64.tar.gz">https://mirrors.kernel.org/archlinux/iso/2016.04.01/archlinux-bootstrap-2016.04.01-x86_64.tar.gz</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">устаревшая ссылка</a> 2020-08-02]</sup>
+</pre>
+<p>Образ i686:
+</p>
+<pre> $ curl -O <a rel="nofollow" class="external free" href="https://mirrors.kernel.org/archlinux/iso/2016.04.01/archlinux-bootstrap-2016.04.01-i686.tar.gz">https://mirrors.kernel.org/archlinux/iso/2016.04.01/archlinux-bootstrap-2016.04.01-i686.tar.gz</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">устаревшая ссылка</a> 2020-08-02]</sup>
+</pre>
+<p>Внимание! Ссылки  могут оказаться нерабочими. В этом случае перейдите по адресу <a rel="nofollow" class="external free" href="https://mirrors.kernel.org/archlinux/iso/">https://mirrors.kernel.org/archlinux/iso/</a> и найдите образ там
+</p>
+<p>Распаковываем его:
+</p>
+<pre> # cd /tmp
+ # tar xzf &lt;путь-к-каталогу-где-образ&gt;/archlinux-bootstrap-2016.04.01-*.tar.gz
+</pre>
+<p>Выбираем подходящий для вашего интернета сервер, откуда будут загружаться основные репозитории:
+</p>
+<pre> # nano /tmp/root.*/etc/pacman.d/mirrorlist
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Если ваша хост-система — x86_64, а образ boostrap — i686, то также подправьте <code>/tmp/root.i686/etc/pacman.conf</code>, ясно указав <code>Architecture = i686</code>, чтобы pacman качал пакеты под архитектуру i686.</div>
+<p>Войдём в chroot
+</p>
+<ul><li>Если установлен bash 4 или новее, то:</li></ul>
+<pre>  # /tmp/root.*/bin/arch-chroot /tmp/root.*/
+</pre>
+<ul><li>Иначе:</li></ul>
+<pre>  # cd /tmp/root.*
+  # cp /etc/resolv.conf etc
+  # mount --rbind /proc proc
+  # mount --rbind /sys sys
+  # mount --rbind /dev dev
+  # mount --rbind /run run
+    (при условии, что /run существует)
+  # chroot /tmp/root.* /bin/bash
+</pre>
+<h4>
+<span id=".D0.A1.D0.BF.D0.BE.D1.81.D0.BE.D0.B1_2:_.D0.98.D1.81.D0.BF.D0.BE.D0.BB.D1.8C.D0.B7.D1.83.D1.8F_.D0.BE.D0.B1.D1.80.D0.B0.D0.B7_LiveCD"></span><span class="mw-headline" id="Способ_2:_Используя_образ_LiveCD">Способ 2: Используя образ LiveCD</span>
+</h4>
+<p>Можно смонтировать корневой образ последнего установочного диска Arch Linux и затем заchroot'ить туда. Плюс этого способа в том, что у вас будет сразу рабочий Arch Linux installation прямо внутри хост-системы без надобности в его настройки.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Перед тем как продолжить, удостоверьтесь, что у вас последняя версия <a rel="nofollow" class="external text" href="http://squashfs.sourceforge.net/">squashfs</a> на хост-системе. Иначе будут ошибки типа: <code>FATAL ERROR aborting: uncompress_inode_table: failed to read block</code>.</div>
+<ul><li>Корневой образ можно скачать с одного из <a rel="nofollow" class="external text" href="https://archlinux.org/download">зеркал</a> в папке arch/x86_64/ либо arch/i686/, смотря какую архитектуру хотите. Образ имеет формат squashfs, который является read-only, поэтому нам надо распаковать его и смонтировать корневой образ (root-image.fs).</li></ul>
+<ul><li>Чтобы распаковать корневой образ, надо</li></ul>
+<pre># unsquashfs -d /squashfs-root root-image.fs.sfs</pre>
+<ul><li>Теперь смонтируем его с помощью опции loop</li></ul>
+<pre># mkdir /arch
+# mount -o loop /squashfs-root/root-image.fs /arch
+</pre>
+<ul><li>Перед тем как <a href="../en/Chroot.html" class="mw-redirect" title="Change root">chrooting</a> to it, нужно смонтировать некоторые виртуальные системные разделы, а затем скопировать resolv.conf для интернета.</li></ul>
+<pre># mount -t proc none /arch/proc
+# mount -t sysfs none /arch/sys
+# mount -o bind /dev /arch/dev
+# mount -o bind /dev/pts /arch/dev/pts # важно для pacman (для проверки подписей)
+# cp -L /etc/resolv.conf /arch/etc # а это, чтобы мог работать интернет в chroot
+</pre>
+<ul><li>Теперь всё готово, чтобы to chroot в только что установленное окружение Arch</li></ul>
+<pre># chroot /arch bash</pre>
+<h3>
+<span id=".D0.98.D1.81.D0.BF.D0.BE.D0.BB.D1.8C.D0.B7.D1.83.D0.B5.D0.BC_.D0.BD.D0.B0.D1.88.D0.B5_chroot_.D0.BE.D0.BA.D1.80.D1.83.D0.B6.D0.B5.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="Используем_наше_chroot_окружение">Используем наше chroot окружение</span>
+</h3>
+<h4>
+<span id=".D0.9D.D0.B0.D1.87.D0.B0.D0.BB.D1.8C.D0.BD.D0.B0.D1.8F_.D0.BD.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0_.D1.85.D1.80.D0.B0.D0.BD.D0.B8.D0.BB.D0.B8.D1.89.D0.B0_.D0.BA.D0.BB.D1.8E.D1.87.D0.B5.D0.B9_pacman"></span><span class="mw-headline" id="Начальная_настройка_хранилища_ключей_pacman">Начальная настройка хранилища ключей pacman</span>
+</h4>
+<p>Перед установкой, ключи pacman должны быть настроены. Перед тем как вводить следующие две команды, можете почитать <a href="../ru/c6ed1c3742314bc1625029baca94d312.html#%D0%98%D0%BD%D0%B8%D1%86%D0%B8%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F_%D1%81%D0%B2%D1%8F%D0%B7%D0%BA%D0%B8_%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%B9" class="mw-redirect" title="Pacman/Подпись пакета">pacman/Подпись пакета#Инициализация связки ключей</a>, чтобы узнать entropy requirements:
+</p>
+<pre># pacman-key --init
+# pacman-key --populate archlinux
+</pre>
+<h4>
+<span id=".D0.A3.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BA.D0.B0"></span><span class="mw-headline" id="Установка">Установка</span>
+</h4>
+<p>Следуйте <a href="../en/Installation_guide.html#Format_the_partitions" title="Installation guide">Installation guide#Format the partitions</a> и <a href="../en/Installation_guide.html#Install_the_base_packages" title="Installation guide">Installation guide#Install the base packages</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">ссылка недействительна</a>: раздел не найден]</sup>.
+</p>
+<h5>
+<span id=".D0.A5.D0.BE.D1.81.D1.82_Debian"></span><span class="mw-headline" id="Хост_Debian">Хост Debian</span>
+</h5>
+<p>На хостах Debian <code>pacstrap</code> выводит следующую ошибку:
+</p>
+<pre># pacstrap /mnt base
+# ==&gt; Creating install root at /mnt
+# mount: mount point /mnt/dev/shm is a symbolic link to nowhere
+# ==&gt; ERROR: failed to setup API filesystems in new root
+</pre>
+<p>Это потому, что в Debian <code>/dev/shm</code> ссылается на <code>/run/shm</code>, который в Arch-based chroot не существует, поэтому ссылка не рабочая. Чтобы исправить это, просто создайте каталог <code>/run/shm</code>:
+</p>
+<pre># mkdir /run/shm
+</pre>
+<h5>
+<span id=".D0.A5.D0.BE.D1.81.D1.82_Fedora"></span><span class="mw-headline" id="Хост_Fedora">Хост Fedora</span>
+</h5>
+<p>На хостах Fedora и Live USB, если у вас не получается сгенерировать ваш <code><a href="../ru/Fstab.html" title="Fstab (Русский)">fstab</a></code> с помощью <code>genfstab</code>, то удалите из fstab одинаковые записи и везде опции <code>seclabel</code> (это опция специфична для Fedora и поэтому не даст вам загрузиться).
+</p>
+<h4>
+<span id=".D0.9D.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0_.D1.81.D0.B8.D1.81.D1.82.D0.B5.D0.BC.D1.8B"></span><span class="mw-headline" id="Настройка_системы">Настройка системы</span>
+</h4>
+<p>С этого момента просто следуйте согласно разделам начиная с «<a href="../ru/Installation_guide.html#%D0%9C%D0%BE%D0%BD%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB%D0%BE%D0%B2" title="Installation guide (Русский)">Монтирование разделов</a>» из <a href="../en/Installation_guide.html" title="Installation guide">руководства по установке Arch Linux</a>.
+</p>
+<h2>
+<span id=".D0.97.D0.B0.D0.BC.D0.B5.D0.BD.D0.B0_.D1.83.D0.B6.D0.B5_.D1.81.D1.83.D1.89.D0.B5.D1.81.D1.82.D0.B2.D1.83.D1.8E.D1.89.D0.B5.D0.B9_.D1.81.D0.B8.D1.81.D1.82.D0.B5.D0.BC.D1.8B_.D0.B1.D0.B5.D0.B7_LiveCD"></span><span class="mw-headline" id="Замена_уже_существующей_системы_без_LiveCD">Замена уже существующей системы без LiveCD</span>
+</h2>
+<p>Освободите ~650МБ, например, переформатировав существующий swap-раздел (после окончания установки, можете обратно создать swap). Если не можете столько освободить, выясните точно, какие пакеты группы base вам понадобятся для того, чтобы get a system с работающим интернетом and running in the temporary partition. То есть надо будет ясно указать каждый пакет для pacstrap. И ещё надо указать -c, чтобы пакеты скачивались на хост-систему, дабы избежать недостатка свободного места.
+</p>
+<p>После того как установили, перезагрузитесь в свою новую систему, затем <a href="../en/Rsync.html#With_a_single_command" class="mw-redirect" title="Full system backup with rsync">rsync the entire system</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">ссылка недействительна</a>: раздел не найден]</sup> to the primary partition.
+Fix the bootloader configuration before rebooting.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Installation_process.html" title="Category:Installation process (Русский)">Installation process (Русский)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../ru/Category:Pages_or_sections_flagged_with_Template:Translateme.html" title="Category:Pages or sections flagged with Template:Translateme (Русский)">Pages or sections flagged with Template:Translateme (Русский)</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_from_existing_Linux_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=646837">https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_from_existing_Linux_(Русский)&amp;oldid=646837</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

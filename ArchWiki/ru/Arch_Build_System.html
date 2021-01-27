@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch Build System (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_Build_System_Русский rootpage-Arch_Build_System_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch Build System (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Ссылки по теме</p>
+<ul>
+<li><a href="../ru/Arch_package_guidelines.html" class="mw-redirect" title="Стандарты создания пакетов для Arch">Стандарты создания пакетов для Arch</a></li>
+<li><a href="../ru/Arch_User_Repository.html" class="mw-redirect" title="Пользовательский репозиторий Arch">Пользовательский репозиторий Arch</a></li>
+<li><a href="../en/Creating_packages.html" class="mw-redirect" title="Создание пакетов">Создание пакетов</a></li>
+<li><a href="../ru/3b407c4bc81374daebcb84198d9b3ead.html" title="Kernel (Русский)/Arch Build System (Русский)">Сборка ядра через ABS</a></li>
+<li><a href="../ru/Makepkg.html" title="Makepkg (Русский)">makepkg (Русский)</a></li>
+<li><a href="../ru/Official_repositories.html" class="mw-redirect" title="Официальные репозитории">Официальные репозитории</a></li>
+<li><a href="../ru/Pacman.html" title="Pacman (Русский)">pacman (Русский)</a></li>
+<li><a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD (Русский)</a></li>
+<li><a href="../en/Patching_packages.html" class="mw-redirect" title="Patching in ABS">Patching in ABS</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Arch_Build_System.html" title="Arch Build System">Arch Build System</a>. Дата последней синхронизации: 3 ноября 2020. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Arch_Build_System&amp;diff=0&amp;oldid=638834">изменения</a>.</div>
+<p>Система сборки Arch (Arch Build System, ABS) — схожая с <i>портами</i> система сборки программных пакетов из исходного кода. В отличие от <a href="../ru/Pacman.html" title="Pacman (Русский)">pacman</a>, который является инструментом управления двоичными пакетами (в том числе собранными с помощью ABS), система сборки Arch — набор утилит для компилирования исходников в устанавливаемый (<i>.pkg.tar.zst</i>) пакет.
+</p>
+<p><i>Порты</i> используются в ОС семейства BSD для автоматизации процесса сборки программ из файлов с исходным кодом. <i>Порты</i> помогают загружать, распаковывать, патчить, компилировать и устанавливать программы. Сам по себе <i>порт</i> является небольшой директорией на компьютере пользователя, название которой совпадает с названием устанавливаемой программы. Данная директория содержит файлы с инструкциями по установке и сборке программ. Благодаря этому установка сильно упрощается: как правило, необходимо лишь выполнить команду <code>make</code> или <code>make install clean</code> в директории порта.
+</p>
+<p>Концепция ABS во многом похожа. Частью системы сборки является SVN-репозиторий и эквивалентный ему Git-репозиторий. Репозиторий состоит из каталогов, каждый из которых предназначен для отдельного пакета Arch Linux. В директориях содержатся файлы <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a> (и иногда некоторые другие файлы), но в них нет ни исходников, ни двоичных файлов программ. Если выполнить команду <a href="../ru/Makepkg.html" title="Makepkg (Русский)">makepkg</a> внутри директории, то исходники программы будут загружены, скомпилированы и собраны в пакет. После этого можно воспользоваться <a href="../ru/Pacman.html" title="Pacman (Русский)">pacman</a>, чтобы установить данный пакет в систему.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%D0%9E%D0%B1%D0%B7%D0%BE%D1%80"><span class="tocnumber">1</span> <span class="toctext">Обзор</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%80%D0%B5%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D1%8F"><span class="tocnumber">1.1</span> <span class="toctext">Дерево репозитория</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#%D0%A1%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D1%8B_%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F"><span class="tocnumber">2</span> <span class="toctext">Способы применения</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"><span class="tocnumber">3</span> <span class="toctext">Использование</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5">
+<a href="#%D0%9F%D0%BE%D0%BB%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_PKGBUILD"><span class="tocnumber">3.1</span> <span class="toctext">Получение PKGBUILD</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#PKGBUILD_%D0%B8%D0%B7_Git"><span class="tocnumber">3.1.1</span> <span class="toctext">PKGBUILD из Git</span></a></li>
+<li class="toclevel-3 tocsection-7">
+<a href="#PKGBUILD_%D0%B8%D0%B7_SVN"><span class="tocnumber">3.1.2</span> <span class="toctext">PKGBUILD из SVN</span></a>
+<ul>
+<li class="toclevel-4 tocsection-8"><a href="#%D0%9F%D1%80%D0%B5%D0%B4%D0%B2%D0%B0%D1%80%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D1%83%D1%81%D0%BB%D0%BE%D0%B2%D0%B8%D1%8F"><span class="tocnumber">3.1.2.1</span> <span class="toctext">Предварительные условия</span></a></li>
+<li class="toclevel-4 tocsection-9"><a href="#%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0_%D1%80%D0%B5%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D1%8F"><span class="tocnumber">3.1.2.2</span> <span class="toctext">Сверка репозитория</span></a></li>
+<li class="toclevel-4 tocsection-10"><a href="#%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0"><span class="tocnumber">3.1.2.3</span> <span class="toctext">Сверка пакета</span></a></li>
+<li class="toclevel-4 tocsection-11"><a href="#%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0_%D1%81%D1%82%D0%B0%D1%80%D0%BE%D0%B9_%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D0%B8_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0"><span class="tocnumber">3.1.2.4</span> <span class="toctext">Сверка старой версии пакета</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12"><a href="#%D0%A1%D0%B1%D0%BE%D1%80%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0"><span class="tocnumber">3.2</span> <span class="toctext">Сборка пакета</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13">
+<a href="#%D0%A1%D0%BE%D0%B2%D0%B5%D1%82%D1%8B_%D0%B8_%D1%80%D0%B5%D0%BA%D0%BE%D0%BC%D0%B5%D0%BD%D0%B4%D0%B0%D1%86%D0%B8%D0%B8"><span class="tocnumber">4</span> <span class="toctext">Советы и рекомендации</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14"><a href="#%D0%A1%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B8%D0%B7%D0%BC%D0%B5%D0%BD%D1%91%D0%BD%D0%BD%D1%8B%D1%85_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2"><span class="tocnumber">4.1</span> <span class="toctext">Сохранение изменённых пакетов</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#%D0%94%D1%80%D1%83%D0%B3%D0%B8%D0%B5_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B"><span class="tocnumber">5</span> <span class="toctext">Другие инструменты</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".D0.9E.D0.B1.D0.B7.D0.BE.D1.80"></span><span class="mw-headline" id="Обзор">Обзор</span>
+</h2>
+<p>Система сборки Arch часто используется как обобщённый термин для целого ряда компонентов, хоть это и не совсем правильно. Обычно под ABS понимают следующие инструменты:
+</p>
+<dl>
+<dt>Дерево репозитория</dt>
+<dd>Набор каталогов, в которых хранятся необходимые для сборки всех официальных пакетов файлы — но не сами пакеты и не файлы с исходным кодом. Доступны две версии репозитория, <a rel="nofollow" class="external text" href="https://archlinux.org/svn/">svn</a> и <a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages">git</a>. Подробнее см. раздел <a href="#%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%80%D0%B5%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D1%8F">#Дерево репозитория</a>.</dd>
+</dl>
+<dl>
+<dt><a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a></dt>
+<dd>
+<a href="../ru/Bash.html" title="Bash (Русский)">Bash</a>-скрипт, в котором находится URL для скачивания файлов с исходным кодом, а также инструкции по их компиляции в двоичный код и упаковке.</dd>
+</dl>
+<dl>
+<dt><a href="../ru/Makepkg.html" title="Makepkg (Русский)">makepkg</a></dt>
+<dd>Утилита командной строки, которая читает <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a>, автоматически скачивает файлы с исходным кодом, компилирует их и создает пакет <i>.pkg.tar*</i> (какой конкретно суффикс будет у пакета определяется параметром <code>PKGEXT</code> в файле <code>makepkg.conf</code>). <i>makepkg</i> также можно использовать для создания пакетов из <a href="../ru/Arch_User_Repository.html" title="Arch User Repository (Русский)">AUR</a> или сторонних источников, подробнее см. <a href="../en/Creating_packages.html" class="mw-redirect" title="Создание пакетов">Создание пакетов</a>.</dd>
+</dl>
+<dl>
+<dt><a href="../ru/Pacman.html" title="Pacman (Русский)">pacman</a></dt>
+<dd>pacman является полностью отдельным проектом, но он вызывается (утилитой makepkg или вручную) каждый раз при установке или удалении собранных пакетов, а также для установки зависимостей.</dd>
+</dl>
+<dl>
+<dt><a href="../ru/Arch_User_Repository.html" title="Arch User Repository (Русский)">AUR</a></dt>
+<dd>Пользовательский репозиторий Arch (Arch User Repository, AUR) — отдельное от ABS хранилище файлов PKGBUILD для программ, не вошедших в официальные репозитории. В отличие от дерева ABS, которое представляет собой "голый" репозиторий git, у AUR есть интерактивный веб-интерфейс. В AUR находятся тысячи предложенных пользователями файлов PKGBUILD для программ, которые не имеют официального пакета Arch. Если вам нужен пакет, которого нет в официальных репозиториях, стоит поискать его в AUR.</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Официальные файлы PKGBUILD разрабатываются исходя из предположения, что пакеты будут собираться в <a href="../DeveloperWiki:Building_in_a_clean_chroot.html" title="DeveloperWiki:Building in a clean chroot">чистом chroot-окружении</a>. <i>Грязная</i> cборка может привести к непредсказуемому поведению программы во время исполнения. Это связано с тем, что при сборке зависимости определяются динамически, и итоговый список зависит от того, какие пакеты были доступны на машине в момент сборки.
+</div>
+<h3>
+<span id=".D0.94.D0.B5.D1.80.D0.B5.D0.B2.D0.BE_.D1.80.D0.B5.D0.BF.D0.BE.D0.B7.D0.B8.D1.82.D0.BE.D1.80.D0.B8.D1.8F"></span><span class="mw-headline" id="Дерево_репозитория">Дерево репозитория</span>
+</h3>
+<p>В SVN-репозитории <i>packages</i> хранятся файлы PKGBUILD пакетов из <a href="../ru/Official_repositories.html" title="Official repositories (Русский)">официальных репозиториев</a> <i>core</i>, <i>extra</i> и <i>testing</i>, а в SVN-репозитории <i>community</i> — файлы из <i>community</i> и <i>multilib</i>.
+</p>
+<p>В SVN-репозитории для каждого пакета выделен отдельный каталог, в котором находятся подкаталоги <code>repos</code> и <code>trunk</code>. В <code>repos</code>, в свою очередь, есть ещё один каталог, имя которого состоит из названия официального репозитория пакета (например, <i>core</i>) и архитектуры процессора. Файлы <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a>, которые находятся в <code>repos</code>, используются в качестве официальной сборки. Файлы в <code>trunk</code> используются разработчиками до перемещения в <code>repos</code>.
+</p>
+<p>Например, дерево каталогов для <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acl">acl</a></span> выглядит следующим образом:
+</p>
+<pre>acl
+acl/repos
+acl/repos/core-x86_64
+acl/repos/core-x86_64/PKGBUILD
+acl/trunk
+acl/trunk/PKGBUILD
+</pre>
+<p>Исходного кода пакета в SVN-репозитории нет. Вместо этого файл <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a> содержит URL официального репозитория, из которого исходный код будет загружен во время сборки.
+</p>
+<h2>
+<span id=".D0.A1.D0.BF.D0.BE.D1.81.D0.BE.D0.B1.D1.8B_.D0.BF.D1.80.D0.B8.D0.BC.D0.B5.D0.BD.D0.B5.D0.BD.D0.B8.D1.8F"></span><span class="mw-headline" id="Способы_применения">Способы применения</span>
+</h2>
+<p>ABS позволяет автоматизировать некоторые задачи, связанные с компиляцией из исходников. Например:
+</p>
+<ul>
+<li>Компиляция или перекомпиляция пакета;</li>
+<li>Сборка из исходных кодов и установка программ, для которых ещё нет официального пакета (см. <a href="../en/Creating_packages.html" class="mw-redirect" title="Создание пакетов">Создание пакетов</a>);</li>
+<li>Изменение существующих пакетов под свои нужды (включение или отключение опций, внесение исправлений);</li>
+<li>Перестройка всей системы с использованием новых флагов компиляции "à la FreeBSD";</li>
+<li>Чистая сборка и установка собственного ядра (см. <a href="../ru/Kernel.html#%D0%9A%D0%BE%D0%BC%D0%BF%D0%B8%D0%BB%D1%8F%D1%86%D0%B8%D1%8F" class="mw-redirect" title="Ядро">Ядро#Компиляция</a>);</li>
+<li>Создание модулей для вашего собственного ядра;</li>
+<li>Компиляция и установка новой/старой/beta/devel версии Arch-пакета с помощью редактирования номера версии в PKGBUILD.</li>
+</ul>
+<h2>
+<span id=".D0.98.D1.81.D0.BF.D0.BE.D0.BB.D1.8C.D0.B7.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="Использование">Использование</span>
+</h2>
+<h3>
+<span id=".D0.9F.D0.BE.D0.BB.D1.83.D1.87.D0.B5.D0.BD.D0.B8.D0.B5_PKGBUILD"></span><span class="mw-headline" id="Получение_PKGBUILD">Получение PKGBUILD</span>
+</h3>
+<p>Существует два способа добыть необходимый для сборки конкретного пакета из исходников файл <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a>: либо посредством <a href="../en/Subversion.html" class="mw-redirect" title="SVN">SVN</a>, либо через <a href="../en/Git.html" title="Git">Git</a> программой <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asp">asp</a></span>, которая представляет собой обёртку для svntogit-репозиториев. Ниже рассматриваются оба подхода.
+</p>
+<h4>
+<span id="PKGBUILD_.D0.B8.D0.B7_Git"></span><span class="mw-headline" id="PKGBUILD_из_Git">PKGBUILD из Git</span>
+</h4>
+<p><a href="../ru/Help:Reading.html#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Установите">Установите</a> пакет <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asp">asp</a></span>. <a rel="nofollow" class="external text" href="https://github.com/falconindy/asp">Asp</a> — инструмент для скачивания исходных файлов пакетов Arch Linux через Git-интерфейс. Подробнее см. <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=185075">обсуждение</a> на форуме.
+</p>
+<p>Чтобы выполнить "сверку" (checkout) пакета из репозитория, выполните:
+</p>
+<pre>$ asp checkout <i>пакет</i>
+</pre>
+<p>Пакет будет клонирован в каталог, имя которого совпадает с названием пакета. Для обновления клонированного git-репозитория необходимо перейти в него и последовательно выполнить команды <code>asp update</code> и <code>git pull</code>.
+</p>
+<p>Кроме того, можно использовать другие команды <i>git</i> для сверки более старых версий пакета и отслеживания изменений. Подробнее см. <a href="../en/Git.html" title="Git">Git</a>.
+</p>
+<p>Если необходимо просто получить копию снимка (snapshot) текущего PKGBUILD для конкретного пакета, выполните:
+</p>
+<pre>$ asp export <i>пакет</i>
+</pre>
+<h4>
+<span id="PKGBUILD_.D0.B8.D0.B7_SVN"></span><span class="mw-headline" id="PKGBUILD_из_SVN">PKGBUILD из SVN</span>
+</h4>
+<h5>
+<span id=".D0.9F.D1.80.D0.B5.D0.B4.D0.B2.D0.B0.D1.80.D0.B8.D1.82.D0.B5.D0.BB.D1.8C.D0.BD.D1.8B.D0.B5_.D1.83.D1.81.D0.BB.D0.BE.D0.B2.D0.B8.D1.8F"></span><span class="mw-headline" id="Предварительные_условия">Предварительные условия</span>
+</h5>
+<p><a href="../ru/Help:Reading.html#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Установите">Установите</a> пакет <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=subversion">subversion</a></span>.
+</p>
+<h5>
+<span id=".D0.A1.D0.B2.D0.B5.D1.80.D0.BA.D0.B0_.D1.80.D0.B5.D0.BF.D0.BE.D0.B7.D0.B8.D1.82.D0.BE.D1.80.D0.B8.D1.8F"></span><span class="mw-headline" id="Сверка_репозитория">Сверка репозитория</span>
+</h5>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Загружать репозиторий целиком запрещено; для нерекурсивной загрузки обязательно необходимо указывать опцию <code>--depth=empty</code> в командах, представленных ниже. Репозиторий SVN довольно велик, при полной загрузке он не только займет много места на вашей машине, но и серьезно нагрузит сервер archlinux.org. При злоупотреблении этим сервисом ваш адрес могут заблокировать. Никогда не используйте публичный SVN для скриптов любого типа.
+</div>
+<p>Команда для сверки <a href="../ru/Official_repositories.html" title="Official repositories (Русский)">официальных репозиториев</a> <i>core</i>, <i>extra</i> и <i>testing</i>:
+</p>
+<pre>$ svn checkout --depth=empty svn://svn.archlinux.org/packages
+</pre>
+<p>Соответствующая команда для репозиториев <i>community</i> и <i>multilib</i>:
+</p>
+<pre>$ svn checkout --depth=empty svn://svn.archlinux.org/community
+</pre>
+<p>В обоих случаях единственным видимым результатом будет создание пустого каталога.
+</p>
+<h5>
+<span id=".D0.A1.D0.B2.D0.B5.D1.80.D0.BA.D0.B0_.D0.BF.D0.B0.D0.BA.D0.B5.D1.82.D0.B0"></span><span class="mw-headline" id="Сверка_пакета">Сверка пакета</span>
+</h5>
+<p>Перейдите в созданный каталог, <i>packages</i> или <i>community</i>, и выполните:
+</p>
+<pre>$ svn update <i>пакет</i>
+</pre>
+<p>Эта команда выполнит сверку указанного пакета. С этого момента каждый раз при выполнении <code>svn update</code> будет происходить его обновление.
+</p>
+<p>Если запрошенный пакет не существует, svn не выдаст предупреждение. В терминале появится только что-то вроде "At revision 358704" без создания каких-либо файлов. Если это произошло:
+</p>
+<ul>
+<li>проверьте правильность имени пакета;</li>
+<li>проверьте, не был ли пакет перемещен в другой репозиторий (например, из <i>community</i> в <i>packages</i>);</li>
+<li>проверьте страницу <a rel="nofollow" class="external free" href="https://archlinux.org/packages">https://archlinux.org/packages</a> чтобы убедиться, что ваш пакет не собирается на основе другого пакета (например, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-tensorflow">python-tensorflow</a></span> собирается по <code>PKGBUILD</code> пакета <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tensorflow">tensorflow</a></span>).</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Совет:</strong> Для синхронизации старой версии пакета ознакомьтесь с <a href="#%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0_%D1%81%D1%82%D0%B0%D1%80%D0%BE%D0%B9_%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D0%B8_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0">#Сверка старой версии пакета</a>.
+</div>
+<p>Все синхронизированные пакеты можно периодически обновлять, если вы желаете пересобирать актуальные версии пакетов из репозиториев. Для этого выполните:
+</p>
+<pre>$ svn update
+</pre>
+<h5>
+<span id=".D0.A1.D0.B2.D0.B5.D1.80.D0.BA.D0.B0_.D1.81.D1.82.D0.B0.D1.80.D0.BE.D0.B9_.D0.B2.D0.B5.D1.80.D1.81.D0.B8.D0.B8_.D0.BF.D0.B0.D0.BA.D0.B5.D1.82.D0.B0"></span><span class="mw-headline" id="Сверка_старой_версии_пакета">Сверка старой версии пакета</span>
+</h5>
+<p>Находясь в сверенном svn-репозитории (т.е. <i>packages</i> или <i>community</i>, как описано в разделе <a href="#%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0_%D1%80%D0%B5%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D1%8F">#Сверка репозитория</a>), сначала изучите лог:
+</p>
+<pre>$ svn log <i>пакет</i>
+</pre>
+<p>Найдите ревизию, которая вам нужна, и укажите её номер в команде синхронизации. Например, чтобы синхронизировать ревизию <code>r1729</code>, выполните:
+</p>
+<pre>$ svn update -r1729 <i>пакет</i>
+</pre>
+<p>Выбранный пакет обновится до нужной версии.
+</p>
+<p>Вместо номера ревизии можно указать дату. Если на эту дату нет ревизии, то svn найдет ближайшую ревизию перед ней. Пример (для даты 2009-03-03):
+</p>
+<pre>$ svn update -r'{20090303}' <i>пакет</i>
+</pre>
+<p>Это даёт возможность синхронизации пакета с последней версией до перемещения в другой репозиторий. Необходимо лишь найти в логах дату перемещения или же последний номер ревизии.
+</p>
+<h3>
+<span id=".D0.A1.D0.B1.D0.BE.D1.80.D0.BA.D0.B0_.D0.BF.D0.B0.D0.BA.D0.B5.D1.82.D0.B0"></span><span class="mw-headline" id="Сборка_пакета">Сборка пакета</span>
+</h3>
+<p>Перед сборкой пакета из файла <a href="../ru/PKGBUILD.html" title="PKGBUILD (Русский)">PKGBUILD</a> настройте <i>makepkg</i> в соответствии с указаниями из раздела <a href="../ru/Makepkg.html#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0" title="Makepkg (Русский)">makepkg#Настройка</a>.
+</p>
+<p>Скопируйте каталог с файлом PKGBUILD в другое место, отредактируйте его, если необходимо, после чего соберите пакет и установите его в систему, как описано в разделе <a href="../ru/Makepkg.html#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5" title="Makepkg (Русский)">makepkg#Использование</a>.
+</p>
+<h2>
+<span id=".D0.A1.D0.BE.D0.B2.D0.B5.D1.82.D1.8B_.D0.B8_.D1.80.D0.B5.D0.BA.D0.BE.D0.BC.D0.B5.D0.BD.D0.B4.D0.B0.D1.86.D0.B8.D0.B8"></span><span class="mw-headline" id="Советы_и_рекомендации">Советы и рекомендации</span>
+</h2>
+<h3>
+<span id=".D0.A1.D0.BE.D1.85.D1.80.D0.B0.D0.BD.D0.B5.D0.BD.D0.B8.D0.B5_.D0.B8.D0.B7.D0.BC.D0.B5.D0.BD.D1.91.D0.BD.D0.BD.D1.8B.D1.85_.D0.BF.D0.B0.D0.BA.D0.B5.D1.82.D0.BE.D0.B2"></span><span class="mw-headline" id="Сохранение_изменённых_пакетов">Сохранение изменённых пакетов</span>
+</h3>
+<p>При первом же обновлении системы <a href="../ru/Pacman.html" title="Pacman (Русский)">pacman</a> заменит модифицированный вами пакет из ABS на стандартный пакет с таким же названием из официальных репозиториев. Ниже описано, как этого не допустить.
+</p>
+<p>Добавьте параметр <code>groups</code> в PKGBUILD пакета и укажите в нём группу <code>modified</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">PKGBUILD</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">groups=('modified')</pre>
+<p>Добавьте эту группу в раздел <code>IgnoreGroup</code> файла <code>/etc/pacman.conf</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">IgnoreGroup = modified</pre>
+<p>Если в официальных репозиториях появится новая версия этого пакета, то во время обновления системы pacman напечатает замечание, что он пропускает пакет, поскольку тот находится в разделе <code>IgnoreGroup</code>. После этого необходимо вручную пересобрать новую версию пакета из ABS, чтобы ваша система не оказалась "частично обновлённой".
+</p>
+<h2>
+<span id=".D0.94.D1.80.D1.83.D0.B3.D0.B8.D0.B5_.D0.B8.D0.BD.D1.81.D1.82.D1.80.D1.83.D0.BC.D0.B5.D0.BD.D1.82.D1.8B"></span><span class="mw-headline" id="Другие_инструменты">Другие инструменты</span>
+</h2>
+<ul><li>
+<a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/projects/pbget/">pbget</a> — получение файлов PKGBUILD для конкретных пакетов прямо из веб-интерфейса. Также работает для AUR.</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../ru/Category:About_Arch.html" title="Category:About Arch (Русский)">About Arch (Русский)</a></li>
+<li><a href="../ru/Category:Package_development.html" title="Category:Package development (Русский)">Package development (Русский)</a></li>
+<li><a href="../ru/Category:Package_management.html" title="Category:Package management (Русский)">Package management (Русский)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_Build_System_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=646648">https://wiki.archlinux.org/index.php?title=Arch_Build_System_(Русский)&amp;oldid=646648</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 11:46.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

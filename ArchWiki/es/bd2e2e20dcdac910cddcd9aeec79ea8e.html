@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Pacman (Español)/Restore local database (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Pacman_Español_Restore_local_database_Español rootpage-Pacman_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Pacman (Español)/Restore local database (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../es/Pacman.html" title="Pacman (Español)">Pacman (Español)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Pacman/Restore_local_database.html" title="Pacman/Restore local database">Pacman/Restore local database</a> revisada por última vez el <b>2018-11-24</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Pacman/Restore_local_database&amp;diff=0&amp;oldid=557130">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<p>Señales de que pacman necesita una restauración de la base de datos local:
+</p>
+<ul>
+<li>
+<code>pacman -Q</code> no da absolutamente ninguna salida, y <code>pacman -Syu</code> informa erróneamente que el sistema está actualizado.</li>
+<li>Al intentar instalar un paquete utilizando <code>pacman -S paquete</code>, se genera una lista de dependencias ya satisfechas.</li>
+</ul>
+<p>Lo más probable es que esto se deba a que la base de datos de software instalado por pacman, <code>/var/lib/pacman/local</code>, se haya corrompido o eliminado. Si bien este es un problema grave, puede restaurarse siguiendo las instrucciones siguientes.
+</p>
+<p>En primer lugar, asegúrese de que el archivo de registro de pacman esté presente:
+</p>
+<pre>$ ls /var/log/pacman.log
+</pre>
+<p>Si no existe, <i>no</i> será posible continuar con este método. Puede usar el <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=670876">script de detección de paquetes de Xyne</a> para recrear la base de datos. Si no es así, entonces la solución más factible será reinstalar todo el sistema.
+</p>
+<h2>
+<span id="Generar_la_lista_de_recuperaci.C3.B3n_de_paquetes"></span><span class="mw-headline" id="Generar_la_lista_de_recuperación_de_paquetes">Generar la lista de recuperación de paquetes</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Advertencia:</strong> si por algún motivo la memoria caché de <a href="../es/Pacman.html" title="Pacman (Español)">pacman (Español)</a> de destino de paquetes de <a href="../es/Makepkg.html" title="Makepkg (Español)">makepkg (Español)</a> contiene paquetes para otras arquitecturas, elimínelos antes de continuar.</div>
+<p><a href="../es/Help:Reading.html#Instalaci%C3%B3n_de_paquetes" class="mw-redirect" title="Install (Español)">Instale</a> el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pacutils">pacutils</a></span> para obtener <i>paclog</i>.
+</p>
+<p>Cree un script de filtro de registro y hágalo ejecutable:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">pacrecover</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash -e
+
+. /etc/makepkg.conf
+
+PKGCACHE=$((grep -m 1 '^CacheDir' /etc/pacman.conf || echo 'CacheDir = /var/cache/pacman/pkg') | sed 's/CacheDir = //')
+
+pkgdirs=("$@" "$PKGDEST" "$PKGCACHE")
+
+while read -r -a parampart; do
+  pkgname="${parampart[0]}-${parampart[1]}-*.pkg.tar.xz"
+  for pkgdir in ${pkgdirs[@]}; do
+    pkgpath="$pkgdir"/$pkgname
+    [ -f $pkgpath ] &amp;&amp; { echo $pkgpath; break; };
+  done || echo ${parampart[0]} 1&gt;&amp;2
+done
+</pre>
+<p>Ejecute el script (opcionalmente, pasando directorios adicionales con paquetes como parámetros):
+</p>
+<pre>$ paclog --pkglist /var/log/pacman.log | ./pacrecover &gt;files.list 2&gt;pkglist.orig
+</pre>
+<p>De esta manera, se crearán dos archivos: <code>files.list</code> con los archivos de paquetes que todavía están presentes en el equipo, y <code>pkglist.orig</code>, paquetes que se deben descargar. La operación posterior puede dar lugar a discrepancia entres los archivos de versiones anteriores aún presentes en el equipo, y los archivos que se encuentran con una nueva versión. Dichos desajustes deberán ser arreglados manualmente.
+</p>
+<p>He aquí una forma de restringir automáticamente la segunda lista a los paquetes disponibles en un repositorio:
+</p>
+<pre>$ { cat pkglist.orig; pacman -Slq; } | sort | uniq -d &gt; pkglist
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> si esto falla mostrando <code>failed to initialise alpm library</code>, verifique si <code>/var/lib/pacman/local/ALPM_DB_VERSION</code> existe. En caso contrario, ejecute <code>pacman-db-upgrade</code> como root, seguido de <code>pacman -Sy</code> y luego <b>repita la orden anterior</b>.</div>
+<p>Compruebe si falta algún paquete <i>base</i> importante y agréguelo a la lista:
+</p>
+<pre>$ comm -23 &lt;(pacman -Sgq base | sort) pkglist.orig &gt;&gt; pkglist
+</pre>
+<p>Continúe una vez que el contenido de ambas listas sea satisfactorio, ya que se utilizarán para restaurar la base de datos de paquetes instalada por pacman (<code>/var/lib/pacman/local/</code>).
+</p>
+<h2>
+<span id="Realizar_la_recuperaci.C3.B3n"></span><span class="mw-headline" id="Realizar_la_recuperación">Realizar la recuperación</span>
+</h2>
+<p>Defina una función de bash para fines de recuperación:
+</p>
+<pre> recovery-pacman() {
+    sudo pacman "$@"  \
+    --log /dev/null   \
+    --noscriptlet     \
+    --dbonly          \
+    --force           \
+    --nodeps          \
+    --needed
+}
+</pre>
+<p><code>--log /dev/null</code> permite evitar la saturación innecesaria del registro de pacman, <code>--needed</code> ahorrará tiempo al omitir instalar paquetes ya presentes en la base de datos, <code>--nodeps</code> permitirá la instalación de paquetes almacenados en caché, incluso si los paquetes que se instalan dependen de versiones más nuevas. El resto de opciones permitirá que <b>pacman</b> funcione sin leer/escribir el sistema de archivos.
+</p>
+<p>Refresque la base de datos:
+</p>
+<pre># pacman -Sy
+</pre>
+<p>Inicie la generación de la base de datos instalando archivos de paquetes disponibles localmente desde <code>files.list</code>:
+</p>
+<pre># recovery-pacman -U $(&lt; files.list)
+</pre>
+<p>Instale el resto desde <code>pkglist</code>:
+</p>
+<pre># recovery-pacman -S $(&lt; pkglist)
+</pre>
+<p>Actualice la base de datos local para que los paquetes que no son requeridos por cualquier otro paquete se marquen como instalados explícitamente y el resto como dependencias. Necesitará tener más cuidado en el futuro al eliminar paquetes, pero con la base de datos original perdida es lo mejor que podemos hacer.
+</p>
+<pre># pacman -D --asdeps $(pacman -Qq)
+# pacman -D --asexplicit $(pacman -Qtq)
+</pre>
+<p>Opcionalmente, compruebe todos los paquetes instalados con daños:
+</p>
+<pre># pacman -Qk
+</pre>
+<p>Opcionalmente <a href="../es/de17b6ce88a43214b055e2fd83cd83eb.html#Identificar_archivos_que_no_pertenecen_a_ning%C3%BAn_paquete" class="mw-redirect" title="Pacman/Tips and tricks (Español)">Pacman/Tips and tricks (Español)#Identificar archivos que no pertenecen a ningún paquete</a>.
+</p>
+<p>Actualice todos los paquetes:
+</p>
+<pre># pacman -Su
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Package_management.html" title="Category:Package management (Español)">Package management (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Pacman_(Espa%C3%B1ol)/Restore_local_database_(Espa%C3%B1ol)&amp;oldid=610804">https://wiki.archlinux.org/index.php?title=Pacman_(Español)/Restore_local_database_(Español)&amp;oldid=610804</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 May 2020, at 13:43.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

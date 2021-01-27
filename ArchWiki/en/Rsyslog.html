@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>rsyslog - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Rsyslog rootpage-Rsyslog skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">rsyslog</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Syslog-ng.html" title="Syslog-ng">syslog-ng</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> References out of date documentation (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Rsyslog">Talk:Rsyslog#</a>)</div>
+</div>
+<p><a rel="nofollow" class="external text" href="https://www.rsyslog.com">rsyslog</a> is a <a href="https://en.wikipedia.org/wiki/syslog" class="extiw" title="w:syslog">syslog</a> implementation that offers many benefits over <a href="../en/Syslog-ng.html" title="Syslog-ng">syslog-ng</a>. It can be configured to receive log entries from <a href="../en/Systemd/Journal.html" title="Systemd/Journal">systemd's journal</a> in order to process or filter them before quickly writing them to disk or sending them over network.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Starting_service"><span class="tocnumber">1.1</span> <span class="toctext">Starting service</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Configure_hostname"><span class="tocnumber">1.2</span> <span class="toctext">Configure hostname</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#imjournal"><span class="tocnumber">2.1</span> <span class="toctext">imjournal</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#journald's_syslog-forward_feature"><span class="tocnumber">2.2</span> <span class="toctext">journald's syslog-forward feature</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Facility_levels"><span class="tocnumber">3</span> <span class="toctext">Facility levels</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Severity_levels"><span class="tocnumber">4</span> <span class="toctext">Severity levels</span></a></li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Examples"><span class="tocnumber">5</span> <span class="toctext">Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#journald_with_rsyslog_for_kernel_messages"><span class="tocnumber">5.1</span> <span class="toctext">journald with rsyslog for kernel messages</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is recommended to disable and uninstall the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslog-ng">syslog-ng</a></span> package to prevent possible conflicts.</div>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rsyslog/">rsyslog</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h3><span class="mw-headline" id="Starting_service">Starting service</span></h3>
+<p>You can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>rsyslog.service</code> after installation.
+</p>
+<h3><span class="mw-headline" id="Configure_hostname">Configure hostname</span></h3>
+<p>Rsyslog uses the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=glibc">glibc</a></span> routine <code>gethostname()</code> or <code>gethostbyname()</code> to determine the hostname of the local machine. The <code>gethostname()</code> or <code>gethostbyname()</code> routine check the contents of <code>/etc/hosts</code> for the fully qualified domain name (FQDN) if you are not using <a href="../en/BIND.html" title="BIND">BIND</a> or <a href="../en/NIS.html" title="NIS">NIS</a>.
+</p>
+<p>You can check what the local machine's currently configured FQDN is by running <code>hostname --fqdn</code>. The output of <code>hostname --short</code> will be used by rsyslog when writing log messages. If you want to have full hostnames in logs, you need to add <code>$PreserveFQDN on</code> to the beginning of the file (before using any directive that write to files). This is because, rsyslog reads config file and applies it on-the-go and then reads the later lines. 
+</p>
+<p>The <code>/etc/hosts</code> file contains a number of lines that map FQDNs to IP addresses and that map aliases to FQDNs. See the example <code>/etc/hosts</code> file below:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/hosts</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#&lt;ip-address&gt;    &lt;hostname.domain.org&gt; &lt;hostname&gt;
+#&lt;ip-address&gt;    &lt;actual FQDN&gt; &lt;aliases&gt;
+127.0.0.1        localhost.localdomain somehost.localdomain localhost somehost
+::1              localhost.localdomain somehost.localdomain localhost somehost
+</pre>
+<p><code>localhost.localdomain</code> is the first item following the IP address, so <code>gethostbyname()</code> function will return <b>localhost.localdomain</b> as the local machine's FQDN. Then <code>/var/log/messages</code> file will use <b>localhost</b> as hostname.
+</p>
+<p>To use <b>somehost</b> as the hostname. Move <b>somehost.localdomain</b> to the first item:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/hosts</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#&lt;ip-address&gt;    &lt;hostname.domain.org&gt; &lt;hostname&gt;
+#&lt;ip-address&gt;    &lt;actual FQDN&gt; &lt;aliases&gt;
+127.0.0.1        somehost.localdomain localhost.localdomain localhost somehost
+::1              somehost.localdomain localhost.localdomain localhost somehost
+</pre>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>rsyslog is configured in <code>/etc/rsyslog.conf</code>. See <a rel="nofollow" class="external text" href="https://www.rsyslog.com/doc/v8-stable/configuration/index.html">the official documentation</a> for more information on the available configuration options.
+</p>
+<p>By default, all syslog messages are handled by <a href="../en/Systemd/Journal.html" title="Systemd/Journal">systemd's journal</a>. In order to gather system logs in rsyslog, you either have to turn on <a href="#journald's_syslog-forward_feature">#journald's syslog-forward feature</a> or use the <a href="#imjournal">#imjournal</a> module of rsyslog to gather the logs by importing it from the systemd journald.
+</p>
+<h4><span class="mw-headline" id="imjournal">imjournal</span></h4>
+<p>If you want rsyslog to pull messages from systemd, load the <i>imjournal</i> module:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/rsyslog.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">$ModLoad imjournal
+</pre>
+<p>See <a rel="nofollow" class="external text" href="https://www.rsyslog.com/doc/v8-stable/configuration/modules/imjournal.html">the documentation on the imjournal input module</a> for more information.
+</p>
+<h4>
+<span id="journald.27s_syslog-forward_feature"></span><span class="mw-headline" id="journald's_syslog-forward_feature">journald's syslog-forward feature</span>
+</h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ForwardToSyslog=yes
+</pre>
+<p>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rsyslog/">rsyslog</a></span><sup><small>AUR</small></sup> does not create its working directory <code>/var/spool/rsyslog</code> defined by the <code>$WorkDirectory</code> variable in the configuration file. You might need to create it manually or change its destination.
+</p>
+<p>Log output can be fine tuned in <code>/etc/rsyslog.conf</code>. The daemon uses Facility levels (see below) to determine what gets put where. For example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/rsyslog.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+</pre>
+<p>States that all messages falling under the <b>authpriv</b> facility are logged to <code>/var/log/secure</code>.
+</p>
+<p>Another example, which would be similar to the behaviour of <i>syslog-ng</i> for the old <code>auth.log</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/rsyslog.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">auth.*                                                  -/var/log/auth
+</pre>
+<p>See <a href="../en/Systemd/Journal.html#Journald_in_conjunction_with_syslog" title="Systemd/Journal">Systemd/Journal#Journald in conjunction with syslog</a> for more information.
+</p>
+<h2><span class="mw-headline" id="Facility_levels">Facility levels</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The mapping between Facility Number and Keyword is not uniform over different operating systems and different syslog implementations. Use the keyword where possible, until it is determined which numbers are used by Arch.</div>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<th>Facility Number</th>
+<th>Keyword</th>
+<th>Facility Description
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>kern</td>
+<td>kernel messages
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>user</td>
+<td>user-level messages
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>mail</td>
+<td>mail system
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>daemon</td>
+<td>system daemons
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>auth</td>
+<td>security/authorization messages
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>syslog</td>
+<td>messages generated internally by syslogd
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>lpr</td>
+<td>line printer subsystem
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>news</td>
+<td>network news subsystem
+</td>
+</tr>
+<tr>
+<td>8</td>
+<td>uucp</td>
+<td>UUCP subsystem
+</td>
+</tr>
+<tr>
+<td>9</td>
+<td></td>
+<td>clock daemon
+</td>
+</tr>
+<tr>
+<td>10</td>
+<td>authpriv</td>
+<td>security/authorization messages
+</td>
+</tr>
+<tr>
+<td>11</td>
+<td>ftp</td>
+<td>FTP daemon
+</td>
+</tr>
+<tr>
+<td>12</td>
+<td>-</td>
+<td>NTP subsystem
+</td>
+</tr>
+<tr>
+<td>13</td>
+<td>-</td>
+<td>log audit
+</td>
+</tr>
+<tr>
+<td>14</td>
+<td>-</td>
+<td>log alert
+</td>
+</tr>
+<tr>
+<td>15</td>
+<td>cron</td>
+<td>clock daemon
+</td>
+</tr>
+<tr>
+<td>16</td>
+<td>local0</td>
+<td>local use 0  (local0)
+</td>
+</tr>
+<tr>
+<td>17</td>
+<td>local1</td>
+<td>local use 1  (local1)
+</td>
+</tr>
+<tr>
+<td>18</td>
+<td>local2</td>
+<td>local use 2  (local2)
+</td>
+</tr>
+<tr>
+<td>19</td>
+<td>local3</td>
+<td>local use 3  (local3)
+</td>
+</tr>
+<tr>
+<td>20</td>
+<td>local4</td>
+<td>local use 4  (local4)
+</td>
+</tr>
+<tr>
+<td>21</td>
+<td>local5</td>
+<td>local use 5  (local5)
+</td>
+</tr>
+<tr>
+<td>22</td>
+<td>local6</td>
+<td>local use 6  (local6)
+</td>
+</tr>
+<tr>
+<td>23</td>
+<td>local7</td>
+<td>local use 7  (local7)
+</td>
+</tr>
+</tbody>
+</table>
+<h2><span class="mw-headline" id="Severity_levels">Severity levels</span></h2>
+<p>As defined in <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424">RFC 5424</a>, there are eight severity levels:
+</p>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+<th>Keyword</th>
+<th>Description</th>
+<th>General Description
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>Emergency</td>
+<td>emerg (panic)</td>
+<td>System is unusable.</td>
+<td>A "panic" condition usually affecting multiple apps/servers/sites. At this level it  would usually notify all tech staff on call.
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Alert</td>
+<td>alert</td>
+<td>Action must be taken immediately.</td>
+<td>Should be corrected immediately, therefore notify staff who can fix the problem. An example would be the loss of a primary ISP connection.
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Critical</td>
+<td>crit</td>
+<td>Critical conditions.</td>
+<td>Should be corrected immediately, but indicates failure in a primary system, an example is a loss of a backup ISP connection.
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Error</td>
+<td>err (error)</td>
+<td>Error conditions.</td>
+<td>Non-urgent failures, these should be relayed to developers or admins; each item must be resolved within a given time.
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Warning</td>
+<td>warning (warn)</td>
+<td>Warning conditions.</td>
+<td>Warning messages, not an error, but indication that an error will occur if action is not taken, e.g. file system 85% full - each item must be resolved within a given time.
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Notice</td>
+<td>notice</td>
+<td>Normal but significant condition.</td>
+<td>Events that are unusual but not error conditions - might be summarized in an email to developers or admins to spot potential problems - no immediate action required.
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Informational</td>
+<td>info</td>
+<td>Informational messages.</td>
+<td>Normal operational messages - may be harvested for reporting, measuring throughput, etc. - no action required.
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Debug</td>
+<td>debug</td>
+<td>Debug-level messages.</td>
+<td>Info useful to developers for debugging the application, not useful during operations.
+</td>
+</tr>
+</tbody>
+</table>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> A common mnemonic used to remember the syslog levels in reverse order: "Do I Notice When Evenings Come Around Early".</div>
+<h2><span class="mw-headline" id="Examples">Examples</span></h2>
+<h3><span class="mw-headline" id="journald_with_rsyslog_for_kernel_messages">journald with rsyslog for kernel messages</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Redundant instructions, systemd commands... (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Rsyslog">Talk:Rsyslog#</a>)</div>
+</div>
+<p>Since the syslog component of systemd, journald, does not flush its logs to disk during normal operation, these logs will be gone when the machine is shut down abnormally (power loss, kernel lock-ups, ...). In the case of kernel lock-ups, it can be important to have some kernel logs for debugging. Until journald gains a configuration option for flushing kernel logs, rsyslog can be used in conjunction with journald.
+</p>
+<p>Summary of requirements:
+</p>
+<ul>
+<li>journald must still get all log messages.</li>
+<li>rsyslog must only log kernel messages, all other logs are handled by journald.</li>
+<li>Kernel logs must be logged separatedly to <code>/var/log/kernel.log</code>.</li>
+<li>Use systemd to start the service.</li>
+</ul>
+<p>Installation and configuration steps:
+</p>
+<ol>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rsyslog/">rsyslog</a></span><sup><small>AUR</small></sup>.</li>
+<li>Edit <code>/etc/logrotate.d/rsyslog</code> and add <code>/var/log/kernel.log</code> to the list of logs. Without this modification, the kernel log would grow indefinitely.</li>
+<li>Edit <code>/etc/rsyslog.conf</code> and comment everything except for <code>$ModLoad imklog</code>. If a heart-beat (repeated confirmation that the log is alive) is preferred, <code>$ModLoad immark</code> should remain uncommented as well.</li>
+<li>Add the next line to the same configuration file:
+<dl>
+<dd><pre>kern.*     /var/log/kernel.log;RSYSLOG_TraditionalFileFormat</pre></dd>
+<dd>The <code>kern.*</code> part catches all messages originating from the kernel. <code>;RSYSLOG_TraditionalFileFormat</code> is used here to use a less verbose date format. By default, a date format like <code>2013-03-09T19:29:33.103897+01:00</code> is used. Since the kernel log contains a precision already (printk time) and the actual log time is irrelevant, a format like <code>Mar  9 19:29:13</code> might be preferred.</dd>
+</dl>
+</li>
+<li>Since rsyslog should operate completely separated from systemd, remove the option that shares a socket with systemd:
+<dl><dd><pre>sed 's/^Sockets=/#&amp;/' /usr/lib/systemd/system/rsyslog.service | sudo tee /etc/systemd/system/rsyslog.service</pre></dd></dl>
+</li>
+<li>Next, make rsyslog start on boot and start it for this session by <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">starting</a> and enabling <code>rsyslog.service</code>.</li>
+</ol>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> rsyslog reads from <code>/proc/kmsg</code>. This means that subsequent reads from that file (either the user or a syslog daemon) will not read "old" logs from that file anymore. journald is not affected as it reads from <code>/dev/kmsg</code> which allows multiple readers.</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://www.rsyslog.com/doc/v8-stable/">Rsyslog manual</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Logging.html" title="Category:Logging">Logging</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Rsyslog&amp;oldid=617275">https://wiki.archlinux.org/index.php?title=Rsyslog&amp;oldid=617275</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 31 May 2020, at 09:50.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch Build System (Česky) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_Build_System_Česky rootpage-Arch_Build_System_Česky skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch Build System (Česky)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%C3%9Avod"><span class="tocnumber">1</span> <span class="toctext">Úvod</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Instalace_bal%C3%AD%C4%8Dk%C5%AF"><span class="tocnumber">2</span> <span class="toctext">Instalace balíčků</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Co_je_to_bal%C3%AD%C4%8Dek_?"><span class="tocnumber">3</span> <span class="toctext">Co je to balíček ?</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Co_je_PKGBUILD_a_co_obsahuje?"><span class="tocnumber">4</span> <span class="toctext">Co je PKGBUILD a co obsahuje?</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Funkce_build"><span class="tocnumber">5</span> <span class="toctext">Funkce build</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Strom_ABS"><span class="tocnumber">6</span> <span class="toctext">Strom ABS</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Prvn%C3%AD_pou%C5%BEit%C3%AD_ABS_:_p%C5%99izp%C5%AFsoben%C3%AD_bal%C3%AD%C4%8Dku"><span class="tocnumber">7</span> <span class="toctext">První použití ABS : přizpůsobení balíčku</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Compiler_Flags_a_%C3%BApravy_makepkg"><span class="tocnumber">8</span> <span class="toctext">Compiler Flags a úpravy makepkg</span></a></li>
+</ul>
+</div>
+
+<h4>
+<span id=".C3.9Avod"></span><span class="mw-headline" id="Úvod">Úvod</span>
+</h4>
+<p>Arch Build System (ABS zkratkou) se používá pro
+</p>
+<ul>
+<li>Tvorbu nových balíčků jenž ještě neexistují</li>
+<li>Úpravu existujících balíčků pro vlastní potřeby (např. přidání parametru)</li>
+<li>Re-build celého vašeho systému s použitím compiler flags, "ala freebsd" (a rozběhnutí modulů jádra s vaším vlastním kernelem!)</li>
+</ul>
+<p>ABS není nezbytný pro používání Arch Linuxu ale je užitečný.
+</p>
+<p>Toto how-to se vám pokusí dát přehled o ABS a baličcích Archu, není to kompletní referenční příručka! Pokud chcete víc, zkuste si přečíst manuálovou stránku.
+</p>
+<h4>
+<span id="Instalace_bal.C3.AD.C4.8Dk.C5.AF"></span><span class="mw-headline" id="Instalace_balíčků">Instalace balíčků</span>
+</h4>
+<p>Pro použití abs, musíte nejprve nainstalovat <b>cvsup</b> a <b>wget</b>, to uděláte snadno příkazem:
+</p>
+<pre>pacman -S cvsup wget</pre>
+<p>Nebo, pokud máte stažené balíčky do adresáře pojmenovaného 'foo' (pro příklad):
+</p>
+<pre>cd foo
+pacman -U  cvsup-*.pkg.tar.gz  wget-*.pkg.tar.gz</pre>
+<h4>
+<span id="Co_je_to_bal.C3.AD.C4.8Dek_.3F"></span><span class="mw-headline" id="Co_je_to_balíček_?">Co je to balíček ?</span>
+</h4>
+<p>Typický soubor balíčku má tvar <i>balíček</i>.pkg.tar.gz
+</p>
+<p>Ve skutečnosti to neni víc než gzipovaný tar archiv který obsahuje:
+</p>
+<ul><li>Soubory pro instalaci</li></ul>
+<ul><li>.PKGBUILD : obsahuje všechna metadata potřebné pacmanem k výměně s balíčky, závislostmi, apod.</li></ul>
+<ul><li>.FILELIST : seznam všech souborů obsažených v archivu. Je to vhodné pro zpětné odinstalování nebo konfliktu souborů.</li></ul>
+<ul><li>.INSTALL : soubor pro provedení příkazů po instalaci/upgradu/odebrání.</li></ul>
+<h4>
+<span id="Co_je_PKGBUILD_a_co_obsahuje.3F"></span><span class="mw-headline" id="Co_je_PKGBUILD_a_co_obsahuje?">Co je PKGBUILD a co obsahuje?</span>
+</h4>
+<p>Vzhledem k vysvětlení výše, soubor <a href="../cs/PKGBUILD.html" title="PKGBUILD (Česky)">PKGBUILD</a> obsahuje metadata o balíčcích. Je to jednoduchý textový soubor. Zde je příklad:
+</p>
+<pre># $Id: PKGBUILD,v 1.12 2003/11/06 08:26:13 dorphell Exp $
+# Maintainer: judd &lt;jvinet@zeroflux.org&gt;
+# Contributor: Judd Vinet &lt;jvinet@zeroflux.org&gt;
+pkgname=foo
+pkgver=0.99 # note: if the pkgver had been '0.99-10' then use an underscore. like '0.99_10'
+pkgrel=1
+pkgdesc="short description of foo"
+arch=(i686 x86_64)
+url="http://www.foo.org"
+groups=
+provides=
+depends=('qt' 'python')
+makedepends=('guile')
+conflicts=('yafoo')
+replaces=('mffoo')
+backup=('etc/foo/foo.conf')
+install=('foo.install')
+source=(http://www.foo.org/download/$pkgname-$pkgver.tar.gz)
+md5sums=('2c0cca3ef6330a187c6ef4fe41ecaa4d35175bee593a7cc7d6205584a94d8625')
+
+build() {
+  cd $srcdir/$pkgname-$pkgver
+  ./configure --prefix=/usr
+  make || return 1
+  make prefix=$pkgdir/usr install
+}
+</pre>
+<p>Zde si vysvětleme jednotlivé pojmy :
+</p>
+<ul>
+<li>
+<b># text</b> : komentář</li>
+<li>
+<b># $Id: PKGBUILD,v ...</b> : cvs-tag pro tento balíček (z archlinux-cvs system)</li>
+<li>
+<b># Maintainer</b> : vývojář zodpovědný za balíček v oficiálním repozitáři</li>
+<li>
+<b># Contributor</b> : osoba která napsala PKGBUILD pro tento balíček</li>
+<li>
+<b>pkgname</b> :  jméno balíčku</li>
+<li>
+<b>pkgver</b> : verze balíčku</li>
+<li>
+<b>pkgrel</b> : číslo vydání Arch balíčku.  V základu je to číslo verze změněné pokud je PKGBUILD modifikován.  To se může přihodit z mnoha důvodů pro příklad pokud povolíte compile-time pro něco.</li>
+<li>
+<b>pkgdesc</b> : výstižný popis balíčku.  Toto je co uvidíte pokud se podíváte na <a rel="nofollow" class="external text" href="https://archlinux.org/packages/">databázi balíčků</a>
+</li>
+<li>
+<b>arch</b> : ukazuje na jakou architektutu je tvořen a odskoušen <a href="../en/Frequently_asked_questions.html#64-bit" class="mw-redirect" title="Arch64 FAQ">Arch64 FAQ</a> pro portování.</li>
+<li>
+<b>url</b> : domovská stránka softwaru (objevíse pokud kliknete na balíček v databázi balíčků)</li>
+<li>
+<b>groups</b> : je užívané ve skupinách balíčků: například když zkusíte nainstalovat kde, nainstalujete všechny balíčky obsažené ve skupině kde.</li>
+<li>
+<b>provides</b> : pokud balíček poskytuje jiný balíček, pro příklad kernel-scsi poskytuje kernel</li>
+<li>
+<b>depends</b> : seznam závislostí balíčku (co potřebuje k běhu)</li>
+<li>
+<b>makedepends</b> : závislosti potřebné k tvorbě balíčku ale nepotřebné k samotnému spuštění</li>
+<li>
+<b>conflicts</b> : balíčky které jsou v konfliktu.  Např, <i>foo</i> má konflikt s <i>yafoo (yet another foo)</i>.  Nemohou proto být nainstalovány společně.</li>
+<li>
+<b>replaces</b> : nový balíček přepíše starý.  Pokud <i>mffoo (my first foo)</i> je podporován, přepíše <i>foo</i>
+</li>
+<li>
+<b>backup</b> : soubory pro zálohu (jako soubor.pacsave) pokud je balíček odstraněn</li>
+<li>
+<b>install</b> : specifikuje speciální instalační script který může být obsažen v balíčku (ve stejném adresáři jako PKGBUILD)</li>
+<li>
+<b>source</b> : specifikuje cestu odkud stáhnout zdrojový kód balíčku. Může to být např. "http" nebo "ftp".</li>
+<li>
+<b>md5sums</b> : md5 součet pro ověření integrity</li>
+</ul>
+<p>Tak pojdme si vysvětlit funkci :
+</p>
+<ul><li>build : všechny akce potřebné pro tvorbu balíčku (to bude vysvětleno v tomto dokumentu níže)</li></ul>
+<p>Dobře, podíváme se co PKGBUILD obsahuje za informace potřebné pro správce balíčků. To je srdce pacmana a abs.
+</p>
+<p>Jsou tam také instalační soubory. Soubor PKGBUILD odkazuje na 'foo.install' jako na instalační soubor balíčku.  Zde je příklad instalačního souboru:
+</p>
+<pre>post_install() {
+/bin/true
+}
+
+post_upgrade() {
+/bin/true
+}
+
+pre_remove() {
+/bin/true
+}
+
+op=$1
+shift
+
+$op "$@"
+</pre>
+<p>Zde je vysvětlení funkcí :
+</p>
+<ul>
+<li>post_install : tento script se spustí když jsou soubory nainstalovány, předává jeden argument :
+<ul><li>the package version</li></ul>
+</li>
+<li>post_upgrade : tento script se spustí jsou-li soubory upgradovány <em>předává dva argumenty </em> :
+<ul>
+<li>the new package version</li>
+<li>the old package version</li>
+</ul>
+</li>
+<li>pre_remove : spustí se jsou-li soubory odstraněny (například zastaví daemona) a předá jeden argument :
+<ul><li>the package version</li></ul>
+</li>
+</ul>
+<p>Ostatní jsou řádky potřebné pro každou instalaci.
+</p>
+<h4><span class="mw-headline" id="Funkce_build">Funkce build</span></h4>
+<p>Jestli nejste seznámen s tvorbou balíčku, měl by jste vědět že většina balíčků (ale ne všechny) jde vytvořit touto cestou :
+</p>
+<ul><li>rozbalit zdrojový soubor :</li></ul>
+  <pre>  tar -xzf foo-0.99.tar.gz
+  tar -xjf foo-0.99.tar.bz2</pre>
+<ul><li>otevřít adresář</li></ul>
+  <pre>cd foo-0.99</pre>
+<ul><li>konfigurace balíčku : V adresáři je malý script zvaný <code>configure</code> který je použit ke konfiguraci balíčku a kontrole zda má váš pačítač všechen potřebný software. Můžete ho spustit pomocí :</li></ul>
+  <pre>./configure [[option]]</pre>
+<p>Klidně se můžete podívat na nápovědu jak to pracuje :
+</p>
+  <pre>./configure --help</pre>
+<ul><li>kompilace zdroje :</li></ul>
+  <pre>make</pre>
+<ul><li>instalace</li></ul>
+  <pre>make install</pre>
+<p>Vždycky by jste měl číst soubor <code>INSTALL</code> pro informace jak program sestavit a nainstalovat ! <b>Všechny balíčky nepoužívají <code>configure; make; make install</code> systém!</b>
+</p>
+<p>Podívejme se nyní na "standardní" build funkci :
+</p>
+<pre>build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+  ./configure --prefix=/usr
+  make || return 1
+  make prefix=${pkgdir}/usr install
+}
+</pre>
+<p>Co děláme je to, že :
+</p>
+<ul><li>zadání adresáře kde máme zdrojové kódy :</li></ul>
+  <pre>cd ${srcdir}/${pkgname}-${pkgver}</pre>
+<p>Pokud zkoušíte sestavit balíček, pečlivě zkontrolujte, že je to správný adresář : někdy je adresář pojmenován :
+</p>
+  <pre>tar -xzf foo-0.99.tar.gz</pre>
+<p>a <code>ls</code> může vypsat :
+</p>
+  <pre>  .
+  ..
+  foo-0.99.tar.gz
+  foo/</pre>
+<p>a ne :
+</p>
+  <pre>  .
+  ..
+  foo-0.99.tar.gz
+  foo-0.99/</pre>
+<ul><li>konfigurace balíčku a provedení instalace v adresáři <code>/usr</code> :</li></ul>
+  <pre>  ./configure --prefix=/usr</pre>
+<ul><li>kompilace</li></ul>
+  <pre>  make || return 1</pre>
+<ul><li>instaluje software ale ne v adresáři <code>/usr</code>, ale v <code>${pkgdir}/usr</code>.</li></ul>
+  <pre>  make prefix=${pkgdir}/usr install</pre>
+<p>Co potřebujeme je vytvořit balíček ale neinstalovat ho do standartního adresáře (<code>/usr</code>), my chceme pomocí <code>make</code> nastavit náš speciální adresář : <code>${pkgdir}/usr</code>.
+</p>
+<h4><span class="mw-headline" id="Strom_ABS">Strom ABS</span></h4>
+<p>Když spustíte poprvé abs :
+</p>
+<pre># abs</pre>
+<p>provede se synchronizace věci zvané "strom ABS" což by se vlastně dalo nazvat jako cvs system Archlinuxu. Takže co je vlastně ABS strom ? Je uložen v /var/abs vypadá takto :
+</p>
+<pre>|-
+| -- base/
+|-
+|     ||-- autoconf/
+|-
+|     ||-- automake/
+|-
+|     ||-- ...
+|-
+| -- devel/
+|-
+| -- ...
+|-
+| -- extra/
+|-
+|      || -- daemons/
+|-
+|      ||      || -- acpid/
+|-
+|      ||      ||      || -- PKGBUILD
+...    ...    ...    ...
+</pre>
+<p>ABS strom má strukturu abs databáze :
+</p>
+<ul>
+<li>první úroveň adresáře reprezentuje kategorii</li>
+<li>první úroveň adresářů reprezentuje balíčky</li>
+<li>PKGBUILD obsahují všechny informace vztahující se k balíčku</li>
+</ul>
+<p>Existuje speciální adresář : <b>local</b>. Tento adresář je  <i>váš</i>, Tohle je to pravé místo kam budete vše dávat : Nikdy nemodifikujte položky stromu !.
+</p>
+<p><br>
+Takže nyní již víme co je ABS strom. Jak ho ale používat ?
+</p>
+<h4>
+<span id="Prvn.C3.AD_pou.C5.BEit.C3.AD_ABS_:_p.C5.99izp.C5.AFsoben.C3.AD_bal.C3.AD.C4.8Dku"></span><span class="mw-headline" id="První_použití_ABS_:_přizpůsobení_balíčku">První použití ABS : přizpůsobení balíčku</span>
+</h4>
+<p>Tato situace nastane jistě víckrát než se domníváte : oficiální balíčky jsou kompilované s centrálním kódováním <code>--enable</code> nebo <code>--disable</code>.
+</p>
+<p>Pro ilustraci uvedu příklad : <i>foo</i> Balíček <i>foo</i> je sestaven bez <b>arts</b> podpory. Představme si že chceme povolit <b>arts</b>. Zde je návod jak to udělat :
+</p>
+<ul><li>najděte kde je <i>foo</i> balíček umístěn. Můžete to udělat pomocí :</li></ul>
+  <pre>  find /var/abs -name "foo"</pre>
+<p>nebo použijte příkaz slocate :
+</p>
+  <pre>  slocate foo | grep ^/var/abs</pre>
+<p>Zjistili jsme že foo patří do <code>extra</code> a <code>multimedia</code> (pro příklad)
+</p>
+<ul><li>kopírujte <i>foo</i> <code>PKGBUILD</code> do <code>/var/abs/local/foo</code>
+</li></ul>
+  <pre>  mkdir /var/abs/local/foo
+  cp /var/abs/extra/multimedia/foo/* /var/abs/local/foo
+  cd /var/abs/local/foo</pre>
+<ul><li>modifikujte <code>PKGBUILD</code> : pro podporu <b>arts</b> :</li></ul>
+  <pre>  build() {
+    cd ${srcdir}/${pkgname}-${pkgver}
+    ./configure --prefix=/usr
+    make || return 1
+    make prefix=${pkgdir}/usr install
+  }</pre>
+<p>becomes :
+</p>
+  <pre>  build() {
+    cd ${srcdir}/${pkgname}-${pkgver}
+    ./configure --enable-arts --prefix=/usr
+    make || return 1
+    make prefix=${pkgdir}/usr install
+  }</pre>
+<ul><li>launch <code>makepkg</code> :</li></ul>
+  <pre>  makepkg</pre>
+<ul><li>nainstalujte balíček (<code>-A</code> pro instalaci, <code>-U</code> pro upgrade):</li></ul>
+  <pre>  pacman -A foo-*.pkg.tar.gz
+  pacman -U foo-*.pkg.tar.gz</pre>
+<h4>
+<span id="Compiler_Flags_a_.C3.BApravy_makepkg"></span><span class="mw-headline" id="Compiler_Flags_a_úpravy_makepkg">Compiler Flags a úpravy makepkg</span>
+</h4>
+<p>Konfigurační soubor <code>makepkg</code> je <code>/etc/makepkg.conf</code>.  Zde můžeme nastavit parametry pro <code>gcc</code> a <code>make</code>, také nějaké pro <code>makepkg</code>.  Následuje příklad <code>/etc/makepkg.conf</code>.
+</p>
+<pre># FTP/HTTP download utilita kterou makepkg použije k získání zdrojových kódů
+export FTPAGENT="/usr/bin/wget --continue --passive-ftp --tries=3 --waitretry=3"
+
+# Informace pro gcc jaký typ počítače používáte.
+export CARCH="i686"
+export CHOST="i686-pc-linux-gnu"
+
+# Flags pro gcc když balíček zkompiluje
+export CFLAGS "-march athlon-tbird -O2 -pipe"
+export CXXFLAGS "-march athlon-tbird -02 -pipe"
+
+# Flags pro make když balíček zkompiluje
+export MAKEFLAGS="-j 2"
+
+# Povolí barevně odlišený výstup
+export USE_COLOR="y"
+
+# Povolte fakeroot pro sestavení balíčků bez nutnosti být root.
+# Napište 'man fakeroot' pro více informací
+export USE_FAKEROOT="y"
+
+# Adresář kde jsou umístěny všechny balíčky (default is ./)
+export PKGDEST=/home/packages
+
+# ABS strom (default is /var/abs)
+export ABSROOT=/var/abs
+
+# Zde napište svoje jméno chcete-li
+export PACKAGER="John Doe &lt;nowhere@microsoft.com&gt;"
+</pre>
+<p>Upozornění: Uživatel by si měl být jistý že změny <code>CFLAGS</code>, <code>CXXFLAGS</code> a <code>MAKEFLAGS</code> nezpůsobí problémy nebo nestabilitu.  Většina uživatelů nemění hodnoty pro <code>CARCH</code>, <code>CHOST</code>, a <code>USE_FAKEROOT</code>.
+</p>
+<p>References for gcc and make flags
+</p>
+<ul>
+<li><a rel="nofollow" class="external autonumber" href="https://gcc.gnu.org/onlinedocs/gcc-3.4.3/gcc/Option-Summary.html#Option-Summary">[1]</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.gnu.org/software/make/manual/html"><i>chapter/make</i>9.html#SEC102</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-19 ⓘ]</sup>
+</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../cs/Category:About_Arch.html" title="Category:About Arch (Česky)">About Arch (Česky)</a></li>
+<li><a href="../cs/Category:Package_development.html" title="Category:Package development (Česky)">Package development (Česky)</a></li>
+<li><a href="../cs/Category:Package_management.html" title="Category:Package management (Česky)">Package management (Česky)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_Build_System_(%C4%8Cesky)&amp;oldid=646067">https://wiki.archlinux.org/index.php?title=Arch_Build_System_(Česky)&amp;oldid=646067</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 December 2020, at 13:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Audit framework - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Audit_framework rootpage-Audit_framework skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Audit framework</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>The Linux audit framework provides a CAPP-compliant (<a href="https://en.wikipedia.org/wiki/Controlled_Access_Protection_Profile" class="extiw" title="wikipedia:Controlled Access Protection Profile">Controlled Access Protection Profile</a>) auditing system that reliably collects information about any security-relevant (or non-security-relevant) event on a system. It can help you track actions  performed on a system.
+</p>
+<p>Linux audit helps make your system more secure by providing you with means to analyze what is happening on your system in great detail. It does not, however, provide additional security itself—it does not protect your system from code malfunctions or any kind of exploits. Instead, Audit is useful for tracking these issues and helps you take additional security measures to prevent them.
+</p>
+<p>The audit framework works by listening to the event reported by the kernel and logging them to a log file.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Audit framework compatibility with containers was fixed in Linux 3.15, see <a rel="nofollow" class="external autonumber" href="https://bugzilla.redhat.com/show_bug.cgi?id=893751">[1]</a>, however interpreting audit records may be difficult as support for namespace ID is still work in progress, see <a rel="nofollow" class="external autonumber" href="https://github.com/linux-audit/audit-kernel/issues/32">[2]</a>.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Adding_rules"><span class="tocnumber">2</span> <span class="toctext">Adding rules</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Audit_files_and_directories_access"><span class="tocnumber">2.1</span> <span class="toctext">Audit files and directories access</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Audit_syscalls"><span class="tocnumber">2.2</span> <span class="toctext">Audit syscalls</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Search_the_logs"><span class="tocnumber">3</span> <span class="toctext">Search the logs</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Using_pid"><span class="tocnumber">3.1</span> <span class="toctext">Using pid</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Using_keys"><span class="tocnumber">3.2</span> <span class="toctext">Using keys</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Look_for_abnormalities"><span class="tocnumber">3.3</span> <span class="toctext">Look for abnormalities</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Which_files_or_syscalls_are_worth-auditing?"><span class="tocnumber">4</span> <span class="toctext">Which files or syscalls are worth-auditing?</span></a></li>
+<li class="toclevel-1 tocsection-10">
+<a href="#Gather_logs_from_different_hosts"><span class="tocnumber">5</span> <span class="toctext">Gather logs from different hosts</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#Send_logfiles"><span class="tocnumber">5.1</span> <span class="toctext">Send logfiles</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Receive_logfiles"><span class="tocnumber">5.2</span> <span class="toctext">Receive logfiles</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>In-kernel audit support is available in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> (since 4.18), <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span> (since 4.19), <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-zen">linux-zen</a></span> (since 4.18)  and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-hardened">linux-hardened</a></span>. For custom kernels <code>CONFIG_AUDIT</code> should be enabled. Audit can be enabled at boot-time by setting <code>audit=1</code> as <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a>.
+</p>
+<p>For userspace support <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=audit">audit</a></span> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>auditd.service</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> In order to disable audit completely and suppress audit messages from appearing in journal you may set <code>audit=0</code> as <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> and/or <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Mask">mask</a> <code>systemd-journald-audit.socket</code>.</div>
+<p>Audit framework is composed of the auditd daemon, responsible for writing the audit messages that were generated through the audit kernel interface and triggered by application and system activity.
+</p>
+<p>This daemon can be controlled by several commands and files:
+</p>
+<ul>
+<li>
+<i>auditctl</i> : to control the behavior of the daemon on the fly, adding rules etc.</li>
+<li>
+<code>/etc/audit/audit.rules</code> : contains the rules and various parameters of the auditd daemon</li>
+<li>
+<i>aureport</i> : generate report of the activity on a system</li>
+<li>
+<i>ausearch</i> : search for various events</li>
+<li>
+<i>auditspd</i> : the daemon which can be used to relay event notifications to other applications instead of writing them to disk in the audit log</li>
+<li>
+<i>autrace</i> : this command can be used to trace a process, in a similar way as strace.</li>
+<li>
+<code>/etc/audit/auditd.conf</code> : configuration file related to the logging.</li>
+</ul>
+<h2><span class="mw-headline" id="Adding_rules">Adding rules</span></h2>
+<p>Before adding rules, you must know that the audit framework can be very verbose and that each rule must be carefully tested before being effectively deployed. Indeed, just one rule can flood all your logs within a few minutes.
+</p>
+<h3><span class="mw-headline" id="Audit_files_and_directories_access">Audit files and directories access</span></h3>
+<p>The most basic use of the audit framework is to log the access to the files you want.
+To do this, you must use a watch <code>-w</code> to a file or a directory
+The most basic rule to set up is to track accesses to the passwd file :
+</p>
+<pre># auditctl -w /etc/passwd -p rwxa
+</pre>
+<p>You can track access to a folder with :
+</p>
+<pre># auditctl -w /etc/security/
+</pre>
+<p>The first rule keeps track of every read <code>r</code> , write <code>w</code> , execution <code>x</code> , attribute change <code>a</code>  to the file <code>/etc/passwd</code>.
+The second one keeps track of any access to the <code>/etc/security/</code> folder.
+</p>
+<p>You can list all active rules with :
+</p>
+<pre># auditctl -l
+</pre>
+<p>You can delete all rules with :
+</p>
+<pre># auditctl -D
+</pre>
+<p>Once you validate the rules, you can append them to the <code>/etc/audit/audit.rules</code> file like that : 
+</p>
+<pre>-w /etc/audit/audit.rules -p rwxa
+-w /etc/security/
+</pre>
+<h3><span class="mw-headline" id="Audit_syscalls">Audit syscalls</span></h3>
+<p>The audit framework allows you to audit the syscalls performed with the <code>-a</code> option.
+</p>
+<p>A security related rule is to track the <code>chmod syscall</code>, to detect file ownership changes :
+</p>
+<pre># auditctl -a entry,always -S chmod
+</pre>
+<p>For a list of all syscalls: <span class="plainlinks archwiki-template-man" title="$ man 2 syscalls"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/syscalls.2">syscalls(2)</a></span>
+</p>
+<p>A lot of rules and posibilities are available, see <span class="plainlinks archwiki-template-man" title="$ man 8 auditctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/auditctl.8">auditctl(8)</a></span> and <span class="plainlinks archwiki-template-man" title="$ man 7 audit.rules"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/audit.rules.7">audit.rules(7)</a></span>.
+</p>
+<h2><span class="mw-headline" id="Search_the_logs">Search the logs</span></h2>
+<p>The audit framework provides some tools to ease the use and the research of events happening on a system.
+</p>
+<h3><span class="mw-headline" id="Using_pid">Using pid</span></h3>
+<p>You can search events related to a particular pid using <code>ausearch</code>:
+</p>
+<pre># ausearch -p 1
+</pre>
+<p>This command will show you all the events logged according to your rules related to PID 1 (i.e. systemd).
+</p>
+<h3><span class="mw-headline" id="Using_keys">Using keys</span></h3>
+<p>One of the great features of the audit framework is its ability to use <code>keys</code> to manage events, such a usage is recommended.
+</p>
+<p>You can use the <code>-k</code> option in your rules to be able to find related events easily :
+</p>
+<pre># auditctl -w /etc/passwd -p rwxa -k KEY_pwd
+</pre>
+<p>Then, if you search for events with the key <code>KEY_pwd</code>, ausearch will display only event related to the file <code>/etc/passwd</code>.
+</p>
+<pre># ausearch -k KEY_pwd
+</pre>
+<h3><span class="mw-headline" id="Look_for_abnormalities">Look for abnormalities</span></h3>
+<p>The <code>aureport</code> tool can be used to quickly report any abnormal event performed on the system, it includes network interfaces used in promiscous mode, process or thread crashing or exiting with ENOMEM error etc.
+</p>
+<p>The easiest way to use <code>aureport</code> is :
+</p>
+<pre># aureport -n
+</pre>
+<p>aureport can be used to generate custom reports, see <span class="plainlinks archwiki-template-man" title="$ man 8 aureport"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/aureport.8">aureport(8)</a></span>.
+</p>
+<h2>
+<span id="Which_files_or_syscalls_are_worth-auditing.3F"></span><span class="mw-headline" id="Which_files_or_syscalls_are_worth-auditing?">Which files or syscalls are worth-auditing?</span>
+</h2>
+<p>Keep in mind that each audit rule added will generate logs, so you must be ready to treat this amount of information.
+Basically, each security-related event/file must be monitored, like ids, ips, anti-rootkits etc.
+On the other side, it's totally useless to track every write syscall, the smallest compilation will fill your logs with this event.
+</p>
+<p>More complex set of rules can be set up, performing auditing on a very fine-grained base. If you want to do so, see <span class="plainlinks archwiki-template-man" title="$ man 8 auditctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/auditctl.8">auditctl(8)</a></span>.
+</p>
+<h2><span class="mw-headline" id="Gather_logs_from_different_hosts">Gather logs from different hosts</span></h2>
+<p>The audit framework has a plugin system which provides the possibility to send local logfiles to a remote auditd.
+</p>
+<h3><span class="mw-headline" id="Send_logfiles">Send logfiles</span></h3>
+<p>To send your logfiles to a remote host you need the <code>audisp-remote</code> plugin which comes automatically with the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=audit">audit</a></span> package.
+Activate the plugin:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/audisp/plugins.d/au-remote.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">active = yes
+direction = out
+path = /usr/bin/audisp-remote
+type = always
+format = string</pre>
+<p>and set the remote host where the logs should be send to:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/audisp/audisp-remote.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">remote_server = domain.name.or.ip
+port = 60
+##local_port = optional
+transport = tcp</pre>
+<h3><span class="mw-headline" id="Receive_logfiles">Receive logfiles</span></h3>
+<p>To make audit listen for remote audispds you just need to set the tcp options:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/audit/auditd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">tcp_listen_port = 60
+tcp_listen_queue = 5
+tcp_max_per_addr = 1
+##tcp_client_ports = 1024-65535 #optional
+tcp_client_max_idle = 0</pre>
+<p>Now you can view the logs of <b>all</b> configured hosts in the logfiles of the receiving auditd.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+<li><a href="../en/Category:Logging.html" title="Category:Logging">Logging</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Audit_framework&amp;oldid=616567">https://wiki.archlinux.org/index.php?title=Audit_framework&amp;oldid=616567</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 27 May 2020, at 13:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

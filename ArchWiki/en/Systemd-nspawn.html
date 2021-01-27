@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd-nspawn - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd-nspawn rootpage-Systemd-nspawn skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd-nspawn</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Systemd.html" title="Systemd">systemd</a></li>
+<li><a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a></li>
+<li><a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a></li>
+<li><a href="../en/Docker.html" title="Docker">Docker</a></li>
+<li><a href="../en/Linux_Containers.html#Systemd_considerations_.28required.29" class="mw-redirect" title="Lxc-systemd">Lxc-systemd</a></li>
+</ul>
+</div>
+<p><i>systemd-nspawn</i> is like the <a href="../en/Chroot.html" title="Chroot">chroot</a> command, but it is a <i>chroot on steroids</i>.
+</p>
+<p><i>systemd-nspawn</i> may be used to run a command or OS in a light-weight namespace container. It is more powerful than <a href="../en/Chroot.html" title="Chroot">chroot</a> since it fully virtualizes the file system hierarchy, as well as the process tree, the various IPC subsystems and the host and domain name.
+</p>
+<p><i>systemd-nspawn</i> limits access to various kernel interfaces in the container to read-only, such as <code>/sys</code>, <code>/proc/sys</code> or <code>/sys/fs/selinux</code>. Network interfaces and the system clock may not be changed from within the container. Device nodes may not be created. The host system cannot be rebooted and kernel modules may not be loaded from within the container.
+</p>
+<p><i>systemd-nspawn</i> is a simpler tool to configure than <a href="../en/Linux_Containers.html#Systemd_considerations_.28required.29" class="mw-redirect" title="Lxc-systemd">Lxc-systemd</a> or <a href="../en/Libvirt.html" title="Libvirt">Libvirt</a>-lxc.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Examples"><span class="tocnumber">2</span> <span class="toctext">Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Create_and_boot_a_minimal_Arch_Linux_container"><span class="tocnumber">2.1</span> <span class="toctext">Create and boot a minimal Arch Linux container</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Create_a_Debian_or_Ubuntu_environment"><span class="tocnumber">2.2</span> <span class="toctext">Create a Debian or Ubuntu environment</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Build_and_test_packages"><span class="tocnumber">2.3</span> <span class="toctext">Build and test packages</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Management"><span class="tocnumber">3</span> <span class="toctext">Management</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Default_systemd-nspawn_options"><span class="tocnumber">3.1</span> <span class="toctext">Default systemd-nspawn options</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#machinectl"><span class="tocnumber">3.2</span> <span class="toctext">machinectl</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#systemd_toolchain"><span class="tocnumber">3.3</span> <span class="toctext">systemd toolchain</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10">
+<a href="#Configuration"><span class="tocnumber">4</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#Per-container_settings"><span class="tocnumber">4.1</span> <span class="toctext">Per-container settings</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Enable_container_to_start_at_boot"><span class="tocnumber">4.2</span> <span class="toctext">Enable container to start at boot</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Resource_control"><span class="tocnumber">4.3</span> <span class="toctext">Resource control</span></a></li>
+<li class="toclevel-2 tocsection-14">
+<a href="#Networking"><span class="tocnumber">4.4</span> <span class="toctext">Networking</span></a>
+<ul>
+<li class="toclevel-3 tocsection-15"><a href="#Use_host_networking"><span class="tocnumber">4.4.1</span> <span class="toctext">Use host networking</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Use_a_virtual_Ethernet_link"><span class="tocnumber">4.4.2</span> <span class="toctext">Use a virtual Ethernet link</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#Use_a_network_bridge"><span class="tocnumber">4.4.3</span> <span class="toctext">Use a network bridge</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#Use_a_%22macvlan%22_or_%22ipvlan%22_interface"><span class="tocnumber">4.4.4</span> <span class="toctext">Use a "macvlan" or "ipvlan" interface</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#Use_an_existing_interface"><span class="tocnumber">4.4.5</span> <span class="toctext">Use an existing interface</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20"><a href="#Port_mapping"><span class="tocnumber">4.5</span> <span class="toctext">Port mapping</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Domain_name_resolution"><span class="tocnumber">4.6</span> <span class="toctext">Domain name resolution</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-22">
+<a href="#Tips_and_tricks"><span class="tocnumber">5</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-23"><a href="#Unprivileged_containers"><span class="tocnumber">5.1</span> <span class="toctext">Unprivileged containers</span></a></li>
+<li class="toclevel-2 tocsection-24">
+<a href="#Use_an_X_environment"><span class="tocnumber">5.2</span> <span class="toctext">Use an X environment</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25"><a href="#Avoiding_xhost"><span class="tocnumber">5.2.1</span> <span class="toctext">Avoiding xhost</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#Run_Firefox"><span class="tocnumber">5.2.2</span> <span class="toctext">Run Firefox</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27"><a href="#Access_host_filesystem"><span class="tocnumber">5.3</span> <span class="toctext">Access host filesystem</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href="#Run_on_a_non-systemd_system"><span class="tocnumber">5.4</span> <span class="toctext">Run on a non-systemd system</span></a></li>
+<li class="toclevel-2 tocsection-29"><a href="#Use_Btrfs_subvolume_as_container_root"><span class="tocnumber">5.5</span> <span class="toctext">Use Btrfs subvolume as container root</span></a></li>
+<li class="toclevel-2 tocsection-30"><a href="#Use_temporary_Btrfs_snapshot_of_container"><span class="tocnumber">5.6</span> <span class="toctext">Use temporary Btrfs snapshot of container</span></a></li>
+<li class="toclevel-2 tocsection-31"><a href="#Run_docker_in_systemd-nspawn"><span class="tocnumber">5.7</span> <span class="toctext">Run docker in systemd-nspawn</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#Using_machinectl_without_root_permissions"><span class="tocnumber">5.8</span> <span class="toctext">Using machinectl without root permissions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-33">
+<a href="#Troubleshooting"><span class="tocnumber">6</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-34"><a href="#Root_login_fails"><span class="tocnumber">6.1</span> <span class="toctext">Root login fails</span></a></li>
+<li class="toclevel-2 tocsection-35"><a href="#execv(...)_failed:_Permission_denied"><span class="tocnumber">6.2</span> <span class="toctext">execv(...) failed: Permission denied</span></a></li>
+<li class="toclevel-2 tocsection-36"><a href="#Terminal_type_in_TERM_is_incorrect_(broken_colors)"><span class="tocnumber">6.3</span> <span class="toctext">Terminal type in TERM is incorrect (broken colors)</span></a></li>
+<li class="toclevel-2 tocsection-37"><a href="#Mounting_a_NFS_share_inside_the_container"><span class="tocnumber">6.4</span> <span class="toctext">Mounting a NFS share inside the container</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-38"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><i>systemd-nspawn</i> is part of and packaged with <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span>. 
+</p>
+<h2><span class="mw-headline" id="Examples">Examples</span></h2>
+<h3><span class="mw-headline" id="Create_and_boot_a_minimal_Arch_Linux_container">Create and boot a minimal Arch Linux container</span></h3>
+<p>First install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>.
+</p>
+<p>Next, create a directory to hold the container. In this example we will use <code>~/MyContainer</code>. 
+</p>
+<p>Next, we use <i>pacstrap</i> to install a basic Arch system into the container. At minimum we need to install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=base">base</a></span> package. 
+</p>
+<pre># pacstrap -c ~/MyContainer base <i>[additional packages/groups]</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=base">base</a></span> package does not depend on the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> kernel package and is container-ready.</div>
+<p>Once your installation is finished, chroot into the container, and set a root password:
+</p>
+<pre># systemd-nspawn -D ~/MyContainer
+# passwd
+# logout
+</pre>
+<p>Finally, boot into the container:
+</p>
+<pre># systemd-nspawn -b -D ~/MyContainer
+</pre>
+<p>The <code>-b</code> option will boot the container (i.e. run <code>systemd</code> as PID=1), instead of just running a shell, and <code>-D</code> specifies the directory that becomes the container's root directory.
+</p>
+<p>After the container starts, log in as "root" with your password.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the login fails with "Login incorrect", the problem is likely the <code>securetty</code> TTY device whitelist. See <a href="#Root_login_fails">#Root login fails</a>.</div>
+<p>The container can be powered off by running <code>poweroff</code> from within the container. From the host, containers can be controlled by the <a href="#machinectl">machinectl</a> tool.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> To terminate the <i>session</i> from within the container, hold <code>Ctrl</code> and rapidly press <code>]</code> three times. Non-US keyboard users should use <code>%</code> instead of <code>]</code>.</div>
+<h3><span class="mw-headline" id="Create_a_Debian_or_Ubuntu_environment">Create a Debian or Ubuntu environment</span></h3>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=debootstrap">debootstrap</a></span>, and one or both of <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=debian-archive-keyring">debian-archive-keyring</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ubuntu-keyring">ubuntu-keyring</a></span> depending on which distribution you want.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <i>systemd-nspawn</i> requires that the operating system in the container uses <i>systemd</i> init (has it running as PID 1) and <i>systemd-nspawn</i> is installed in the container. Make sure that the <i>systemd-container</i> package is installed on the container system.</div>
+<p>From there it is rather easy to set up Debian or Ubuntu environments:
+</p>
+<pre># cd /var/lib/machines
+# debootstrap --include=systemd-container --components=main,universe <i>codename</i> <i>container-name</i> <i>repository-url</i>
+</pre>
+<p>For Debian valid code names are either the rolling names like "stable" and "testing" or release names like "stretch" and "sid", for Ubuntu the code name like "xenial" or "zesty" should be used. A complete list of code names is in <code>/usr/share/debootstrap/scripts</code>. In case of a Debian image the "repository-url" can be <a rel="nofollow" class="external free" href="https://deb.debian.org/debian/">https://deb.debian.org/debian/</a>. For an Ubuntu image, the "repository-url" can be <a rel="nofollow" class="external free" href="http://archive.ubuntu.com/ubuntu/">http://archive.ubuntu.com/ubuntu/</a>. "repository-url" should <i>not</i> contain a trailing slash.
+</p>
+<p>Just like Arch, Debian and Ubuntu will not let you log in without a password. To set the root password, run <i>systemd-nspawn</i> without the <code>-b</code> option:
+</p>
+<pre># cd /var/lib/machines
+# systemd-nspawn -D ./<i>container-name</i>
+# passwd
+# logout
+</pre>
+<h3><span class="mw-headline" id="Build_and_test_packages">Build and test packages</span></h3>
+<p>See <a href="../en/Creating_packages_for_other_distributions.html" title="Creating packages for other distributions">Creating packages for other distributions</a> for example uses.
+</p>
+<h2><span class="mw-headline" id="Management">Management</span></h2>
+<p>Containers located in <code>/var/lib/machines/</code> can be controlled by the <i>machinectl</i> command, which internally controls instances of the <code>systemd-nspawn@.service</code> unit. The subdirectories in <code>/var/lib/machines/</code> correspond to the container names, i.e. <code>/var/lib/machines/<i>container-name</i>/</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the container cannot be moved into <code>/var/lib/machines/</code> for some reason, it can be symlinked. See <span class="plainlinks archwiki-template-man" title="$ man 1 machinectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/machinectl.1#FILES_AND_DIRECTORIES">machinectl(1) § FILES AND DIRECTORIES</a></span> for details.</div>
+<h3><span class="mw-headline" id="Default_systemd-nspawn_options">Default systemd-nspawn options</span></h3>
+<p>It is important to realize that containers started via <i>machinectl</i> or <code>systemd-nspawn@.service</code> use different default options than containers started manually by the <i>systemd-nspawn</i> command. The extra options used by the service are:
+</p>
+<ul>
+<li>
+<code>-b</code>/<code>--boot</code> – Managed containers automatically search for an init program and invoke it as PID 1.</li>
+<li>
+<code>--network-veth</code> which implies <code>--private-network</code> – Managed containers get a virtual network interface and are disconnected from the host network. See <a href="#Networking">#Networking</a> for details.</li>
+<li>
+<code>-U</code> – Managed containers use the <span class="plainlinks archwiki-template-man" title="$ man 7 user_namespaces"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/user_namespaces.7">user_namespaces(7)</a></span> feature by default if supported by the kernel. See <a href="#Unprivileged_containers">#Unprivileged containers</a> for implications.</li>
+<li><code>--link-journal=try-guest</code></li>
+</ul>
+<p>The behaviour can be overridden in per-container configuration files, see <a href="#Configuration">#Configuration</a> for details.
+</p>
+<h3><span class="mw-headline" id="machinectl">machinectl</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <i>machinectl</i> tool requires <a href="../en/Systemd.html" title="Systemd">systemd</a> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dbus">dbus</a></span> to be installed in the container. See <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/685">[1]</a> for detailed discussion.</div>
+<p>Containers can be managed by the <code>machinectl <i>subcommand</i> <i>container-name</i></code> command. For example, to start a container:
+</p>
+<pre>$ machinectl start <i>container-name</i>
+</pre>
+<p>Similarly, there are subcommands such as <code>poweroff</code>, <code>reboot</code>, <code>status</code> and <code>show</code>. See <span class="plainlinks archwiki-template-man" title="$ man 1 machinectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/machinectl.1#Machine_Commands">machinectl(1) § Machine Commands</a></span> for detailed explanations.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Poweroff and reboot operations can be performed from within the container using the <code>poweroff</code> and <code>reboot</code> commands.</div>
+<p>Other common commands are:
+</p>
+<ul>
+<li>
+<code>machinectl list</code> – show a list of currently running containers</li>
+<li>
+<code>machinectl login <i>container-name</i></code> – open an interactive login session in a container</li>
+<li>
+<code>machinectl shell <i>[username@]container-name</i></code> – open an interactive shell session in a container (this immediately invokes a user process without going through the login process in the container)</li>
+<li>
+<code>machinectl enable <i>container-name</i></code> and <code>machinectl disable <i>container-name</i></code> – enable or disable a container to start at boot, see <a href="#Enable_container_to_start_at_boot">#Enable container to start at boot</a> for details</li>
+</ul>
+<p><i>machinectl</i> also has subcommands for managing container (or virtual machine) images and image transfers. See <span class="plainlinks archwiki-template-man" title="$ man 1 machinectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/machinectl.1#Image_Commands">machinectl(1) § Image Commands</a></span> and <span class="plainlinks archwiki-template-man" title="$ man 1 machinectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/machinectl.1#Image_Transfer_Commands">machinectl(1) § Image Transfer Commands</a></span> for details.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Add some explicit examples how to use the image transfer commands. Most importantly, where to find suitable images. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd-nspawn">Talk:Systemd-nspawn#</a>)</div>
+</div>
+<h3><span class="mw-headline" id="systemd_toolchain">systemd toolchain</span></h3>
+<p>Much of the core systemd toolchain has been updated to work with containers. Tools that do usually provide a <code>-M, --machine=</code> option which will take a container name as argument.
+</p>
+<p>Examples:
+</p>
+<p>See journal logs for a particular machine:
+</p>
+<pre>$ journalctl -M <i>container-name</i>
+</pre>
+<p>Show control group contents:
+</p>
+<pre>$ systemd-cgls -M <i>container-name</i>
+</pre>
+<p>See startup time of container:
+</p>
+<pre>$ systemd-analyze -M <i>container-name</i>
+</pre>
+<p>For an overview of resource usage:
+</p>
+<pre>$ systemd-cgtop
+</pre>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="Per-container_settings">Per-container settings</span></h3>
+<p>To specify per-container settings and not global overrides, the <i>.nspawn</i> files can be used. See <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.nspawn.5">systemd.nspawn(5)</a></span> for details.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>
+<i>.nspawn</i> files may be removed unexpectedly from <code>/etc/systemd/nspawn/</code> when you run <code>machinectl remove</code>. <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/15900">[2]</a>
+</li>
+<li>The interaction of network options specified in the <i>.nspawn</i> file and on the command line does not work correctly when there is <code>--settings=override</code> (which is specified in the <code>systemd-nspawn@.service</code> file). <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/12313#issuecomment-681116926">[3]</a> As a workaround, you need to include the option <code>VirtualEthernet=on</code>, even though the service specifies <code>--network-veth</code>.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Enable_container_to_start_at_boot">Enable container to start at boot</span></h3>
+<p>When using a container frequently, you may want to start it at boot.
+</p>
+<p>First make sure that the <code>machines.target</code> is <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enabled">enabled</a>.
+</p>
+<p>Containers discoverable by <a href="#machinectl">machinectl</a> can be enabled or disabled:
+</p>
+<pre>$ machinectl enable <i>container-name</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>This has the effect of enabling the <code>systemd-nspawn@<i>container-name</i>.service</code> systemd unit.</li>
+<li>As mentioned in <a href="#Default_systemd-nspawn_options">#Default systemd-nspawn options</a>, containers started by <i>machinectl</i> get a virtual Ethernet interface. To disable private networking, see <a href="#Use_host_networking">#Use host networking</a>.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Resource_control">Resource control</span></h3>
+<p>You can take advantage of control groups to implement limits and resource management of your containers with <code>systemctl set-property</code>, see <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.resource-control"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.resource-control.5">systemd.resource-control(5)</a></span>. For example, you may want to limit the memory amount or CPU usage. To limit the memory consumption of your container to 2 GiB:
+</p>
+<pre># systemctl set-property systemd-nspawn@<i>container-name</i>.service MemoryMax=2G
+</pre>
+<p>Or to limit the CPU time usage to roughly the equivalent of 2 cores:
+</p>
+<pre># systemctl set-property systemd-nspawn@<i>container-name</i>.service CPUQuota=200%
+</pre>
+<p>This will create permanent files in <code>/etc/systemd/system.control/systemd-nspawn@<i>container-name</i>.service.d/</code>.
+</p>
+<p>According to the documentation, <code>MemoryHigh</code> is the preferred method to keep in check memory consumption, but it will not be hard-limited as is the case with <code>MemoryMax</code>. You can use both options leaving <code>MemoryMax</code> as the last line of defense. Also take in consideration that you will not limit the number of CPUs the container can see, but you will achieve similar results by limiting how much time the container will get at maximum, relative to the total CPU time.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If you want these changes to be only temporary, you can pass the option <code>--runtime</code>. You can check their results with <i>systemd-cgtop</i>.</div>
+<h3><span class="mw-headline" id="Networking">Networking</span></h3>
+<p><i>systemd-nspawn</i> containers can use either <i>host networking</i> or <i>private networking</i>:
+</p>
+<ul>
+<li>In the host networking mode, the container has full access to the host network. This means that the container will be able to access all network services on the host and packets coming from the container will appear to the outside network as coming from the host (i.e. sharing the same IP address).</li>
+<li>In the private networking mode, the container is disconnected from the host's network. This makes all network interfaces unavailable to the container, with the exception of the loopback device and those explicitly assigned to the container. There is a number of different ways to set up network interfaces for the container:
+<ul>
+<li>an existing interface can be assigned to the container (e.g. if you have multiple Ethernet devices),</li>
+<li>a virtual network interface associated with an existing interface (i.e. <a href="../en/VLAN.html" title="VLAN">VLAN</a> interface) can be created and assigned to the container,</li>
+<li>a virtual Ethernet link between the host and the container can be created.</li>
+</ul>
+</li>
+</ul>
+<dl><dd>In the latter case the container's network is fully isolated (from the outside network as well as other containers) and it is up to the administrator to configure networking between the host and the containers. This typically involves creating a <a href="../en/Network_bridge.html" title="Network bridge">network bridge</a> to connect multiple (physical or virtual) interfaces or setting up a <a href="https://en.wikipedia.org/wiki/Network_Address_Translation" class="extiw" title="wikipedia:Network Address Translation">Network Address Translation</a> between multiple interfaces.</dd></dl>
+<p>The host networking mode is suitable for <i>application containers</i> which do not run any networking software that would configure the interface assigned to the container. Host networking is the default mode when you run <i>systemd-nspawn</i> from the shell.
+</p>
+<p>On the other hand, the private networking mode is suitable for <i>system containers</i> that should be isolated from the host system. The creation of virtual Ethernet links is a very flexible tool allowing to create complex virtual networks. This is the default mode for containers started by <i>machinectl</i> or <code>systemd-nspawn@.service</code>.
+</p>
+<p>The following subsections describe common scenarios. See <span class="plainlinks archwiki-template-man" title="$ man 1 systemd-nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-nspawn.1#Networking_Options">systemd-nspawn(1) § Networking Options</a></span> for details about the available <i>systemd-nspawn</i> options.
+</p>
+<h4><span class="mw-headline" id="Use_host_networking">Use host networking</span></h4>
+<p>To disable private networking and the creation of a virtual Ethernet link used by containers started with <i>machinectl</i>, add a <i>.nspawn</i> file with the following option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/nspawn/<i>container-name</i>.nspawn</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Network]
+VirtualEthernet=no</pre>
+<p>This will override the <code>-n</code>/<code>--network-veth</code> option used in <code>systemd-nspawn@.service</code> and the newly started containers will use the host networking mode.
+</p>
+<h4><span class="mw-headline" id="Use_a_virtual_Ethernet_link">Use a virtual Ethernet link</span></h4>
+<p>If a container is started with the <code>-n</code>/<code>--network-veth</code> option, <i>systemd-nspawn</i> will create a virtual Ethernet link between the host and the container. The host side of the link will be available as a network interface named <code>ve-<i>container-name</i></code>. The container side of the link will be named <code>host0</code>. Note that this option implies <code>--private-network</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>If the container name is too long, the interface name will be shortened (e.g. <code>ve-long-conKQGh</code> instead of <code>ve-long-container-name</code>) to fit into the <a rel="nofollow" class="external text" href="https://stackoverflow.com/a/29398765">15-characters limit</a>. The full name will be set as the <code>altname</code> property of the interface (see <span class="plainlinks archwiki-template-man" title="$ man 8 ip-link"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ip-link.8">ip-link(8)</a></span>) and can be still used to reference the interface.</li>
+<li>When examining the interfaces with <code>ip link</code>, interface names will be shown with a suffix, such as <code>ve-<i>container-name</i>@if2</code> and <code>host0@if9</code>. The <code>@if<i>N</i></code> is not actually part of the interface name; instead, <code>ip link</code> appends this information to indicate which "slot" the virtual Ethernet cable connects to on the other end.</li>
+</ul>
+<dl><dd>For example, a host virtual Ethernet interface shown as <code>ve-<i>foo</i>@if2</code> is connected to the container <code><i>foo</i></code>, and inside the container to the second network interface – the one shown with index 2 when running <code>ip link</code> inside the container. Similarly, the interface named <code>host0@if9</code> in the container is connected to the 9th network interface on the host.</dd></dl>
+</div>
+<p>When you start the container, an IP address has to be assigned to both interfaces (on the host and in the container). If you use <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> on the host as well as in the container, this is done out-of-the-box:
+</p>
+<ul>
+<li>the <code>/usr/lib/systemd/network/80-container-ve.network</code> file on the host matches the <code>ve-<i>container-name</i></code> interface and starts a DHCP server, which assigns IP addresses to the host interface as well as the container,</li>
+<li>the <code>/usr/lib/systemd/network/80-container-host0.network</code> file in the container matches the <code>host0</code> interface and starts a DHCP client, which receives an IP address from the host.</li>
+</ul>
+<p>If you do not use <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a>, you can configure static IP addresses or start a DHCP server on the host interface and a DHCP client in the container. See <a href="../en/Network_configuration.html" title="Network configuration">Network configuration</a> for details.
+</p>
+<p>To give the container access to the outside network, you can configure NAT as described in <a href="../en/Internet_sharing.html#Enable_NAT" title="Internet sharing">Internet sharing#Enable NAT</a>. If you use <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a>, this is done (partially) automatically via the <code>IPMasquerade=yes</code> option in <code>/usr/lib/systemd/network/80-container-ve.network</code>. However, this issues just one <a href="../en/Iptables.html" title="Iptables">iptables</a> rule such as
+</p>
+<pre>-t nat -A POSTROUTING -s 192.168.163.192/28 -j MASQUERADE
+</pre>
+<p>The <code>filter</code> table has to be configured manually as shown in <a href="../en/Internet_sharing.html#Enable_NAT" title="Internet sharing">Internet sharing#Enable NAT</a>. You can use a wildcard to match all interfaces starting with <code>ve-</code>:
+</p>
+<pre># iptables -A FORWARD -i ve-+ -o <i>internet0</i> -j ACCEPT
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <i>systemd-networkd</i> uses the <a rel="nofollow" class="external text" href="https://tldp.org/HOWTO/Querying-libiptc-HOWTO/whatis.html">libiptc</a> library to interact with <a href="../en/Iptables.html" title="Iptables">iptables</a>. If you use <a href="../en/Nftables.html" title="Nftables">nftables</a>, install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables-nft">iptables-nft</a></span> translation layer. See also <a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/13307">systemd issue 13307</a>.</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Investigate if/why the following is necessary. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd-nspawn">Talk:Systemd-nspawn#</a>)</div>
+</div>
+<p>Additionally, the rule <code>-A FORWARD -i ve-+ -o <i>internet0</i> -j ACCEPT</code> may not work as described in <a href="../en/Internet_sharing.html#Enable_NAT" title="Internet sharing">Internet sharing#Enable NAT</a>. If that is the case, try <code>-A FORWARD -i ve-+ -j ACCEPT</code>.
+</p>
+<h4><span class="mw-headline" id="Use_a_network_bridge">Use a network bridge</span></h4>
+<p>If you have configured a <a href="../en/Network_bridge.html" title="Network bridge">network bridge</a> on the host system, you can create a virtual Ethernet link for the container and add its host side to the network bridge. This is done with the <code>--network-bridge=<i>bridge-name</i></code> option. Note that <code>--network-bridge</code> implies <code>--network-veth</code>, i.e. the virtual Ethernet link is created automatically. However, the host side of the link will use the <code>vb-</code> prefix instead of <code>ve-</code>, so the <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> options for starting the DHCP server and IP masquerading will not be applied.
+</p>
+<p>The bridge management is left to the administrator. For example, the bridge can connect virtual interfaces with a physical interface, or it can connect only virtual interfaces of several containers. See <a href="../en/Systemd-networkd.html#Network_bridge_with_DHCP" title="Systemd-networkd">systemd-networkd#Network bridge with DHCP</a> and <a href="../en/Systemd-networkd.html#Network_bridge_with_static_IP_addresses" title="Systemd-networkd">systemd-networkd#Network bridge with static IP addresses</a> for example configurations using <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a>.
+</p>
+<p>There is also a <code>--network-zone=<i>zone-name</i></code> option which is similar to <code>--network-bridge</code> but the network bridge is managed automatically by <i>systemd-nspawn</i> and <i>systemd-networkd</i>. The bridge interface named <code>vz-<i>zone-name</i></code> is automatically created when the first container configured with <code>--network-zone=<i>zone-name</i></code> is started, and is automatically removed when the last container configured with <code>--network-zone=<i>zone-name</i></code> exits. Hence, this option makes it easy to place multiple related containers on a common virtual network. Note that <code>vz-*</code> interfaces are managed by <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> same way as <code>ve-*</code> interfaces using the options from the <code>/usr/lib/systemd/network/80-container-vz.network</code> file.
+</p>
+<h4>
+<span id="Use_a_.22macvlan.22_or_.22ipvlan.22_interface"></span><span class="mw-headline" id='Use_a_"macvlan"_or_"ipvlan"_interface'>Use a "macvlan" or "ipvlan" interface</span>
+</h4>
+<p>Instead of creating a virtual Ethernet link (whose host side may or may not be added to a bridge), you can create a virtual interface on an existing physical interface (i.e. <a href="../en/VLAN.html" title="VLAN">VLAN</a> interface) and add it to the container. The virtual interface will be bridged with the underlying host interface and thus the container will be exposed to the outside network, which allows it to obtain a distinct IP address via DHCP from the same LAN as the host is connected to.
+</p>
+<p><i>systemd-nspawn</i> offers 2 options:
+</p>
+<ul>
+<li>
+<code>--network-macvlan=<i>interface</i></code> – the virtual interface will have a different MAC address than the underlying physical <code><i>interface</i></code> and will be named <code>mv-<i>interface</i></code>.</li>
+<li>
+<code>--network-ipvlan=<i>interface</i></code> – the virtual interface will have the same MAC address as the underlying physical <code><i>interface</i></code> and will be named <code>iv-<i>interface</i></code>.</li>
+</ul>
+<p>Both options imply <code>--private-network</code>.
+</p>
+<h4><span class="mw-headline" id="Use_an_existing_interface">Use an existing interface</span></h4>
+<p>If the host system has multiple physical network interfaces, you can use the <code>--network-interface=<i>interface</i></code> to assign <code><i>interface</i></code> to the container (and make it unavailable to the host while the container is started). Note that <code>--network-interface</code> implies <code>--private-network</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Passing wireless network interfaces to <i>systemd-nspawn</i> containers is currently not supported. <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/7873">[4]</a>
+</div>
+<h3><span class="mw-headline" id="Port_mapping">Port mapping</span></h3>
+<p>When private networking is enabled, individual ports on the host can be mapped to ports on the container using the <code>-p</code>/<code>--port</code> option or by using the <code>Port</code> setting in an <i>.nspawn</i> file. This is done by issuing <a href="../en/Iptables.html" title="Iptables">iptables</a> rules to the <code>nat</code> table, but the <code>FORWARD</code> chain in the <code>filter</code> table needs to be configured manually as shown in <a href="#Use_a_virtual_Ethernet_link">#Use a virtual Ethernet link</a>.
+</p>
+<p>For example, to map a TCP port 8000 on the host to the TCP port 80 in the container:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/nspawn/<i>container-name</i>.nspawn</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Network]
+Port=tcp:8000:80</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>
+<i>systemd-nspawn</i> explicitly excludes the <code>loopback</code> interface when mapping ports. Hence, for the example above, <code>localhost:8000</code> connects to the host and not to the container. Only connections to other interfaces are subjected to port mapping. See <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/6106">[5]</a> for details.</li>
+<li>Port mapping works only for IPv4 connections. <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/10254">[6]</a>
+</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Domain_name_resolution">Domain name resolution</span></h3>
+<p><a href="../en/Domain_name_resolution.html" title="Domain name resolution">Domain name resolution</a> in the container can be configured by the <code>--resolv-conf</code> option of <i>systemd-nspawn</i> or the corresponding option <code>ResolvConf=</code> for the <i>.nspawn</i> files. There are many possible values which are described in <span class="plainlinks archwiki-template-man" title="$ man 1 systemd-nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-nspawn.1#Integration_Options">systemd-nspawn(1) § Integration Options</a></span>.
+</p>
+<p>The default value is <code>auto</code>, which means that:
+</p>
+<ul>
+<li>If <code>--private-network</code> is enabled, the <code>/etc/resolv.conf</code> is left as it is in the container.</li>
+<li>Otherwise, if <a href="../en/Systemd-resolved.html" title="Systemd-resolved">systemd-resolved</a> is running on the host, its stub <code>resolv.conf</code> file is copied or bind-mounted into the container.</li>
+<li>Otherwise, the <code>/etc/resolv.conf</code> file is copied or bind-mounted from the host to the container.</li>
+</ul>
+<p>In the last two cases, the file is copied, if the container root is writeable, and bind-mounted if it is read-only.
+</p>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Unprivileged_containers">Unprivileged containers</span></h3>
+<p><i>systemd-nspawn</i> supports unprivileged containers, though the containers need to be booted as root.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Very little of <a href="../en/Linux_Containers.html#Enable_support_to_run_unprivileged_containers_(optional)" title="Linux Containers">Linux Containers#Enable support to run unprivileged containers (optional)</a> applies to systemd-nspawn. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd-nspawn">Talk:Systemd-nspawn#</a>)</div>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This feature requires <span class="plainlinks archwiki-template-man" title="$ man 7 user_namespaces"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/user_namespaces.7">user_namespaces(7)</a></span>, for further info see <a href="../en/Linux_Containers.html#Enable_support_to_run_unprivileged_containers_(optional)" title="Linux Containers">Linux Containers#Enable support to run unprivileged containers (optional)</a>.</div>
+<p>The easiest way to do this is to let <i>systemd-nspawn</i> automatically choose an unused range of UIDs/GIDs by using the <code>-U</code> option:
+</p>
+<pre># systemd-nspawn -bUD ~/MyContainer
+</pre>
+<p>If kernel supports user namespaces, the <code>-U</code> option is equivalent to <code>--private-users=pick --private-users-chown</code>. This implies that files and directories in the container are <a href="../en/File_permissions_and_attributes.html#Changing_ownership" class="mw-redirect" title="Chown">chowned</a> to the selected range of private UIDs/GIDs when the container starts. See <span class="plainlinks archwiki-template-man" title="$ man 1 systemd-nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-nspawn.1#User_Namespacing_Options">systemd-nspawn(1) § User Namespacing Options</a></span> for details.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You can also specify the UID/GID range of the container manually, however, this is rarely useful.</div>
+<p>Once you have started a container with a private UID/GID range, you need to keep using it that way to avoid permission errors. Alternatively, it is possible to undo the effect of <code>--private-users-chown</code> (or <code>-U</code>) on the file system by specifying a range of IDs starting at 0:
+</p>
+<pre># systemd-nspawn -D ~/MyContainer --private-users=0 --private-users-chown
+</pre>
+<h3><span class="mw-headline" id="Use_an_X_environment">Use an X environment</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> The note about the systemd version at the end of this section seems to be obsolete. For me (systemd version 239) X applications also work if <code>/tmp/.X11-unix</code> is bound rw. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Systemd-nspawn#/tmp/.X11-unix_contents_have_to_be_bind-mounted_as_read-only_-_still_relevant?">Talk:Systemd-nspawn#/tmp/.X11-unix contents have to be bind-mounted as read-only - still relevant?</a>)</div>
+</div>
+<p>See <a href="../en/Xhost.html" title="Xhost">Xhost</a> and <a href="../en/Chroot.html#Run_graphical_applications_from_chroot" class="mw-redirect" title="Change root">Change root#Run graphical applications from chroot</a>.
+</p>
+<p>You will need to set the <code>DISPLAY</code> environment variable inside your container session to connect to the external X server.
+</p>
+<p>X stores some required files in the <code>/tmp</code> directory. In order for your container to display anything, it needs access to those files. To do so, append the <code>--bind-ro=/tmp/.X11-unix</code> option when starting the container.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Since systemd version 235, <code>/tmp/.X11-unix</code> contents <a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/7093">have to be bind-mounted as read-only</a>, otherwise they will disappear from the filesystem. The read-only mount flag does not prevent using <code>connect()</code> syscall on the socket. If you binded also <code>/run/user/1000</code> then you might want to explicitly bind <code>/run/user/1000/bus</code> as read-only to protect the dbus socket from being deleted. </div>
+<h4><span class="mw-headline" id="Avoiding_xhost">Avoiding xhost</span></h4>
+<p><code>xhost</code> only provides rather coarse access rights to the X server. More fine-grained access control is possible via the <code>$XAUTHORITY</code> file. Unfortunately, just making the <code>$XAUTHORITY</code> file accessible in the container will not do the job:
+your <code>$XAUTHORITY</code> file is specific to your host, but the container is a different host.
+The following trick adapted from <a rel="nofollow" class="external text" href="https://stackoverflow.com/a/25280523">stackoverflow</a> can be used to make your X server accept the <code>$XAUTHORITY</code> file from an X application run inside the container:
+</p>
+<pre>$ XAUTH=/tmp/container_xauth
+$ xauth nextract - "$DISPLAY" | sed -e 's/^..../ffff/' | xauth -f "$XAUTH" nmerge -
+# systemd-nspawn -D myContainer --bind=/tmp/.X11-unix --bind="$XAUTH" -E DISPLAY="$DISPLAY" -E XAUTHORITY="$XAUTH" --as-pid2 /usr/bin/xeyes
+</pre>
+<p>The second line above sets the connection family to "FamilyWild", value <code>65535</code>, which causes the entry to match every display. See <span class="plainlinks archwiki-template-man" title="$ man 7 Xsecurity"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/Xsecurity.7">Xsecurity(7)</a></span> for more information.
+</p>
+<h4><span class="mw-headline" id="Run_Firefox">Run Firefox</span></h4>
+<p>To run as PID 1
+</p>
+<pre> # systemd-nspawn --setenv=DISPLAY=:0 \
+              --setenv=XAUTHORITY=~/.Xauthority \
+              --bind-ro=$HOME/.Xauthority:/root/.Xauthority \
+              --bind=/tmp/.X11-unix \
+              -D ~/containers/firefox \
+              firefox
+</pre>
+<p>Alternatively you can boot the container and let e.g. <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> set up the virtual network interface:
+</p>
+<pre># systemd-nspawn --bind-ro=$HOME/.Xauthority:/root/.Xauthority \
+              --bind=/tmp/.X11-unix \
+              -D ~/containers/firefox \
+              --network-veth -b
+</pre>
+<p>Once your container is booted, run the Xorg binary like so:
+</p>
+<pre># systemd-run -M firefox --setenv=DISPLAY=:0 firefox
+</pre>
+<h3><span class="mw-headline" id="Access_host_filesystem">Access host filesystem</span></h3>
+<p>See <code>--bind</code> and <code>--bind-ro</code> in <span class="plainlinks archwiki-template-man" title="$ man 1 systemd-nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-nspawn.1">systemd-nspawn(1)</a></span>.
+</p>
+<p>If both the host and the container are Arch Linux, then one could, for example, share the pacman cache:
+</p>
+<pre># systemd-nspawn --bind=/var/cache/pacman/pkg
+</pre>
+<p>Or you can specify per-container bind using the file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/nspawn/<i>my-container</i>.nspawn</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Files]
+Bind=/var/cache/pacman/pkg
+</pre>
+<p>See <a href="#Per-container_settings">#Per-container settings</a>.
+</p>
+<p>To bind the directory to a different path within the container, add the path be separated by a colon. For example:
+</p>
+<pre># systemd-nspawn --bind=<i>/path/to/host_dir:/path/to/container_dir</i>
+</pre>
+<h3><span class="mw-headline" id="Run_on_a_non-systemd_system">Run on a non-systemd system</span></h3>
+<p>See <a href="../en/Init.html#systemd-nspawn" title="Init">Init#systemd-nspawn</a>.
+</p>
+<h3><span class="mw-headline" id="Use_Btrfs_subvolume_as_container_root">Use Btrfs subvolume as container root</span></h3>
+<p>To use a <a href="../en/Btrfs.html#Subvolumes" title="Btrfs">Btrfs subvolume</a> as a template for the container's root, use the <code>--template</code> flag. This takes a snapshot of the subvolume and populates the root directory for the container with it.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the template path specified is not the root of a subvolume, the <b>entire</b> tree is copied. This will be very time consuming.</div>
+<p>For example, to use a snapshot located at <code>/.snapshots/403/snapshot</code>:
+</p>
+<pre># systemd-nspawn --template=/.snapshots/403/snapshots -b -D <i>my-container</i>
+</pre>
+<p>where <code><i>my-container</i></code> is the name of the directory that will be created for the container. After powering off, the newly created subvolume is retained.
+</p>
+<h3><span class="mw-headline" id="Use_temporary_Btrfs_snapshot_of_container">Use temporary Btrfs snapshot of container</span></h3>
+<p>One can use the <code>--ephemeral</code> or <code>-x</code> flag to create a temporary btrfs snapshot of the container and use it as the container root. Any changes made while booted in the container will be lost. For example:
+</p>
+<pre># systemd-nspawn -D <i>my-container</i> -xb
+</pre>
+<p>where <i>my-container</i> is the directory of an <b>existing</b> container or system. For example, if <code>/</code> is a btrfs subvolume one could create an ephemeral container of the currently running host system by doing:
+</p>
+<pre># systemd-nspawn -D / -xb 
+</pre>
+<p>After powering off the container, the btrfs subvolume that was created is immediately removed.
+</p>
+<h3><span class="mw-headline" id="Run_docker_in_systemd-nspawn">Run docker in systemd-nspawn</span></h3>
+<p><a href="../en/Docker.html" title="Docker">Docker</a> requires <code>rw</code> permission of <code>/sys/fs/cgroup</code> to run its containers, which is mounted read-only by <i>systemd-nspawn</i> by default due to cgroup namespace. However, it is possible to run Docker in a <i>systemd-nspawn</i> container by bind-mounting <code>/sys/fs/cgroup</code> from the host system and enabling necessary capabilities and permissions.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following steps are essentially sharing the cgroup / user namespace to the container, giving kernel keyring permissions and making it a privileged container, which is likely to increase the attack surface and decrease security level. You should always evaluate the actual benefits by doing so before following the steps.</div>
+<p>First, cgroup namespace should be disabled by <code>systemctl edit systemd-nspawn@myContainer</code>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">systemctl edit systemd-nspawn@myContainer</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+Environment=SYSTEMD_NSPAWN_USE_CGNS=0
+</pre>
+<p>Then, edit <code>/etc/systemd/nspawn/myContainer.nspawn</code> (create if absent) and add the following configurations.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/nspawn/myContainer.nspawn</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Exec]
+Capability=all
+SystemCallFilter=add_key keyctl
+PrivateUsers=no
+
+[Files]
+Bind=/sys/fs/cgroup
+</pre>
+<p>This grants all capabilities to the container, disables user namespacing, whitelists two system calls <code>add_key</code> and <code>keyctl</code> (related to kernel keyring and required by Docker), and bind-mounts <code>/sys/fs/cgroup</code> from host to the container. After editing these files, you need to poweroff and restart your container for them to take effect. If your container had user namespaces enabled before this change (which is the default if the <code>systemd-nspawn@.service</code> unit is used), you will also need to undo permission changes caused by user namespacing to avoid permission errors. See <a href="#Unprivileged_containers">#Unprivileged containers</a> for details.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>You might need to load the <code>overlay</code> module on the host before starting Docker inside the systemd-nspawn to use the <code>overlay2</code> storage driver (default storage driver of Docker) properly. Failure to load the driver will cause Docker to choose the inefficient driver <code>vfs</code> which copies everything for every layer of Docker containers. Consult <a href="../en/Kernel_module.html#Automatic_module_loading_with_systemd" class="mw-redirect" title="Kernel modules">Kernel modules#Automatic module loading with systemd</a> on how to load the module automatically.</li>
+<li>As of November 2020, cgroups v2 seems to break Docker inside <i>systemd-nspawn</i>. If you want to use Docker in this way, do not set the kernel parameter <code>systemd.unified_cgroup_hierarchy=1</code>.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Using_machinectl_without_root_permissions">Using machinectl without root permissions</span></h3>
+<p>machined is <a href="../en/Polkit.html" title="Polkit">Polkit</a> enabled, this allows the creation of polkit rules to allow certain actions to be performed without becoming the root user. The different permissions are described in <code>/usr/share/polkit-1/actions/org.freedesktop.machine1.policy</code> and all live underneath <code>org.freedesktop.machine1.</code>.
+</p>
+<p>To allow a user named "foo" to perform all actions without root permissions, add a policy:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/polkit-1/rules.d/machined.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">polkit.addRule(
+  function(action, subject) {
+    if (action.id.startsWith("org.freedesktop.machine1.") &amp;&amp; subject.user == "foo") {
+      return polkit.Result.YES;
+    }
+  }
+);
+</pre>
+<p>Additionally, the user will require permissions to manage the <code>systemd-nspawn@</code> units to be able to start and stop nspawn containers, add this policy to allow this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/polkit-1/rules.d/machined.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">polkit.addRule(
+  function(action, subject) {
+    if ((action.id.startsWith("org.freedesktop.machine1.") || (action.id == "org.freedesktop.systemd1.manage-units" &amp;&amp; action.lookup("unit").startsWith("systemd-nspawn@"))) &amp;&amp; subject.user == "foo") {
+      return polkit.Result.YES;
+    }
+  }
+);
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Root_login_fails">Root login fails</span></h3>
+<p>If you get the following error when you try to login (i.e. using <code>machinectl login &lt;name&gt;</code>):
+</p>
+<pre>arch-nspawn login: root
+Login incorrect
+</pre>
+<p>And <code>journalctl</code> shows:
+</p>
+<pre>pam_securetty(login:auth): access denied: tty 'pts/0' is not secure !
+</pre>
+<p>Delete <code>/etc/securetty</code><a rel="nofollow" class="external autonumber" href="https://unix.stackexchange.com/questions/41840/effect-of-entries-in-etc-securetty/41939#41939">[7]</a> and <code>/usr/share/factory/etc/securetty</code> on the <b>container</b> file system. Optionally add them to <a href="../en/Pacman.html#Skip_files_from_being_installed_to_system" title="Pacman">NoExtract</a> in <code>/etc/pacman.conf</code> to prevent them from getting reinstalled. See <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/45903">FS#45903</a> for details.
+</p>
+<h3>
+<span id="execv.28....29_failed:_Permission_denied"></span><span class="mw-headline" id="execv(...)_failed:_Permission_denied">execv(...) failed: Permission denied</span>
+</h3>
+<p>When trying to boot the container via <code>systemd-nspawn -bD <i>/path/to/container</i></code> (or executing something in the container), and the following error comes up:
+</p>
+<pre>execv(/usr/lib/systemd/systemd, /lib/systemd/systemd, /sbin/init) failed: Permission denied
+</pre>
+<p>even though the permissions of the files in question (i.e. <code>/lib/systemd/systemd</code>) are correct, this can be the result of having mounted the file system on which the container is stored as non-root user. For example, if you mount your disk manually with an entry in <a href="../en/Fstab.html" title="Fstab">fstab</a> that has the options <code>noauto,user,...</code>, <i>systemd-nspawn</i> will not allow executing the files even if they are owned by root.
+</p>
+<h3>
+<span id="Terminal_type_in_TERM_is_incorrect_.28broken_colors.29"></span><span class="mw-headline" id="Terminal_type_in_TERM_is_incorrect_(broken_colors)">Terminal type in TERM is incorrect (broken colors)</span>
+</h3>
+<p>When logging into the container via <code>machinectl login</code>, the colors and keystrokes in the terminal within the container might be broken. This may be due to an incorrect terminal type in <code>TERM</code> environment variable. The environment variable is not inherited from the shell on the host, but falls back to a default fixed in systemd (<code>vt220</code>), unless explicitly configured. To configure, within the container create a configuration overlay for the <code>container-getty@.service</code> systemd service that launches the login getty for <code>machinectl login</code>, and set <code>TERM</code> to the value that matches the host terminal you are logging in from:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/container-getty@.service.d/term.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+Environment=TERM=xterm-256color</pre>
+<p>Alternatively use <code>machinectl shell</code>. It properly inherits the <code>TERM</code> environment variable from the terminal.
+</p>
+<h3><span class="mw-headline" id="Mounting_a_NFS_share_inside_the_container">Mounting a NFS share inside the container</span></h3>
+<p>Not possible at this time (June 2019).
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="../en/Getty.html#Nspawn_console" title="Getty">Automatic console login</a></li>
+<li><a rel="nofollow" class="external text" href="http://lwn.net/Articles/572957/">Creating containers with systemd-nspawn</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.youtube.com/results?search_query=systemd-nspawn&amp;aq=f">Presentation by Lennart Poettering on systemd-nspawn</a></li>
+<li><a rel="nofollow" class="external text" href="http://dabase.com/e/12009/">Running Firefox in a systemd-nspawn container</a></li>
+<li><a rel="nofollow" class="external text" href="https://patrickskiba.com/sysytemd-nspawn/2019/03/21/graphical-applications-in-systemd-nspawn.html">Graphical applications in systemd-nspawn</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Virtualization.html" title="Category:Virtualization">Virtualization</a></li>
+<li><a href="../en/Category:Sandboxing.html" title="Category:Sandboxing">Sandboxing</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd-nspawn&amp;oldid=648354">https://wiki.archlinux.org/index.php?title=Systemd-nspawn&amp;oldid=648354</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 January 2021, at 12:06.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

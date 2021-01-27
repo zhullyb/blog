@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Power management (简体中文)/Suspend and hibernate (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Power_management_简体中文_Suspend_and_hibernate_简体中文 rootpage-Power_management_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Power management (简体中文)/Suspend and hibernate (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Power_management.html" title="Power management (简体中文)">Power management (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Power_management/Suspend_and_hibernate.html" title="Power management/Suspend and hibernate">Power_management/Suspend_and_hibernate</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2020-10-06。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Power_management/Suspend_and_hibernate&amp;diff=0&amp;oldid=624774">更改</a>，则您可以帮助同步翻译。</div>
+<p>现主要有三种挂起方式：<b>suspend to RAM</b>（挂起到内存，通称挂起/睡眠），<b>suspend to disk</b>（通称休眠），和<b>hybrid suspend</b>或者<b>suspend to both</b>（内存和硬盘都保存当前内存状态，通称混合休眠）：
+</p>
+<ul><li>
+<b>睡眠（挂起）</b>将机器中大多数和RAM不相关的部件断电，电脑状态仅仅保存在RAM中。关闭多数外围设备，保留鼠标键盘等少数外围设备，以对用户操作进行快速响应。建议用户将笔记本设置为合盖时进入此模式。同样建议将系统设置为使用电池而用户离开时自动进入此模式。</li></ul>
+<ul><li>
+<b>休眠</b>将机器内容保存至<a href="../en/Swap.html" class="mw-redirect" title="Swap space">swap space</a>并完全断电。再次开机时从硬盘读取swap进内存，恢复运行状态。和睡眠不同，休眠时不会耗电。</li></ul>
+<ul><li>
+<b>混合休眠</b>将电脑状态保存进swap，但并不对电脑断电，而是引用睡眠机制，从而使未掉电的电脑能从内存中恢复。如果电脑掉电（断电且电池耗尽），系统也可以从硬盘的swap中恢复，尽管比从内存中恢复慢一些。</li></ul>
+<p>以上三者均由许多底层接口提供基础功能，再由高级接口进行一定调整，以适配一些较为复杂的硬件与内核模块（如显卡唤醒后的重新初始化）
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E5%BA%95%E5%B1%82%E6%8E%A5%E5%8F%A3"><span class="tocnumber">1</span> <span class="toctext">底层接口</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#%E5%86%85%E6%A0%B8%E4%BC%91%E7%9C%A0%EF%BC%88%E8%BD%AF%E4%BB%B6%E4%BC%91%E7%9C%A0%EF%BC%8Cswsusp%EF%BC%89"><span class="tocnumber">1.1</span> <span class="toctext">内核休眠（软件休眠，swsusp）</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E8%BD%AF%E4%BB%B6%E4%BC%91%E7%9C%A0%EF%BC%88uswswsp%EF%BC%89"><span class="tocnumber">1.2</span> <span class="toctext">用户空间软件休眠（uswswsp）</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%E9%AB%98%E7%BA%A7%E6%8E%A5%E5%8F%A3"><span class="tocnumber">2</span> <span class="toctext">高级接口</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#systemd"><span class="tocnumber">2.1</span> <span class="toctext">systemd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#%E4%BC%91%E7%9C%A0"><span class="tocnumber">3</span> <span class="toctext">休眠</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#swap%E5%88%86%E5%8C%BA/%E6%96%87%E4%BB%B6%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="tocnumber">3.1</span> <span class="toctext">swap分区/文件的大小</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#%E5%BF%85%E9%9C%80%E7%9A%84%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0"><span class="tocnumber">3.2</span> <span class="toctext">必需的内核参数</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#%E4%BC%91%E7%9C%A0%E5%88%B0%E4%BA%A4%E6%8D%A2%E6%96%87%E4%BB%B6"><span class="tocnumber">3.2.1</span> <span class="toctext">休眠到交换文件</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#%E4%BC%91%E7%9C%A0%E5%88%B0_Btrfs_%E4%B8%8A%E7%9A%84%E4%BA%A4%E6%8D%A2%E6%96%87%E4%BB%B6%E4%B8%AD"><span class="tocnumber">3.2.2</span> <span class="toctext">休眠到 Btrfs 上的交换文件中</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#%E4%BC%91%E7%9C%A0%E5%88%B0%E7%B2%BE%E7%AE%80%E9%85%8D%E7%BD%AE%E7%9A%84LVM%E5%8D%B7%E4%B8%AD"><span class="tocnumber">3.2.3</span> <span class="toctext">休眠到精简配置的LVM卷中</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12"><a href="#%E9%85%8D%E7%BD%AE_initramfs"><span class="tocnumber">3.3</span> <span class="toctext">配置 initramfs</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#%E8%AE%BE%E7%BD%AE%E4%BD%8E%E7%94%B5%E9%87%8F%E4%BC%91%E7%9C%A0"><span class="tocnumber">3.4</span> <span class="toctext">设置低电量休眠</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#%E8%AE%BE%E7%BD%AE%E7%9B%96%E4%B8%8A%E7%AC%94%E8%AE%B0%E6%9C%AC%E7%9B%96%E5%AD%90%E6%88%96%E6%8C%89%E4%B8%8B%E7%94%B5%E6%BA%90%E9%94%AE%E4%BC%91%E7%9C%A0"><span class="tocnumber">3.5</span> <span class="toctext">设置盖上笔记本盖子或按下电源键休眠</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#%E6%95%85%E9%9A%9C%E6%8E%92%E9%99%A4"><span class="tocnumber">4</span> <span class="toctext">故障排除</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#ACPI_OS_NAME"><span class="tocnumber">4.1</span> <span class="toctext">ACPI_OS_NAME</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#%E7%9D%A1%E7%9C%A0/%E4%BC%91%E7%9C%A0%E6%97%A0%E6%B3%95%E8%BF%9B%E8%A1%8C%EF%BC%8C%E6%88%96%E6%97%A0%E6%B3%95%E7%A8%B3%E5%AE%9A%E8%BF%9B%E8%A1%8C"><span class="tocnumber">4.2</span> <span class="toctext">睡眠/休眠无法进行，或无法稳定进行</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#%E7%BD%91%E7%BB%9C%E5%94%A4%E9%86%92%EF%BC%88WoL,_Wake-on-LAN%EF%BC%89"><span class="tocnumber">4.3</span> <span class="toctext">网络唤醒（WoL, Wake-on-LAN）</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#%E6%8C%82%E8%B5%B7%E5%90%8E%E4%B8%8D%E7%BB%8F%E6%93%8D%E4%BD%9C%E5%B0%B1%E7%AB%8B%E5%8D%B3%E5%94%A4%E9%86%92"><span class="tocnumber">4.4</span> <span class="toctext">挂起后不经操作就立即唤醒</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#%E7%B3%BB%E7%BB%9F%E5%9C%A8%E4%BC%91%E7%9C%A0%E5%90%8E%E6%B2%A1%E6%9C%89%E6%96%AD%E7%94%B5"><span class="tocnumber">4.5</span> <span class="toctext">系统在休眠后没有断电</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21"><a href="#%E5%8F%82%E7%9C%8B"><span class="tocnumber">5</span> <span class="toctext">参看</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E5.BA.95.E5.B1.82.E6.8E.A5.E5.8F.A3"></span><span class="mw-headline" id="底层接口">底层接口</span>
+</h2>
+<p>直接使用低级接口显然会比任何高级接口都快很多，因为执行睡眠/休眠前后的钩子（hooks）需要时间。然而，钩子可以提供很多功能，如正确设置设备时钟、恢复无线网络状态等。因此，虽然这些接口可以被直接使用，我们仍然建议用户使用<a href="#%E9%AB%98%E7%BA%A7%E6%8E%A5%E5%8F%A3">高级接口</a>进行睡眠/休眠。
+</p>
+<h3>
+<span id=".E5.86.85.E6.A0.B8.E4.BC.91.E7.9C.A0.EF.BC.88.E8.BD.AF.E4.BB.B6.E4.BC.91.E7.9C.A0.EF.BC.8Cswsusp.EF.BC.89"></span><span class="mw-headline" id="内核休眠（软件休眠，swsusp）">内核休眠（软件休眠，swsusp）</span>
+</h3>
+<p>最直接的方法是直接告知内核中的软件挂起代码（swsusp）进入挂起状态，具体的方法和状态取决于硬件支持的程度。在现代内核中，向 <code>/sys/power/state</code> 写入特定字符串是触发此挂起的主要机制。
+</p>
+<p>更多信息详见<a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/pm/sleep-states.html">Linux内核文档</a>。
+</p>
+<h3>
+<span id=".E7.94.A8.E6.88.B7.E7.A9.BA.E9.97.B4.E8.BD.AF.E4.BB.B6.E4.BC.91.E7.9C.A0.EF.BC.88uswswsp.EF.BC.89"></span><span class="mw-headline" id="用户空间软件休眠（uswswsp）">用户空间软件休眠（uswswsp）</span>
+</h3>
+<p>uswsusp（“Userspace Software Suspend”）是内核Suspend to RAM机制的封装，该机制在挂起前和恢复后从用户空间执行一些有关图形适配器的操作。
+</p>
+<p>详见 <a href="../en/Uswsusp.html" title="Uswsusp">Uswsusp</a> 。
+</p>
+<h2>
+<span id=".E9.AB.98.E7.BA.A7.E6.8E.A5.E5.8F.A3"></span><span class="mw-headline" id="高级接口">高级接口</span>
+</h2>
+<p>这些软件包的目标是提供二进制文件或脚本，使用户可以调它们来进行睡眠或休眠。在实际使用中，往往由其它软件（如桌面环境/DE）将它们与电源按钮、菜单点击或笔记本电脑盖事件联系起来。如果不想借助其他软件调用高级接口，又希望设备能在某些电源事件（如合上盖子或电池耗尽）时自动睡眠/休眠，你也许需要看看<a href="../en/Acpid.html" title="Acpid">Acpid</a>。
+</p>
+<h3><span class="mw-headline" id="systemd">systemd</span></h3>
+<p><a href="../en/Systemd.html" title="Systemd">systemd</a>为睡眠、休眠和混合休眠提供原生支持。详见  <a href="../en/Power_management.html#Power_management_with_systemd" title="Power management">Power management#Power management with systemd</a> 。systemd是 Arch Linux 默认使用的接口。
+</p>
+<p>关于配置睡眠或休眠钩子，详见 <a href="../en/Power_management.html#Sleep_hooks" title="Power management">Power management#Sleep hooks</a>。又见 <span class="plainlinks archwiki-template-man" title="$ man 1 systemctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemctl.1">systemctl(1)</a></span>、<span class="plainlinks archwiki-template-man" title="$ man 8 systemd-sleep"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-sleep.8">systemd-sleep(8)</a></span> 和 <span class="plainlinks archwiki-template-man" title="$ man 7 systemd.special"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.special.7">systemd.special(7)</a></span>。
+</p>
+<h2>
+<span id=".E4.BC.91.E7.9C.A0"></span><span class="mw-headline" id="休眠">休眠</span>
+</h2>
+<p>为了使用休眠，用户需要创建一个交换分区或文件。使用resume= 内核参数向内核传递swap信息，该参数应通过引导程序配置。您还需要<a href="#Configure_the_initramfs">configure the initramfs</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>。这将让内核尝试从早期用户空间中的指定swap分区/文件恢复。下面将详细描述这三个步骤。
+</p>
+<h3>
+<span id="swap.E5.88.86.E5.8C.BA.2F.E6.96.87.E4.BB.B6.E7.9A.84.E5.A4.A7.E5.B0.8F"></span><span class="mw-headline" id="swap分区/文件的大小">swap分区/文件的大小</span>
+</h3>
+<p>即使swap比内存小，成功休眠的可能性仍然很大。<a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/power/interface.txt">内核文档</a>如是说：
+</p>
+<dl><dd><i><code>/sys/power/image_size</code>控制由休眠机制创建的镜像的大小。它可以被写入一个字符串，表示将用作镜像大小上限的非负整数（以字节为单位）。休眠机制将尽力确保镜像大小不会超过这个数字。但是，如果这是不可能的，它将尝试使用尽可能小的镜像休眠。特别地，如果将“0”写入此文件，则休眠镜像将尽可能小。读取该文件将显示当前镜像大小限制，默认设置为可用RAM的2/5。</i></dd></dl>
+<p>您可以减小<code>/sys/power/image_size</code>的设定值以使休眠镜像尽可能小（对于小swap），或者增大它以加快休眠过程（也许）。对于RAM很大大的系统，较小的值可能会显著提高系统从休眠中恢复的速度。这是一个临时文件，参阅<a href="../en/Systemd.html#Temporary_files" title="Systemd">Systemd#Temporary files</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>以固定你的修改。
+</p>
+<p>休眠镜像不能跨多个交换分区和/或交换文件。它必须完全适配<b>一个</b>交换分区或<b>一个</b>交换文件<a rel="nofollow" class="external autonumber" href="https://www.kernel.org/doc/html/latest/power/swsusp.html">[1]</a>
+</p>
+<h3>
+<span id=".E5.BF.85.E9.9C.80.E7.9A.84.E5.86.85.E6.A0.B8.E5.8F.82.E6.95.B0"></span><span class="mw-headline" id="必需的内核参数">必需的内核参数</span>
+</h3>
+<p>想要休眠，必须传递<a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> <code>resume=<i>swap_device</i></code>。（以 <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">persistent block device naming</a> 方法中的任何一个替换掉<code><i>swap_device</i></code> ）如：
+</p>
+<ul>
+<li><code>resume=UUID=4209c845-f495-4c43-8a03-5363dd433153</code></li>
+<li><code>resume=“PARTLABEL=swap分区卷标”</code></li>
+<li>
+<code>resume=/dev/archVolumeGroup/archLogicalVolume</code>——如果swap在<a href="../en/LVM.html" title="LVM">LVM</a>逻辑卷上</li>
+</ul>
+<p>内核参数只有在重新启动后才会生效。要想不重启而立即休眠，请从<a href="../en/Device_file.html#lsblk" class="mw-redirect" title="Lsblk">lsblk</a>获取卷的主要和次要设备号，并 echo <code><i>major</i>:<i>minor</i></code>到<code>/sys/power/resume</code>。如果使用交换文件，则还应将 resume offset 添加到<code>/sys/power/resume_offset</code>。 <a rel="nofollow" class="external autonumber" href="https://www.kernel.org/doc/html/latest/power/swsusp.html">[2]</a>
+</p>
+<p>例如，如果交换设备是<code>8:3</code>：
+</p>
+<pre># echo 8:3 &gt; /sys/power/resume
+</pre>
+<p>或者在休眠到交换文件时，如果交换文件位于卷<code>8:2</code>上并且offset为<code>38912</code>：
+</p>
+<pre># echo 8:2 &gt; /sys/power/resume
+# echo 38912 &gt; /sys/power/resume_offset
+</pre>
+<h4>
+<span id=".E4.BC.91.E7.9C.A0.E5.88.B0.E4.BA.A4.E6.8D.A2.E6.96.87.E4.BB.B6"></span><span class="mw-headline" id="休眠到交换文件">休眠到交换文件</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> <a href="../en/Btrfs.html#Swap_file" title="Btrfs">Btrfs</a>版本5.0之前的Linux内核不支持交换文件。不注意此警告可能会导致文件系统损坏。当通过循环设备装入Btrfs时，交换文件可能会被使用，这将导致交换性能严重下降。</div>
+<p>使用交换文件需要设置<code>resume=<i>swap_device</i></code>，另外还需要设置<code>resume_offset=<i>swap_file_offset</i></code>内核参数。见 <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/power/swsup-and-swap-files.html">内核文档</a><sup title="最后检查状态：404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">失效链接</a> 2020-08-04 ⓘ]</sup> 。
+</p>
+<p><br>
+<code><i>swap_device</i></code> 是交换文件所在的卷，其格式与<a href="../en/Persistent_block_device_naming.html#Kernel_parameters" title="Persistent block device naming">root parameter</a>相同。<code><i>swap_file_offset</i></code>的值可以通过运行<code>filefrag -v <i>swap_file</i></code>来获得，输出为表格形式，所需的值位于<code>physical_offset</code>列的第一行。例如：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># filefrag -v /swapfile</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Filesystem type is: ef53
+File size of /swapfile is 4294967296 (1048576 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:      <b>38912..</b>     38912:      1:            
+   1:        1..   22527:      38913..     61439:  22527:             unwritten
+   2:    22528..   53247:     899072..    929791:  30720:      61440: unwritten
+...
+</pre>
+<p>在本例中，<code><i>swap_file_offset</i></code> 的值是<code>38912..</code>（包括英文句点在内）。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 
+<ul>
+<li>以下可用于替换<code><i>swap_device</i></code>：<code>findmnt -no UUID -T /swapfile</code>
+</li>
+<li>以下可用于替换<code><i>swap_file_offset</i></code>：<code>filefrag -v /swapfile | awk '{ if($1=="0:"){print $4} }'</code>
+</li>
+<li>
+<code><i>swap_file_offset</i></code>的值也可以通过运行<code>swap-offset <i>swap_file</i></code>来获得。工具集<a href="../en/Uswsusp.html" title="Uswsusp">uswsusp</a>中提供了<i>swap-offset</i>二进制文件。如果使用此方法，则必须在<code>/etc/suspend.conf</code>通过键<code>resume device</code>和<code>resume offset</code>。在这种情况下，不需要重新启动。</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>对于堆叠块设备，如加密容器（LUKS）、RAID或LVM，<code>resume</code>参数必须指向包含交换文件的文件系统的未锁定/映射设备。</li>
+<li>如果交换文件在<code>/home/</code>中，则<i>systemd-logind</i>将无法确定其大小，因此将阻止休眠。解决办法见<a rel="nofollow" class="external text" href="https://github.com/systemd/systemd/issues/15354">systemd issue 15354</a>。</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果你只想休眠而不扩展RAM，则可能需要减少交换文件的<a href="../en/Swap.html#Swappiness" class="mw-redirect" title="Swappiness">swappiness</a>。</div>
+<h4>
+<span id=".E4.BC.91.E7.9C.A0.E5.88.B0_Btrfs_.E4.B8.8A.E7.9A.84.E4.BA.A4.E6.8D.A2.E6.96.87.E4.BB.B6.E4.B8.AD"></span><span class="mw-headline" id="休眠到_Btrfs_上的交换文件中">休眠到 Btrfs 上的交换文件中</span>
+</h4>
+<p>最新版本的 systemd 支持在交换文件上休眠<a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/9559">[3]</a>。
+</p>
+<p>可以使用<a rel="nofollow" class="external text" href="https://github.com/osandov/osandov-linux/blob/master/scripts/btrfs_map_physical.c">btrfs_map_physical.c</a>计算resume_offset。
+不要尝试使用filefrag工具，在<a href="../en/Btrfs.html" title="Btrfs">Btrfs</a>上，从filefrag获得的<i>physical_offset</i>不是实际offset。因为btefs有一个虚拟磁盘地址空间以支持多个设备。<a rel="nofollow" class="external autonumber" href="https://bugzilla.kernel.org/show_bug.cgi?id=202803">[4]</a>
+下载或复制<a rel="nofollow" class="external text" href="https://github.com/osandov/osandov-linux/blob/master/scripts/btrfs_map_physical.c">tool btrfs_map_physical.c</a>到名为<code>btrfs_map_physical.c</code>的文件中，然后编译它，
+</p>
+<pre>$ gcc -O2 -o btrfs_map_physical btrfs_map_physical.c
+</pre>
+<p>然后运行。输出示例如下。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># ./btrfs_map_physical <i>/path/to/swapfile</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">FILE OFFSET  EXTENT TYPE  LOGICAL SIZE  LOGICAL OFFSET  PHYSICAL SIZE  DEVID  PHYSICAL OFFSET
+0            regular      4096          2927632384      268435456      1      <b>4009762816</b>
+4096         prealloc     268431360     2927636480      268431360      1      4009766912
+268435456    prealloc     268435456     3251634176      268435456      1      4333764608
+536870912    prealloc     268435456     3520069632      268435456      1      4602200064
+805306368    prealloc     268435456     3788505088      268435456      1      4870635520
+1073741824   prealloc     268435456     4056940544      268435456      1      5139070976
+1342177280   prealloc     268435456     4325376000      268435456      1      5407506432
+1610612736   prealloc     268435456     4593811456      268435456      1      5675941888
+</pre>
+<p>请注意此工具返回的第一个physical offset。在此案例中，我们使用<code>4009762816</code>。同样需要在<code>getconf PAGESIZE</code>中获得pagesize。
+</p>
+<p>要计算<code>resume_offset</code>的值，请将物理偏移量除以页面大小。在这个例子中，它是<code>4009762816 / 4096 = 978946</code>。
+</p>
+<h4>
+<span id=".E4.BC.91.E7.9C.A0.E5.88.B0.E7.B2.BE.E7.AE.80.E9.85.8D.E7.BD.AE.E7.9A.84LVM.E5.8D.B7.E4.B8.AD"></span><span class="mw-headline" id="休眠到精简配置的LVM卷中">休眠到精简配置的LVM卷中</span>
+</h4>
+<p>在精简配置的<a href="../en/LVM.html" title="LVM">LVM</a>卷中休眠是可能的，但必须确保该卷已完全分配。否则系统将无法从中恢复。
+</p>
+<p>可以通过简单地用零填充来完全分配LVM卷。例如：
+</p>
+<pre># dd if=/dev/zero of=/dev/vg0/swap bs=1M status=progress
+</pre>
+<p>想确认卷是否已完全被分配，使用：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lvs</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> LV                   VG  Attr       LSize   Pool Origin    Data%  Meta%  Move Log Cpy%Sync Convert
+ swap                 vg0 Vwi-aot--- 10.00g  pool           100
+</pre>
+<p>完全分配的卷将显示为具有100%的Data%
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>警告：</strong> 不要在用于休眠的精简配置的swap分区上使用<a href="../en/Solid_state_drive.html#TRIM" class="mw-redirect" title="TRIM">TRIM</a>，即：不要在<code>/etc/fstab</code>使用<code>discard</code>，也不要在<i>swapon</i>时加入<code>-d</code>或<code>--discard</code>参数。否则已被使用的空间会被重新去分配</div>
+<p>需要添加resume=/dev/sdxY (sdxY 是swap分区的名字) ，让系统在启动时读取swap分区中的内容。
+</p>
+<h3>
+<span id=".E9.85.8D.E7.BD.AE_initramfs"></span><span class="mw-headline" id="配置_initramfs">配置 initramfs</span>
+</h3>
+<p>1. 添加resume钩子或systemd钩子
+编辑<code>/etc/mkinitcpio.conf</code>，在HOOKS行中添加resume钩子或systemd钩子：
+例如该行原有内容是：
+</p>
+<pre>HOOKS="base udev autodetect modconf block filesystems keyboard fsck"
+</pre>
+<p>添加resume后就是：
+</p>
+<pre>HOOKS="base udev resume autodetect modconf block filesystems keyboard fsck"
+</pre>
+<p>添加systemd后是：
+</p>
+<pre>HOOKS="base udev systemd autodetect modconf block filesystems keyboard fsck"
+</pre>
+<p>resume和systemd二选一加入即可。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如果使用lvm分区，需要将resume放在lvm后面</div>
+<p>使用lvm的示例：
+</p>
+<pre>HOOKS="base udev autodetect modconf block lvm2 resume filesystems keyboard fsck"
+</pre>
+<p>2. 重新生成 initramfs 镜像: 
+</p>
+<pre>mkinitcpio -P
+</pre>
+<h3>
+<span id=".E8.AE.BE.E7.BD.AE.E4.BD.8E.E7.94.B5.E9.87.8F.E4.BC.91.E7.9C.A0"></span><span class="mw-headline" id="设置低电量休眠">设置低电量休眠</span>
+</h3>
+<p>用于带有内置电池的设备。
+</p>
+<p>当电池电量极低时，使其休眠，以免丢失数据。
+修改<code>/etc/UPower/UPower.conf</code>相关配置.示例，在电量低至%5时自动休眠：
+</p>
+<pre>PercentageLow=15  #&lt;=15%低电量
+PercentageCritical=10  #&lt;=10%警告电量
+PercentageAction=5  #&lt;=5%执行动作（即CriticalPowerAction)的电量
+CriticalPowerAction=Hibernate #(在本示例中是电量&lt;=5%）执行休眠
+</pre>
+<p>当电池低至5%，设备会自动休眠。
+</p>
+<p>CriticalPowerAction的取值有Poweroff、Hibernate和Hybid-sleep。
+</p>
+<p>更多配置项参考该文件中的说明。
+</p>
+<h3>
+<span id=".E8.AE.BE.E7.BD.AE.E7.9B.96.E4.B8.8A.E7.AC.94.E8.AE.B0.E6.9C.AC.E7.9B.96.E5.AD.90.E6.88.96.E6.8C.89.E4.B8.8B.E7.94.B5.E6.BA.90.E9.94.AE.E4.BC.91.E7.9C.A0"></span><span class="mw-headline" id="设置盖上笔记本盖子或按下电源键休眠">设置盖上笔记本盖子或按下电源键休眠</span>
+</h3>
+<p>1. 编辑<code>/etc/systemd/logind.conf</code> ，
+盖上盖子休眠，添加：
+</p>
+<pre>HandleLidSwitch=hibernate
+</pre>
+<p>按下电源键休眠，添加：
+</p>
+<pre>HandlePowerKey=hibernate
+</pre>
+<p>2. 执行以下命令使其立即生效：
+</p>
+<pre>systemctl restart systemd-logind
+</pre>
+<p>其他详细的设置请参考 <a href="../zh-CN/Power_management.html" title="Power management (简体中文)">电源管理页面</a>。
+</p>
+<h2>
+<span id=".E6.95.85.E9.9A.9C.E6.8E.92.E9.99.A4"></span><span class="mw-headline" id="故障排除">故障排除</span>
+</h2>
+<h3><span class="mw-headline" id="ACPI_OS_NAME">ACPI_OS_NAME</span></h3>
+<p>你也许需要调整你的 <b>DSDT table</b> 来让它工作。 参阅 <a href="../en/DSDT.html" title="DSDT">DSDT</a> 词条。
+</p>
+<h3>
+<span id=".E7.9D.A1.E7.9C.A0.2F.E4.BC.91.E7.9C.A0.E6.97.A0.E6.B3.95.E8.BF.9B.E8.A1.8C.EF.BC.8C.E6.88.96.E6.97.A0.E6.B3.95.E7.A8.B3.E5.AE.9A.E8.BF.9B.E8.A1.8C"></span><span class="mw-headline" id="睡眠/休眠无法进行，或无法稳定进行">睡眠/休眠无法进行，或无法稳定进行</span>
+</h3>
+<p>有相当多的错误报告指出，他们的屏幕在给出可读的错误信息前就关闭了，有时屏幕关闭了，却再也无法唤醒。这些故障在笔记本电脑和台式机上都曾发生。（这不是个官方解决方案），但切换到旧的内核，尤其是LTS内核，或许可以修复这个问题。
+</p>
+<p>使用硬件看门狗（默认是禁用的，详阅<span class="plainlinks archwiki-template-man" title="$ man 5 systemd-system.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-system.conf.5#OPTIONS">systemd-system.conf(5) § OPTIONS</a></span>中的<code>RuntimeWatchdogSec=</code>条目。存在bug的硬件看门狗可能会在系统成功创建休眠镜像前就重置电脑状态。
+</p>
+<p>有时屏幕会因为 initramfs 中进行的设备初始化过程而变黑。移除 <a href="../en/Mkinitcpio.html#MODULES" title="Mkinitcpio">Mkinitcpio#MODULES</a> 里你可能设置了的任何模块，尤其是KMS显卡驱动 <a href="../en/Kernel_mode_setting.html#Early_KMS_start" title="Kernel mode setting">early KMS</a> 并重新构建initramfs，也许能解决这个问题。唤醒前初始化这样的设备可能会带来一些冲突，这些冲突将阻止系统从休眠中唤醒。但这一般不会影响系统从睡眠（挂起）中唤醒。可参考一篇博文： <a rel="nofollow" class="external text" href="https://01.org/blogs/rzhang/2015/best-practice-debug-linux-suspend/hibernate-issues">best practices to debug suspend issues</a>。
+</p>
+<p>将旧的 <a href="../en/ATI.html" class="mw-redirect" title="Radeon">radeon</a> 驱动换成新的 <a href="../en/AMDGPU.html" title="AMDGPU">AMDGPU</a> 驱动也许能让休眠与唤醒过程更加成功。
+</p>
+<p>对于英特尔核芯显卡，启用 early KMS 也许能解决休眠黑屏的问题。详见 <a href="../en/Kernel_mode_setting.html#Early_KMS_start" title="Kernel mode setting">Kernel mode setting#Early KMS start</a>。
+</p>
+<p>在升级到内核版本 4.15.3 后，唤醒系统时可能会黑屏，只在黑屏上留下一个静止不动的鼠标指针。 禁用 <a href="../en/Kernel_module.html#Blacklisting" class="mw-redirect" title="Blacklisting">Blacklisting</a> 这个模块 <code>nvidiafb</code> 可能会有帮助。<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=234646">[5]</a>
+</p>
+<p>使用 Intel CPU 并且为触摸板加载 <code>intel_lpss_pci</code> 模块的笔记本电脑，可能会在唤醒时发生内核崩溃（Caps Lock灯闪烁）。<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=231881">[6]</a>这个模块需要以这样的方式加入 <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> 里：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">MODULES=(... intel_lpss_pci ...)</pre>
+<p>然后 <a href="../en/Mkinitcpio.html#Image_creation_and_activation" class="mw-redirect" title="Regenerate the initramfs">regenerate the initramfs</a>。
+</p>
+<h3>
+<span id=".E7.BD.91.E7.BB.9C.E5.94.A4.E9.86.92.EF.BC.88WoL.2C_Wake-on-LAN.EF.BC.89"></span><span class="mw-headline" id="网络唤醒（WoL,_Wake-on-LAN）">网络唤醒（WoL, Wake-on-LAN）</span>
+</h3>
+<p>如果网络唤醒被启用，网卡可能会消耗电力，即使电脑处于休眠状态。
+</p>
+<h3>
+<span id=".E6.8C.82.E8.B5.B7.E5.90.8E.E4.B8.8D.E7.BB.8F.E6.93.8D.E4.BD.9C.E5.B0.B1.E7.AB.8B.E5.8D.B3.E5.94.A4.E9.86.92"></span><span class="mw-headline" id="挂起后不经操作就立即唤醒">挂起后不经操作就立即唤醒</span>
+</h3>
+<p>对于带有 LynxPoint 或 LynxPoint-LP 芯片组的 Intel Haswell 系列电脑，有报告称它们会在挂起后不经用户操作就立即被唤醒。这与错误的 BIOS ACPI 信号实现方式，以及 <code>xhci_hcd</code> 如何处理它们都有关。作为一个临时性的解决方案，依据报告，受影响的电脑系列被逐个逐个地加入了内核里的一份黑名单（名叫<code>XHCI_SPURIOUS_WAKEUP</code>）。
+</p>
+<p>电脑也有可能在其它情况下不经操作就立即唤醒，比如，一个 USB 设备在挂起后插入，从而启动了 ACPI 唤醒触发器。对于这样的情况，如果受影响的电脑系列未被加入上述黑名单，一个可行的方案是禁用相关的唤醒触发器。一个例子见后。<a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617">[7]</a> 
+</p>
+<p>查看当前配置：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/acpi/wakeup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Device  S-state   Status   Sysfs node
+...
+EHC1      S3    *enabled  pci:0000:00:1d.0
+EHC2      S3    *enabled  pci:0000:00:1a.0
+XHC       S3    *enabled  pci:0000:00:14.0
+...
+</pre>
+<p>可以看到相关的设备有 <code>EHC1</code>、<code>EHC2</code> 和 <code>XHC</code> (USB 3.0设备). 要切换它们的状态，你需要以 root 权限把设备名写入到下面的文件里。
+</p>
+<pre># echo EHC1 &gt; /proc/acpi/wakeup
+# echo EHC2 &gt; /proc/acpi/wakeup
+# echo XHC &gt; /proc/acpi/wakeup
+</pre>
+<p>这将让挂起重新可用。然而，这个设定只是临时性的，会随着每次重启而重置。若想自动化这个操作，参阅 <a href="../en/Systemd.html#systemd-tmpfiles_-_temporary_files" title="Systemd">systemd#systemd-tmpfiles - temporary files</a> 或 <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1575617#p1575617">BBS thread</a> 来获取更多信息，以及可能的解决方案。
+</p>
+<p>同时禁用 PTXH 和 XHC0 的示例。由于某些原因，两个 PTXH 和一个 XHC0 在一起（或在不同的文件中）不能正常工作。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">#  cat /etc/tmpfiles.d/100-disable-usb-wake.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#    Path                  Mode UID  GID  Age Argument
+w    /proc/acpi/wakeup     -    -    -    -   PTXHXHC0
+</pre>
+<p>如果你使用 <code>nouveau</code> 驱动，电脑挂起后不经操作就立即唤醒也许是这个驱动里的一个 bug，该 bug 使显卡不能挂起。一个可行的解决方案是正好在睡眠前卸载 <code>nouveau</code> 内核模块，并在唤醒后重新加载。想这么做，你需要创建如下脚本：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/lib/systemd/system-sleep/10-nouveau.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+case $1/$2 in
+  pre/*)
+    # echo "Going to $2..."
+    /usr/bin/echo "0" &gt; /sys/class/vtconsole/vtcon1/bind
+    /usr/bin/rmmod nouveau
+    ;;
+  post/*)
+    # echo "Waking up from $2..."
+    /usr/bin/modprobe nouveau
+    /usr/bin/echo "1" &gt; /sys/class/vtconsole/vtcon1/bind
+    ;;
+esac</pre>
+<p>第一行 echo 将 nouveaufb 与 flamebuffer 终端（fbcon）解绑。通常是例子中的 <code>vtcon1</code>，但也有可能是别的，比如 <code>vtcon*</code> 。参看 <code>/sys/class/vtconsole/vtcon*/name</code> 来弄清楚在你的电脑里到底哪个才是 flamebuffer 设备。<a rel="nofollow" class="external autonumber" href="https://nouveau.freedesktop.org/wiki/KernelModeSetting/">[8]</a>
+</p>
+<h3>
+<span id=".E7.B3.BB.E7.BB.9F.E5.9C.A8.E4.BC.91.E7.9C.A0.E5.90.8E.E6.B2.A1.E6.9C.89.E6.96.AD.E7.94.B5"></span><span class="mw-headline" id="系统在休眠后没有断电">系统在休眠后没有断电</span>
+</h3>
+<p>当你把你的系统休眠，系统应该（在保存状态后）断电。有时你会看见电源 LED 仍然亮着。如果存在这样的情况，在 <span class="plainlinks archwiki-template-man" title="$ man 5 sleep.conf.d"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sleep.conf.d.5">sleep.conf.d(5)</a></span> 里把 <code>HibernateMode</code> 设置为 <code>shutdown</code> 也许有用：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/sleep.conf.d/hibernatemode.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Sleep]
+HibernateMode=shutdown</pre>
+<p>在进行了上述设置后，如果其它一切正常，当调用 <code>systemctl hibernate</code> 时，电脑就会正常地休眠后断电了。
+</p>
+<h2>
+<span id=".E5.8F.82.E7.9C.8B"></span><span class="mw-headline" id="参看">参看</span>
+</h2>
+<p><a rel="nofollow" class="external text" href="https://github.com/levinit/itnotes/blob/master/linux/laptop%E7%AC%94%E8%AE%B0%E6%9C%AC%E7%9B%B8%E5%85%B3.md">linux-laptop笔记本相关</a>
+<a rel="nofollow" class="external text" href="http://www.cnblogs.com/unkownarea/p/7471285.html">linux笔记本设置休眠</a>
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Power_management.html" title="Category:Power management (简体中文)">Power management (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Power_management_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Suspend_and_hibernate_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=638587">https://wiki.archlinux.org/index.php?title=Power_management_(简体中文)/Suspend_and_hibernate_(简体中文)&amp;oldid=638587</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 07:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

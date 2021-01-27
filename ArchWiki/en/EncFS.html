@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>EncFS - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-EncFS rootpage-EncFS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">EncFS</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Data-at-rest_encryption.html" title="Data-at-rest encryption">Data-at-rest encryption</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/EncFS" class="extiw" title="wikipedia:EncFS">EncFS</a> is a userspace stackable cryptographic file-system similar to <a href="../en/ECryptfs.html" title="ECryptfs">eCryptfs</a>, and aims to secure data with the minimum hassle. It uses <a href="https://en.wikipedia.org/wiki/Filesystem_in_Userspace" class="extiw" title="wikipedia:Filesystem in Userspace">FUSE</a> to mount an encrypted directory onto another directory specified by the user. It does not use a loopback system like some other comparable systems such as <a href="../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a> and <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a>.
+</p>
+<p>EncFS is definitely the simplest software if you want to try disk encryption on Linux.
+</p>
+<p>Advantages of EncFS: Firstly, it does not require any root privileges to implement; any user can create a repository of encrypted files. Secondly, one does not need to create a single file and create a file-system within that; it works on existing file-system without modifications.
+</p>
+<p>Disadvantages: The encrypted files are not stored in their own file, someone who obtains access to the system can still see the underlying directory structure, the number of files, their sizes and when they were modified. They cannot see the contents, however.
+</p>
+<p>This particular method of securing data is obviously not perfect, but there are situations in which it is useful.
+</p>
+<p>For more details on how EncFS compares to other disk encryption solution, see <a href="../en/Data-at-rest_encryption.html#Comparison_table" title="Data-at-rest encryption">Data-at-rest encryption#Comparison table</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Comparison_to_eCryptFS"><span class="tocnumber">1</span> <span class="toctext">Comparison to eCryptFS</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Installation"><span class="tocnumber">2</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Usage"><span class="tocnumber">3</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Changing_the_password"><span class="tocnumber">3.1</span> <span class="toctext">Changing the password</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#User_friendly_mounting"><span class="tocnumber">4</span> <span class="toctext">User friendly mounting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Gnome_Encfs_Manager"><span class="tocnumber">4.1</span> <span class="toctext">Gnome Encfs Manager</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Mount_using_gnome-encfs"><span class="tocnumber">4.2</span> <span class="toctext">Mount using gnome-encfs</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Mount_using_CryptKeeper_trayicon"><span class="tocnumber">4.3</span> <span class="toctext">Mount using CryptKeeper trayicon</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Mount_using_encfsui"><span class="tocnumber">4.4</span> <span class="toctext">Mount using encfsui</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Mount_via_fstab"><span class="tocnumber">4.5</span> <span class="toctext">Mount via fstab</span></a></li>
+<li class="toclevel-2 tocsection-11">
+<a href="#Mount_at_login_using_pam_encfs"><span class="tocnumber">4.6</span> <span class="toctext">Mount at login using pam_encfs</span></a>
+<ul>
+<li class="toclevel-3 tocsection-12"><a href="#Single_password"><span class="tocnumber">4.6.1</span> <span class="toctext">Single password</span></a></li>
+<li class="toclevel-3 tocsection-13">
+<a href="#/etc/pam.d/"><span class="tocnumber">4.6.2</span> <span class="toctext">/etc/pam.d/</span></a>
+<ul>
+<li class="toclevel-4 tocsection-14"><a href="#setup_pam_encfs_for_all_login_methods"><span class="tocnumber">4.6.2.1</span> <span class="toctext">setup pam_encfs for all login methods</span></a></li>
+<li class="toclevel-4 tocsection-15"><a href="#login"><span class="tocnumber">4.6.2.2</span> <span class="toctext">login</span></a></li>
+<li class="toclevel-4 tocsection-16"><a href="#gdm"><span class="tocnumber">4.6.2.3</span> <span class="toctext">gdm</span></a></li>
+<li class="toclevel-4 tocsection-17"><a href="#Configuration"><span class="tocnumber">4.6.2.4</span> <span class="toctext">Configuration</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18"><a href="#Mount_at_login_using_pam_mount"><span class="tocnumber">4.7</span> <span class="toctext">Mount at login using pam_mount</span></a></li>
+<li class="toclevel-2 tocsection-19">
+<a href="#Mount_when_USB_drive_with_EncFS_folders_is_inserted_using_fsniper"><span class="tocnumber">4.8</span> <span class="toctext">Mount when USB drive with EncFS folders is inserted using fsniper</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#How_to"><span class="tocnumber">4.8.1</span> <span class="toctext">How to</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-21"><a href="#Mount_using_KDE_KWallet"><span class="tocnumber">4.9</span> <span class="toctext">Mount using KDE KWallet</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-22">
+<a href="#Encrypted_backup"><span class="tocnumber">5</span> <span class="toctext">Encrypted backup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-23"><a href="#Backup_encrypted_directory"><span class="tocnumber">5.1</span> <span class="toctext">Backup encrypted directory</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Backup_plaintext_directory"><span class="tocnumber">5.2</span> <span class="toctext">Backup plaintext directory</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Comparison_to_eCryptFS">Comparison to eCryptFS</span></h2>
+<p><a href="../en/ECryptfs.html" class="mw-redirect" title="System Encryption with eCryptfs">eCryptFS</a> is implemented in kernelspace and therefore a little bit harder to configure. You have to remember various encryption options (used cyphers, key type, etc...). With EncFS this is not the case, because it stores the encryption metadata information in a per-directory configuration file (<code>.encfs6.xml</code>). So you do not have to remember anything (except the passphrase). 
+</p>
+<p>The performance of both depends on the type of disk activity. While eCryptFS can perform faster in some cases because there is less overhead by context switching (between kernel and userspace), EncFS has advantages in other cases because the encryption metadata is centralized and not stored in the individual files' headers. For more information <a rel="nofollow" class="external text" href="https://github.com/vgough/encfs/blob/master/PERFORMANCE.md">benchmark examples</a> are provided by the EncFS project.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=encfs">encfs</a></span> package.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> A security <a rel="nofollow" class="external text" href="https://defuse.ca/audits/encfs.htm">review</a> (February 2014) of <i>encfs</i> discovered a number of security issues in the stable release 1.7.4 (June 2014). Please consider the report and the references in it for updated information before using the release.</div>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>To create a secured repository, type:
+</p>
+<pre>$ encfs ~/.<i>encrypted</i> ~/<i>origin</i>
+</pre>
+<p>Note that absolute paths must be used. This will be followed by a prompt about whether you want to go with the default options, expert configuration or a paranoid preset. The first is a fairly secure default setup. The second allows specifying algorithms and other options. After entering a key for the encryption, the encoded file-system will be created and mounted. The encoded files are stored, in this example, at <code>~/.<i>encrypted</i></code>, and their unencrypted versions in <code>~/<i>origin</i></code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Using EncFS on a FUSE <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a>, e.g. <a href="../en/NTFS-3G.html" title="NTFS-3G">NTFS-3G</a>, might end up with slow performance. Consider changing the file system if possible.</div> 
+<p>To unmount the file-system, type:
+</p>
+<pre>$ fusermount -u ~/<i>name</i>
+</pre>
+<p>To remount the file-system, issue the first command, and enter the key used to encode it. Once this has been entered, the file-system will be mounted again.
+</p>
+<h3><span class="mw-headline" id="Changing_the_password">Changing the password</span></h3>
+<p>To change the password of a directory encrypted by EncFS, the following command can be used:
+</p>
+<pre>$ encfsctl passwd ~/.<i>name</i>
+</pre>
+<p>In this example, <code>~/.<i>name</i></code> is the path to the directory which contains the encoded files. The tool will ask for your current password and afterwards, you will be able to set a new one.
+</p>
+<h2><span class="mw-headline" id="User_friendly_mounting">User friendly mounting</span></h2>
+<h3><span class="mw-headline" id="Gnome_Encfs_Manager">Gnome Encfs Manager</span></h3>
+<p>The <a rel="nofollow" class="external text" href="http://libertyzero.com/GEncfsM/">Gnome Encfs Manager</a> is an easy to use manager and mounter for encfs stashes featuring per-stash configuration, Gnome Keyring support, a tray menu inspired by Cryptkeeper but using the AppIndicator API and lots of unique features. 
+</p>
+<p>Both <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gnome-encfs-manager-bin/">gnome-encfs-manager-bin</a></span><sup><small>AUR</small></sup> and a slightly more up to date <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gnome-encfs-manager-bzr/">gnome-encfs-manager-bzr</a></span><sup><small>AUR</small></sup> are available.
+</p>
+<h3><span class="mw-headline" id="Mount_using_gnome-encfs">Mount using gnome-encfs</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gnome-encfs-hg/">gnome-encfs-hg</a></span><sup><small>AUR</small></sup> integrates EncFS folders into the GNOME desktop by storing their passwords in the keyring and optionally mounting them at login using GNOME's autostart mechanism.
+</p>
+<p>It allows you to use strong passwords for EncFS folders while still mounting them painlessly (i.e. no password prompt). This is an advantage over automount solutions like pam-encfs and pam-mount which require to use the same password for EncFS folders as for your local user account. This is bad because local account passwords usually are weaker than those one should use for encrypting online stored data, e.g. in a Dropbox.
+</p>
+<p>See <a rel="nofollow" class="external free" href="https://hg.sr.ht/~obensonne/gnome-encfs">https://hg.sr.ht/~obensonne/gnome-encfs</a> for more information.
+</p>
+<h3><span class="mw-headline" id="Mount_using_CryptKeeper_trayicon">Mount using CryptKeeper trayicon</span></h3>
+<p>Quite simple app, just <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cryptkeeper/">cryptkeeper</a></span><sup><small>AUR</small></sup> and add it to your X session.
+</p>
+<h3><span class="mw-headline" id="Mount_using_encfsui">Mount using encfsui</span></h3>
+<p>A bash script <a rel="nofollow" class="external text" href="https://github.com/bulletmark/encfsui">encfsui</a> provides a simple <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=zenity">zenity</a></span> gui around the EncFS command line utility to mount and unmount an encrypted directory. It includes a desktop launcher. Install it from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/encfsui/">encfsui</a></span><sup><small>AUR</small></sup>.
+</p>
+<h3><span class="mw-headline" id="Mount_via_fstab">Mount via fstab</span></h3>
+<p>Adding an entry in <code>/etc/fstab</code> will allow you to mount the encfs volume with a simple <code>mount /target/path</code> and you will be prompted for your password.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">encfs#/path/to/encfs/data  /mnt/decrypted  fuse  noauto,user  0  0
+</pre>
+<p>The <code>noauto</code> option prevents an attempt to mount the volume at boot, which could delay the boot process while it waits for a password to be entered.  <code>user</code> can be omitted if only the <code>root</code> user should be able to mount the volume.
+</p>
+<h3><span class="mw-headline" id="Mount_at_login_using_pam_encfs">Mount at login using pam_encfs</span></h3>
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pam_encfs/">pam_encfs</a></span><sup><small>AUR</small></sup>. See also:
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external free" href="http://pam-encfs.googlecode.com/svn/trunk/README">http://pam-encfs.googlecode.com/svn/trunk/README</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>
+</li>
+<li>
+<a rel="nofollow" class="external free" href="http://pam-encfs.googlecode.com/svn/trunk/pam_encfs.conf">http://pam-encfs.googlecode.com/svn/trunk/pam_encfs.conf</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup>
+</li>
+<li><a rel="nofollow" class="external free" href="https://wiki.edubuntu.org/EncryptedHomeFolder">https://wiki.edubuntu.org/EncryptedHomeFolder</a></li>
+<li><a rel="nofollow" class="external free" href="http://code.google.com/p/pam-encfs/">http://code.google.com/p/pam-encfs/</a></li>
+</ul>
+<h4><span class="mw-headline" id="Single_password">Single password</span></h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Note that if you will use same password (eg.: using try_first_pass or use_first_pass) for login and encfs (so encfs will mount during your login) then you should use <a href="../en/SHA_password_hashes.html" title="SHA password hashes">SHA password hashes</a> (Preferably SHA512 with some huge number of rounds) and (which is most important) <b>secure password</b>, because hash of your password is probably stored in unencrypted form in <code>/etc/shadow</code> and it can be cracked in order to get your encfs password (because it is same as your regular unix login password).</div>
+<h4>
+<span id=".2Fetc.2Fpam.d.2F"></span><span class="mw-headline" id="/etc/pam.d/">/etc/pam.d/</span>
+</h4>
+<p>Note that when you are using <i>try_first_pass</i> parameter to <i>pam_unix.so</i> then you will have to set EncFS to use same password as you are using to login (or vice-versa) and you will be entering just single password. Without this parameter you will need to enter two passwords.
+</p>
+<h5><span class="mw-headline" id="setup_pam_encfs_for_all_login_methods">setup pam_encfs for all login methods</span></h5>
+<p>Put encfs line to /etc/pam.d/system-login as follows:
+</p>
+<pre>...
+auth       sufficient pam_encfs.so
+...
+</pre>
+<h5><span class="mw-headline" id="login">login</span></h5>
+<p>This section tells how to make encfs automount when you are logging in by virtual terminal.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you only want to use it through GDM, you may pass this and go right to the <a href="#gdm">GDM section</a> below.</div>
+<p>Edit the file <code>/etc/pam.d/login</code>:
+</p>
+<pre>#%PAM-1.0
+
+auth		required	pam_securetty.so
+auth		requisite	pam_nologin.so
+auth		sufficient	pam_encfs.so
+auth		required	pam_unix.so nullok try_first_pass
+#auth		required	pam_unix.so nullok
+auth		required	pam_tally.so onerr=succeed file=/var/log/faillog
+# use this to lockout accounts for 10 minutes after 3 failed attempts
+#auth		required	pam_tally.so deny=2 unlock_time=600 onerr=succeed file=/var/log/faillog
+account		required	pam_access.so
+account		required	pam_time.so
+account		required	pam_unix.so
+#password	required	pam_cracklib.so difok=2 minlen=8 dcredit=2 ocredit=2 retry=3
+#password	required	pam_unix.so md5 shadow use_authtok
+session		required	pam_unix.so
+session		required	pam_env.so
+session		required	pam_motd.so
+session		required	pam_limits.so
+session		optional	pam_mail.so dir=/var/spool/mail standard
+session		optional	pam_lastlog.so
+session		optional	pam_loginuid.so
+-session	optional	pam_ck_connector.so nox11
+#Automatic unmount (optional):
+#session	required	pam_encfs.so
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Note that automatic unmount will process even when there is another session. eg.: logout on VC can unmount encfs mounted by GDM session that is still active.</div>
+<h5><span class="mw-headline" id="gdm">gdm</span></h5>
+<p>This section explains how to make encfs automount when you are logging in by GDM.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For debug purposes you may try automount on virtual console login first. <a href="#login">This article has a section about automount on virtual console login</a>.</div>
+<p>Edit the file <code>/etc/pam.d/gdm-password</code>.
+</p>
+<p>Insert (do not overwrite) the following into the bottom of gdm-password:
+</p>
+<pre>#%PAM-1.0
+auth            requisite       pam_nologin.so
+auth            required        pam_env.so
+auth            sufficient      pam_encfs.so
+auth            required        pam_unix.so try_first_pass
+auth            optional        pam_gnome_keyring.so
+account         required        pam_unix.so
+session         required        pam_limits.so
+session         required        pam_unix.so
+session         optional        pam_gnome_keyring.so auto_start
+password        required        pam_unix.so
+session         required        pam_encfs.so
+</pre>
+<p>Save and exit.
+</p>
+<h5><span class="mw-headline" id="Configuration">Configuration</span></h5>
+<p>Edit <code>/etc/security/pam_encfs.conf</code> :
+</p>
+<p>Recommended: comment out the line
+</p>
+<pre>encfs_default --idle=1
+</pre>
+<p>This flag will unmount your encrypted folder after 1 minute of inactivity.  If you are automounting this on login, you probably would like to keep this mounted for as long as you are logged in.
+</p>
+<p>At the bottom, comment any existing demo entries and add:
+</p>
+<pre>#USERNAME       SOURCE                                  TARGET PATH                 ENCFS Options           FUSE Options
+foo             /home/foo/EncryptedFolder             /home/foo/DecryptedFolder       -v                    allow_other
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is not possible to mount multiple EncFS folders at login using <code>pam_encfs</code>. If multiple entries are specified in <code>/etc/security/pam_encfs.conf</code>, only the first one will be mounted, and the rest will be ignored. To mount multiple EncFS folders at login it is necessary to use <a href="../en/Pam_mount.html" title="Pam mount">pam_mount</a>. See <a href="#Mount_at_login_using_pam_mount">#Mount at login using pam_mount</a> for details.</div>
+<p>Also, if you see the following line, remove <code>allow_root</code> from the options. Otherwise, it will be in conflict with <code>allow_other</code> defined above.
+</p>
+<pre>fuse_default allow_root,nonempty
+</pre>
+<p><br>
+Next, edit <code>/etc/fuse.conf</code>:
+Uncomment:
+</p>
+<pre>user_allow_other
+
+</pre>
+<p>To test your config, open a new virtual terminal (e.g. <code>Ctrl+Alt+F4</code>) and login.  You should see pam successfuly mount your EncFS folder.
+</p>
+<h3><span class="mw-headline" id="Mount_at_login_using_pam_mount">Mount at login using pam_mount</span></h3>
+<p>Install and configure <a href="../en/Pam_mount.html" title="Pam mount">pam_mount</a> as explained on its wiki page. EncFS mounts can be specified in pam_mount's configuration file as follows:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/security/pam_mount.conf.xml</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;volume fstype="fuse" path="encfs#<i>/path/to/encfs/encrypted/data</i>" mountpoint="<i>/path/to/decrypted/data/mountpoint</i>" options="nonempty" /&gt;</pre>
+<p>The EncFS mounts need to have the same password than your user account. The <code>nonempty</code> option makes it possible to mount the encrypted file system even when the mount point is non-empty. You may remove this option if this is not the desired behaviour.
+</p>
+<p>It is possible to mount multiple EncFS folders at login specifying multiple consecutive <code>&lt;volume&gt;</code> entries in the configuration file.
+</p>
+<h3><span class="mw-headline" id="Mount_when_USB_drive_with_EncFS_folders_is_inserted_using_fsniper">Mount when USB drive with EncFS folders is inserted using fsniper</span></h3>
+<p>Simple method to automount (asking for password) encfs when USB drive with EncFS one or more folders in root is inserted. We will use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/fsniper/">fsniper</a></span><sup><small>AUR</small></sup> (filesystem watching daemon using inotify) and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=git">git</a></span> (for askpass binary).
+</p>
+<p>See more at <a rel="nofollow" class="external free" href="https://github.com/Harvie/Programs/tree/master/bash/encfs/automount">https://github.com/Harvie/Programs/tree/master/bash/encfs/automount</a> (latest version of files used in the <a href="#How_to">How to</a>).
+</p>
+<h4><span class="mw-headline" id="How_to">How to</span></h4>
+<p><b>1.</b> You need USB automount working for this - like Thunar or Gnome Files does.<br>
+<b>2.</b> Make encrypted folder on your drive, eg.: <code>encfs /media/USB/somename /media/USB/somename.plain</code> (and then unmount everything).<br>
+<b>3.</b> Create a <code>~/.config/fsniper/config</code> file:
+</p>
+<pre>watch {
+	/etc/ {
+		mtab {
+			# %% is replaced with the filename of the new file
+			handler = encfs-automount.sh %%;
+		}
+	}
+}
+</pre>
+<p><b>4.</b> install helper script:
+</p>
+<pre>#!/bin/sh
+#	~/.config/fsniper/scripts/encfs-automount.sh
+# Quick &amp; dirty script for automounting EncFS USB drives
+# TODO:
+#  - Unmounting!!!
+#
+ASKPASS="/usr/lib/git-core/git-gui--askpass"
+
+lock=/tmp/fsniper_encfs.lock
+lpid=$(cat "$lock" 2&gt;/dev/null) &amp;&amp;
+ps "$lpid" | grep "$lpid" &gt;/dev/null &amp;&amp; {
+	echo "Another instance of fsniper_encfs is running"
+	exit;
+}
+echo $BASHPID &gt; "$lock";
+sleep 2;
+
+echo
+echo ==== EncFS automount script for fsniper ====
+
+list_mounts() {
+	cat /proc/mounts | cut -d ' ' -f 2
+}
+
+list_mounts | while read mount; do
+	config="$mount"'/*/.encfs*';
+	echo Looking for "$config"
+	config="$(echo $config)"
+	[ -r "$config" ] &amp;&amp; {
+		cyphertext="$(dirname "$config")";
+		plaintext="$cyphertext".plain
+		echo Found config: "$config";
+		echo Trying to mount: "$cyphertext to $plaintext";
+		list_mounts | grep "$plaintext" &gt;/dev/null &amp;&amp; {
+			echo Already mounted: "$plaintext"
+		} || {
+			echo Will mount "$cyphertext to $plaintext"
+			"$ASKPASS" "EncFS $cyphertext to $plaintext" | encfs --stdinpass "$cyphertext" "$plaintext"
+		}
+	}
+done
+echo
+
+rm "$lock" 2&gt;/dev/null
+</pre>
+<p><b>5.</b> Make sure that /usr/lib/git-core/git-gui--askpass is working for you (that is why you need git package - but you can adjust the helper script).<br>
+<b>6.</b> Try <code>fsniper --log-to-stdout</code> in terminal (askpass should appear when USB drive is inserted).<br>
+<b>7.</b> Add <code>fsniper --daemon</code> to your session.<br>
+<b>8.</b> Do not forget to unmount encfs before removing drive.
+</p>
+<h3><span class="mw-headline" id="Mount_using_KDE_KWallet">Mount using KDE KWallet</span></h3>
+<p>This can be done in KDE with the <a rel="nofollow" class="external text" href="http://pastebin.com/RR1hguwE">kdeencfs</a> script. You will also have to <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=kdialog">kdialog</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/kdebase-runtime/">kdebase-runtime</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qt5-tools">qt5-tools</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=kwallet-pam">kwallet-pam</a></span> packages from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>. kwallet-pam has to started with the session which it is by default. <i>(If not: Add /usr/lib/pam_kwallet_init to sessionstart.)</i> It can be used by calling <i>kdeencfs encrypted-folder decrypted-folder</i>.
+</p>
+<h2><span class="mw-headline" id="Encrypted_backup">Encrypted backup</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you follow below examples to separate the encryption options file from the data, you - of course - need to ensure you have a separate backup of the options file in plaintext as well. If your disk crashes and you have not backed it up in plaintext, the backup alone will help nothing because the file contains cryptographic metadata! The good point is that the file is static, you do not need to back it up repetitively over time unless you change the password.</div>
+<h3><span class="mw-headline" id="Backup_encrypted_directory">Backup encrypted directory</span></h3>
+<p>An encrypted directory may be backed up and restored to another location like it is. This is possible, because the configuration file for the encryption options/metadata is actually stored in the directory itself in plaintext in the hidden <code>.encfs6.xml</code> file. This poses no direct problem, because the password is not in it. 
+</p>
+<p>However, if you - for example - store the backup on a remote location (e.g. in the cloud) or a portable device, you might feel uncomfortable about it. In this case it also is no problem to manually move the file out of the directory before creating the backup. You can even move it permanently and still mount and access the files, if you pass its location to <i>encfs</i> via the <code>ENCFS6_CONFIG</code> environment variable. For the <a href="#Usage">#Usage</a> example above:  
+</p>
+<pre>$ mv ~/.name/.encfs6.xml ~/.
+$ ENCFS6_CONFIG=~/.encfs6.xml encfs ~/.name ~/name
+</pre>
+<h3><span class="mw-headline" id="Backup_plaintext_directory">Backup plaintext directory</span></h3>
+<p>The following example assumes you want to create an encrypted  backup of an existing plaintext directory <code>~/mythesis</code> which contains the file <code>thesis.txt</code>. 
+</p>
+<p>First, we create the encrypted backup of the existing plaintext directory: 
+</p>
+<pre>$ encfs --reverse ~/mythesis /tmp/thesisbackup 
+</pre>
+<p>Note the directory order is reversed to normal usage in this case. Using the <code>--reverse</code> option has two effects: Firstly, the configuration file is now stored in the plaintext directory and <code>/tmp/thesisbackup</code> only contains it in encrypted form. Secondly, the files in <code>/tmp/thesisbackup</code> are not persistent. They will vanish once it is unmounted (no, this is not due to usage of the <code>/tmp</code> mountpoint). 
+</p>
+<p>For the second reason, now is the time to copy the encrypted files to the desired backup location, <i>before</i> unmounting the temporary <i>encfs</i> directory again: 
+</p>
+<pre>$ cp -R /tmp/thesisbackup/* /mnt/usbstick/
+$ fusermount -u /tmp/thesisbackup 
+</pre>
+<p>and done. 
+</p>
+<p>To restore (or view) the backup, we need access to the encryption options in plaintext, which has to be passed to <i>encfs</i> with the environment variable <code>ENCFS6_CONFIG</code> (we use a different directory in order not to mess up the existing <code>~/mythesis</code>): 
+</p>
+<pre>$ ENCFS6_CONFIG=~/mythesis/.encfs6.xml encfs ~/mnt/usbstick/thesisbackup ~/restoremythesis 
+</pre>
+<p>If you now list the restore location, it will contain two files: 
+</p>
+<pre>$ ls -la ~/restoremythesis
+... 
+-rw-r--r--  1 student student    1078  3. Jan 12:33 .encfs6.xml
+-rw-r--r--  1 student student      42  3. Jan 12:33 thesis.txt
+...
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://vgough.github.io/encfs/">EncFS</a> - project homepage</li>
+<li>
+<a rel="nofollow" class="external text" href="https://defuse.ca/audits/encfs.htm">Security audit</a> of EncFS by Taylor Hornby (January 14, 2014).</li>
+<li>
+<a rel="nofollow" class="external text" href="https://www.ict.griffith.edu.au/anthony/info/crypto/encfs.hints">EncFS micro-how-to</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-03-29 ⓘ]</sup> by Anthony Thyssen.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption">Data-at-rest encryption</a></li>
+<li><a href="../en/Category:FUSE.html" title="Category:FUSE">FUSE</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=EncFS&amp;oldid=643488">https://wiki.archlinux.org/index.php?title=EncFS&amp;oldid=643488</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 December 2020, at 13:26.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

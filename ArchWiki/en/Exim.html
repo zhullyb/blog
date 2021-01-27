@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Exim - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Exim rootpage-Exim skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Exim</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Postfix.html" title="Postfix">Postfix</a></li>
+<li><a href="../en/Dovecot.html" title="Dovecot">Dovecot</a></li>
+<li><a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" class="mw-redirect" title="Virtual user mail system">Virtual user mail system</a></li>
+<li><a href="../en/Fail2ban.html" title="Fail2ban">Fail2ban</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Exim" class="extiw" title="wikipedia:Exim">Exim</a> is a versatile <a href="../en/Mail_server.html" class="mw-redirect" title="Mail transfer agent">mail transfer agent</a>. This article builds upon <a href="../en/Mail_server.html" title="Mail server">Mail server</a>. While the <a rel="nofollow" class="external text" href="https://github.com/Exim/exim/wiki/">Exim wiki</a> provides some helpful how-tos on certain specific use cases, a <a rel="nofollow" class="external text" href="https://exim.org/exim-html-current/doc/html/spec_html/index.html">detailed description</a> of all configuration options is available as well.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Basic_configuration"><span class="tocnumber">2</span> <span class="toctext">Basic configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Main_parameters"><span class="tocnumber">2.1</span> <span class="toctext">Main parameters</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#TLS,_security_&amp;_authentication"><span class="tocnumber">2.2</span> <span class="toctext">TLS, security &amp; authentication</span></a></li>
+<li class="toclevel-2 tocsection-5">
+<a href="#Routing,_transport_&amp;_retry"><span class="tocnumber">2.3</span> <span class="toctext">Routing, transport &amp; retry</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#Use_manualroute"><span class="tocnumber">2.3.1</span> <span class="toctext">Use manualroute</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#ACL:_Access_Control_Lists"><span class="tocnumber">2.4</span> <span class="toctext">ACL: Access Control Lists</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Hide_machine_name"><span class="tocnumber">2.5</span> <span class="toctext">Hide machine name</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Startup"><span class="tocnumber">2.6</span> <span class="toctext">Startup</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Dovecot_LMTP_delivery_&amp;_SASL_authentication"><span class="tocnumber">3</span> <span class="toctext">Dovecot LMTP delivery &amp; SASL authentication</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Using_Gmail_as_smarthost"><span class="tocnumber">4</span> <span class="toctext">Using Gmail as smarthost</span></a></li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Hardening"><span class="tocnumber">5</span> <span class="toctext">Hardening</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#Rate_limits"><span class="tocnumber">5.1</span> <span class="toctext">Rate limits</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Troubleshooting"><span class="tocnumber">6</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#451_Temporary_local_problem"><span class="tocnumber">6.1</span> <span class="toctext">451 Temporary local problem</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=exim">exim</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Basic_configuration">Basic configuration</span></h2>
+<p>Exim comes with a bulky default configuration file which is located in <code>/etc/mail/exim.conf</code>. Many options in there are not necessary in a regular use case. By default configuration is done in a single file containing several chapters. Below is a very basic configuration, which provides: local delivers to system users (<a href="https://en.wikipedia.org/wiki/Maildir" class="extiw" title="wikipedia:Maildir">Maildir</a> format) and authorized relaying to MX hosts. The description is based on a domain "mydomain.tld" served on a host "hostname.mydomain.tld". It is highly recommended to consult the official documentation before using the given documentation below.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The default <a href="../en/File_permissions_and_attributes.html" class="mw-redirect" title="Permissions">permissions</a> of the default configuration file is 0644. Which allows reading by any user. Change this as appropriate, perhaps to 0640, if you are keeping sensitive  information (<a href="../en/OpenLDAP.html" class="mw-redirect" title="LDAP">LDAP</a> credentials et. al.) in there.</div>
+<h3><span class="mw-headline" id="Main_parameters">Main parameters</span></h3>
+<p>Main parameters contain some basic options. Using solely those options would open ports for connections but still no mail would be accepted nor relayed anywhere.
+</p>
+<pre># be the responsible mail host for hostname.mydomain.tld (@) &amp; mydomain.tld
+domainlist local_domains = @ : mydomain.tld
+
+# we don't relay. Not for foreign domains nor for a single host
+domainlist relay_to_domains =
+hostlist relay_from_hosts = 
+
+# serve the on all used ports
+daemon_smtp_ports = 25 : 465 : 587
+
+# do a reverse name lookup for all incoming connections
+host_lookup = *
+
+# Logging: log all events, add syslog to logging path &amp; avoid double entries
+log_selector = +all
+log_file_path = : syslog
+syslog_duplication = false
+
+# undeliverables: discard bounce messages after 2d and all others after 7 d
+ignore_bounce_errors_after = 2d
+timeout_frozen_after = 7d
+</pre>
+<h3>
+<span id="TLS.2C_security_.26_authentication"></span><span class="mw-headline" id="TLS,_security_&amp;_authentication">TLS, security &amp; authentication</span>
+</h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Are there factual concerns with giving a low privilege user access to a private key? Why should the Exim private key get lost? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Exim">Talk:Exim#</a>)</div>
+</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you deploy <a href="https://en.wikipedia.org/wiki/TLS" class="extiw" title="wikipedia:TLS">TLS</a>, be sure to follow <a href="../en/Transport_Layer_Security.html#Server-side_recommendations" class="mw-redirect" title="Server-side TLS">Server-side TLS</a> to prevent vulnerabilities.</div>
+<p>To obtain a certificate, see <a href="../en/OpenSSL.html#Usage" title="OpenSSL">OpenSSL#Usage</a>.
+</p>
+<p>The first part of the following options are still part of the first configuration section in Exim. Starting with "begin authenticators" the first special section in Exim configuration begins. There will be more such sections later.
+Below some very basic security related options are defined, TLS is set up &amp; a plain text authenticator using a user password lookup is introduced.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This example of an authenticator should not be used in production environment!</div>
+<pre># actually not required: it's hard coded - anyway: no mail delivery to root
+never_users = root
+
+# don't show the exim version to everyone. Actually not even show the name.
+smtp_banner = $smtp_active_hostname ESMTP $tod_full
+
+# STARTTLS is offered to everyone
+tls_advertise_hosts	= *
+tls_certificate = /path/to/exim/only/fullchain.pem
+tls_privatekey = /path/to/exim/only/privkey.pem
+
+# use all ciphers on port 25, use only good ciphers on port 587
+tls_require_ciphers = ${if =={$received_port}{25} \
+				{DEFAULT} {HIGH:!MD5:!SHA1:!SHA2}}
+
+# traffic on port 465 always uses TLS
+tls_on_connect_ports = 465
+
+# special sections always start with a "begin"
+begin authenticators
+
+	PLAIN:
+		# authentication protocol is plain text
+		driver = plaintext
+		# authentication is offered as plain text
+		public_name = PLAIN
+		server_prompts = :
+		# authentication is successful, if the password provided ($auth3) 
+		# equals the password found in a lookup file for user ($auth2)
+		server_condition = ${if eq{$auth3}{${lookup{$auth2}dbm{/etc/authpwd}}}}
+		server_set_id = $auth2
+		# only offer plain text authentication after TLS is been negotiated
+		server_advertise_condition = ${if def:tls_in_cipher}
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Exim loads certificate files during mail processing with the low privilege user <code>exim</code>. While it is good to run an internet facing process with such a user, it is somewhat strange to give access to a private key to such user. If your server serves multiple purposes (e.g. HTTP, IMAP, SMTP) with multiple DNS aliases (CNAME or several names pointing to a single IP) it may be wise to request multiple certificates. If the Exim private key gets lost, damage is limited to SMTP.</div>
+<h3>
+<span id="Routing.2C_transport_.26_retry"></span><span class="mw-headline" id="Routing,_transport_&amp;_retry">Routing, transport &amp; retry</span>
+</h3>
+<p>For each recipient of a message routing is performed as follows: routers are tested in their order given in the routing section. For each router, conditions may apply (e.g. <code>domains = ! +local_domains</code>). Only if all conditions apply, the message will be handed over to the defined transport (e.g. <code>transport = smtp</code>). If transport fails or not all conditions of a router are fulfilled, the next router is tested.
+</p>
+<pre>begin routers
+
+	# that's the relay router
+	dnslookup:
+		# the router type
+		driver = dnslookup
+		# the domains served on this router: not the local domain
+		domains = ! +local_domains
+		# the transport to be used (see transport section below)
+		transport = remote_delivery
+		# localhost is to be ignored if dns gives such result
+		ignore_target_hosts = &lt;; 0.0.0.0 ; 127.0.0.0/8 ; ::1
+		# a router list is processed until matched and successful transported.
+		# if transport fails, we don't want the next router to be used
+		no_more
+
+	# local delivery
+	localuser:
+		# the transport type - we accept the mail locally
+		driver = accept
+		# this router serves only our domains
+		domains	= +local_domains
+		# use transport named local_delivery
+		transport = local_delivery
+		# in case local delivery fails
+		cannot_route_message = Unknown local user
+
+begin transports
+
+	remote_delivery:
+	 	driver = smtp
+
+	local_delivery:
+		#deliver to a local mailbox
+		driver = appendfile
+		file = /var/mail/$local_part
+
+# if routing or transport fails, try again after this (default) ruleset
+begin retry
+
+	# Address or Domain    Error       Retries
+	# -----------------    -----       -------
+	*                      *           F,2h,15m; G,16h,1h,1.5; F,4d,6h
+</pre>
+<h4><span class="mw-headline" id="Use_manualroute">Use manualroute</span></h4>
+<p>If you want to use manualroute instead, comment out the dnslookup block and add the smarthost block.
+</p>
+<pre>#dnslookup:
+    # the router type
+    # driver = dnslookup
+    # the domains served on this router: not the local domain
+    # domains = ! +local_domains
+    # the transport to be used (see transport section below)
+    # transport = remote_delivery
+    # localhost is to be ignored if dns gives such result
+    # ignore_target_hosts = &lt;; 0.0.0.0 ; 127.0.0.0/8 ; ::1
+    # a router list is processed until matched and successful transported.
+    # if transport fails, we don't want the next router to be used
+    # no_more
+
+smarthost:
+  driver = manualroute
+  domains = !+local_domains
+  transport = remote_delivery
+  route_list = * smtp.myisp.com        # change to the desired smtp server
+  ignore_target_hosts = &lt;; 0.0.0.0 ; 127.0.0.0/8 ; ::1</pre>
+<h3><span class="mw-headline" id="ACL:_Access_Control_Lists">ACL: Access Control Lists</span></h3>
+<p>Access Control Lists are at the heart of Exim. They are required for basic checks and may be used for sophisticated message processing. In general the overall message processing in Exim is:
+</p>
+<pre>connection &gt; (authentication &gt;) ACL &gt; routing &gt; transport
+</pre>
+<p>With this it is important to note that messages coming from authenticated clients are treated (by default) by the same ACL as messages coming from other mail servers.
+Exim know a full set of <a rel="nofollow" class="external text" href="https://www.exim.org/exim-html-current/doc/html/spec_html/ch-access_control_lists.html">different ACL</a>. Good knowledge of the SMTP protocol is required to choose the correct set of ACL. 
+</p>
+<pre>acl_smtp_connect &gt; acl_smtp_helo &gt; ... &gt; acl_smtp_rcpt &gt; ... &gt; acl_smtp_data &gt; ...
+</pre>
+<p>For a basic setup two ACL are mandatory: acl_smtp_rcpt and acl_smtp_data. These are default to deny while all other default to accept.
+The example below just prevents being an open relay. This setup has multiple security flaws (e.g. all authenticated users may use any mail address). If added to an existing configuration, it must be added before any other special section (i.e. before any existing "begin").
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Don't use the following example in a production example! It lacks several required checks!</div>
+<pre># use this ACL after SMTP RCPT TO: is received
+acl_smtp_rcpt = basic_acl_rcpt
+# use this ACL after SMTP DATA is finished, i.e. all data has been received
+acl_smtp_data = basic_acl_data
+
+begin acl
+
+	basic_acl_rcpt:
+		
+		# accept all messages for which I am the receiving mail host
+		accept 	domains = +local_domains
+
+		# accept all messages from authenticated clients
+		accept	authenticated = *
+		
+		# deny all other messages (i.e. messages to be relayed from unauthorized
+		# clients)
+		deny	message = "we are not an open relay"
+		
+	basic_acl_data:
+
+		# we have done all checks after RCPT already
+		accept
+</pre>
+<h3><span class="mw-headline" id="Hide_machine_name">Hide machine name</span></h3>
+<p>If you have a laptop, or a machine in a smarthost configuration, where you do not want the name of the machine to appear in the outgoing email then you must enable exim's rewriting facilities.
+</p>
+<p>In the Rewriting section you should have something like:
+</p>
+<pre>*@<i>machine</i>.<i>mydomain</i> $1@<i>mydomain</i>
+</pre>
+<p>where <code><i>machine</i></code> is the hostname of your laptop or PC and <code><i>mydomain</i></code> is the domain name of the machine and the outgoing mail. To rewrite only sender domain, add special flag (F) in the line end. See <a rel="nofollow" class="external text" href="http://www.exim.org/exim-html-current/doc/html/spec_html/ch-address_rewriting.html">upstream document</a> for detail
+</p>
+<h3><span class="mw-headline" id="Startup">Startup</span></h3>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">Start/enable</a> the <code>exim.service</code>.
+</p>
+<h2>
+<span id="Dovecot_LMTP_delivery_.26_SASL_authentication"></span><span class="mw-headline" id="Dovecot_LMTP_delivery_&amp;_SASL_authentication">Dovecot LMTP delivery &amp; SASL authentication</span>
+</h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> What is LMTP? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Exim">Talk:Exim#</a>)</div>
+</div>
+<p>In this section the integration of <a href="../en/Dovecot.html" title="Dovecot">Dovecot</a> is described. It is assumed that Dovecot &amp; Exim are already setup and configured.
+Dovecot will serve as <a href="https://en.wikipedia.org/wiki/Simple_Authentication_and_Security_Layer" class="extiw" title="wikipedia:Simple Authentication and Security Layer">SASL</a> authenticator and local transport mechanism. For this purpose the Dovecot services will be setup as follows.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/dovecot/conf.d/10-master.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">service auth {
+	unix_listener exim-auth {
+		mode = 0600
+		user = exim
+		group = exim        
+	}
+	# Auth process is run as this user.
+	user = $default_internal_user
+}
+
+service lmtp {
+	# a unix socket is preferred of a local port communication
+	unix_listener exim-lmtp {
+		mode = 0600
+		group = exim
+		user = exim
+	}
+}
+</pre>
+<p>To use the Dovecot SASL in a TLS protected environment, add the following authenticator to Exim.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/exim.conf - authenticators section</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">	PLAIN:
+		driver = dovecot
+		public_name = PLAIN
+		server_socket = /var/run/dovecot/exim-auth
+		server_set_id = $auth1
+		server_advertise_condition = ${if def:tls_in_cipher}
+</pre>
+<p>The existing router for local delivery can be reused. You may want to consider add a <code>dsn_lasthop</code> to the router definition. If <a href="https://en.wikipedia.org/wiki/Delivery_Status_Notification" class="extiw" title="wikipedia:Delivery Status Notification">DSN</a> is used, Exim will assume final delivery of the message at this point. In the transport section the transport for local delivery must be replaced by the following transport definition.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mai/exim.conf - transports section</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">	local_delivery:
+		driver = lmtp
+		socket = /var/run/dovecot/exim-lmtp
+		batch_max = 200
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> As of Exim 4.88 there is a limitation with the lmtp driver: in an ACL, <code>verify = recipient/callout=no_cache</code> won't work as expected, i.e. non-existent user accounts won't throw a failure. To accomplish a receipient check against Dovecot you must replace the driver above by a
+<pre>driver = smtp
+protocol = lmtp
+port = 2525</pre>
+<p>The host is specified in the router, not the transport. Thus, the router must look like:
+</p>
+<pre>lmtp_router:
+  driver = manualroute
+  domains = +local_domains
+  transport = local_delivery
+  route_list = * 127.0.0.1 byname</pre>
+<p>Furthermore your Dovecot lmtp service must be <a rel="nofollow" class="external text" href="https://wiki.dovecot.org/LMTP/Exim#Using_LMTP_over_TCP_Socket">adjusted accordingly</a>.
+For example: here is a <a rel="nofollow" class="external text" href="https://yalis.fr/git/yves/home-server/commit/807b01c97b420713b6f1f6f73d35f2a440eb24e0">Git commit that fixes this exact issue</a>.
+</p>
+</div>
+<p>Since Dovecot is configured to provide a unix socket for the exim user, you may harden your security by adding the following line to the main configuration section.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/exim.conf - main section</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># don't deliver being root, drop privileges to exim user
+deliver_drop_privilege = true</pre>
+<h2><span class="mw-headline" id="Using_Gmail_as_smarthost">Using Gmail as smarthost</span></h2>
+<p>In the beginning of the exim conf file, you must enable TLS using
+</p>
+<pre>tls_advertise_hosts = +local_network : *.gmail.com
+</pre>
+<p>or to advertise tls to all hosts
+</p>
+<pre>tls_advertise_hosts = *
+</pre>
+<p>More information about TLS can be found in the <a rel="nofollow" class="external text" href="http://www.exim.org/exim-html-current/doc/html/spec_html/ch-encrypted_smtp_connections_using_tlsssl.html">exim documentation</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following must be put in the appropriate sections of the configuration file, eg, after <b>begin authenticators</b>.</div>
+<p>Add a router before or instead of the dnslookup router:
+</p>
+<pre>gmail_route:
+  driver = manualroute
+  transport = gmail_relay
+  route_list = * smtp.gmail.com</pre>
+<p>Add a transport:
+</p>
+<pre>gmail_relay:
+  driver = smtp
+  port = 587
+  tls_verify_certificates = /etc/ssl/certs/ca-certificates.crt
+  # this forces host verification.
+  tls_verify_hosts = smtp.gmail.com
+  hosts_require_auth = &lt;; $host_address
+  hosts_require_tls = &lt;; $host_address</pre>
+<p>Because of host verification, your exim log might contain
+</p>
+<pre>SSL verify error: certificate name mismatch: "/C=US/ST=California/L=Mountain View/O=Google Inc/CN=smtp.gmail.com"</pre>
+<p>But this has no effect on mail-delivery and can be ignored.
+Add an authenticator (replacing myaccount@gmail.com and mypassword with your own account details):
+</p>
+<pre>gmail_login:
+  driver = plaintext
+  public_name = LOGIN
+  hide client_send = : myaccount@gmail.com : mypassword</pre>
+<p><code>$host_address</code> is used for <code>hosts_require_auth</code> and <code>hosts_require_tls</code> instead of smtp.gmail.com to avoid occasional 530 5.5.1 Authentication Required errors. These are caused by the changing IP addresses in DNS queries for smtp.gmail.com. <code>$host_address</code> will expand to the particular IP address that was resolved by the <code>gmail_route</code> router.
+</p>
+<p>For added security, use a per-application password. This works with Google Apps accounts as well.
+</p>
+<h2><span class="mw-headline" id="Hardening">Hardening</span></h2>
+<h3><span class="mw-headline" id="Rate_limits">Rate limits</span></h3>
+<p>Security breaches happen. In case you don't have any service that submits local mail (receiving mail from localhost on a port is not considered local submission), completely disable local submission. Do so by adding <code>acl_not_smtp = acl_local</code> to the main section and add the following simple ACL to the acl section.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/exim.conf - acl section</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">	acl_local:
+
+		deny	log_message = AL01: Local submission denied.
+
+</pre>
+<p>If local submission is required, consider imposing a rate limit to it. Do so by adding <code>acl_not_smtp = acl_local</code> to the main section and adding the following ACL to the acl section. It imposes 2 rate limits: 20 mails in a single minute and 30 mails in 10 minutes. With this a burst of local submitted alerts are possible while 
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mail/exim.conf - acl section</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">	acl_local:
+
+		# apply a limit of 30 mails to the administrator for alerts submitted
+		# by local services
+		deny	ratelimit	= 30 / 1m / strict 
+			recipients 	= admin@mydomain.tld : root@hostname.mydomain.tld
+			log_message	= AL01: Sender rate limit for local submission \
+					  exceeded: $sender_rate / $sender_rate_period.
+
+		# apply a burst limit of 3 mails per minute to everyone else
+		deny	ratelimit	= 3 / 1m / strict 
+			!recipients 	= admin@mydomain.tld : root@hostname.mydomain.tld
+			log_message 	= AL02: Sender rate limit for local submission \
+					  exceeded: $sender_rate / $sender_rate_period.
+
+		# apply a regular limit of 10 mails per 30 minutes to everyone else
+		deny	ratelimit	= 10 / 30m / strict 
+			!recipients 	= admin@mydomain.tld : root@hostname.mydomain.tld
+			log_message 	= AL03: Sender rate limit for local submission \
+					  exceeded: $sender_rate / $sender_rate_period.
+
+		accept
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="451_Temporary_local_problem">451 Temporary local problem</span></h3>
+<p>If you are getting a "451 Temporary Local Problem" when testing SMTP, you are probably sending as root. By default Exim will not allow you to send as root.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://www.exim.org/">Official website</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Mail_server.html" title="Category:Mail server">Mail server</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Exim&amp;oldid=621692">https://wiki.archlinux.org/index.php?title=Exim&amp;oldid=621692</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 June 2020, at 22:17.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

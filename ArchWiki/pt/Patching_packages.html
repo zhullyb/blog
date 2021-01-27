@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Patching packages (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Patching_packages_Português rootpage-Patching_packages_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Patching packages (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Patching_packages.html" title="Patching packages">Patching packages</a>. Data da última tradução: 2019-08-17. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Patching_packages&amp;diff=0&amp;oldid=579209">alterações</a> na versão em inglês.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artigos relacionados</p>
+<ul>
+<li><a href="../pt/Arch_Build_System.html" class="mw-redirect" title="ABS (Português)">ABS</a></li>
+</ul>
+</div>
+<p>Esse artigo cobre como criar e como aplicar <i>patches</i> (correções, remendos) em pacotes no <a href="../pt/Arch_Build_System.html" title="Arch Build System (Português)">Arch Build System</a> (ABS).
+</p>
+<p>Um <a href="https://en.wikipedia.org/wiki/Patch_(computa%C3%A7%C3%A3o)" class="extiw" title="wikipedia:Patch (computação)">patch</a> descreve um conjunto de alterações a linha para um ou mais arquivos. Patches são geralmente usados para automatizar as alterações ao código-fonte.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Criando_patches"><span class="tocnumber">1</span> <span class="toctext">Criando patches</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Aplicando_patches"><span class="tocnumber">2</span> <span class="toctext">Aplicando patches</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Usando_quilt"><span class="tocnumber">3</span> <span class="toctext">Usando quilt</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Veja_tamb%C3%A9m"><span class="tocnumber">4</span> <span class="toctext">Veja também</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Criando_patches">Criando patches</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Se você precisar alterar apenas uma ou duas linhas, convém usar o <a href="../pt/Core_utilities.html#Essenciais" class="mw-redirect" title="Sed (Português)">sed (Português)</a>.</div>
+<p>A ferramenta <i>diff</i> compara arquivos linha por linha. Se você salvar sua saída, você terá um patch, por exemplo <code>diff --unified --recursive --text foo bar &gt; patch</code>. Se você informar diretórios, <i>diff</i> vai comparar os arquivos que eles contêm.
+</p>
+<ol>
+<li>Exclua o diretório <code>src</code> se você já tiver construído o pacote.</li>
+<li>Execute <code>makepkg --nobuild</code>, o qual baixará e extrairá os arquivos fonte, especificados em <code>PKGBUILD</code>, mas não os compilará.</li>
+<li>Crie duas cópias do diretório extraído no diretório <code>src</code>, uma como uma cópia original e outra para sua versão alterada. Nós os chamaremos de <code>pacote.orig</code> e <code>pacote.new</code>.</li>
+<li>Faça suas alterações no diretório <code>pacote.new</code>.</li>
+<li>Execute <code>diff --unified --recursive --text pacote.orig pacote.new --color</code> e verifique se o patch está correto.</li>
+<li>Execute <code>diff --unified --recursive --text pacote.orig pacote.new &gt; pacote.patch</code> para criar o patch.</li>
+<li>Entre no diretório <code>pacote.orig</code> e aplique o patch usando <code>patch --strip=1 &lt; ../pacote.patch</code>. Verifique se o patch está funcionando na compilação e instalação do pacote modificado com <code>makepkg --noextract --install</code>.</li>
+</ol>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Você também pode criar patches com <a href="../en/Git.html" title="Git">Git</a> usando <code>git diff</code> ou <code>git format-patch</code> <a rel="nofollow" class="external autonumber" href="https://stackoverflow.com/questions/6658313/generate-a-git-patch-for-a-specific-commit">[1]</a>.</div>
+<p>Veja <span class="plainlinks archwiki-template-man" title="$ man 1 diff"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/diff.1">diff(1)</a></span> e <span class="plainlinks archwiki-template-man" title="$ man 1 git-diff"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/git-diff.1">git-diff(1)</a></span> para mais informações.
+</p>
+<h2><span class="mw-headline" id="Aplicando_patches">Aplicando patches</span></h2>
+<p>Esta seção descreve como aplicar patches criados ou baixados da Internet a partir da função <code>PKGBUILD</code> <code>prepare()</code>. Siga esses passos:
+</p>
+<ol>
+<li>Adicione uma entrada ao array <code>source</code> do <code>PKGBUILD</code> para o arquivo de patch, separado do URL fonte original por um espaço. Se o arquivo estiver disponível online, você pode fornecer a URL completa e ela será automaticamente baixada e colocada no diretório <code>src</code>. Se for um patch criado por você mesmo ou não estiver disponível, você deverá colocar o arquivo de patch no mesmo diretório que o arquivo <code>PKGBUILD</code> e apenas adicionar o nome do arquivo ao array de fontes para que ele é copiado para o diretório <code>src</code>. Se você redistribuir o <code>PKGBUILD</code>, você deve, claro, incluir o patch com o <code>PKGBUILD</code>.</li>
+<li>Então, use <i>updpkgsums</i> (do <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pacman-contrib">pacman-contrib</a></span>) para atualizar o array <code>md5sums</code>. Ou adicione manualmente uma entrada à matriz <code>md5sums</code>; você pode gerar a soma do seu patch usando a ferramenta <i>md5sum</i>.</li>
+<li>Crie a função <code>prepare()</code> no <code>PKGBUILD</code> se ainda não houver uma.</li>
+<li>O primeiro passo é mudar para o diretório que precisa ser corrigido (na função <code>prepare()</code>, não no seu terminal! Você quer automatizar o processo de aplicação do patch). Você pode fazer isso com algo como <code>cd "$srcdir/$pkgname-$pkgver"</code> ou algo semelhante. O <code>$pkgname-$pkgver</code> é geralmente o nome de um diretório criado pela descompactação de um arquivo de origem baixado, mas não em todos os casos.</li>
+<li>Agora você só precisa aplicar o patch dentro desse diretório. Isto é feito simplesmente adicionando <code>patch --strip=1 --input=<i>pkgname</i>.patch</code> à sua função <code>prepare()</code>, alterando <code><i>pkgname</i>.patch</code> para o nome do arquivo que contém o diff (o arquivo que foi copiado automaticamente em seu diretório <code>src</code> porque estava no array <code>source</code> do arquivo <code>PKGBUILD</code>).</li>
+</ol>
+<p>Um exemplo de função "prepare":
+</p>
+<pre>prepare() {
+    cd $pkgname-$pkgver
+    patch --forward --strip=1 --input="${srcdir}/eject.patch"
+}</pre>
+<p>Execute <code>makepkg</code> (a partir do terminal agora). Se tudo correr bem, o patch será aplicado automaticamente e o novo pacote conterá as alterações incluídas no patch. Se não, você pode ter que tentar com a opção <code>--strip</code> do patch. Enquanto estiver tentado, você pode achar as opções <code>--dry-run</code>, <code>--reverse</code> ou <code>--verbose</code> utilizáveis. Leia <span class="plainlinks archwiki-template-man" title="$ man 1 patch"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/patch.1">patch(1)</a></span> para mais informações.
+</p>
+<p>Basicamente, funciona da seguinte forma. Se o arquivo diff foi criado para aplicar patches a arquivos em <code>minhaversão/</code>, os arquivos diff serão aplicados a <code>minhaversão/arquivo</code>. Você está executando-o de dentro do diretório <code>suaversão/</code> (porque você mudar o diretório para dentro daquele diretório no <code>PKGBUILD</code>), então quando o patch é aplicado ao arquivo, você vai querer aplicá-lo ao arquivo <code>arquivo</code>, retirando a parte <code>minhaversão/</code>. <code>--strip=1</code> faz isso, removendo um diretório do caminho. Porém, se o desenvolvedor aplicou patch em <code>meusarquivos/minhaversão</code>, você precisa remover dois diretórios, usando <code>--strip=2</code>.
+</p>
+<p>Se você não aplicar uma opção <code>--strip</code>, ela tirará toda a estrutura do diretório. Tudo bem se todos os arquivos estiverem no diretório base, mas se o patch foi criado em <code>minhaversão/</code> e um dos arquivos editados for <code>minhaversão/src/arquivo</code>, e você executar o patch sem uma opção <code>--strip</code> de <code>suaversão</code>, ele tentará corrigir um arquivo chamado <code>suaversão/arquivo</code>.
+</p>
+<p>A maioria dos desenvolvedores cria patches a partir do diretório pai do diretório que está sendo corrigido, então <code>--strip=1</code> geralmente estará correto.
+</p>
+<h2><span class="mw-headline" id="Usando_quilt">Usando quilt</span></h2>
+<p>Uma maneira mais simples de criar patches é usar o <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=quilt">quilt</a></span>, que tem um trabalho melhor para gerenciar vários patches, como aplicar patches, atualizar patches e reverter arquivos com patches para o estado original. O <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=quilt">quilt</a></span> é usado no <a href="https://wiki.debian.org/UsingQuilt" class="extiw" title="debian:UsingQuilt">Debian</a> para gerenciar seus patches. Consulte <a rel="nofollow" class="external text" href="http://www.shakthimaan.com/downloads/glv/quilt-tutorial/quilt-doc.pdf">Using Quilt</a> para obter informações básicas sobre o uso de quilt básico para gerar, aplicar patches e reverter arquivos corrigidos.
+</p>
+<h2>
+<span id="Veja_tamb.C3.A9m"></span><span class="mw-headline" id="Veja_também">Veja também</span>
+</h2>
+<ul><li>
+<a rel="nofollow" class="external free" href="http://www.kegel.com/academy/opensource.html">http://www.kegel.com/academy/opensource.html</a> — Informações úteis sobre fazer patching de arquivos</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../pt/Category:Package_management.html" title="Category:Package management (Português)">Package management (Português)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Patching_packages_(Portugu%C3%AAs)&amp;oldid=589502">https://wiki.archlinux.org/index.php?title=Patching_packages_(Português)&amp;oldid=589502</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 November 2019, at 20:51.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Huawei E173s - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Huawei_E173s rootpage-Huawei_E173s skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Huawei E173s</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This page describes how to set up Huawei E173s 3G USB modem on Arch Linux. It involves switching the USB stick from CD-ROM mode to modem mode using usb_modeswitch, making a connection to the network with sakis3g and setting it up to run at system startup.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Activating_the_SIM"><span class="tocnumber">1</span> <span class="toctext">Activating the SIM</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Checking_modem"><span class="tocnumber">2</span> <span class="toctext">Checking modem</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Set_up_usb_modeswitch"><span class="tocnumber">3</span> <span class="toctext">Set up usb_modeswitch</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Check_if_the_modem_is_switched"><span class="tocnumber">4</span> <span class="toctext">Check if the modem is switched</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Connecting"><span class="tocnumber">5</span> <span class="toctext">Connecting</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Connecting_at_system_startup"><span class="tocnumber">6</span> <span class="toctext">Connecting at system startup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Creating_a_configuration_file"><span class="tocnumber">6.1</span> <span class="toctext">Creating a configuration file</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Running_sakis3g_at_system_startup"><span class="tocnumber">6.2</span> <span class="toctext">Running sakis3g at system startup</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#External_links"><span class="tocnumber">7</span> <span class="toctext">External links</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Activating_the_SIM">Activating the SIM</span></h2>
+<p>Before using a brand new SIM (or a USB stick with SIM included) for the first time in Linux it may need to be activated first by using the Windows-only software on the stick, otherwise it won't connect no matter how many times you try (was true in my case).
+</p>
+<h2><span class="mw-headline" id="Checking_modem">Checking modem</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=usbutils">usbutils</a></span>.
+</p>
+<p>Plug in the modem and run lsusb:
+</p>
+<pre>$ lsusb | grep Huawei
+</pre>
+<p>The output should be something like this:
+</p>
+<pre>Bus 003 Device 003: ID 12d1:1c0b Huawei Technologies Co., Ltd.
+</pre>
+<p>The ID 12d1:1c0b refers to vendor id and product id. If you get different values, it means your modem is not Huawei E173s (of course, you can always open the USB stick to double check).
+</p>
+<h2><span class="mw-headline" id="Set_up_usb_modeswitch">Set up usb_modeswitch</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=usb_modeswitch">usb_modeswitch</a></span>.
+</p>
+<p>At this point, if you remove your modem and re-insert it udev should switch to modem mode automatically but sometimes it just doesn't work (on my system for example) so you have to do it manually as root:
+</p>
+<pre># usb_modeswitch -c /usr/share/usb_modeswitch/12d1\:1c0b -v 12d1 -p 1c0b
+</pre>
+<h2><span class="mw-headline" id="Check_if_the_modem_is_switched">Check if the modem is switched</span></h2>
+<pre>$ lsusb | grep Huawei
+</pre>
+<p>The output should be something like this:
+</p>
+<pre>Bus 003 Device 003: ID 12d1:1c05 Huawei Technologies Co., Ltd.
+</pre>
+<p>Note that the product ID has changed from 1c0b to 1c05. It means that the USB stick can now be used as a modem. Also note that it can take some time (probably not more than 15 seconds) for the modem to switch if you removed and re-inserted it instead of running usb_modeswitch manually.
+</p>
+<h2><span class="mw-headline" id="Connecting">Connecting</span></h2>
+<p>One way to connect is with sakis3g. This script has an interactive mode which tries to guide, and lead the user by hand.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/sakis3g/">sakis3g</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup>. Then run sakis3g:
+</p>
+<pre>$ sakis3g --interactive
+</pre>
+<p>You will have to provide your APN, username and password, assuming everything goes right you should be connected by now. Note while sakis3g should detect your modem, sometimes it just doesn't (it's the case on my system). If that's the case you have to specify CUSTOM_TTY, for example /dev/ttyUSB0.
+</p>
+<h2><span class="mw-headline" id="Connecting_at_system_startup">Connecting at system startup</span></h2>
+<h3><span class="mw-headline" id="Creating_a_configuration_file">Creating a configuration file</span></h3>
+<p>Create <code>/etc/sakis3g.conf</code>.
+</p>
+<p>Add the following lines (CUSTOM_APN, APN_USER and APN_PASS refer to your APN, username and password respectively, you may have to adjust them):
+</p>
+<pre>OTHER=CUSTOM_TTY
+CUSTOM_TTY="/dev/ttyUSB0"
+APN=CUSTOM_APN
+CUSTOM_APN="general.t-mobile.uk"
+APN_USER="t-mobile"
+APN_PASS="tm"
+</pre>
+<p>This configuration file works very well on my system but you may have to adjust CUSTOM_TTY as well if you have more than one USB modem. Note that it's also modem-independent - if you start using a different modem you shouldn't have to change anything.
+</p>
+<h3><span class="mw-headline" id="Running_sakis3g_at_system_startup">Running sakis3g at system startup</span></h3>
+<p>What you need to do is to run sakis3g connect at system startup. With <a href="../en/SysVinit.html" title="SysVinit">SysVinit</a>, one can add these lines to /etc/rc.local (it doesn't always work, I don't know why):
+</p>
+<pre>sakis3g connect --console
+sleep 3
+</pre>
+<p>The second line gives you time to examine the output of sakis3g at system startup to see if everything is working as it should. If it is, you can just remove it later. If using <a href="../en/Xorg.html" class="mw-redirect" title="X">X</a> with an <a href="../en/Xinit.html#xinitrc" title="Xinit">xinit#xinitrc</a>, and without a <a href="../en/Display_manager.html" title="Display manager">display manager</a> like <a href="../en/GDM.html" title="GDM">GDM</a>, one can add 
+</p>
+<pre>sudo sakis3g connect &amp;
+</pre>
+<p>to <code>.xinitrc</code>.
+Although if you are using <a href="../en/GNOME.html" title="GNOME">GNOME</a>, you should add it in gnome-session-properties instead:
+</p>
+<pre>Name: sakis3g
+Command: sudo sakis3g connect
+</pre>
+<p>For both of these to work you need the <a href="../en/Users_and_groups.html#Overview" class="mw-redirect" title="Root user">root user</a> privileges. Or a substitute. With the <a href="../en/Sudo.html" title="Sudo">sudo</a> substitution, add the following line to <a href="../en/Sudo.html#Configuration" title="Sudo">sudo#Configuration</a>:
+</p>
+<pre><i>username</i> ALL=(ALL) NOPASSWD:/usr/bin/sakis3g
+</pre>
+<h2><span class="mw-headline" id="External_links">External links</span></h2>
+<ul><li><a rel="nofollow" class="external free" href="https://github.com/Trixarian/sakis3g-source/tree/master/man">https://github.com/Trixarian/sakis3g-source/tree/master/man</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Modems.html" title="Category:Modems">Modems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Huawei_E173s&amp;oldid=635909">https://wiki.archlinux.org/index.php?title=Huawei_E173s&amp;oldid=635909</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 September 2020, at 07:13.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Zswap - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Zswap rootpage-Zswap skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Zswap</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel parameters</a></li>
+<li><a href="../en/Mkinitcpio.html" title="Mkinitcpio">Mkinitcpio</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/zswap" class="extiw" title="wikipedia:zswap">Zswap</a> is a kernel feature that provides a compressed RAM cache for swap pages. 
+Pages which would otherwise be swapped out to disk are instead compressed and stored into a memory pool in RAM. Once the pool is full or the RAM is exhausted, the least recently used (<a href="https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_.28LRU.29" class="extiw" title="wikipedia:Cache replacement policies">LRU</a>) page is decompressed and written to disk, as if it had not been intercepted. After the page has been decompressed into the swap cache, the compressed version in the pool can be freed.
+</p>
+<p>The <a href="../en/Improving_performance.html#Zram_or_zswap" title="Improving performance">difference compared to zram</a> is that zswap works in conjunction with a <a href="../en/Swap.html" title="Swap">swap</a> device while <i>zram</i> is a swap device in RAM that does not require a backing swap device.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Toggling_zswap"><span class="tocnumber">1</span> <span class="toctext">Toggling zswap</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Customizing_zswap"><span class="tocnumber">2</span> <span class="toctext">Customizing zswap</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Current_parameters"><span class="tocnumber">2.1</span> <span class="toctext">Current parameters</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Set_parameters"><span class="tocnumber">2.2</span> <span class="toctext">Set parameters</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Using_sysfs"><span class="tocnumber">2.2.1</span> <span class="toctext">Using sysfs</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Using_kernel_boot_parameters"><span class="tocnumber">2.2.2</span> <span class="toctext">Using kernel boot parameters</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Using_systemd-swap"><span class="tocnumber">2.2.3</span> <span class="toctext">Using systemd-swap</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-8"><a href="#Maximum_pool_size"><span class="tocnumber">2.3</span> <span class="toctext">Maximum pool size</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Compressed_memory_pool_allocator"><span class="tocnumber">2.4</span> <span class="toctext">Compressed memory pool allocator</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Compression_algorithm"><span class="tocnumber">2.5</span> <span class="toctext">Compression algorithm</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">3</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Toggling_zswap">Toggling zswap</span></h2>
+<p>In the stable <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> official kernel, zswap is enabled by default. This can be verified via the <code>CONFIG_ZSWAP_DEFAULT_ON</code> flag in the <a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages/blob/packages/linux/trunk/config#L1046">stable kernel config</a>.
+</p>
+<p>To disable zswap at runtime, execute the following command:
+</p>
+<pre># echo 0 &gt; /sys/module/zswap/parameters/enabled
+</pre>
+<p>To disable zswap permanently, add <code>zswap.enabled=0</code> to your <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Alternatively, you can use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd-swap">systemd-swap</a></span> which is a script to manage swap spaces with a configuration file <code>/etc/systemd/swap.conf</code>. In this case you must <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>systemd-swap.service</code>.</div>
+<h2><span class="mw-headline" id="Customizing_zswap">Customizing zswap</span></h2>
+<h3><span class="mw-headline" id="Current_parameters">Current parameters</span></h3>
+<p>Zswap has several customizable parameters. The live settings can be displayed using:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ grep -R . /sys/module/zswap/parameters</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/sys/module/zswap/parameters/same_filled_pages_enabled:Y
+/sys/module/zswap/parameters/enabled:Y
+/sys/module/zswap/parameters/max_pool_percent:20
+/sys/module/zswap/parameters/compressor:lz4
+/sys/module/zswap/parameters/zpool:z3fold
+/sys/module/zswap/parameters/accept_threshold_percent:90
+</pre>
+<p>See the <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/vm/zswap.html">zswap documentation</a> for the description of the different parameters.
+</p>
+<p>The boot time load message showing the initial configuration can be retrieved with:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ dmesg | grep zswap:</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[    0.317569] zswap: loaded using pool lz4/z3fold
+</pre>
+<h3><span class="mw-headline" id="Set_parameters">Set parameters</span></h3>
+<h4><span class="mw-headline" id="Using_sysfs">Using sysfs</span></h4>
+<p>Each setting can be changed at runtime via the <a href="https://en.wikipedia.org/wiki/sysfs" class="extiw" title="wikipedia:sysfs">sysfs</a> interface. For example, to change the <code>compressor</code> parameter:
+</p>
+<pre># echo lz4 &gt; /sys/module/zswap/parameters/compressor
+</pre>
+<h4><span class="mw-headline" id="Using_kernel_boot_parameters">Using kernel boot parameters</span></h4>
+<p>To persist the parameter change, the corresponding option, for example <code>zswap.compressor=lz4</code>, must be added to the kernel boot parameter. Therefore to set permanently all the above settings, the following kernel parameters must be added: 
+</p>
+<pre>zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20 zswap.zpool=z3fold
+</pre>
+<p>When changing the compression algorithm via boot parameter, one needs to ensure the corresponding compression module is loaded early during boot (refer to <a href="#Compression_algorithm">#Compression algorithm</a>).
+</p>
+<h4><span class="mw-headline" id="Using_systemd-swap">Using systemd-swap</span></h4>
+<p>For the ones using the <i>systemd-swap</i> script, it modifies the <i>sysfs</i> parameters at a later stage of the boot process based on its <a rel="nofollow" class="external text" href="https://github.com/Nefelim4ag/systemd-swap/blob/master/swap-default.conf">configuration</a> stored in <code>/etc/systemd/swap.conf</code>.
+</p>
+<h3><span class="mw-headline" id="Maximum_pool_size">Maximum pool size</span></h3>
+<p>The memory pool is not preallocated, it is allowed to grow up to a certain limit in percentage of the total memory available, by default up to 20% of the total RAM. Once this threshold is reached, pages are evicted from the pool into the swap device.
+The maximum compressed pool size is controlled with the parameter <code>max_pool_percent</code>.
+</p>
+<h3><span class="mw-headline" id="Compressed_memory_pool_allocator">Compressed memory pool allocator</span></h3>
+<p>The <i>zpool</i> parameter controls the management of the compressed memory pool.
+</p>
+<p>With the <i>zbud</i> data allocator, 2 compressed objects are stored into 1 page which limits the compression ratio to 2 or less.
+</p>
+<p>The superior <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/vm/z3fold.html">z3fold</a> allocator allows up to 3 compressed objects by page. The compression ratio with <i>z3fold</i> typically averages 2.7 while it is 1.7 for <i>zbud</i>.
+</p>
+<p>A <i>zpool</i> of type <i>z3fold</i> is created by default. Use the kernel parameter <code>zswap.zpool</code> to select another method at boot time. The data allocator can also be changed at a later stage via the <i>sysfs</i> interface.
+</p>
+<h3><span class="mw-headline" id="Compression_algorithm">Compression algorithm</span></h3>
+<p>For page compression, zswap uses compressor modules provided by the kernel's cryptographic API. It uses by default the <i>lz4</i> compression algorithm but this can be changed with <code>zswap.compressor</code> at boot time. Other options include <i>deflate</i>, <i>lz4hc</i>, <i>lzo</i>, <i>lzo-rle</i>, <i>842</i> and <i>zstd</i>.
+</p>
+<p>There is no issue changing the compression at runtime using <i>sysfs</i> or via <i>systemd-swap</i> but zswap starts in this case with <i>lz4</i> and switches at a later stage to the defined algorithm. To start zswap with another algorithm straight away, this must be set via the kernel boot parameters and the corresponding module must be loaded early by the kernel. This can be achieved by following these steps:
+</p>
+<ol>
+<li>Add the modules related to the chosen compressor to the <a href="../en/Mkinitcpio.html#MODULES" title="Mkinitcpio">mkinitcpio#MODULES</a> array.</li>
+<li>Regenerate the ramdisk environments after modifying mkinitcpio configuration: see <a href="../en/Mkinitcpio.html#Image_creation_and_activation" title="Mkinitcpio">mkinitcpio#Image creation and activation</a>.</li>
+<li>Set <code>zswap.compressor</code> to your chosen algorithm in the <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>.</li>
+</ol>
+<p>On next boot, see <a href="#Current_parameters">#Current parameters</a> to check if zswap now uses the requested compressor.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://lkml.org/lkml/2013/7/17/147">zswap: How to determine whether it is compressing swap pages?</a>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://www.ibm.com/developerworks/community/blogs/fe313521-2e95-46f2-817d-44a4f27eba32/entry/new_linux_zswap_compression_functionality7?lang=en">IBM Developer Works Article (with benchmarks)</a>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://askubuntu.com/questions/471912/zram-vs-zswap-vs-zcache-ultimate-guide-when-to-use-which-one">Ask Ubuntu: zram vs. zswap vs. zcache</a>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=169585">Archlinux forum thread</a>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://lwn.net/Articles/537422/">LWN.net technical article by the main developer of zswap</a>.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Zswap&amp;oldid=647360">https://wiki.archlinux.org/index.php?title=Zswap&amp;oldid=647360</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 27 December 2020, at 21:23.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

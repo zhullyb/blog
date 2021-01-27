@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Persistent block device naming - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Persistent_block_device_naming rootpage-Persistent_block_device_naming skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Persistent block device naming</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Fstab.html" title="Fstab">fstab</a></li>
+<li><a href="../en/Udev.html" title="Udev">udev</a></li>
+<li><a href="../en/LVM.html" title="LVM">LVM</a></li>
+</ul>
+</div>
+<p>This article describes how to use persistent names for your <a href="../en/Device_file.html#Block_devices" class="mw-redirect" title="Block device">block devices</a>. This has been made possible by the introduction of <a href="../en/Udev.html" title="Udev">udev</a> and has some advantages over bus-based naming. If your machine has more than one SATA, SCSI or IDE disk controller, the order in which their corresponding device nodes are added is arbitrary. This may result in device names like <code>/dev/<b>sda</b></code> and <code>/dev/<b>sdb</b></code> switching around on each boot, culminating in an unbootable system, kernel panic, or a block device disappearing. Persistent naming solves these issues.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>Persistent naming has limits that are out-of-scope in this article. For example, while <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> may support a method, systemd may impose its own limits (e.g. <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/42884">FS#42884</a>) on naming it can process during boot.</li>
+<li>This article is not relevant for <a href="../en/LVM.html" title="LVM">LVM</a> logical volumes as the <code>/dev/<i>VolumeGroupName</i>/<i>LogicalVolumeName</i></code> device paths are persistent.</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Persistent_naming_methods"><span class="tocnumber">1</span> <span class="toctext">Persistent naming methods</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#by-label"><span class="tocnumber">1.1</span> <span class="toctext">by-label</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#by-uuid"><span class="tocnumber">1.2</span> <span class="toctext">by-uuid</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#by-id_and_by-path"><span class="tocnumber">1.3</span> <span class="toctext">by-id and by-path</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#by-partlabel"><span class="tocnumber">1.4</span> <span class="toctext">by-partlabel</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#by-partuuid"><span class="tocnumber">1.5</span> <span class="toctext">by-partuuid</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Static_device_names_with_udev"><span class="tocnumber">1.6</span> <span class="toctext">Static device names with udev</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Using_persistent_naming"><span class="tocnumber">2</span> <span class="toctext">Using persistent naming</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#fstab"><span class="tocnumber">2.1</span> <span class="toctext">fstab</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Kernel_parameters"><span class="tocnumber">2.2</span> <span class="toctext">Kernel parameters</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Persistent_naming_methods">Persistent naming methods</span></h2>
+<p>There are four different schemes for persistent naming: <a href="#by-label">by-label</a>, <a href="#by-uuid">by-uuid</a>, <a href="#by-id_and_by-path">by-id and by-path</a>. For those using disks with <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table (GPT)</a>, two additional schemes can be used <a href="#by-partlabel">by-partlabel</a> and <a href="#by-partuuid">by-partuuid</a>. You can also use <a href="#Static_device_names_with_udev">static device names by using Udev</a>.
+</p>
+<p>The directories in <code>/dev/disk/</code> are created and destroyed dynamically, depending on whether there are devices in them.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Beware that <a href="../en/Disk_cloning.html" title="Disk cloning">Disk cloning</a> creates two different disks with the same name.</div>
+<p>The following sections describe what the different persistent naming methods are and how they are used.
+</p>
+<p>The <a href="../en/Device_file.html#lsblk" class="mw-redirect" title="Lsblk">lsblk</a> command can be used for viewing graphically the first persistent schemes:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsblk -f</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">NAME        FSTYPE LABEL      UUID                                 MOUNTPOINT
+sda                                                       
+├─sda1      vfat              CBB6-24F2                            /boot
+├─sda2      ext4   Arch Linux 0a3407de-014b-458b-b5c1-848e92a327a3 /
+├─sda3      ext4   Data       b411dc99-f0a0-4c87-9e05-184977be8539 /home
+└─sda4      swap              f9fe0b69-a280-415d-a03a-a32752370dee [SWAP]
+mmcblk0
+└─mmcblk0p1 vfat              F4CA-5D75
+</pre>
+<p>For those using <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GPT">GPT</a>, use the <code>blkid</code> command instead. The latter is more convenient for scripts, but more difficult to read.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/sda1: UUID="CBB6-24F2" TYPE="vfat" PARTLABEL="EFI system partition" PARTUUID="d0d0d110-0a71-4ed6-936a-304969ea36af" 
+/dev/sda2: LABEL="Arch Linux" UUID="0a3407de-014b-458b-b5c1-848e92a327a3" TYPE="ext4" PARTLABEL="GNU/Linux" PARTUUID="98a81274-10f7-40db-872a-03df048df366" 
+/dev/sda3: LABEL="Data" UUID="b411dc99-f0a0-4c87-9e05-184977be8539" TYPE="ext4" PARTLABEL="Home" PARTUUID="7280201c-fc5d-40f2-a9b2-466611d3d49e" 
+/dev/sda4: UUID="f9fe0b69-a280-415d-a03a-a32752370dee" TYPE="swap" PARTLABEL="Swap" PARTUUID="039b6c1c-7553-4455-9537-1befbc9fbc5b"
+/dev/mmcblk0: PTUUID="0003e1e5" PTTYPE="dos"
+/dev/mmcblk0p1: UUID="F4CA-5D75" TYPE="vfat" PARTUUID="0003e1e5-01"</pre>
+<h3><span class="mw-headline" id="by-label">by-label</span></h3>
+<p>Almost every <a href="../en/File_systems.html#Types_of_file_systems" title="File systems">file system type</a> can have a label. All your volumes that have one are listed in the <code>/dev/disk/by-label</code> directory.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/disk/by-label</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 Data -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 Arch\x20Linux -&gt; ../../sda2
+</pre>
+<p>Most file systems support setting the label upon file system creation, see the <a href="../en/Man_page.html" title="Man page">man page</a> of the relevant <code>mkfs.*</code> utility. For some file systems it is also possible to change the labels. Following are some methods for changing labels on common file systems:
+</p>
+<dl>
+<dt>swap</dt>
+<dd>
+<code>swaplabel -L "<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>
+</dd>
+<dt>ext2/3/4</dt>
+<dd>
+<code>e2label /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=e2fsprogs">e2fsprogs</a></span>
+</dd>
+<dt>btrfs</dt>
+<dd>
+<code>btrfs filesystem label /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=btrfs-progs">btrfs-progs</a></span>
+</dd>
+<dt>reiserfs</dt>
+<dd>
+<code>reiserfstune -l "<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=reiserfsprogs">reiserfsprogs</a></span>
+</dd>
+<dt>jfs</dt>
+<dd>
+<code>jfs_tune -L "<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=jfsutils">jfsutils</a></span>
+</dd>
+<dt>xfs</dt>
+<dd>
+<code>xfs_admin -L "<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xfsprogs">xfsprogs</a></span>
+</dd>
+<dt>fat/vfat</dt>
+<dd>
+<code>fatlabel /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dosfstools">dosfstools</a></span>
+</dd>
+<dd>
+<code>mlabel -i /dev/<i>XXX</i> ::"<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mtools">mtools</a></span>
+</dd>
+<dt>exfat</dt>
+<dd>
+<code>tune.exfat -L "<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=exfatprogs">exfatprogs</a></span>
+</dd>
+<dd>
+<code>exfatlabel /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=exfat-utils">exfat-utils</a></span>
+</dd>
+<dt>ntfs</dt>
+<dd>
+<code>ntfslabel /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntfs-3g">ntfs-3g</a></span>
+</dd>
+<dt>udf</dt>
+<dd>
+<code>udflabel /dev/<i>XXX</i> "<i>new label</i>"</code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=udftools">udftools</a></span>
+</dd>
+<dt>crypto_LUKS (LUKS2 only)</dt>
+<dd>
+<code>cryptsetup config --label="<i>new label</i>" /dev/<i>XXX</i></code> using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cryptsetup">cryptsetup</a></span>
+</dd>
+</dl>
+<p>The label of a device can be obtained with <i>lsblk</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsblk -dno LABEL /dev/sda2</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Arch Linux
+</pre>
+<p>Or with <i>blkid</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid -s LABEL -o value /dev/sda2</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Arch Linux
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>The file system must not be mounted to change its label. For the root file system this can be accomplished by booting from another volume.</li>
+<li>Labels have to be unambiguous to prevent any possible conflicts.</li>
+<li>Labels can be up to 16 characters long.</li>
+<li>Since the label is a property of the filesystem, it is not suitable for addressing a single RAID device persistently.</li>
+<li>When using encrypted containers with <a href="../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a>, the labels of filesystems inside of containers are not available while the container is locked/encrypted.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="by-uuid">by-uuid</span></h3>
+<p><a href="https://en.wikipedia.org/wiki/UUID" class="extiw" title="wikipedia:UUID">UUID</a> is a mechanism to give each <a href="../en/File_systems.html" class="mw-redirect" title="Filesystem">filesystem</a> a unique identifier. These identifiers are generated by filesystem utilities (e.g. <code>mkfs.*</code>) when the device gets formatted and are designed so that collisions are unlikely. All GNU/Linux filesystems (including swap and LUKS headers of raw encrypted devices) support UUID. FAT, exFAT and NTFS filesystems do not support UUID, but are still listed in <code>/dev/disk/by-uuid/</code> with a shorter UID (unique identifier):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/disk/by-uuid/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 0a3407de-014b-458b-b5c1-848e92a327a3 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 b411dc99-f0a0-4c87-9e05-184977be8539 -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 CBB6-24F2 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 May 27 23:31 f9fe0b69-a280-415d-a03a-a32752370dee -&gt; ../../sda4
+lrwxrwxrwx 1 root root 10 May 27 23:31 F4CA-5D75 -&gt; ../../mmcblk0p1
+</pre>
+<p>The UUID of a device can be obtained with <i>lsblk</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsblk -dno UUID /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">CBB6-24F2
+</pre>
+<p>Or with <i>blkid</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid -s UUID -o value /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">CBB6-24F2
+</pre> 
+<p>The advantage of using the UUID method is that it is much less likely that name collisions occur than with labels. Further, it is generated automatically on creation of the filesystem. It will, for example, stay unique even if the device is plugged into another system (which may perhaps have a device with the same label). 
+</p>
+<p>The disadvantage is that UUIDs make long code lines hard to read and break formatting in many configuration files (e.g. <a href="../en/Fstab.html" title="Fstab">fstab</a> or <a href="../en/Dm-crypt/System_configuration.html#crypttab" class="mw-redirect" title="Crypttab">crypttab</a>). Also every time a volume is reformatted a new UUID is generated and configuration files have to get manually adjusted.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> In case your swap does not have an UUID assigned, you will need to reset it using the <a href="../en/Swap.html#Swap_partition" title="Swap">mkswap</a> utility.</div>
+<h3><span class="mw-headline" id="by-id_and_by-path">by-id and by-path</span></h3>
+<p><code>by-id</code> creates a unique name depending on the hardware serial number, <code>by-path</code> depending on the shortest physical path (according to sysfs). Both contain strings to indicate which subsystem they belong to (i.e. <code>pci-</code> for <code>by-path</code>, and <code>ata-</code> for <code>by-id</code>), so they are linked to the hardware controlling the device. This implies different levels of persistence: the <code>by-path</code> will already change when the device is plugged into a different port of the controller, the <code>by-id</code> will change when the device is plugged into a port of a hardware controller subject to another subsystem. <a rel="nofollow" class="external autonumber" href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Online_Storage_Reconfiguration_Guide/persistent_naming.html">[1]</a> Thus, both are not suitable to achieve persistent naming tolerant to hardware changes. 
+</p>
+<p>However, both provide important information to find a particular device in a large hardware infrastructure. For example, if you do not manually assign persistent labels (<code>by-label</code> or <code>by-partlabel</code>) and keep a directory with hardware port usage, <code>by-id</code> and <code>by-path</code> can be used to find a particular device.<a rel="nofollow" class="external autonumber" href="http://linuxshellaccount.blogspot.in/2008/09/how-to-easily-find-wwns-of-qlogic-hba.html">[2]</a> <a rel="nofollow" class="external autonumber" href="http://www.linuxquestions.org/questions/linux-server-73/how-to-find-wwn-for-dev-sdc-917269/">[3]</a>
+</p>
+<p><code>by-id</code> also creates <a href="https://en.wikipedia.org/wiki/World_Wide_Name" class="extiw" title="wikipedia:World Wide Name">World Wide Name</a> links of storage devices that support it. Unlike other <code>by-id</code> links, WWNs are fully persistent and will not change depending on the used subsystem.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Explain and provide examples with <code>/dev/disk/by-id/nvme-eui.*</code> links<a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/pull/3136">[4]</a>. Will the WWID of NVME devices always start with <code>eui.</code>? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Persistent_block_device_naming">Talk:Persistent block device naming#</a>)</div>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <code>by-id</code> and <code>by-path</code> links can only be considered persistent for disks, not partitions. Partitions will be referenced by their number in the partition table and that can change if the partitions are reordered.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/disk/by-id/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470 -&gt; ../../sda
+lrwxrwxrwx 1 root root 10 May 27 23:31 ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-part1 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 May 27 23:31 ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-part2 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-part3 -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 ata-WDC_WD2500BEVT-22ZCT0_WD-WXE908VF0470-part4 -&gt; ../../sda4
+lrwxrwxrwx 1 root root 10 May 27 23:31 mmc-SD32G_0x0040006d -&gt; ../../mmcblk0
+lrwxrwxrwx 1 root root 10 May 27 23:31 mmc-SD32G_0x0040006d-part1 -&gt; ../../mmcblk0p1
+lrwxrwxrwx 1 root root 10 May 27 23:31 wwn-0x60015ee0000b237f -&gt; ../../sda
+lrwxrwxrwx 1 root root 10 May 27 23:31 wwn-0x60015ee0000b237f-part1 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 May 27 23:31 wwn-0x60015ee0000b237f-part2 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 wwn-0x60015ee0000b237f-part3 -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 wwn-0x60015ee0000b237f-part4 -&gt; ../../sda4
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /dev/disk/by-path/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:00:1f.2-ata-1 -&gt; ../../sda
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:00:1f.2-ata-1-part1 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:00:1f.2-ata-1-part2 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:00:1f.2-ata-1-part3 -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:00:1f.2-ata-1-part4 -&gt; ../../sda4
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:07:00.0-platform-rtsx_pci_sdmmc.0 -&gt; ../../mmcblk0
+lrwxrwxrwx 1 root root 10 May 27 23:31 pci-0000:07:00.0-platform-rtsx_pci_sdmmc.0-part1 -&gt; ../../mmcblk0p1
+</pre>
+<h3><span class="mw-headline" id="by-partlabel">by-partlabel</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This method only concerns disks with <a href="../en/Partitioning.html#GUID_Partition_Table" class="mw-redirect" title="GUID Partition Table">GUID Partition Table (GPT)</a>.</div>
+<p>GPT partition labels can be defined in the header of the <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_entries_.28LBA_2.E2.80.9333.29" class="extiw" title="wikipedia:GUID Partition Table">partition entry</a> on GPT disks.
+</p>
+<p>This method is very similar to the <a href="#by-label">filesystem labels</a>, except the partition labels do not get affected if the file system on the partition is changed.
+</p>
+<p>All partitions that have partition labels are listed in the <code>/dev/disk/by-partlabel</code> directory.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">ls -l /dev/disk/by-partlabel/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 EFI\x20system\x20partition -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 May 27 23:31 GNU\x2fLinux -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 Home -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 Swap -&gt; ../../sda4
+</pre>
+<p>The partition label of a device can be obtained with <i>lsblk</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsblk -dno PARTLABEL /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">EFI system partition
+</pre>
+<p>Or with <i>blkid</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid -s PARTLABEL -o value /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">EFI system partition
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>GPT partition labels also have to be different to avoid conflicts. To change your partition label, you can use <a href="../en/GPT_fdisk.html" class="mw-redirect" title="Gdisk">gdisk</a> or the ncurses-based version <a href="../en/GPT_fdisk.html" class="mw-redirect" title="Cgdisk">cgdisk</a>. Both are available from the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gptfdisk">gptfdisk</a></span> package. See <a href="../en/Partitioning.html#Partitioning_tools" title="Partitioning">Partitioning#Partitioning tools</a>.</li>
+<li>According to the specification, GPT partition labels can be up to 72 characters long.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="by-partuuid">by-partuuid</span></h3>
+<p>Like <a href="#by-partlabel">GPT partition labels</a>, GPT partition UUIDs are defined in the <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_entries_.28LBA_2.E2.80.9333.29" class="extiw" title="wikipedia:GUID Partition Table">partition entry</a> on GPT disks.
+</p>
+<p>MBR does not support partition UUIDs, but Linux<a rel="nofollow" class="external autonumber" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d33b98fc82b0908e91fb05ae081acaed7323f9d2">[5]</a> and software using libblkid<a rel="nofollow" class="external autonumber" href="https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git/commit/?id=d67cc2889a0527b26d7bb8c76f2acac46751d673">[6]</a> (e.g. udev<a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/pull/3293">[7]</a>) are capable of generating pseudo PARTUUIDs for MBR partitions. The format is <code><i>SSSSSSSS</i>-<i>PP</i></code>, where <code><i>SSSSSSSS</i></code> is a zero-filled 32-bit <a href="https://en.wikipedia.org/wiki/Master_boot_record#Disk_identity" class="extiw" title="wikipedia:Master boot record">MBR disk signature</a>, and <code><i>PP</i></code> is a zero-filled partition number in hexadecimal form. Unlike a regular PARTUUID of a GPT partition, MBR's pseudo PARTUUID can change if the partition number changes.
+</p>
+<p>The dynamic directory is similar to other methods and, like <a href="#by-uuid">filesystem UUIDs</a>, using UUIDs is preferred over labels.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">ls -l /dev/disk/by-partuuid/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+lrwxrwxrwx 1 root root 10 May 27 23:31 0003e1e5-01 -&gt; ../../mmcblk0p1
+lrwxrwxrwx 1 root root 10 May 27 23:31 039b6c1c-7553-4455-9537-1befbc9fbc5b -&gt; ../../sda4
+lrwxrwxrwx 1 root root 10 May 27 23:31 7280201c-fc5d-40f2-a9b2-466611d3d49e -&gt; ../../sda3
+lrwxrwxrwx 1 root root 10 May 27 23:31 98a81274-10f7-40db-872a-03df048df366 -&gt; ../../sda2
+lrwxrwxrwx 1 root root 10 May 27 23:31 d0d0d110-0a71-4ed6-936a-304969ea36af -&gt; ../../sda1
+</pre>
+<p>The partition UUID of a device can be obtained with <i>lsblk</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ lsblk -dno PARTUUID /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">d0d0d110-0a71-4ed6-936a-304969ea36af
+</pre>
+<p>Or with <i>blkid</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># blkid -s PARTUUID -o value /dev/sda1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">d0d0d110-0a71-4ed6-936a-304969ea36af
+</pre>
+<h3><span class="mw-headline" id="Static_device_names_with_udev">Static device names with udev</span></h3>
+<p>See <a href="../en/Udev.html#Setting_static_device_names" title="Udev">udev#Setting static device names</a>.
+</p>
+<h2><span class="mw-headline" id="Using_persistent_naming">Using persistent naming</span></h2>
+<p>There are various applications that can be configured using persistent naming. Following are some examples of how to configure them.
+</p>
+<h3><span class="mw-headline" id="fstab">fstab</span></h3>
+<p>See the main article: <a href="../en/Fstab.html#Identifying_filesystems" title="Fstab">fstab#Identifying filesystems</a>.
+</p>
+<h3><span class="mw-headline" id="Kernel_parameters">Kernel parameters</span></h3>
+<p>To use persistent names in <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>, the following prerequisites must be met. On a standard installation following the installation guide both prerequisites are met:
+</p>
+<ul><li>You are using an <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> image that has <a href="../en/Udev.html" title="Udev">udev</a> in it.
+<ul><li>For <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a>, enable either the udev or systemd hook in <code>/etc/mkinitcpio.conf</code>
+</li></ul>
+</li></ul>
+<p>The location of the root filesystem is given by the parameter <code>root</code> on the kernel command line. The kernel command line is configured from the <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a>, see <a href="../en/Kernel_parameters.html#Configuration" title="Kernel parameters">Kernel parameters#Configuration</a>. To change to persistent device naming, only change the parameters which specify block devices, e.g. <code>root</code> and <code>resume</code>, while leaving other parameters as is. Various naming schemes are supported:
+</p>
+<p>Persistent device naming <a href="#by-label">using label</a> and the <code>LABEL=</code> format, in this example <code>Arch Linux</code> is the LABEL of the root file system.
+</p>
+<pre>root="LABEL=Arch Linux"
+</pre>
+<p>Persistent device naming <a href="#by-uuid">using UUID</a> and the <code>UUID=</code> format, in this example <code>0a3407de-014b-458b-b5c1-848e92a327a3</code> is the UUID of the root file system.
+</p>
+<pre>root=UUID=0a3407de-014b-458b-b5c1-848e92a327a3
+</pre>
+<p>Persistent device naming <a href="#by-id_and_by-path">using disk id</a> and the <code>/dev</code> path format, in this example <code>wwn-0x60015ee0000b237f-part2</code> is the id of the root partition.
+</p>
+<pre>root=/dev/disk/by-id/wwn-0x60015ee0000b237f-part2
+</pre>
+<p>Persistent device naming <a href="#by-partuuid">using GPT partition UUID</a> and the <code>PARTUUID=</code> format, in this example <code>98a81274-10f7-40db-872a-03df048df366</code> is the PARTUUID of the root partition.
+</p>
+<pre>root=PARTUUID=98a81274-10f7-40db-872a-03df048df366
+</pre>
+<p>Persistent device naming <a href="#by-partlabel">using GPT partition label</a> and the <code>PARTLABEL=</code> format, in this example <code>GNU/Linux</code> is the PARTLABEL of the root partition.
+</p>
+<pre>root="PARTLABEL=GNU/Linux"
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+<li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li>
+<li><a href="../en/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting">Hardware detection and troubleshooting</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Persistent_block_device_naming&amp;oldid=648458">https://wiki.archlinux.org/index.php?title=Persistent_block_device_naming&amp;oldid=648458</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 8 January 2021, at 10:59.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

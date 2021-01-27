@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>RAID - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-RAID rootpage-RAID skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">RAID</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/LVM_on_software_RAID.html" class="mw-redirect" title="Software RAID and LVM">Software RAID and LVM</a></li>
+<li><a href="../en/LVM.html#RAID" title="LVM">LVM#RAID</a></li>
+<li><a href="../en/Install_Arch_Linux_with_Fake_RAID.html" class="mw-redirect" title="Installing with Fake RAID">Installing with Fake RAID</a></li>
+<li><a href="../en/Convert_a_single_drive_system_to_RAID.html" title="Convert a single drive system to RAID">Convert a single drive system to RAID</a></li>
+<li><a href="../en/ZFS.html" title="ZFS">ZFS</a></li>
+<li><a href="../en/ZFS/Virtual_disks.html" title="ZFS/Virtual disks">ZFS/Virtual disks</a></li>
+<li><a href="../en/Swap.html#Striping" title="Swap">Swap#Striping</a></li>
+<li><a href="../en/Btrfs.html#RAID" title="Btrfs">Btrfs#RAID</a></li>
+</ul>
+</div>
+<p>Redundant Array of Independent Disks (<a href="https://en.wikipedia.org/wiki/RAID" class="extiw" title="wikipedia:RAID">RAID</a>) is a storage technology that combines multiple disk drive components (typically disk drives or partitions thereof) into a logical unit. Depending on the RAID implementation, this logical unit can be a file system or an additional transparent layer that can hold several partitions. Data is distributed across the drives in one of several ways called <a href="#RAID_levels">#RAID levels</a>, depending on the level of redundancy and performance required. The RAID level chosen can thus prevent data loss in the event of a hard disk failure, increase performance or be a combination of both.
+</p>
+<p>This article explains how to create/manage a software RAID array using mdadm.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Be sure <a href="../en/Synchronization_and_backup_programs.html" class="mw-redirect" title="Backup programs">to back up</a> all data before proceeding.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#RAID_levels"><span class="tocnumber">1</span> <span class="toctext">RAID levels</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Standard_RAID_levels"><span class="tocnumber">1.1</span> <span class="toctext">Standard RAID levels</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Nested_RAID_levels"><span class="tocnumber">1.2</span> <span class="toctext">Nested RAID levels</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#RAID_level_comparison"><span class="tocnumber">1.3</span> <span class="toctext">RAID level comparison</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Implementation"><span class="tocnumber">2</span> <span class="toctext">Implementation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Which_type_of_RAID_do_I_have?"><span class="tocnumber">2.1</span> <span class="toctext">Which type of RAID do I have?</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Installation"><span class="tocnumber">3</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Prepare_the_devices"><span class="tocnumber">3.1</span> <span class="toctext">Prepare the devices</span></a></li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Partition_the_devices"><span class="tocnumber">3.2</span> <span class="toctext">Partition the devices</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#GUID_Partition_Table"><span class="tocnumber">3.2.1</span> <span class="toctext">GUID Partition Table</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#Master_Boot_Record"><span class="tocnumber">3.2.2</span> <span class="toctext">Master Boot Record</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12"><a href="#Build_the_array"><span class="tocnumber">3.3</span> <span class="toctext">Build the array</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Update_configuration_file"><span class="tocnumber">3.4</span> <span class="toctext">Update configuration file</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Assemble_the_array"><span class="tocnumber">3.5</span> <span class="toctext">Assemble the array</span></a></li>
+<li class="toclevel-2 tocsection-15">
+<a href="#Format_the_RAID_filesystem"><span class="tocnumber">3.6</span> <span class="toctext">Format the RAID filesystem</span></a>
+<ul>
+<li class="toclevel-3 tocsection-16">
+<a href="#Calculating_the_stride_and_stripe_width"><span class="tocnumber">3.6.1</span> <span class="toctext">Calculating the stride and stripe width</span></a>
+<ul>
+<li class="toclevel-4 tocsection-17"><a href="#Example_1._RAID0"><span class="tocnumber">3.6.1.1</span> <span class="toctext">Example 1. RAID0</span></a></li>
+<li class="toclevel-4 tocsection-18"><a href="#Example_2._RAID5"><span class="tocnumber">3.6.1.2</span> <span class="toctext">Example 2. RAID5</span></a></li>
+<li class="toclevel-4 tocsection-19"><a href="#Example_3._RAID10,far2"><span class="tocnumber">3.6.1.3</span> <span class="toctext">Example 3. RAID10,far2</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#Mounting_from_a_Live_CD"><span class="tocnumber">4</span> <span class="toctext">Mounting from a Live CD</span></a></li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Installing_Arch_Linux_on_RAID"><span class="tocnumber">5</span> <span class="toctext">Installing Arch Linux on RAID</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#Update_configuration_file_2"><span class="tocnumber">5.1</span> <span class="toctext">Update configuration file</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#Configure_mkinitcpio"><span class="tocnumber">5.2</span> <span class="toctext">Configure mkinitcpio</span></a></li>
+<li class="toclevel-2 tocsection-24">
+<a href="#Configure_the_boot_loader"><span class="tocnumber">5.3</span> <span class="toctext">Configure the boot loader</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25"><a href="#Root_device"><span class="tocnumber">5.3.1</span> <span class="toctext">Root device</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#RAID0_layout"><span class="tocnumber">5.3.2</span> <span class="toctext">RAID0 layout</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-27">
+<a href="#RAID_Maintenance"><span class="tocnumber">6</span> <span class="toctext">RAID Maintenance</span></a>
+<ul>
+<li class="toclevel-2 tocsection-28">
+<a href="#Scrubbing"><span class="tocnumber">6.1</span> <span class="toctext">Scrubbing</span></a>
+<ul>
+<li class="toclevel-3 tocsection-29"><a href="#General_notes_on_scrubbing"><span class="tocnumber">6.1.1</span> <span class="toctext">General notes on scrubbing</span></a></li>
+<li class="toclevel-3 tocsection-30"><a href="#RAID1_and_RAID10_notes_on_scrubbing"><span class="tocnumber">6.1.2</span> <span class="toctext">RAID1 and RAID10 notes on scrubbing</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-31"><a href="#Removing_devices_from_an_array"><span class="tocnumber">6.2</span> <span class="toctext">Removing devices from an array</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#Adding_a_new_device_to_an_array"><span class="tocnumber">6.3</span> <span class="toctext">Adding a new device to an array</span></a></li>
+<li class="toclevel-2 tocsection-33"><a href="#Increasing_size_of_a_RAID_volume"><span class="tocnumber">6.4</span> <span class="toctext">Increasing size of a RAID volume</span></a></li>
+<li class="toclevel-2 tocsection-34"><a href="#Change_sync_speed_limits"><span class="tocnumber">6.5</span> <span class="toctext">Change sync speed limits</span></a></li>
+<li class="toclevel-2 tocsection-35"><a href="#RAID5_performance"><span class="tocnumber">6.6</span> <span class="toctext">RAID5 performance</span></a></li>
+<li class="toclevel-2 tocsection-36"><a href="#Update_RAID_superblock"><span class="tocnumber">6.7</span> <span class="toctext">Update RAID superblock</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-37">
+<a href="#Monitoring"><span class="tocnumber">7</span> <span class="toctext">Monitoring</span></a>
+<ul>
+<li class="toclevel-2 tocsection-38"><a href="#Watch_mdstat"><span class="tocnumber">7.1</span> <span class="toctext">Watch mdstat</span></a></li>
+<li class="toclevel-2 tocsection-39"><a href="#Track_IO_with_iotop"><span class="tocnumber">7.2</span> <span class="toctext">Track IO with iotop</span></a></li>
+<li class="toclevel-2 tocsection-40"><a href="#Track_IO_with_iostat"><span class="tocnumber">7.3</span> <span class="toctext">Track IO with iostat</span></a></li>
+<li class="toclevel-2 tocsection-41"><a href="#Email_notifications"><span class="tocnumber">7.4</span> <span class="toctext">Email notifications</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-42">
+<a href="#Troubleshooting"><span class="tocnumber">8</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-43"><a href="#Error:_%22kernel:_ataX.00:_revalidation_failed%22"><span class="tocnumber">8.1</span> <span class="toctext">Error: "kernel: ataX.00: revalidation failed"</span></a></li>
+<li class="toclevel-2 tocsection-44"><a href="#Start_arrays_read-only"><span class="tocnumber">8.2</span> <span class="toctext">Start arrays read-only</span></a></li>
+<li class="toclevel-2 tocsection-45"><a href="#Recovering_from_a_broken_or_missing_drive_in_the_raid"><span class="tocnumber">8.3</span> <span class="toctext">Recovering from a broken or missing drive in the raid</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-46"><a href="#Benchmarking"><span class="tocnumber">9</span> <span class="toctext">Benchmarking</span></a></li>
+<li class="toclevel-1 tocsection-47"><a href="#See_also"><span class="tocnumber">10</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="RAID_levels">RAID levels</span></h2>
+<p>Despite redundancy implied by most RAID levels, RAID does not guarantee that data is safe. A RAID will not protect data if there is a fire, the computer is stolen or multiple hard drives fail at once. Furthermore, installing a system with RAID is a complex process that may destroy data.
+</p>
+<h3><span class="mw-headline" id="Standard_RAID_levels">Standard RAID levels</span></h3>
+<p>There are many different <a href="https://en.wikipedia.org/wiki/Standard_RAID_levels" class="extiw" title="wikipedia:Standard RAID levels">levels of RAID</a>, please find hereafter the most commonly used ones.
+</p>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Standard_RAID_levels#RAID_0" class="extiw" title="wikipedia:Standard RAID levels">RAID 0</a></dt>
+<dd>Uses striping to combine disks. Even though it <i>does not provide redundancy</i>, it is still considered RAID. It does, however, <i>provide a big speed benefit</i>. If the speed increase is worth the possibility of data loss (for <a href="../en/Swap.html" title="Swap">swap</a> partition for example), choose this RAID level. On a server, RAID 1 and RAID 5 arrays are more appropriate. The size of a RAID 0 array block device is the size of the smallest component partition times the number of component partitions.</dd>
+</dl>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Standard_RAID_levels#RAID_1" class="extiw" title="wikipedia:Standard RAID levels">RAID 1</a></dt>
+<dd>The most straightforward RAID level: straight mirroring. As with other RAID levels, it only makes sense if the partitions are on different physical disk drives. If one of those drives fails, the block device provided by the RAID array will continue to function as normal. The example will be using RAID 1 for everything except <a href="../en/Swap.html" title="Swap">swap</a> and temporary data. Please note that with a software implementation, the RAID 1 level is the only option for the boot partition, because bootloaders reading the boot partition do not understand RAID, but a RAID 1 component partition can be read as a normal partition. The size of a RAID 1 array block device is the size of the smallest component partition.</dd>
+</dl>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Standard_RAID_levels#RAID_5" class="extiw" title="wikipedia:Standard RAID levels">RAID 5</a></dt>
+<dd>Requires 3 or more physical drives, and provides the redundancy of RAID 1 combined with the speed and size benefits of RAID 0. RAID 5 uses striping, like RAID 0, but also stores parity blocks <i>distributed across each member disk</i>. In the event of a failed disk, these parity blocks are used to reconstruct the data on a replacement disk. RAID 5 can withstand the loss of one member disk.</dd>
+<dd><div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> RAID 5 is a common choice due to its combination of speed and data redundancy. The caveat is that if one drive were to fail and another drive failed before that drive was replaced, all data will be lost. Furthermore, with modern disk sizes and expected unrecoverable read error (URE) rates on consumer disks, the rebuild of a 4TiB array is <b>expected</b> (i.e. higher than 50% chance) to have at least one URE. Because of this, RAID 5 is no longer advised by the storage industry.</div></dd>
+</dl>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Standard_RAID_levels#RAID_6" class="extiw" title="wikipedia:Standard RAID levels">RAID 6</a></dt>
+<dd>Requires 4 or more physical drives, and provides the benefits of RAID 5 but with security against two drive failures. RAID 6 also uses striping, like RAID 5, but stores two distinct parity blocks <i>distributed across each member disk</i>. In the event of a failed disk, these parity blocks are used to reconstruct the data on a replacement disk. RAID 6 can withstand the loss of two member disks. The robustness against unrecoverable read errors is somewhat better, because the array still has parity blocks when rebuilding from a single failed drive. However, given the overhead, RAID 6 is costly and in most settings RAID 10 in far2 layout (see below) provides better speed benefits and robustness, and is therefore preferred.</dd>
+</dl>
+<h3><span class="mw-headline" id="Nested_RAID_levels">Nested RAID levels</span></h3>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Nested_RAID_levels#RAID_10_.28RAID_1.2B0.29" class="extiw" title="wikipedia:Nested RAID levels">RAID 1+0</a></dt>
+<dd>RAID1+0 is a nested RAID that combines two of the standard levels of RAID to gain performance and additional redundancy. It is commonly referred to as <i>RAID10</i>, however, Linux MD RAID10 is slightly different from simple RAID layering, see below.</dd>
+</dl>
+<dl>
+<dt><a href="https://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10" class="extiw" title="wikipedia:Non-standard RAID levels">RAID 10</a></dt>
+<dd>RAID10 under Linux is built on the concepts of RAID1+0, however, it implements this as a single layer, with multiple possible layouts.</dd>
+<dd>The <i>near X</i> layout on Y disks repeats each chunk X times on Y/2 stripes, but does not need X to divide Y evenly. The chunks are placed on almost the same location on each disk they are mirrored on, hence the name. It can work with any number of disks, starting at 2. Near 2 on 2 disks is equivalent to RAID1, near 2 on 4 disks to RAID1+0.</dd>
+<dd>The <i>far X</i> layout on Y disks is designed to offer striped read performance on a mirrored array. It accomplishes this by dividing each disk in two sections, say front and back, and what is written to disk 1 front is mirrored in disk 2 back, and vice versa. This has the effect of being able to stripe sequential reads, which is where RAID0 and RAID5 get their performance from. The drawback is that sequential writing has a very slight performance penalty because of the distance the disk needs to seek to the other section of the disk to store the mirror. RAID10 in far 2 layout is, however, preferable to layered RAID1+0 <b>and</b> RAID5 whenever read speeds are of concern and availability / redundancy is crucial. However, it is still not a substitute for backups. See the wikipedia page for more information.</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  mdadm cannot reshape arrays in <i>far X</i> layouts which means once the array is created, you won't be able to <code>mdadm --grow</code> it. For example, if you have a 4x1TB RAID10 array and you want to switch to 2TB disks, your usable capacity will remain 2TB. For such use cases, stick to <i>near X</i> layouts.</div>
+<h3><span class="mw-headline" id="RAID_level_comparison">RAID level comparison</span></h3>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>RAID level</th>
+<th>Data redundancy</th>
+<th>Physical drive utilization</th>
+<th>Read performance</th>
+<th>Write performance</th>
+<th>Min drives
+</th>
+</tr>
+<tr>
+<td><b>0</b></td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td>100%</td>
+<td>nX
+<p><b>Best</b>
+</p>
+</td>
+<td>nX
+<p><b>Best</b>
+</p>
+</td>
+<td>2
+</td>
+</tr>
+<tr>
+<td><b>1</b></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>50%</td>
+<td>Up to nX if multiple processes are reading, otherwise 1X
+</td>
+<td>1X</td>
+<td>2
+</td>
+</tr>
+<tr>
+<td><b>5</b></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>67% - 94%</td>
+<td>(n−1)X
+<p><b>Superior</b>
+</p>
+</td>
+<td>(n−1)X
+<p><b>Superior</b>
+</p>
+</td>
+<td>3
+</td>
+</tr>
+<tr>
+<td><b>6</b></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>50% - 88%</td>
+<td>(n−2)X</td>
+<td>(n−2)X</td>
+<td>4
+</td>
+</tr>
+<tr>
+<td><b>10,far2</b></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>50%</td>
+<td>nX
+<p><b>Best;</b> on par with RAID0 but redundant
+</p>
+</td>
+<td>(n/2)X</td>
+<td>2
+</td>
+</tr>
+<tr>
+<td><b>10,near2</b></td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>50%</td>
+<td>Up to nX if multiple processes are reading, otherwise 1X</td>
+<td>(n/2)X</td>
+<td>2
+</td>
+</tr>
+</tbody>
+</table>
+<p>* Where <i>n</i> is standing for the number of dedicated disks.
+</p>
+<h2><span class="mw-headline" id="Implementation">Implementation</span></h2>
+<p>The RAID devices can be managed in different ways:
+</p>
+<dl>
+<dt>Software RAID</dt>
+<dd>This is the easiest implementation as it does not rely on obscure proprietary firmware and software to be used. The array is managed by the operating system either by:
+<ul>
+<li>by an abstraction layer (e.g. <a href="#Installation">mdadm</a>); <div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This is the method we will use later in this guide.</div>
+</li>
+<li>by a logical volume manager (e.g. <a href="../en/LVM.html#RAID" title="LVM">LVM</a>);</li>
+<li>by a component of a file system (e.g. <a href="../en/ZFS.html" title="ZFS">ZFS</a>, <a href="../en/Btrfs.html#RAID" title="Btrfs">Btrfs</a>).</li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Hardware RAID</dt>
+<dd>The array is directly managed by a dedicated hardware card installed in the PC to which the disks are directly connected. The RAID logic runs on an on-board processor independently of <a href="https://en.wikipedia.org/wiki/Central_processing_unit" class="extiw" title="wikipedia:Central processing unit">the host processor (CPU)</a>. Although this solution is independent of any operating system, the latter requires a driver in order to function properly with the hardware RAID controller. The RAID array can either be configured via an option rom interface or, depending on the manufacturer, with a dedicated application when the OS has been installed. The configuration is transparent for the Linux kernel: it does not see the disks separately.</dd>
+</dl>
+<dl>
+<dt><a href="../en/Install_Arch_Linux_with_Fake_RAID.html" class="mw-redirect" title="Fakeraid">FakeRAID</a></dt>
+<dd>This type of RAID is properly called BIOS or Onboard RAID, but is falsely advertised as hardware RAID. The array is managed by pseudo-RAID controllers where the RAID logic is implemented in an option rom or in the firmware itself <a rel="nofollow" class="external text" href="http://www.win-raid.com/t19f13-Intel-EFI-RAID-quot-SataDriver-quot-BIOS-Modules.html">with a EFI SataDriver</a> (in case of <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a>), but are not full hardware RAID controllers with <i>all</i> RAID features implemented. Therefore, this type of RAID is sometimes called FakeRAID. <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dmraid">dmraid</a></span> from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>, will be used to deal with these controllers. Here are some examples of FakeRAID controllers: <a href="https://en.wikipedia.org/wiki/Intel_Rapid_Storage_Technology" class="extiw" title="wikipedia:Intel Rapid Storage Technology">Intel Rapid Storage</a>, JMicron JMB36x RAID ROM, AMD RAID, ASMedia 106x, and NVIDIA MediaShield.</dd>
+</dl>
+<h3>
+<span id="Which_type_of_RAID_do_I_have.3F"></span><span class="mw-headline" id="Which_type_of_RAID_do_I_have?">Which type of RAID do I have?</span>
+</h3>
+<p>Since software RAID is implemented by the user, the type of RAID is easily known to the user.
+</p>
+<p>However, discerning between FakeRAID and true hardware RAID can be more difficult. As stated, manufacturers often incorrectly distinguish these two types of RAID and false advertising is always possible. The best solution in this instance is to run the <code>lspci</code> command and looking through the output to find the RAID controller. Then do a search to see what information can be located about the RAID controller. Hardware RAID controllers appear in this list, but FakeRAID implementations do not. Also, true hardware RAID controller are often rather expensive, so if someone customized the system, then it is very likely that choosing a hardware RAID setup made a very noticeable change in the computer's price.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mdadm">mdadm</a></span>. <i>mdadm</i> is used for administering pure software RAID using plain block devices: the underlying hardware does not provide any RAID logic, just a supply of disks. <i>mdadm</i> will work with any collection of block devices. Even if unusual. For example, one can thus make a RAID array from a collection of thumb drives.
+</p>
+<h3><span class="mw-headline" id="Prepare_the_devices">Prepare the devices</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> These steps erase everything on a device, so type carefully!</div>
+<p>If the device is being reused or re-purposed from an existing array, erase any old RAID configuration information:
+</p>
+<pre># mdadm --misc --zero-superblock /dev/&lt;drive&gt;
+</pre>
+<p>or if a particular partition on a drive is to be deleted:
+</p>
+<pre># mdadm --misc --zero-superblock /dev/&lt;partition&gt;
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>Zapping a partition's superblock should not affect the other partitions on the disk.</li>
+<li>Due to the nature of RAID functionality it is very difficult to <a href="../en/Securely_wipe_disk.html" title="Securely wipe disk">securely wipe disks</a> fully on a running array. Consider whether it is useful to do so before creating it.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Partition_the_devices">Partition the devices</span></h3>
+<p>It is highly recommended to partition the disks to be used in the array. Since most RAID users are selecting disk drives larger than 2 TiB, GPT is required and recommended. See <a href="../en/Partitioning.html" title="Partitioning">Partitioning</a> for the more information on partitioning and the available <a href="../en/Partitioning.html#Partitioning_tools" class="mw-redirect" title="Partitioning tools">partitioning tools</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> It is also possible to create a RAID directly on the raw disks (without partitions), but not recommended because it can cause problems when swapping a failed disk.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> When replacing a failed disk of a RAID, the new disk has to be exactly the same size as the failed disk or bigger — otherwise the array recreation process will not work. Even hard drives of the same manufacturer and model can have small size differences. By leaving a little space at the end of the disk unallocated one can compensate for the size differences between drives, which makes choosing a replacement drive model easier. Therefore, it is good practice to leave about 100 MiB of unallocated space at the end of the disk.</div>
+<h4><span class="mw-headline" id="GUID_Partition_Table">GUID Partition Table</span></h4>
+<ul>
+<li>After creating the partitions, their <a href="https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs" class="extiw" title="wikipedia:GUID Partition Table">partition type GUIDs</a> should be <code>A19D880F-05FC-4D3B-A006-743F0F84911E</code> (it can be assigned by selecting partition type <code>Linux RAID</code> in <i>fdisk</i> or <code>FD00</code> in <i>gdisk</i>).</li>
+<li>If a larger disk array is employed, consider assigning <a href="../en/Persistent_block_device_naming.html#by-label" title="Persistent block device naming">filesystem labels</a> or <a href="../en/Persistent_block_device_naming.html#by-partlabel" title="Persistent block device naming">partition labels</a> to make it easier to identify an individual disk later.</li>
+<li>Creating partitions that are of the same size on each of the devices is recommended.</li>
+</ul>
+<h4><span class="mw-headline" id="Master_Boot_Record">Master Boot Record</span></h4>
+<p>For those creating partitions on HDDs with a MBR partition table, the <a href="https://en.wikipedia.org/wiki/Partition_type" class="extiw" title="wikipedia:Partition type">partition types IDs</a> available for use are:
+</p>
+<ul>
+<li>
+<code>0xFD</code> for raid autodetect arrays (<code>Linux raid autodetect</code> in <i>fdisk</i>)</li>
+<li>
+<code>0xDA</code> for non-fs data (<code>Non-FS data</code> in <i>fdisk</i>)</li>
+</ul>
+<p>See <a rel="nofollow" class="external text" href="https://raid.wiki.kernel.org/index.php/Partition_Types">Linux Raid Wiki:Partition Types</a> for more information.
+</p>
+<h3><span class="mw-headline" id="Build_the_array">Build the array</span></h3>
+<p>Use <code>mdadm</code> to build the array. See <span class="plainlinks archwiki-template-man" title="$ man 8 mdadm"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mdadm.8">mdadm(8)</a></span> for supported options. Several examples are given below.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not simply copy/paste the examples below; make sure you use substitute the correct options and drive letters.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>If this is a RAID1 array which is intended to boot from <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a> a limitation in syslinux v4.07 requires the metadata value to be 1.0 rather than the default of 1.2.</li>
+<li>When creating an array from <a href="../en/Archiso.html" title="Archiso">Arch installation medium</a> use the option <code>--homehost=<i>myhostname</i></code> (or <code>--homehost=any</code> to always have the same name regardless of the host) to set the <a href="../en/Network_configuration.html#Set_the_hostname" class="mw-redirect" title="Hostname">hostname</a>, otherwise the hostname <code>archiso</code> will be written in the array metadata.</li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You can specify a custom raid device name using the option <code>--name=<i>MyRAIDName</i></code> or by setting the raid device path to <code>/dev/md/<i>MyRAIDName</i></code>. Udev will create symlinks to the raid arrays in <code>/dev/md/</code> using that name. If <code>homehost</code> matches the current <a href="../en/Network_configuration.html#Set_the_hostname" class="mw-redirect" title="Hostname">hostname</a> (or if homehost is set to <code>any</code>) the link will be <code>/dev/md/<i>name</i></code>, if the hostname does not match the link be <code>/dev/md/<i>homehost</i>:<i>name</i></code>.</div>
+<p>The following example shows building a 2-device RAID1 array:
+</p>
+<pre># mdadm --create --verbose --level=1 --metadata=1.2 --raid-devices=2 /dev/md/MyRAID1Array /dev/sdb1 /dev/sdc1
+</pre>
+<p>The following example shows building a RAID5 array with 4 active devices and 1 spare device:
+</p>
+<pre># mdadm --create --verbose --level=5 --metadata=1.2 --chunk=256 --raid-devices=4 /dev/md/MyRAID5Array /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 --spare-devices=1 /dev/sdf1
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <code>--chunk</code> is used to change the chunk size from the default value. See <a rel="nofollow" class="external text" href="http://www.zdnet.com/article/chunks-the-hidden-key-to-raid-performance/">Chunks: the hidden key to RAID performance</a> for more on chunk size optimisation.</div>
+<p>The following example shows building a RAID10,far2 array with 2 devices:
+</p>
+<pre># mdadm --create --verbose --level=10 --metadata=1.2 --chunk=512 --raid-devices=2 --layout=f2 /dev/md/MyRAID10Array /dev/sdb1 /dev/sdc1
+</pre>
+<p>The array is created under the virtual device <code>/dev/mdX</code>, assembled and ready to use (in degraded mode). One can directly start using it while mdadm resyncs the array in the background. It can take a long time to restore parity. Check the progress with:
+</p>
+<pre>$ cat /proc/mdstat
+</pre>
+<h3><span class="mw-headline" id="Update_configuration_file">Update configuration file</span></h3>
+<p>By default, most of <code>mdadm.conf</code> is commented out, and it contains just the following:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mdadm.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+DEVICE partitions
+...
+</pre>
+<p>This directive tells mdadm to examine the devices referenced by <code>/proc/partitions</code> and assemble as many arrays as possible. This is fine if you really do want to start all available arrays and are confident that no unexpected superblocks will be found (such as after installing a new storage device). A more precise approach is to explicitly add the arrays to <code>/etc/mdadm.conf</code>:
+</p>
+<pre># mdadm --detail --scan &gt;&gt; /etc/mdadm.conf
+</pre>
+<p>This results in something like the following:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mdadm.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+DEVICE partitions
+...
+ARRAY /dev/md/MyRAID1Array metadata=1.2 name=pine:MyRAID1Array UUID=27664f0d:111e493d:4d810213:9f291abe</pre>
+<p>This also causes mdadm to examine the devices referenced by <code>/proc/partitions</code>. However, only devices that have superblocks with a UUID of <code>27664…</code> are assembled in to active arrays.
+</p>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 5 mdadm.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mdadm.conf.5">mdadm.conf(5)</a></span> for more information.
+</p>
+<h3><span class="mw-headline" id="Assemble_the_array">Assemble the array</span></h3>
+<p>Once the configuration file has been updated the array can be assembled using mdadm:
+</p>
+<pre># mdadm --assemble --scan
+</pre>
+<h3><span class="mw-headline" id="Format_the_RAID_filesystem">Format the RAID filesystem</span></h3>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> To create multiple volumes inside a RAID array, follow the <a href="../en/LVM_on_software_RAID.html" title="LVM on software RAID">LVM on software RAID</a> article.</div>
+<p>The array can now be formatted with a <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a> like any other partition, just keep in mind that:
+</p>
+<ul>
+<li>Due to the large volume size not all filesystems are suited (see: <a href="https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits" class="extiw" title="wikipedia:Comparison of file systems">Wikipedia:Comparison of file systems#Limits</a>).</li>
+<li>The filesystem should support growing and shrinking while online (see: <a href="https://en.wikipedia.org/wiki/Comparison_of_file_systems#Features" class="extiw" title="wikipedia:Comparison of file systems">Wikipedia:Comparison of file systems#Features</a>).</li>
+<li>One should calculate the correct stride and stripe-width for optimal performance.</li>
+</ul>
+<h4><span class="mw-headline" id="Calculating_the_stride_and_stripe_width">Calculating the stride and stripe width</span></h4>
+<p>Two parameters are required to optimise the filesystem structure to fit optimally within the underlying RAID structure: the <i>stride</i> and <i>stripe width</i>. These are derived from the RAID <i>chunk size</i>, the filesystem <i>block size</i>, and the <i>number of "data disks"</i>.
+</p>
+<p>The chunk size is a property of the RAID array, decided at the time of its creation. <code>mdadm</code>'s current default is 512 KiB. It can be found with <code>mdadm</code>:
+</p>
+<pre># mdadm --detail /dev/mdX | grep 'Chunk Size'
+</pre>
+<p>The block size is a property of the filesystem, decided at <i>its</i> creation. The default for many filesystems, including ext4, is 4 KiB. See <code>/etc/mke2fs.conf</code> for details on ext4.
+</p>
+<p>The number of "data disks" is the minimum number of devices in the array required to completely rebuild it without data loss. For example, this is N for a raid0 array of N devices and N-1 for raid5.
+</p>
+<p>Once you have these three quantities, the stride and the stripe width can be calculated using the following formulas:
+</p>
+<pre>stride = chunk size / block size
+stripe width = number of data disks * stride
+</pre>
+<h5><span class="mw-headline" id="Example_1._RAID0">Example 1. RAID0</span></h5>
+<p>Example formatting to ext4 with the correct stripe width and stride:
+</p>
+<ul>
+<li>Hypothetical RAID0 array is composed of 2 physical disks.</li>
+<li>Chunk size is 512 KiB.</li>
+<li>Block size is 4 KiB.</li>
+</ul>
+<p>stride = chunk size / block size. In this example, the math is 512/4 so the stride = 128.
+</p>
+<p>stripe width = # of physical <b>data</b> disks * stride. In this example, the math is 2*128 so the stripe width = 256.
+</p>
+<pre># mkfs.ext4 -v -L myarray -b 4096 -E stride=128,stripe-width=256 /dev/md0
+</pre>
+<h5><span class="mw-headline" id="Example_2._RAID5">Example 2. RAID5</span></h5>
+<p>Example formatting to ext4 with the correct stripe width and stride:
+</p>
+<ul>
+<li>Hypothetical RAID5 array is composed of 4 physical disks; 3 data discs and 1 parity disc.</li>
+<li>Chunk size is 512 KiB.</li>
+<li>Block size is 4 KiB.</li>
+</ul>
+<p>stride = chunk size / block size. In this example, the math is 512/4 so the stride = 128.
+</p>
+<p>stripe width = # of physical <b>data</b> disks * stride. In this example, the math is 3*128 so the stripe width = 384.
+</p>
+<pre># mkfs.ext4 -v -L myarray -b 4096 -E stride=128,stripe-width=384 /dev/md0
+</pre>
+<p>For more on stride and stripe width, see: <a rel="nofollow" class="external text" href="http://wiki.centos.org/HowTos/Disk_Optimization">RAID Math</a>.
+</p>
+<h5>
+<span id="Example_3._RAID10.2Cfar2"></span><span class="mw-headline" id="Example_3._RAID10,far2">Example 3. RAID10,far2</span>
+</h5>
+<p>Example formatting to ext4 with the correct stripe width and stride:
+</p>
+<ul>
+<li>Hypothetical RAID10 array is composed of 2 physical disks. Because of the properties of RAID10 in far2 layout, both count as data disks.</li>
+<li>Chunk size is 512 KiB.</li>
+<li>Block size is 4 KiB.</li>
+</ul>
+<p>stride = chunk size / block size.
+In this example, the math is 512/4 so the stride = 128.
+</p>
+<p>stripe width = # of physical <b>data</b> disks * stride.
+In this example, the math is 2*128 so the stripe width = 256.
+</p>
+<pre># mkfs.ext4 -v -L myarray -b 4096 -E stride=128,stripe-width=256 /dev/md0
+</pre>
+<h2><span class="mw-headline" id="Mounting_from_a_Live_CD">Mounting from a Live CD</span></h2>
+<p>Users wanting to mount the RAID partition from a Live CD, use:
+</p>
+<pre># mdadm --assemble /dev/md&lt;number&gt; /dev/&lt;disk1&gt; /dev/&lt;disk2&gt; /dev/&lt;disk3&gt; /dev/&lt;disk4&gt;
+</pre>
+<p>If your RAID 1 that is missing a disk array was wrongly auto-detected as RAID 1 (as per <code>mdadm --detail /dev/md&lt;number&gt;</code>) and reported as inactive (as per <code>cat /proc/mdstat</code>), stop the array first:
+</p>
+<pre># mdadm --stop /dev/md&lt;number&gt;
+</pre>
+<h2><span class="mw-headline" id="Installing_Arch_Linux_on_RAID">Installing Arch Linux on RAID</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following section is applicable only if the root filesystem resides on the array. Users may skip this section if the array holds a data partition(s).</div>
+<p>You should create the RAID array between the <a href="../en/Partitioning.html" title="Partitioning">Partitioning</a> and <a href="../en/File_systems.html#Create_a_file_system" title="File systems">formatting</a> steps of the Installation Procedure. Instead of directly formatting a partition to be your root file system, it will be created on a RAID array.
+Follow the section <a href="#Installation">#Installation</a> to create the RAID array. Then continue with the installation procedure until the pacstrap step is completed.
+When using <a href="../en/Unified_Extensible_Firmware_Interface.html" title="Unified Extensible Firmware Interface">UEFI boot</a>, also read <a href="../en/EFI_system_partition.html#ESP_on_software_RAID1" title="EFI system partition">EFI system partition#ESP on software RAID1</a>.
+</p>
+<h3><span class="mw-headline" id="Update_configuration_file_2">Update configuration file</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This should be done outside of the chroot, hence the prefix <code>/mnt</code> to the filepath.</div>
+<p>After the base system is installed the default configuration file, <code>mdadm.conf</code>, must be updated like so:
+</p>
+<pre># mdadm --detail --scan &gt;&gt; /mnt/etc/mdadm.conf
+</pre>
+<p>Always check the <code>mdadm.conf</code> configuration file using a text editor after running this command to ensure that its contents look reasonable.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> To prevent failure of <code>mdmonitor.service</code> at boot (enabled by default), you will need to uncomment <code>MAILADDR</code> and provide an e-mail address and/or application to handle notification of problems with your array at the bottom of <code>mdadm.conf</code>. See <a href="#Mailing_on_events">#Mailing on events</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>.</div>
+<p>Continue with the installation procedure until you reach the step <a href="../en/Installation_guide.html#Initramfs" title="Installation guide">Installation guide#Initramfs</a>, then follow the next section.
+</p>
+<h3><span class="mw-headline" id="Configure_mkinitcpio">Configure mkinitcpio</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This should be done whilst chrooted.</div>
+<p>Add <code>mdadm_udev</code> to the <a href="../en/Mkinitcpio.html#HOOKS" title="Mkinitcpio">HOOKS</a> section of the <code>mkinitcpio.conf</code> to add support for mdadm into the initramfs image:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ HOOKS=(base udev autodetect keyboard modconf block <b>mdadm_udev</b> filesystems fsck)
+...</pre>
+<p>If you use the <code>mdadm_udev</code> hook with a FakeRAID array, it is recommended to include <i>mdmon</i> in the <a href="../en/Mkinitcpio.html#BINARIES_and_FILES" title="Mkinitcpio">BINARIES</a> array:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/mkinitcpio.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+BINARIES=(<b>mdmon</b>)
+...</pre>
+<p>Then <a href="../en/Mkinitcpio.html#Image_creation_and_activation" class="mw-redirect" title="Regenerate the initramfs">Regenerate the initramfs</a>.
+</p>
+<p>See also <a href="../en/Mkinitcpio.html#Using_RAID" title="Mkinitcpio">mkinitcpio#Using RAID</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Every time when you make changes to <code>/etc/mdadm.conf</code>, the initramfs needs to be regenerated.</div>
+<h3><span class="mw-headline" id="Configure_the_boot_loader">Configure the boot loader</span></h3>
+<h4><span class="mw-headline" id="Root_device">Root device</span></h4>
+<p>Point the <code>root</code> parameter to the mapped device. E.g.:
+</p>
+<pre>root=/dev/md/<i>MyRAIDArray</i>
+</pre>
+<p>If booting from a software raid partition fails using the kernel device node method above, an alternative way is to use one of the methods from <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">Persistent block device naming</a>, for example:
+</p>
+<pre>root=LABEL=Root_Label
+</pre>
+<p>See also <a href="../en/GRUB.html#RAID" title="GRUB">GRUB#RAID</a>.
+</p>
+<h4><span class="mw-headline" id="RAID0_layout">RAID0 layout</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This also affects existing mdraid RAID0 users that upgrade from an older version of the Linux kernel to 5.3.4 or newer.</div>
+<p>Since version 5.3.4 of the Linux kernel, you need to explicitly tell the kernel which RAID0 layout should be used: RAID0_ORIG_LAYOUT (<code>1</code>) or RAID0_ALT_MULTIZONE_LAYOUT (<code>2</code>).<a rel="nofollow" class="external autonumber" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c84a1372df929033cb1a0441fb57bd3932f39ac9">[1]</a> You can do this by providing the <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> as follows:
+</p>
+<pre>raid0.default_layout=2
+</pre>
+<p>The correct value depends upon the kernel version that was used to create the raid array: use <code>1</code> if created using kernel 3.14 or earlier, use <code>2</code> if using a more recent version of the kernel. One way to check this is to look at the creation time of the raid array:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">mdadm --detail /dev/md1</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/md1:
+           Version : 1.2
+     Creation Time : Thu Sep 24 10:17:41 2015
+        Raid Level : raid0
+        Array Size : 975859712 (930.65 GiB 999.28 GB)
+      Raid Devices : 3
+     Total Devices : 3
+       Persistence : Superblock is persistent
+
+       Update Time : Thu Sep 24 10:17:41 2015
+             State : clean
+    Active Devices : 3
+   Working Devices : 3
+    Failed Devices : 0
+     Spare Devices : 0
+
+        Chunk Size : 512K
+
+Consistency Policy : none
+
+              Name : archiso:root
+              UUID : 028de718:20a81234:4db79a2c:e94fd560
+            Events : 0
+
+    Number   Major   Minor   RaidDevice State
+       0     259        2        0      active sync   /dev/nvme0n1p1
+       1     259        6        1      active sync   /dev/nvme2n1p1
+       2     259        5        2      active sync   /dev/nvme1n1p2
+</pre>
+<p>Here we can see that this raid array was created on September 24, 2015. The release date of Linux Kernel 3.14 was March 30, 2014, and as such this raid array is most likely created using a multizone layout (<code>2</code>).
+</p>
+<h2><span class="mw-headline" id="RAID_Maintenance">RAID Maintenance</span></h2>
+<h3><span class="mw-headline" id="Scrubbing">Scrubbing</span></h3>
+<p>It is good practice to regularly run data <a href="https://en.wikipedia.org/wiki/Data_scrubbing" class="extiw" title="wikipedia:Data scrubbing">scrubbing</a> to check for and fix errors. Depending on the size/configuration of the array, a scrub may take multiple hours to complete.
+</p>
+<p>To initiate a data scrub:
+</p>
+<pre># echo check &gt; /sys/block/md0/md/sync_action
+</pre>
+<p>The check operation scans the drives for bad sectors and automatically repairs them. If it finds good sectors that contain bad data (the data in a sector does not agree with what the data from another disk indicates that it should be, for example the parity block + the other data blocks would cause us to think that this data block is incorrect), then no action is taken, but the event is logged (see below). This "do nothing" allows admins to inspect the data in the sector and the data that would be produced by rebuilding the sectors from redundant information and pick the correct data to keep.
+</p>
+<p>As with many tasks/items relating to mdadm, the status of the scrub can be queried by reading <code>/proc/mdstat</code>.
+</p>
+<p>Example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/mdstat</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Personalities : [raid6] [raid5] [raid4] [raid1]
+md0 : active raid1 sdb1[0] sdc1[1]
+      3906778112 blocks super 1.2 [2/2] [UU]
+      [&gt;....................]  check =  4.0% (158288320/3906778112) finish=386.5min speed=161604K/sec
+      bitmap: 0/30 pages [0KB], 65536KB chunk
+</pre>
+<p>To stop a currently running data scrub safely:
+</p>
+<pre># echo idle &gt; /sys/block/md0/md/sync_action
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the system is rebooted after a partial scrub has been suspended, the scrub will start over.</div>
+<p>When the scrub is complete, admins may check how many blocks (if any) have been flagged as bad:
+</p>
+<pre># cat /sys/block/md0/md/mismatch_cnt
+</pre>
+<h4><span class="mw-headline" id="General_notes_on_scrubbing">General notes on scrubbing</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Users may alternatively echo <b>repair</b> to <code>/sys/block/md0/md/sync_action</code> but this is ill-advised since if a mismatch in the data is encountered, it would be automatically updated to be consistent. The danger is that we really do not know whether it is the parity or the data block that is correct (or which data block in case of RAID1). It is luck-of-the-draw whether or not the operation gets the right data instead of the bad data.</div>
+<p>It is a good idea to set up a cron job as root to schedule a periodic scrub. See <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/raid-check/">raid-check</a></span><sup><small>AUR</small></sup> which can assist with this. To perform a periodic scrub using systemd timers instead of cron, See <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/raid-check-systemd/">raid-check-systemd</a></span><sup><small>AUR</small></sup> which contains the same script along with associated systemd timer unit files.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For typical platter drives, scrubbing can take approximately <b>six seconds per gigabyte</b> (that is one hour forty-five minutes per terabyte) so plan the start of your cron job or timer appropriately.</div>
+<h4><span class="mw-headline" id="RAID1_and_RAID10_notes_on_scrubbing">RAID1 and RAID10 notes on scrubbing</span></h4>
+<p>Due to the fact that RAID1 and RAID10 writes in the kernel are unbuffered, an array can have non-0 mismatch counts even when the array is healthy. These non-0 counts will only exist in transient data areas where they do not pose a problem. However, we cannot tell the difference between a non-0 count that is just in transient data or a non-0 count that signifies a real problem. This fact is a source of false positives for RAID1 and RAID10 arrays. It is however still recommended to scrub regularly in order to catch and correct any bad sectors that might be present in the devices.
+</p>
+<h3><span class="mw-headline" id="Removing_devices_from_an_array">Removing devices from an array</span></h3>
+<p>One can remove a device from the array after marking it as faulty:
+</p>
+<pre># mdadm --fail /dev/md0 /dev/sdxx
+</pre>
+<p>Now remove it from the array:
+</p>
+<pre># mdadm --remove /dev/md0 /dev/sdxx
+</pre>
+<p>Remove device permanently (for example, to use it individually from now on):
+Issue the two commands described above then:
+</p>
+<pre># mdadm --zero-superblock /dev/sdxx
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Do not issue this command on linear or RAID0 arrays or data loss will occur!</li>
+<li>Reusing the removed disk without zeroing the superblock will cause loss of all data on the next boot. (After mdadm will try to use it as the part of the raid array).</li>
+</ul>
+</div>
+<p>Stop using an array:
+</p>
+<ol>
+<li>Umount target array</li>
+<li>Stop the array with: <code>mdadm --stop /dev/md0</code>
+</li>
+<li>Repeat the three command described in the beginning of this section on each device.</li>
+<li>Remove the corresponding line from <code>/etc/mdadm.conf</code>.</li>
+</ol>
+<h3><span class="mw-headline" id="Adding_a_new_device_to_an_array">Adding a new device to an array</span></h3>
+<p>Adding new devices with mdadm can be done on a running system with the devices mounted.
+Partition the new device using the same layout as one of those already in the arrays as discussed above.
+</p>
+<p>Assemble the RAID array if it is not already assembled:
+</p>
+<pre># mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1
+</pre>
+<p>Add the new device to the array:
+</p>
+<pre># mdadm --add /dev/md0 /dev/sdc1
+</pre>
+<p>This should not take long for mdadm to do. 
+</p>
+<p>Depending on the type of RAID (for example, with RAID1), mdadm may add the device as a spare without syncing data to it. You can increase the number of disks the RAID uses by using <code>--grow</code> with the <code>--raid-devices</code> option. For example, to increase an array to four disks:
+</p>
+<pre># mdadm --grow /dev/md0 --raid-devices=4
+</pre>
+<p>You can check the progress with:
+</p>
+<pre># cat /proc/mdstat
+</pre>
+<p>Check that the device has been added with the command:
+</p>
+<pre># mdadm --misc --detail /dev/md0
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For RAID0 arrays you may get the following error message:
+<pre>mdadm: add new device failed for /dev/sdc1 as 2: Invalid argument
+</pre>
+<p>This is because the above commands will add the new disk as a "spare" but RAID0 does not have spares. If you want to add a device to a RAID0 array, you need to "grow" and "add" in the same command, as demonstrated below:
+</p>
+<pre># mdadm --grow /dev/md0 --raid-devices=3 --add /dev/sdc1
+</pre>
+</div>
+<h3><span class="mw-headline" id="Increasing_size_of_a_RAID_volume">Increasing size of a RAID volume</span></h3>
+<p>If larger disks are installed in a RAID array or partition size has been increased, it may be desirable to increase the size of the RAID volume to fill the larger available space. This process may be begun by first following the above sections pertaining to replacing disks. Once the RAID volume has been rebuilt onto the larger disks it must be "grown" to fill the space.
+</p>
+<pre># mdadm --grow /dev/md0 --size=max
+</pre>
+<p>Next, partitions present on the RAID volume <code>/dev/md0</code> may need to be resized. See <a href="../en/Partitioning.html" title="Partitioning">Partitioning</a> for details. Finally, the filesystem on the above mentioned partition will need to be resized. If partitioning was performed with <code>gparted</code> this will be done automatically. If other tools were used, unmount and then resize the filesystem manually.
+</p>
+<pre># umount /storage
+# fsck.ext4 -f /dev/md0p1
+# resize2fs /dev/md0p1
+</pre>
+<h3><span class="mw-headline" id="Change_sync_speed_limits">Change sync speed limits</span></h3>
+<p>Syncing can take a while. If the machine is not needed for other tasks the speed limit can be increased.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /proc/mdstat</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> Personalities : [raid1]
+ md0 : active raid1 sda3[2] sdb3[1]
+       155042219 blocks super 1.2 [2/1] [_U]
+       [&gt;....................]  recovery =  0.0% (77696/155042219) finish=265.8min speed=9712K/sec
+
+ unused devices: &lt;none&gt;
+</pre>
+<p>Check the current speed limit.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /proc/sys/dev/raid/speed_limit_min</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">1000
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /proc/sys/dev/raid/speed_limit_max</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">200000
+</pre>
+<p>Increase the limits.
+</p>
+<pre># echo 400000 &gt;/proc/sys/dev/raid/speed_limit_min
+# echo 400000 &gt;/proc/sys/dev/raid/speed_limit_max
+</pre>
+<p>Then check out the syncing speed and estimated finish time.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /proc/mdstat</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> Personalities : [raid1]
+ md0 : active raid1 sda3[2] sdb3[1]
+       155042219 blocks super 1.2 [2/1] [_U]
+       [&gt;....................]  recovery =  1.3% (2136640/155042219) finish=158.2min speed=16102K/sec
+
+ unused devices: &lt;none&gt;
+</pre>
+<p>See also <a href="../en/Sysctl.html#MDADM" title="Sysctl">sysctl#MDADM</a>.
+</p>
+<h3><span class="mw-headline" id="RAID5_performance">RAID5 performance</span></h3>
+<p>To improve RAID5 performance for fast storage (e.g. <a href="../en/Solid_state_drive/NVMe.html" class="mw-redirect" title="NVMe">NVMe</a>), increase <code>/sys/block/mdx/md/group_thread_cnt</code> to more threads. For example, to use 8 threads to operate on a RAID5 device:
+</p>
+<pre># echo 8 &gt; /sys/block/md0/md/group_thread_cnt
+</pre>
+<p>See <a rel="nofollow" class="external text" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=851c30c9badfc6b294c98e887624bff53644ad21">git kernel commit 851c30c9badf</a>.
+</p>
+<h3><span class="mw-headline" id="Update_RAID_superblock">Update RAID superblock</span></h3>
+<p>To update the RAID superblock, you need to first unmount the array and then stop the array with the following command:
+</p>
+<pre># mdadm --stop /dev/md0
+</pre>
+<p>Then you can update certain parameters by reassembling the array. For example, to update the <code>homehost</code>:
+</p>
+<pre># mdadm --assemble --update=homehost --homehost=NAS /dev/md0 /dev/sda1 /dev/sdb1
+</pre>
+<p>See the arguments of <code>--update</code> for details.
+</p>
+<h2><span class="mw-headline" id="Monitoring">Monitoring</span></h2>
+<p>A simple one-liner that prints out the status of the RAID devices:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># awk '/^md/ {printf "%s: ", $1}; /blocks/ {print $NF}' &lt;/proc/mdstat
+</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">md1: [UU]
+md0: [UU]
+</pre>
+<h3><span class="mw-headline" id="Watch_mdstat">Watch mdstat</span></h3>
+<pre># watch -t 'cat /proc/mdstat'
+</pre>
+<p>Or preferably using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tmux">tmux</a></span>
+</p>
+<pre># tmux split-window -l 12 "watch -t 'cat /proc/mdstat'"
+</pre>
+<h3><span class="mw-headline" id="Track_IO_with_iotop">Track IO with iotop</span></h3>
+<p>The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iotop">iotop</a></span> package displays the input/output stats for processes. Use this command to view the IO for raid threads.
+</p>
+<pre># iotop -a $(sed 's/^/-p /g' &lt;&lt;&lt;`pgrep "_raid|_resync|jbd2"`)
+</pre>
+<h3><span class="mw-headline" id="Track_IO_with_iostat">Track IO with iostat</span></h3>
+<p>The <i>iostat</i> utility from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sysstat">sysstat</a></span> package displays the input/output statistics for devices and partitions.
+</p>
+<pre># iostat -dmy 1 /dev/md0
+# iostat -dmy 1 # all
+</pre>
+<h3><span class="mw-headline" id="Email_notifications">Email notifications</span></h3>
+<p><i>mdadm</i> provides the <a href="../en/Systemd.html" title="Systemd">systemd</a> service <code>mdmonitor.service</code> which can be useful for monitoring the health of your raid arrays and notifying you via email if anything goes wrong.
+</p>
+<p>This service is special in that it cannot be manually activated like a regular service; <i>mdadm</i> will take care of activating it via udev upon assembling your arrays on system startup, but it will <b>only</b> do so if an email address has been configured for its notifications (see below).
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Failure to configure an email address will result in the monitoring service silently failing to start.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> In order to send emails, a properly configured <a href="../en/Mail_server.html" class="mw-redirect" title="Mail transfer agent">mail transfer agent</a> is required.</div>
+<p>To enable this functionality, edit <code>/etc/mdadm.conf</code> and define the email address:
+</p>
+<pre>MAILADDR <i>user@domain</i>
+</pre>
+<p>Then, to verify that everything is working as it should, run the following command:
+</p>
+<pre># mdadm --monitor --scan --oneshot --test
+</pre>
+<p>If the test is successful and the email is delivered, then you are done; the next time your arrays are reassembled, <code>mdmonitor.service</code> will begin monitoring them for errors.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>If you are getting error when you reboot about "invalid raid superblock magic" and you have additional hard drives other than the ones you installed to, check that your hard drive order is correct. During installation, your RAID devices may be hdd, hde and hdf, but during boot they may be hda, hdb and hdc. Adjust your kernel line accordingly. This is what happened to me anyway.
+</p>
+<h3>
+<span id="Error:_.22kernel:_ataX.00:_revalidation_failed.22"></span><span class="mw-headline" id='Error:_"kernel:_ataX.00:_revalidation_failed"'>Error: "kernel: ataX.00: revalidation failed"</span>
+</h3>
+<p>If you suddenly (after reboot, changed BIOS settings) experience Error messages like:
+</p>
+<pre>Feb  9 08:15:46 hostserver kernel: ata8.00: revalidation failed (errno=-5)
+</pre>
+<p>Is does not necessarily mean that a drive is broken. You often find panic links on the web which go for the worst. In a word, No Panic. Maybe you just changed APIC or ACPI settings within your BIOS or Kernel parameters somehow. Change them back and you should be fine. Ordinarily, turning ACPI and/orACPI off should help.
+</p>
+<h3><span class="mw-headline" id="Start_arrays_read-only">Start arrays read-only</span></h3>
+<p>When an md array is started, the superblock will be written, and resync may begin. To start read-only set the kernel module <code>md_mod</code> parameter <code>start_ro</code>. When this is set, new arrays get an 'auto-ro' mode, which disables all internal io (superblock updates, resync, recovery) and is automatically switched to 'rw' when the first write request arrives.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The array can be set to true 'ro' mode using <code>mdadm --readonly</code> before the first write request, or resync can be started without a write using <code>mdadm --readwrite</code>.</div>
+<p>To set the parameter at boot, add <code>md_mod.start_ro=1</code> to your kernel line.
+</p>
+<p>Or set it at module load time from <code>/etc/modprobe.d/</code> file or from directly from <code>/sys/</code>:
+</p>
+<pre># echo 1 &gt; /sys/module/md_mod/parameters/start_ro
+</pre>
+<h3><span class="mw-headline" id="Recovering_from_a_broken_or_missing_drive_in_the_raid">Recovering from a broken or missing drive in the raid</span></h3>
+<p>You might get the above mentioned error also when one of the drives breaks for whatever reason. In that case you will have to force the raid to still turn on even with one disk short. Type this (change where needed):
+</p>
+<pre># mdadm --manage /dev/md0 --run
+</pre>
+<p>Now you should be able to mount it again with something like this (if you had it in fstab):
+</p>
+<pre># mount /dev/md0
+</pre>
+<p>Now the raid should be working again and available to use, however with one disk short! So, to add that one disc partition it the way like described above in <a href="#Prepare_the_devices">#Prepare the devices</a>. Once that is done you can add the new disk to the raid by doing:
+</p>
+<pre># mdadm --manage --add /dev/md0 /dev/sdd1
+</pre>
+<p>If you type:
+</p>
+<pre># cat /proc/mdstat
+</pre>
+<p>you probably see that the raid is now active and rebuilding.
+</p>
+<p>You also might want to update your configuration (see: <a href="#Update_configuration_file">#Update configuration file</a>).
+</p>
+<h2><span class="mw-headline" id="Benchmarking">Benchmarking</span></h2>
+<p>There are several tools for benchmarking a RAID. The most notable improvement is the speed increase when multiple threads are reading from the same RAID volume.
+</p>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/tiobench/">tiobench</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup> specifically benchmarks these performance improvements by measuring fully-threaded I/O on the disk.
+</p>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bonnie%2B%2B">bonnie++</a></span> tests database type access to one or more files, and creation, reading, and deleting of small files which can simulate the usage of programs such as Squid, INN, or Maildir format e-mail. The enclosed <a rel="nofollow" class="external text" href="http://www.coker.com.au/bonnie++/zcav/">ZCAV</a> program tests the performance of different zones of a hard drive without writing any data to the disk.
+</p>
+<p><code>hdparm</code> should <b>not</b> be used to benchmark a RAID, because it provides very inconsistent results.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://www.thomas-krenn.com/en/wiki/Linux_Software_RAID">Linux Software RAID</a> (thomas-krenn.com)</li>
+<li>
+<a rel="nofollow" class="external text" href="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux RAID wiki entry</a> on The Linux Kernel Archives</li>
+<li><a rel="nofollow" class="external text" href="https://raid.wiki.kernel.org/index.php/Write-intent_bitmap">How Bitmaps Work</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/ch-raid.html">Chapter 15: Redundant Array of Independent Disks (RAID)</a> of Red Hat Enterprise Linux 6 Documentation</li>
+<li>
+<a rel="nofollow" class="external text" href="https://tldp.org/FAQ/Linux-RAID-FAQ/x37.html">Linux-RAID FAQ</a> on the Linux Documentation Project</li>
+<li>
+<a rel="nofollow" class="external text" href="https://web.archive.org/web/20160114023340/http://www.miracleas.com/BAARF/">BAARF</a>(Archive.org) including <i><a rel="nofollow" class="external text" href="https://web.archive.org/web/20160112115539/http://www.miracleas.com/BAARF/RAID5_versus_RAID10.txt">Why should I not use RAID 5?</a></i>(Archive.org) by Art S. Kagel</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.linux-mag.com/id/7924/">Introduction to RAID</a>, <a rel="nofollow" class="external text" href="http://www.linux-mag.com/id/7931/">Nested-RAID: RAID-5 and RAID-6 Based Configurations</a>, <a rel="nofollow" class="external text" href="http://www.linux-mag.com/id/7928/">Intro to Nested-RAID: RAID-01 and RAID-10</a>, and <a rel="nofollow" class="external text" href="http://www.linux-mag.com/id/7932/">Nested-RAID: The Triple Lindy</a> in Linux Magazine</li>
+<li><a rel="nofollow" class="external text" href="http://www.cyberciti.biz/tips/linux-raid-increase-resync-rebuild-speed.html">HowTo: Speed Up Linux Software Raid Building And Re-syncing</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Non-RAID_drive_architectures" class="extiw" title="wikipedia:Non-RAID drive architectures">Wikipedia:Non-RAID drive architectures</a></li>
+</ul>
+<p><b>mailing list</b>
+</p>
+<ul><li><a rel="nofollow" class="external text" href="mailto:linux-raid@vger.kernel.org">Kernel Linux-Raid mailing list</a></li></ul>
+<p><b>mdadm</b>
+</p>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/pub/linux/utils/raid/mdadm/">mdadm source code</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.linux-mag.com/id/7939/">Software RAID on Linux with mdadm</a> in Linux Magazine</li>
+<li><a href="https://en.wikipedia.org/wiki/mdadm" class="extiw" title="wikipedia:mdadm">Wikipedia - mdadm</a></li>
+</ul>
+<p><b>Forum threads</b>
+</p>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://forums.overclockers.com.au/showthread.php?t=865333">Raid Performance Improvements with bitmaps</a></li>
+<li><a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=125445">GRUB and GRUB2</a></li>
+<li><a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=123698">Can't install grub2 on software RAID</a></li>
+<li><a rel="nofollow" class="external text" href="http://forums.gentoo.org/viewtopic-t-888624-start-0.html">Use RAID metadata 1.2 in boot and root partition</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Storage_virtualization.html" title="Category:Storage virtualization">Storage virtualization</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=RAID&amp;oldid=645775">https://wiki.archlinux.org/index.php?title=RAID&amp;oldid=645775</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 16 December 2020, at 20:25.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

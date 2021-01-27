@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Intel GVT-g - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Intel_GVT-g rootpage-Intel_GVT-g skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Intel GVT-g</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/PCI_passthrough_via_OVMF.html" title="PCI passthrough via OVMF">PCI passthrough via OVMF</a></li>
+<li><a href="../en/QEMU.html" title="QEMU">QEMU</a></li>
+<li><a href="../en/Intel_graphics.html" title="Intel graphics">Intel graphics</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/wiki/GVTg_Setup_Guide">Intel GVT-g</a> is a technology that provides mediated device passthrough for Intel GPUs (Broadwell and newer). It can be used to virtualize the GPU for multiple guest virtual machines, effectively providing near-native graphics performance in the virtual machine and still letting your host use the virtualized GPU normally. This is useful if you want accelerated graphics in Windows virtual machines running on ultrabooks without dedicated GPUs for <a href="../en/PCI_passthrough_via_OVMF.html" title="PCI passthrough via OVMF">full device passthrough</a>. (Similar technologies exist for NVIDIA and AMD GPUs, but they are available only in the "professional" GPU lines like Quadro, Radeon Pro and so on.)
+</p>
+<p>There is also a variant of this technology called GVT-d - it is essentially Intel's name for full device passthrough with the vfio-pci driver. With GVT-d, the host cannot use the virtualized GPU.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Prerequisite"><span class="tocnumber">1</span> <span class="toctext">Prerequisite</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#libvirt_qemu_hook"><span class="tocnumber">1.1</span> <span class="toctext">libvirt qemu hook</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Assign_a_virtual_GPU_to_the_virtual_machine"><span class="tocnumber">2</span> <span class="toctext">Assign a virtual GPU to the virtual machine</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#QEMU_CLI"><span class="tocnumber">2.1</span> <span class="toctext">QEMU CLI</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#libvirt"><span class="tocnumber">2.2</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Getting_virtual_GPU_display_contents"><span class="tocnumber">3</span> <span class="toctext">Getting virtual GPU display contents</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7">
+<a href="#Using_DMA-BUF_display"><span class="tocnumber">3.1</span> <span class="toctext">Using DMA-BUF display</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#QEMU_CLI_2"><span class="tocnumber">3.1.1</span> <span class="toctext">QEMU CLI</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#libvirt_2"><span class="tocnumber">3.1.2</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10">
+<a href="#Using_DMA-BUF_with_UEFI/OVMF"><span class="tocnumber">3.2</span> <span class="toctext">Using DMA-BUF with UEFI/OVMF</span></a>
+<ul>
+<li class="toclevel-3 tocsection-11"><a href="#libvirt_3"><span class="tocnumber">3.2.1</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12">
+<a href="#Enable_RAMFB_display_(optional)"><span class="tocnumber">3.3</span> <span class="toctext">Enable RAMFB display (optional)</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#QEMU_CLI_3"><span class="tocnumber">3.3.1</span> <span class="toctext">QEMU CLI</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#libvirt_4"><span class="tocnumber">3.3.2</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#Display_virtual_GPU_output"><span class="tocnumber">4</span> <span class="toctext">Display virtual GPU output</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#Output_using_QEMU_display_(QEMU_CLI_only)"><span class="tocnumber">4.1</span> <span class="toctext">Output using QEMU display (QEMU CLI only)</span></a></li>
+<li class="toclevel-2 tocsection-17">
+<a href="#Output_using_SPICE_with_MESA_EGL"><span class="tocnumber">4.2</span> <span class="toctext">Output using SPICE with MESA EGL</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#QEMU_CLI_4"><span class="tocnumber">4.2.1</span> <span class="toctext">QEMU CLI</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#libvirt_5"><span class="tocnumber">4.2.2</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20">
+<a href="#Output_using_SPICE_with_NVIDIA_EGL_or_VNC"><span class="tocnumber">4.3</span> <span class="toctext">Output using SPICE with NVIDIA EGL or VNC</span></a>
+<ul>
+<li class="toclevel-3 tocsection-21"><a href="#libvirt_6"><span class="tocnumber">4.3.1</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-22">
+<a href="#Disable_all_outputs"><span class="tocnumber">4.4</span> <span class="toctext">Disable all outputs</span></a>
+<ul>
+<li class="toclevel-3 tocsection-23"><a href="#QEMU_CLI_5"><span class="tocnumber">4.4.1</span> <span class="toctext">QEMU CLI</span></a></li>
+<li class="toclevel-3 tocsection-24"><a href="#libvirt_7"><span class="tocnumber">4.4.2</span> <span class="toctext">libvirt</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25">
+<a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-26"><a href="#Missing_mdev_supported_types_directory"><span class="tocnumber">5.1</span> <span class="toctext">Missing mdev_supported_types directory</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#Windows_hanging_with_bad_memory_error"><span class="tocnumber">5.2</span> <span class="toctext">Windows hanging with bad memory error</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href="#Using_Intel_GVT-G_in_combination_with_PRIME_render_offload"><span class="tocnumber">5.3</span> <span class="toctext">Using Intel GVT-G in combination with PRIME render offload</span></a></li>
+<li class="toclevel-2 tocsection-29"><a href="#No_display"><span class="tocnumber">5.4</span> <span class="toctext">No display</span></a></li>
+<li class="toclevel-2 tocsection-30"><a href="#Garbled_graphics"><span class="tocnumber">5.5</span> <span class="toctext">Garbled graphics</span></a></li>
+<li class="toclevel-2 tocsection-31"><a href="#Host_hanging_when_trying_to_suspend"><span class="tocnumber">5.6</span> <span class="toctext">Host hanging when trying to suspend</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-32"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Prerequisite">Prerequisite</span></h2>
+<p>You will have to create a virtual GPU first, then assign it to your virtual machine. The guest with a virtual GPU sees it as a "regular" GPU - just install the latest native drivers. (The virtual GPU actually does need specialized drivers to work correctly, but all the required changes are present in the latest upstream Linux/Windows drivers.)
+</p>
+<p>You will need to:
+</p>
+<ul>
+<li>Use at least Linux 4.16 and <a href="../en/QEMU.html" title="QEMU">QEMU</a> 2.12.</li>
+<li>Enable IOMMU by adding <code>intel_iommu=on</code> to your <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>.</li>
+<li>
+<a href="../en/Kernel_module.html#Automatic_module_loading_with_systemd" title="Kernel module">Enable</a> kernel modules: <code>kvmgt</code>, <code>vfio-iommu-type1</code> and <code>vfio-mdev</code>.</li>
+<li>
+<a href="../en/Kernel_module.html#Setting_module_options" title="Kernel module">Set</a> i915 module parameter <code>enable_gvt=1</code> to enable GPU virtualization.</li>
+<li>Add <code>i915.enable_guc=0</code> to <a href="../en/Kernel_parameters.html" title="Kernel parameters">kernel parameters</a>, see warning at <a href="../en/Intel_graphics.html#Enable_GuC_/_HuC_firmware_loading" title="Intel graphics">Intel graphics#Enable GuC / HuC firmware loading</a>.</li>
+<li>Find the PCI address and domain number of your GPU (<code>$GVT_PCI</code> and <code>$GVT_DOM</code> in commands below), as it resides in <code>/sys/bus/pci/devices</code>. It looks like this: <code>0000:00:02.0</code> - you can look it up by running <code>lspci -D -nn</code>, looking for <code>VGA compatible controller: Intel Corporation HD Graphics ...</code> and noting down the address on the left.</li>
+<li>Generate a virtual GPU GUID (<code>$GVT_GUID</code> in commands below) which you will use to create and assign the virtual GPU. A single virtual GPU can be assigned only to a single virtual machine - create as many GUIDs as you want virtual GPUs. (You can do so by running <code>uuidgen</code>.)</li>
+</ul>
+<p>After rebooting with the <code>i915.enable_gvt=1</code> flag, you should be able to create virtual GPUs - there are multiple virtual GPU types you can create, which mainly differ in the amount of resources dedicated to that virtual GPU. You can look up what types are available in your system (and <code>cat description</code> inside of each type to discover what it's capable of) like this:
+</p>
+<pre># ls /sys/devices/pci${GVT_DOM}/$GVT_PCI/mdev_supported_types
+i915-GVTg_V5_1  # Video memory: &lt;512MB, 2048MB&gt;, resolution: up to 1920x1200
+i915-GVTg_V5_2  # Video memory: &lt;256MB, 1024MB&gt;, resolution: up to 1920x1200
+i915-GVTg_V5_4  # Video memory: &lt;128MB, 512MB&gt;, resolution: up to 1920x1200
+i915-GVTg_V5_8  # Video memory: &lt;64MB, 384MB&gt;, resolution: up to 1024x768
+</pre>
+<p>Pick a type you want to use - we will refer to it as <code>$GVT_TYPE</code> below. Use the GUID you have created to create a virtual GPU with a chosen type:
+</p>
+<pre># echo "$GVT_GUID" &gt; "/sys/devices/pci${GVT_DOM}/$GVT_PCI/mdev_supported_types/$GVT_TYPE/create"
+</pre>
+<p>You can repeat this as many times as you want with different GUIDs. All created virtual GPUs will land in <code>/sys/bus/pci/devices/$GVT_PCI/</code> - if you would like to remove a virtual GPU, you can do:
+</p>
+<pre># echo 1 &gt; /sys/bus/pci/devices/$GVT_PCI/$GVT_GUID/remove
+</pre>
+<h3><span class="mw-headline" id="libvirt_qemu_hook">libvirt qemu hook</span></h3>
+<p>With libvirt, a <a rel="nofollow" class="external text" href="https://www.libvirt.org/hooks.html">libvirt qemu hook</a> can be used to automatically create the virtual GPU when the machine is started, and to remove it when the machine is stopped. Replace the variables with the values you found above and the DOMAIN with the name of the machine.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/libvirt/hooks/qemu</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+GVT_PCI=&lt;GVT_PCI&gt;
+GVT_GUID=&lt;GVT_GUID&gt;
+MDEV_TYPE=&lt;GVT_TYPE&gt;
+DOMAIN=&lt;DOMAIN name&gt;
+if [ $# -ge 3 ]; then
+    if [ $1 = "$DOMAIN" -a $2 = "prepare" -a $3 = "begin" ]; then
+        echo "$GVT_GUID" &gt; "/sys/bus/pci/devices/$GVT_PCI/mdev_supported_types/$MDEV_TYPE/create"
+    elif [ $1 = "$DOMAIN" -a $2 = "release" -a $3 = "end" ]; then
+        echo 1 &gt; /sys/bus/pci/devices/$GVT_PCI/$GVT_GUID/remove
+    fi
+fi</pre>
+<p>Do not forget to make the file <a href="../en/Help:Reading.html#Make_executable" class="mw-redirect" title="Executable">executable</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>If you use libvirt user session, you need to tweak the script to use privilege escalation commands, such as <code>pkexec</code> or a no-password <code>sudo</code>.</li>
+<li>The XML of the domain is feed to the hook script through stdin. You can use <code>xmllint</code> and XPath expression to extract <code>GVT_GUID</code> from stdin, e.g.: <pre>GVT_GUID="$(xmllint --xpath 'string(/domain/devices/hostdev[@type="mdev"][@display="on"]/source/address/@uuid)' -)"</pre>
+</li>
+</ul>
+</div>
+<h2><span class="mw-headline" id="Assign_a_virtual_GPU_to_the_virtual_machine">Assign a virtual GPU to the virtual machine</span></h2>
+<p>If you run <code>qemu</code> or <code>libvirtd</code> as a regular user, it may complain that some path <code>/dev/vfio/<i>number</i></code> is not writeable. You need to enable write access to that path for the account, with <code>chmod</code> or <code>setfacl</code>.
+</p>
+<h3><span class="mw-headline" id="QEMU_CLI">QEMU CLI</span></h3>
+<p>To create a virtual machine with the virtualized GPU, add this parameter to the QEMU command line:
+</p>
+<pre>-device vfio-pci,sysfsdev=/sys/bus/mdev/devices/$GVT_GUID
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> KVM must be enabled by <code>-enable-kvm</code>.</div>
+<h3><span class="mw-headline" id="libvirt">libvirt</span></h3>
+<p>Add the following device to the <code><i>devices</i></code> element of the virtual machine definition:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+    &lt;hostdev mode='subsystem' type='mdev' managed='no' model='vfio-pci' display='off'&gt;
+      &lt;source&gt;
+        &lt;address uuid=<i>GVT_GUID</i>/&gt;
+      &lt;/source&gt;
+    &lt;/hostdev&gt;
+...</pre>
+<p>Replace <code><i>GVT_GUID</i></code> with the UUID of your virtual GPU.
+</p>
+<h2><span class="mw-headline" id="Getting_virtual_GPU_display_contents">Getting virtual GPU display contents</span></h2>
+<p>There are several possible ways to retrieve the display contents from the virtual GPU.
+</p>
+<h3><span class="mw-headline" id="Using_DMA-BUF_display">Using DMA-BUF display</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> According to this <a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/issues/20">issue</a>, this method will not work with UEFI guests using (unmodified) OVMF. See below for patches/workarounds.</div>
+<h4><span class="mw-headline" id="QEMU_CLI_2">QEMU CLI</span></h4>
+<p>Add <code>display=on,x-igd-opregion=on</code> to the end of <code>-device vfio-pci</code> parameter, e.g.:
+</p>
+<pre>-device vfio-pci,sysfsdev=/sys/bus/mdev/devices/$GVT_GUID,display=on,x-igd-opregion=on
+</pre>
+<h4><span class="mw-headline" id="libvirt_2">libvirt</span></h4>
+<p>First, modify the XML schema of the virtual machine definition so that we can use QEMU-specific elements later. Change
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;domain type='kvm'&gt;
+</pre>
+<p>to
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'&gt;
+</pre>
+<p>Then add this configuration to the end of the <code>&lt;domain&gt;</code> element, i. e. insert this text right above the closing <code>&lt;/domain&gt;</code> tag:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+  &lt;qemu:commandline&gt;
+    &lt;qemu:arg value='-set'/&gt;
+    &lt;qemu:arg value='device.hostdev0.x-igd-opregion=on'/&gt;
+ &lt;/qemu:commandline&gt;
+...
+</pre>
+<h3>
+<span id="Using_DMA-BUF_with_UEFI.2FOVMF"></span><span class="mw-headline" id="Using_DMA-BUF_with_UEFI/OVMF">Using DMA-BUF with UEFI/OVMF</span>
+</h3>
+<p>As stated above, DMA-BUF display will not work with UEFI-based guests using (unmodified) OVMF because it will not create the necessary ACPI OpRegion exposed via QEMU's nonstandard fw_cfg interface. See <a rel="nofollow" class="external text" href="https://bugzilla.tianocore.org/show_bug.cgi?id=935">this OVMF bug</a> for details of this issue.
+</p>
+<p>According to <a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/issues/23#issuecomment-468125999">this GitHub comment</a>, the OVMF bug report suggests several solutions to the problem. It is possible to:
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://bugzilla.tianocore.org/attachment.cgi?id=165">patch</a> OVMF (<a rel="nofollow" class="external text" href="https://bugzilla.tianocore.org/show_bug.cgi?id=935#c4">details</a>) to add an Intel-specific quirk (most straightforward but non-upstreamable solution);</li>
+<li>
+<a rel="nofollow" class="external text" href="https://bugzilla.tianocore.org/attachment.cgi?id=168">patch</a> the host kernel (<a rel="nofollow" class="external text" href="https://bugzilla.tianocore.org/show_bug.cgi?id=935#c12">details</a>) to automatically provide an option ROM for the virtual GPU containing basically the same code but in option ROM format;</li>
+<li>
+<a rel="nofollow" class="external text" href="http://120.25.59.132:3000/vbios_gvt_uefi.rom">extract the OpROM</a> from the kernel patch (<a rel="nofollow" class="external text" href="https://www.reddit.com/r/VFIO/comments/av736o/creating_a_clover_bios_nonuefi_install_for_qemu/ehdz6mf/">source</a>) and feed it to QEMU as an override.</li>
+</ul>
+<p>We will go with the last option because it does not involve patching anything. (Note: if the link <i>and</i> <a rel="nofollow" class="external text" href="https://web.archive.org/web/20200710205806/http://120.25.59.132/vbios_gvt_uefi.rom">the archive</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-12-27 ⓘ]</sup> go down, the OpROM can be extracted from the kernel patch by hand.)
+</p>
+<p>Download <code>vbios_gvt_uefi.rom</code> and place it somewhere world-accessible (we will use <code>/</code> to make an example).
+</p>
+<h4><span class="mw-headline" id="libvirt_3">libvirt</span></h4>
+<p>Then edit the virtual machine definition, appending this configuration to the <code>&lt;qemu:commandline&gt;</code> element we added earlier:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+    &lt;qemu:arg value='-set'/&gt;
+    &lt;qemu:arg value='device.hostdev0.romfile=<b>/vbios_gvt_uefi.rom</b>'/&gt;
+...
+</pre>
+<h3>
+<span id="Enable_RAMFB_display_.28optional.29"></span><span class="mw-headline" id="Enable_RAMFB_display_(optional)">Enable RAMFB display (optional)</span>
+</h3>
+<p>This should be combined with the above DMA-BUF configuration in order to also display everything that happens before the guest Intel driver is loaded (i.e. POST, the firmware interface, and the guest initialization).
+</p>
+<h4><span class="mw-headline" id="QEMU_CLI_3">QEMU CLI</span></h4>
+<p>Add <code>ramfb=on,driver=vfio-pci-nohotplug</code> to the end of <code>-device vfio-pci</code> parameter, e.g.:
+</p>
+<pre>-device vfio-pci,sysfsdev=/sys/bus/mdev/devices/$GVT_GUID,display=on,x-igd-opregion=on,ramfb=on,driver=vfio-pci-nohotplug
+</pre>
+<h4><span class="mw-headline" id="libvirt_4">libvirt</span></h4>
+<p>First, follow the first step of <a href="#libvirt_2">this section</a> to modify the XML schema.
+</p>
+<p>Then add this configuration to the end of the <code>&lt;domain&gt;</code> element, i.e. insert this text right above the closing <code>&lt;/domain&gt;</code> tag:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+ &lt;qemu:commandline&gt;
+    &lt;qemu:arg value='-set'/&gt;
+    &lt;qemu:arg value='device.hostdev0.ramfb=on'/&gt;
+    &lt;qemu:arg value='-set'/&gt;
+    &lt;qemu:arg value='device.hostdev0.driver=vfio-pci-nohotplug'/&gt;
+ &lt;/qemu:commandline&gt;
+...
+</pre>
+<h2><span class="mw-headline" id="Display_virtual_GPU_output">Display virtual GPU output</span></h2>
+<p>Due to an <a rel="nofollow" class="external text" href="https://gitlab.freedesktop.org/spice/spice-gtk/issues/100">issue</a> with spice-gtk, the configuration is different depending on the SPICE client EGL implementation.
+</p>
+<h3>
+<span id="Output_using_QEMU_display_.28QEMU_CLI_only.29"></span><span class="mw-headline" id="Output_using_QEMU_display_(QEMU_CLI_only)">Output using QEMU display (QEMU CLI only)</span>
+</h3>
+<p>Add <code>-display gtk,gl=on</code> to the command line. The QEMU VGA adapter can be disabled by adding <code>-vga none</code>, or you have two virtual screens, and the one connected to the QEMU VGA adapter is blank.
+</p>
+<h3><span class="mw-headline" id="Output_using_SPICE_with_MESA_EGL">Output using SPICE with MESA EGL</span></h3>
+<h4><span class="mw-headline" id="QEMU_CLI_4">QEMU CLI</span></h4>
+<p>Add <code>-display spice-app,gl=on</code> to the command line. <code>virt-viewer</code> must be installed.
+</p>
+<h4><span class="mw-headline" id="libvirt_5">libvirt</span></h4>
+<ol>
+<li>Ensure the above added &lt;hostdev&gt; device have the display attribute set to 'on'.</li>
+<li>Remove all &lt;graphics&gt; and &lt;video&gt; devices.</li>
+<li>Add the following devices:</li>
+</ol>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+    &lt;graphics type='spice'&gt;
+      &lt;listen type='none'/&gt;
+      &lt;gl enable='yes'/&gt;
+    &lt;/graphics&gt;
+    &lt;video&gt;
+      &lt;model type='none'/&gt;
+    &lt;/video&gt;
+...
+</pre>
+<p>The is an optional attribute <code>rendernode</code> in the <code>gl</code> tag to allow specify the renderer, e.g.:
+</p>
+<pre> &lt;gl enable='yes' rendernode='/dev/dri/by-path/pci-0000:00:02.0-render'/&gt;
+</pre>
+<h3><span class="mw-headline" id="Output_using_SPICE_with_NVIDIA_EGL_or_VNC">Output using SPICE with NVIDIA EGL or VNC</span></h3>
+<h4><span class="mw-headline" id="libvirt_6">libvirt</span></h4>
+<ol>
+<li>Ensure the above added &lt;hostdev&gt; device have the display attribute set to 'on'.</li>
+<li>Remove all &lt;graphics&gt; and &lt;video&gt; devices.</li>
+<li>Add the following devices:</li>
+</ol>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+    &lt;graphics type='spice' autoport='yes'&gt;
+      &lt;listen type='address'/&gt;
+    &lt;/graphics&gt;
+    &lt;graphics type='egl-headless'/&gt;
+    &lt;video&gt;
+      &lt;model type='none'/&gt;
+    &lt;/video&gt;
+...
+</pre>
+<p>The <code>&lt;graphics type='spice'&gt;</code> type can be changed to 'vnc' to use VNC instead.
+</p>
+<p>Also there is an <i>optional</i> tag &lt;gl&gt; inside &lt;graphics type='egl-headless'&gt; tag to force a specific renderer, do not put inside the 'spice' graphics due the mentioned bug, example:
+</p>
+<pre>   &lt;graphics type='egl-headless'&gt;
+     &lt;gl rendernode='/dev/dri/by-path/pci-0000:00:02.0-render'/&gt;
+   &lt;/graphics&gt;
+</pre>
+<h3><span class="mw-headline" id="Disable_all_outputs">Disable all outputs</span></h3>
+<p>If all outputs are disabled, the only way to see the display output would then be using a software server like RDP, VNC or Looking Glass.
+To see more details in <a href="../en/PCI_passthrough_via_OVMF.html#Using_Looking_Glass_to_stream_guest_screen_to_the_host" title="PCI passthrough via OVMF">using Looking Glass to stream guest screen to the host</a>.
+</p>
+<h4><span class="mw-headline" id="QEMU_CLI_5">QEMU CLI</span></h4>
+<p>In the <code>-device vfio-pci</code> parameter, remove <code>ramfb=on</code> and change to <code>display=off</code>. Add <code>-vga none</code> to disable the QEMU VGA adapter.
+</p>
+<h4><span class="mw-headline" id="libvirt_7">libvirt</span></h4>
+<p>To ensure no emulated GPU is added, one can edit the virtual machine configuration and do the following changes:
+</p>
+<ol>
+<li>Remove all &lt;graphics&gt; devices.</li>
+<li>Change the &lt;video&gt; device to be type 'none'.</li>
+<li>Ensure the above added &lt;hostdev&gt; device have the <code>display</code> attribute set to 'off'.</li>
+</ol>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Missing_mdev_supported_types_directory">Missing mdev_supported_types directory</span></h3>
+<p>If you have followed instructions and added <code>i915.enable_gvt=1</code> kernel parameter, but there is still no <code>/sys/bus/pci/devices/0000:02:00.0/mdev_supported_types</code> directory, probably your hardware is not supported. Check dmesg log for this message:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ dmesg | grep -i gvt </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[    4.227468] [drm] Unsupported device. GVT-g is disabled</pre>
+<p>If that is the case, you may want to check upstream for support plans.
+For example, for the "Coffee Lake" (CFL) platform support, see <a rel="nofollow" class="external free" href="https://github.com/intel/gvt-linux/issues/53">https://github.com/intel/gvt-linux/issues/53</a>
+</p>
+<h3><span class="mw-headline" id="Windows_hanging_with_bad_memory_error">Windows hanging with bad memory error</span></h3>
+<p>If Windows is hanging due to a Bad Memory error look for more details via dmesg. If the logs show something like rlimit memory exceeded, you may need to increase the max memory linux allows qemu to allocate. Assuming you are in the group <code>kvm</code>, add the following to <code>/etc/security/limits.conf</code> and restarting the system.
+</p>
+<pre># qemu kvm, need high memlock to allocate memory for vga-passthrough
+@kvm	hard	memlock	8388608
+@kvm	soft	memlock	8388608
+</pre>
+<h3><span class="mw-headline" id="Using_Intel_GVT-G_in_combination_with_PRIME_render_offload">Using Intel GVT-G in combination with PRIME render offload</span></h3>
+<p>Using Intel GVT-G while also using NVIDIA's <a href="../en/PRIME.html#PRIME_render_offload" title="PRIME">PRIME render offload</a> on the host causes several <a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/issues/162">issues</a> on the guest. It is suggested to use <a href="../en/Bumblebee.html#Power_management" class="mw-redirect" title="Bbswitch">bbswitch</a> to keep the card powered off or use it in conjunction with <a href="../en/Bumblebee.html" title="Bumblebee">Bumblebee</a>, <a href="../en/Nvidia-xrun.html" title="Nvidia-xrun">nvidia-xrun</a> or <a href="../en/NVIDIA_Optimus.html#Using_optimus-manager" title="NVIDIA Optimus">optimus-manager</a>.
+</p>
+<h3><span class="mw-headline" id="No_display">No display</span></h3>
+<p>If your virtual machine is not displaying anything when using RAMFB display, try setting the following additional options to the existing &lt;qemu:commandline&gt; tag:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+  &lt;qemu:commandline&gt;
+    &lt;qemu:arg value="-set"/&gt;
+    &lt;qemu:arg value="device.hostdev0.display=on"/&gt;
+  &lt;/qemu:commandline&gt;
+...</pre>
+<h3><span class="mw-headline" id="Garbled_graphics">Garbled graphics</span></h3>
+<p>If your virtual machine is displaying artifacts when the mouse enters the virtual machine screen, the following <a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/issues/152#issuecomment-637790127">workaround</a> might work.
+</p>
+<p>First modify the XML schema as shown on <a href="#libvirt_2">#libvirt 2</a>.
+</p>
+<p>Then, insert this right above the closing &lt;/domain&gt; tag, taking care to add to the existing &lt;qemu:commandline&gt; tag, if existing:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ virsh edit <i>vmname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+  &lt;qemu:commandline&gt;
+    &lt;qemu:env name="MESA_LOADER_DRIVER_OVERRIDE" value="i965"/&gt;
+  &lt;/qemu:commandline&gt;
+...</pre>
+<h3><span class="mw-headline" id="Host_hanging_when_trying_to_suspend">Host hanging when trying to suspend</span></h3>
+<p>After creating a GVT-g virtual GPU, host may hang when trying to suspend. See <a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/issues/156">github</a> to trace this bug.
+</p>
+<p>A workaround is to remove the created GVT-g virtual GPUs before suspend and recreate the GVT-g virtual GPUs after waking from suspend. You can install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gvtg_vgpu-git/">gvtg_vgpu-git</a></span><sup><small>AUR</small></sup> package to automatically do this for you.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/wiki/GVTg_Setup_Guide">Official GVT-g Setup Guide</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/intel/gvt-linux/wiki/Dma_Buf_User_Guide">Official GVT-g DMA-BUF  User Guide</a>.</li>
+<li><a rel="nofollow" class="external text" href="https://www.reddit.com/r/VFIO/comments/8h352p/guide_running_windows_via_qemukvm_and_intel_gvtg/">Running Windows via QEMU/KVM and Intel GVT-g</a></li>
+<li><a rel="nofollow" class="external text" href="https://blog.bepbep.co/posts/gvt/">Blog post about using GVT</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Virtualization.html" title="Category:Virtualization">Virtualization</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Intel_GVT-g&amp;oldid=648072">https://wiki.archlinux.org/index.php?title=Intel_GVT-g&amp;oldid=648072</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 January 2021, at 09:25.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

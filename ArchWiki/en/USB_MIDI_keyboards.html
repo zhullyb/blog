@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>USB MIDI keyboards - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-USB_MIDI_keyboards rootpage-USB_MIDI_keyboards skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">USB MIDI keyboards</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This how-to assumes that you are using <a href="../en/Advanced_Linux_Sound_Architecture.html" class="mw-redirect" title="ALSA">ALSA</a> and that your sound card is set up so you can listen to music. Known to work using this how-to is the Evolution MK-631 USB midi keyboard with SB Live! Value card. Execute these instructions as an unprivileged user unless otherwise noted.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Preliminary_Testing"><span class="tocnumber">1</span> <span class="toctext">Preliminary Testing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#ALSA"><span class="tocnumber">1.1</span> <span class="toctext">ALSA</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#Plugging_the_keyboard"><span class="tocnumber">2</span> <span class="toctext">Plugging the keyboard</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Verifying_Events"><span class="tocnumber">3</span> <span class="toctext">Verifying Events</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Recording"><span class="tocnumber">4</span> <span class="toctext">Recording</span></a></li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Playing"><span class="tocnumber">5</span> <span class="toctext">Playing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Hardware_synthesizer"><span class="tocnumber">5.1</span> <span class="toctext">Hardware synthesizer</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Software_synthesizer"><span class="tocnumber">5.2</span> <span class="toctext">Software synthesizer</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Qsynth"><span class="tocnumber">5.2.1</span> <span class="toctext">Qsynth</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Qsynth_using_JACK"><span class="tocnumber">5.2.2</span> <span class="toctext">Qsynth using JACK</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Preliminary_Testing">Preliminary Testing</span></h2>
+<h3><span class="mw-headline" id="ALSA">ALSA</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-utils">alsa-utils</a></span> package.
+</p>
+<p>Type <code>aseqdump</code>. It should output something like:
+</p>
+<pre>Waiting for data at port 128:0. Press Ctrl+C to end.
+Source_ Event_________________ Ch _Data__
+</pre>
+<p>Not much will show up there, so press Ctrl+C to quit the program.
+</p>
+<h2><span class="mw-headline" id="Plugging_the_keyboard">Plugging the keyboard</span></h2>
+<p>Now plug the keyboard in and turn it on. The keyboard should power up. Output of <code>lsusb</code> should contain:
+</p>
+<pre>Bus 002 Device 002: ID 0a4d:00a0 Evolution Electronics, Ltd
+</pre>
+<p>Output of <code>lsmod | grep usb</code> should contain the following modules:
+</p>
+<pre>usb_midi               25348  0
+snd_usb_audio          70592  0
+snd_usb_lib            16640  1 snd_usb_audio
+</pre>
+<p>Now type <code>aconnect -i</code> to list all MIDI input ports. The output should contain:
+</p>
+<pre>client 72: 'MK-361 USB MIDI keyboard' [type=kernel]
+    0 'MK-361 USB MIDI keyboard MIDI 1'</pre>
+<p>The client number is probably going to be different though. Take note of it.
+</p>
+<h2><span class="mw-headline" id="Verifying_Events">Verifying Events</span></h2>
+<p>Type <code>aseqdump -p ##</code> where you should replace <code>##</code> with the client number of your keyboard. You should see:
+</p>
+<pre> 72:0   Active Sensing
+</pre>
+<p>popping out all the time. Pressing a key should produce:
+</p>
+<pre> 72:0   Note on                 0  65  94
+ 72:0   Note on                 0  65   0
+</pre>
+<p>Various other events (turning control knobs, changing channels, etc.) should register in the list. This is a handy  way of ensuring that your keyboard is running properly.
+</p>
+<p>To send MIDI events back to the keyboard or another MIDI output device, you can use run <code>aplaymidi -p ## midifile.mid</code> and specify a MIDI file.
+</p>
+<h2><span class="mw-headline" id="Recording">Recording</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This section is for recording raw MIDI data to a file. For recording audio, you need a synthesizer. See <a href="#Playing">Playing</a>.</div>
+<p>First, use <code>arecordmidi -l</code> to list the available input devices, and determine the <code>port_number</code> for the desired device. 
+Then, execute the following to start recording:
+</p>
+<pre>arecordmidi -p &lt;port_number&gt; &lt;output_file&gt;
+</pre>
+<p>To stop recording, simply <code>kill</code> the process.
+</p>
+<p><code>man arecordmidi</code> provides details about additional options available with this tool.
+</p>
+<h2><span class="mw-headline" id="Playing">Playing</span></h2>
+<p>To hear a sound when you push a button on your keyboard, you need a synthesizer that converts the MIDI signal into audio.
+</p>
+<p>Some soundcards have a built-in hardware synthesizer, but these are not common in modern sound cards, especially not in onboard sound cards. An easier option is a software synthesizer, which is just a program which you can load with you own instrument samples.
+</p>
+<h3><span class="mw-headline" id="Hardware_synthesizer">Hardware synthesizer</span></h3>
+<p>Type <code>aconnect -o</code> to list all MIDI output ports. It depends a lot on your sound card. On SB Live! Value, you get the following output:
+</p>
+<pre>client 64: 'EMU10K1 MPU-401 (UART)' [type=kernel]
+    0 'EMU10K1 MPU-401 (UART)'
+client 65: 'Emu10k1 WaveTable' [type=kernel]
+    0 'Emu10k1 Port 0  '
+    1 'Emu10k1 Port 1  '
+    2 'Emu10k1 Port 2  '
+    3 'Emu10k1 Port 3  '</pre>
+<p>Here client 65 is the actual MIDI synthesizer. Assuming the soundcard is <a href="../en/SB_Live!_Midi.html" title="SB Live! Midi">set up</a> properly, you should be able to <b>route</b> the output of the keyboard to the MIDI synthesizer. Assuming <i>out</i> is the output client number (65 in our example) and <i>in</i> is the input client number (72 in our example), type <code>aconnect <i>in</i> <i>out</i></code>. Now you can play your keyboard via the MIDI output of your sound card.
+</p>
+<h3><span class="mw-headline" id="Software_synthesizer">Software synthesizer</span></h3>
+<h4><span class="mw-headline" id="Qsynth">Qsynth</span></h4>
+<ol>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qsynth">qsynth</a></span>.</li>
+<li>Start QSynth and go to <b>Setup</b>, where you need to load soundfont in SF2 format. You can get free SoundFonts from <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/fluidplug-git/">fluidplug-git</a></span><sup><small>AUR</small></sup>, or from <a rel="nofollow" class="external free" href="http://soundfonts.narod.ru/">http://soundfonts.narod.ru/</a> (in Russian). When QSynth asks you to restart the engine after loading the SoundFont, do so.</li>
+<li>Type <code>aconnect -o</code> to list all MIDI output ports. Find the one that contains <code>FLUID Synth</code> and note the client number.</li>
+<li>Type <code>aconnect -i</code> to list all MIDI input ports. Note the Keyboard client number.</li>
+<li>Assuming <i>out</i> is the output client number and <i>in</i> is the input client number (72 in our example), type <code>aconnect <i>in</i> <i>out</i></code>. Now you can play your keyboard and QSynth should produce sounds.</li>
+</ol>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You need to run <code>aconnect <i>in</i> <i>out</i></code> each time you restart Qsynth or change the instrument/SoundFont.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Qsynth default audio driver is set to jack. To use alsa run : qsynth -a alsa </div>
+<h4><span class="mw-headline" id="Qsynth_using_JACK">Qsynth using JACK</span></h4>
+<ol>
+<li>We need to install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qsynth">qsynth</a></span>, <a href="../en/JACK_Audio_Connection_Kit.html" class="mw-redirect" title="JACK">JACK</a>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qjackctl">qjackctl</a></span>
+</li>
+<li>Launch qjackctl and check the settings: <pre>Server Path: jackd
+Driver: alsa
+Realtime=enable; Priority:0
+Frames/Period:512
+Soft Mode=enable; Periods/Buffer:2
+Rest of parameters=disable(by default)
+Dither: None
+Audio: Duplex
+</pre>
+</li>
+<li>Start jackd using qjackctl (the <i>Play</i> button)</li>
+<li>Connect your USB keyboard</li>
+<li>Start QSynth and go to <i>Setup</i>, where you need to load soundfont in SF2 format. You can get free SoundFonts from <a rel="nofollow" class="external free" href="http://soundfonts.narod.ru/">http://soundfonts.narod.ru/</a> (in Russian). When QSynth asks you to restart the engine after loading the SoundFont, do so.</li>
+<li>Go to qjackctl, click <i>Connect</i> and choose the ALSA tab. On the left side you will see connected MIDI keyboard, on the left side - QSynth. Choose MIDI keyboard and QSynth, and click <i>Connect</i>.</li>
+</ol>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Hardware.html" title="Category:Hardware">Hardware</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=USB_MIDI_keyboards&amp;oldid=625940">https://wiki.archlinux.org/index.php?title=USB_MIDI_keyboards&amp;oldid=625940</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 July 2020, at 07:38.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

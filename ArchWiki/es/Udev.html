@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>udev (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Udev_Español rootpage-Udev_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">udev (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+<code>udev</code> reemplaza la funcionalidad de <code>hotplug</code> y <code>hwdetect</code>.
+</p>
+<p>Del <a href="https://en.wikipedia.org/wiki/Udev" class="extiw" title="wikipedia:Udev">artículo de Wikipedia</a>:
+</p>
+<dl><dd>
+<i>«Udev es el gestor de dispositivos que usa el kernel de Linux. Principalmente, su función es controlar los archivos de dispositivo en <code>/dev</code>. Es el sucesor de devfs y de hotplug, lo que significa que maneja el directorio <code>/dev</code> y todas las acciones del espacio de usuario al agregar o quitar dispositivos, incluyendo la carga de firmware»</i>.</dd></dl>
+<p>Udev carga los módulos del kernel en paralelo (simultáneamente) para proveer una potencial ventaja de rendimiento, en vez de cargar los módulos secuencialmente (uno después de otro). Los módulos son, por lo tanto, cargados asíncronamente. La desventaja inherente de este método es que udev no siempre carga los módulos en el mismo orden en cada arranque del sistema. Si la máquina posee múltiples dispositivos de bloque, esto se puede manifestar en que los nodos de los dispositivos cambian su designación aleatoriamente. Por ejemplo, si la máquina tiene dos discos duros, <code>/dev/sda</code> puede convertirse aleatoriamente en <code>/dev/sdb</code>. Continue leyendo más abajo para mayor información.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Instalaci%C3%B3n"><span class="tocnumber">1</span> <span class="toctext">Instalación</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Acerca_de_las_reglas_udev"><span class="tocnumber">2</span> <span class="toctext">Acerca de las reglas udev</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Escribir_reglas_udev"><span class="tocnumber">2.1</span> <span class="toctext">Escribir reglas udev</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Listar_los_atributos_de_un_dispositivo"><span class="tocnumber">2.2</span> <span class="toctext">Listar los atributos de un dispositivo</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Comprobar_las_reglas_antes_de_cargarlas"><span class="tocnumber">2.3</span> <span class="toctext">Comprobar las reglas antes de cargarlas</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Cargar_reglas_nuevas"><span class="tocnumber">2.4</span> <span class="toctext">Cargar reglas nuevas</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Udisks"><span class="tocnumber">3</span> <span class="toctext">Udisks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Montaje_autom%C3%A1tico_de_wrappers_de_udisks"><span class="tocnumber">3.1</span> <span class="toctext">Montaje automático de wrappers de udisks</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Funciones_de_la_shell_de_udisks"><span class="tocnumber">3.2</span> <span class="toctext">Funciones de la shell de udisks</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#udisks2_-_montar_en_/media"><span class="tocnumber">3.3</span> <span class="toctext">udisks2 - montar en /media</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Consejos_y_Trucos"><span class="tocnumber">4</span> <span class="toctext">Consejos y Trucos</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Acceder_a_programadores_de_firmware_y_a_dispositivos_USB_de_comunicaci%C3%B3n_virtual"><span class="tocnumber">4.1</span> <span class="toctext">Acceder a programadores de firmware y a dispositivos USB de comunicación virtual</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Ejecutar_USB_al_insertar"><span class="tocnumber">4.2</span> <span class="toctext">Ejecutar USB al insertar</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Detectar_nuevas_unidades_eSATA"><span class="tocnumber">4.3</span> <span class="toctext">Detectar nuevas unidades eSATA</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Marca_como_interna_tanto_SATA-Ports_como_eSATA-Ports"><span class="tocnumber">4.4</span> <span class="toctext">Marca como interna tanto SATA-Ports como eSATA-Ports</span></a></li>
+<li class="toclevel-2 tocsection-16">
+<a href="#Configurar_nombres_est%C3%A1ticos_para_los_dispositivos"><span class="tocnumber">4.5</span> <span class="toctext">Configurar nombres estáticos para los dispositivos</span></a>
+<ul>
+<li class="toclevel-3 tocsection-17"><a href="#Dispositivo_iscsi"><span class="tocnumber">4.5.1</span> <span class="toctext">Dispositivo iscsi</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#Dispositivos_de_v%C3%ADdeo"><span class="tocnumber">4.5.2</span> <span class="toctext">Dispositivos de vídeo</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#Impresoras"><span class="tocnumber">4.5.3</span> <span class="toctext">Impresoras</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20"><a href="#Despertar_desde_la_suspenci%C3%B3n_con_un_dispositivo_USB"><span class="tocnumber">4.6</span> <span class="toctext">Despertar desde la suspención con un dispositivo USB</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Soluci%C3%B3n_de_problemas"><span class="tocnumber">5</span> <span class="toctext">Solución de problemas</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22"><a href="#Blacklisting_de_M%C3%B3dulos"><span class="tocnumber">5.1</span> <span class="toctext">Blacklisting de Módulos</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#udevd_falla_al_inicio"><span class="tocnumber">5.2</span> <span class="toctext">udevd falla al inicio</span></a></li>
+<li class="toclevel-2 tocsection-24">
+<a href="#Problemas_conocidos_con_el_Hardware"><span class="tocnumber">5.3</span> <span class="toctext">Problemas conocidos con el Hardware</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25"><a href="#Dispositivos_BusLogic_dejan_de_funcionar_y_causan_bloqueos_durante_el_arranque"><span class="tocnumber">5.3.1</span> <span class="toctext">Dispositivos BusLogic dejan de funcionar y causan bloqueos durante el arranque</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#Dispositivos_extraibles_no_son_reconocidos_como_tales"><span class="tocnumber">5.3.2</span> <span class="toctext">Dispositivos extraibles no son reconocidos como tales</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27">
+<a href="#Problemas_conocidos_con_la_carga_autom%C3%A1tica"><span class="tocnumber">5.4</span> <span class="toctext">Problemas conocidos con la carga automática</span></a>
+<ul>
+<li class="toclevel-3 tocsection-28"><a href="#Problemas_de_sonido_con_algunos_m%C3%B3dulos_no_cargados_autom%C3%A1ticamente"><span class="tocnumber">5.4.1</span> <span class="toctext">Problemas de sonido con algunos módulos no cargados automáticamente</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-29">
+<a href="#Problemas_conocidos_para_usuarios_con_Kernel_personalizado"><span class="tocnumber">5.5</span> <span class="toctext">Problemas conocidos para usuarios con Kernel personalizado</span></a>
+<ul>
+<li class="toclevel-3 tocsection-30"><a href="#Udev_no_se_ejecuta"><span class="tocnumber">5.5.1</span> <span class="toctext">Udev no se ejecuta</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-31"><a href="#Dispositivos_IDE_CD/DVD"><span class="tocnumber">5.6</span> <span class="toctext">Dispositivos IDE CD/DVD</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#Dispositivos_%C3%B3pticos_con_ID_de_grupo_ajustado_a_%C2%ABdisk%C2%BB"><span class="tocnumber">5.7</span> <span class="toctext">Dispositivos ópticos con ID de grupo ajustado a «disk»</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-33"><a href="#V%C3%A9ase_tambi%C3%A9n"><span class="tocnumber">6</span> <span class="toctext">Véase también</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Instalaci.C3.B3n"></span><span class="mw-headline" id="Instalación">Instalación</span>
+</h2>
+<p>Udev es ahora parte de <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> y es instalado de forma predeterminada en los sistemas Arch Linux.
+</p>
+<h2><span class="mw-headline" id="Acerca_de_las_reglas_udev">Acerca de las reglas udev</span></h2>
+<p>Las reglas de udev escritas por el administrador del sistema se encuentran en el directorio <code>/etc/udev/rules.d/</code>, y el nombre del archivo terminado con la extensión <code>.rules</code>. Las reglas proporcionadas por la instalación de diversos paquetes se encuentran en <code>/usr/lib/udev/rules.d/</code>. En el caso de que existan dos reglas con el mismo nombre en <code>/usr/lib</code> y en <code>/etc</code>, la norma que se encuentra en la carpeta <code>/etc</code> tendrá prioridad.
+</p>
+<h3><span class="mw-headline" id="Escribir_reglas_udev">Escribir reglas udev</span></h3>
+<ul>
+<li>Para aprender a escribir las reglas de udev, consulte: <a rel="nofollow" class="external text" href="http://www.reactivated.net/writing_udev_rules.html">Escribir reglas udev</a>
+</li>
+<li>Para ver un ejemplo de regla udev, consulte: <a rel="nofollow" class="external text" href="https://soosck.wordpress.com/2011/01/19/improved-udev-rule-arch-linux/">Regla udev mejorada para Arch Linux</a>.</li>
+</ul>
+<p>Este es un ejemplo de una regla que coloca un enlace simbólico /dev/video-cam1 cuando una cámara web está conectada. En primer lugar, hemos averiguado que dicha cámara se conecta y se carga como el dispositivo /dev/video2. La razón para escribir esta regla es que en el siguiente arranque el dispositivo bien podría aparecer bajo otro nombre, como por ejemplo /dev/video0.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># udevadm info -a -p $(udevadm info -q path -n /dev/video2)</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Udevadm info starts with the device specified by the devpath and then
+walks up the chain of parent devices. It prints for every device
+found, all possible attributes in the udev rules key format.
+A rule to match, can be composed by the attributes of the device
+and the attributes from one single parent device.
+
+  looking at device '/devices/pci0000:00/0000:00:04.1/usb3/3-2/3-2:1.0/video4linux/video2':
+    KERNEL=="video2"
+    SUBSYSTEM=="video4linux"
+    ...
+  looking at parent device '/devices/pci0000:00/0000:00:04.1/usb3/3-2/3-2:1.0':
+    KERNELS=="3-2:1.0"
+    SUBSYSTEMS=="usb"
+    ...
+  looking at parent device '/devices/pci0000:00/0000:00:04.1/usb3/3-2':
+    KERNELS=="3-2"
+    SUBSYSTEMS=="usb"
+    ...
+    ATTRS{idVendor}=="05a9"
+    ...
+    ATTRS{manufacturer}=="OmniVision Technologies, Inc."
+    ATTRS{removable}=="unknown"
+    ATTRS{idProduct}=="4519"
+    ATTRS{bDeviceClass}=="00"
+    ATTRS{product}=="USB Camera"
+    ...
+</pre>
+<p>Desde el dipositivo video4linux usamos <code>KERNEL=="video2"</code> y <code>SUBSYSTEM=="video4linux"</code>, entoces hacemos que coincida con la webcam del usb principal usando los ID del proveedor y del producto <code>SUBSYSTEMS=="usb"</code>, <code>ATTRS{idVendor}=="05a9"</code> y <code>ATTRS{idProduct}=="4519"</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", \
+        ATTRS{idVendor}=="05a9", ATTRS{idProduct}=="4519", SYMLINK+="video-cam1"
+</pre>
+<p>En el ejemplo anterior hemos creado un enlace simbólico con <code>SYMLINK+="video-cam1"</code>, pero podemos configurar fácilmente el usuario <code>OWNER="john"</code> o el grupo usando <code>GROUP="video"</code>, o ajustando los permisos mediante <code>MODE="0660"</code>
+</p>
+<p>Sin embargo, si tiene la intención de escribir una regla para que actúe cuando se remueve dispositivo, tenga en cuenta que los atributos del dispositivos pueden no estar accesibles. En este caso, tendrá que trabajar con las variables del entorno predeterminadas del dispositivo. Para controlar las variables del entorno, ejecute la orden siguiente al desenchufar el dispositivo:
+</p>
+<pre># udevadm monitor --environment --udev
+</pre>
+<p>En la salida de esta orden, verá pares de valores tales como ID_VENDOR_ID and ID_MODEL_ID, que se corresponden a los atributos utilizados anteriormente "idVendor" y "idProduct". Una regla que utilice variables de entorno del dispositivo puede tener este aspecto:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam-removed.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="remove", SUBSYSTEM=="usb", \
+        ENV{ID_VENDOR_ID}=="05a9", ENV{ID_MODEL_ID}=="4519", RUN+="/path/to/your/script"</pre>
+<h3><span class="mw-headline" id="Listar_los_atributos_de_un_dispositivo">Listar los atributos de un dispositivo</span></h3>
+<p>Para obtener una lista de todos los atributos de un dispositivo que podemos utilizar para escribir reglas, ejecutaremos esta orden:
+</p>
+<pre># udevadm info -a -n [device name]
+</pre>
+<p>Sustituya <code>[device name]</code> con el dispositivo presente en el sistema, como <code>/dev/sda</code> o <code>/dev/ttyUSB0</code>.
+</p>
+<p>Si no sabemos el nombre del dispositivo, también podemos listar todos los atributos de una ruta específica del sistema:
+</p>
+<pre># udevadm info -a -p /sys/class/backlight/acpi_video0
+</pre>
+<h3><span class="mw-headline" id="Comprobar_las_reglas_antes_de_cargarlas">Comprobar las reglas antes de cargarlas</span></h3>
+<pre># udevadm test $(udevadm info -q path -n [device name]) 2&gt;&amp;1
+</pre>
+<p>This will not perform all actions in your new rules but it will however process symlink rules on existing devices which might come in handy if you are unable to load them otherwise. You can also directly provide the path to the device you want to test the udev rule for:
+</p>
+<pre># udevadm test /sys/class/backlight/acpi_video0/
+</pre>
+<h3><span class="mw-headline" id="Cargar_reglas_nuevas">Cargar reglas nuevas</span></h3>
+<p>Udev detecta automáticamente cambios en los archivos de reglas, por lo que los cambios surtan efecto inmediatamente sin necesidad de reiniciar udev. Sin embargo, las reglas no se recargan automáticamente en aquellos dispositivos que están en funcionamiento. Los dispositivos que se ponen en funcionamiento al conectarse, como los dispositivos USB, si ya estaban conectados, probablemente tendrán que volver a conectarse para que la nueva regla entre en vigor, o, al menos, recargar los módulos del kernel ohci-hcd y ehci-hcd y, por lo tanto, volver a cargar todos los controladores USB.
+</p>
+<p>Si las reglas no pueden cargarse de manera automática:
+</p>
+<pre># udevadm control --reload-rules
+</pre>
+<p>Podemos forzar manualmente a udev a activar sus reglas con:
+</p>
+<pre># udevadm trigger
+</pre>
+<h2><span class="mw-headline" id="Udisks">Udisks</span></h2>
+<p>Si desea montar unidades extraíbles no haga una llamada a 'mount' en la regla udev. En el caso de sistemas de archivos fuse (por ejemplo, ntfs-3g) obtendrá el error "Transport endpoint not connected". En su lugar utilice udisks que maneja el montaje automático correctamente.
+</p>
+<p>Hay dos versiones incompatibles, udisks y udisks2, una reescritura de udisks que rompe la compatibilidad. Dependiendo de nuestro DE, uno u otra versión será necesaria (la cual ya vendrá instalada como una dependencia):
+</p>
+<ul>
+<li>Para <a href="../es/GNOME.html" title="GNOME (Español)">GNOME</a> o <a href="../en/KDE.html" title="KDE">KDE</a> 4.10+, instale <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=udisks2">udisks2</a></span>
+</li>
+<li>Para <a href="../en/Xfce.html" title="Xfce">Xfce</a>, instale <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/udisks/">udisks</a></span><sup><small>AUR</small></sup>
+</li>
+</ul>
+<p>No hay necesidad de cualquier regla adicional. Como elemento adicional, se puede eliminar HAL si se está utilizando solo para fines de montaje automático.
+</p>
+<h3>
+<span id="Montaje_autom.C3.A1tico_de_wrappers_de_udisks"></span><span class="mw-headline" id="Montaje_automático_de_wrappers_de_udisks">Montaje automático de wrappers de udisks</span>
+</h3>
+<p>Los soportes de udisks (<i>«udisks wrapper»</i>) tienen la ventaja de ser muy fácil de instalar y sin necesidad de configuración (o mínima). Con wrapper se montarán automáticamente elementos como CDs y memorias flash.
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://ignorantguru.github.com/udevil/">udevil</a> - <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=udevil">udevil</a></span> <i>«Monta y desmonta dispositivos extraíbles sin necesidad de una contraseña, muestra información del dispositivo, y monitorea los cambios de los dispositivos»</i>. Está escrito en C y puede sustituir a udisks e incluye <a rel="nofollow" class="external text" href="https://igurublog.wordpress.com/downloads/script-devmon/">devmon</a>, que se puede instalar por separado desde AUR (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/devmon/">devmon</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">enlace roto</a>: package not found]</sup>). También puede iniciar aplicaciones automáticamente de forma selectiva o ejecutar órdenes después del montaje, hacer caso omiso de dispositivos especificados y volúmenes etiquetados, y desmontar las unidades extraíbles.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/ldm/">ldm</a></span><sup><small>AUR</small></sup> - Un demonio ligero que monta automáticamente unidades usb, cd, dvd o floppys. <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=125918">[1]</a>
+</li>
+<li>
+<a href="../en/Udisks.html" class="mw-redirect" title="Udiskie">udiskie</a> - Escrito en Python. Permite el montaje y desmontaje automático por otros usuarios.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/udisksevt/">udisksevt</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">enlace roto</a>: package not found]</sup> - Escrito en Haskell. Permite el montaje automático por cualquier usuario. Diseñado para ser integrado con <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/traydevice/">traydevice</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">enlace roto</a>: package not found]</sup>.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/udisksvm/">udisksvm</a></span><sup><small>AUR</small></sup> - Una GUI de UDisks wrapper que utiliza la interfaz dbus udisks2. Llama al script 'traydvm' , incluido en el paquete. El utilidad GUI 'traydvm' es un script que muestra un icono de la bandeja del sistema para un dispositivo conectado, proporcionando un menú con el botón derecho del ratón para realizar acciones simples sobre el dispositivo. Así, se puede desactivar la función de montaje automático; esta herramienta debe trabajar con otras herramientas de montaje automático, para mostrar los iconos de la bandeja del sistema. Es independiente de cualquier administrador de archivos.</li>
+</ul>
+<ul><li>Se pueden montar automáticamente y expulsar dispositivos extraíbles con la combinación de <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pmount/">pmount</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=udisks2">udisks2</a></span> y <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/spacefm/">spacefm</a></span><sup><small>AUR</small></sup>. Tenga en cuenta que ha de ejecutar spacefm en modo demonio con <code>spacefm -d &amp;</code> en los scripts de inicio, <code>~/.xinitrc</code> o <code>~/.xsession</code>, para obtener el montaje automático . También puede montar los discos internos agregándolos a <code>/etc/pmount.allow</code>.</li></ul>
+<h3><span class="mw-headline" id="Funciones_de_la_shell_de_udisks">Funciones de la shell de udisks</span></h3>
+<p>Mientras udisks incluye un método simple de montaje (y desmontaje) de los dispositivos a través de la línea de órdenes, puede ser, sin embargo, tedioso tener que escribir las órdenes una y otra vez. Estas funciones de la shell que se enumeran a continuación, generalmente, sirven para acortar y facilitar el uso de la línea de órdenes.
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=109307">udisks_functions</a> - Escrito para Bash.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=117674">bashmount</a> - <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bashmount/">bashmount</a></span><sup><small>AUR</small></sup> es un script bash estructurado a modo de menú, articulado como un simple archivo de configuración que hace que sea fácil de redactar e implementar.</li>
+</ul>
+<h3>
+<span id="udisks2_-_montar_en_.2Fmedia"></span><span class="mw-headline" id="udisks2_-_montar_en_/media">udisks2 - montar en /media</span>
+</h3>
+<p>Por defecto, udisks2 monta unidades extraibles en <code>/run/media/$USER/</code>, en lugar de <code>/media/</code>. Si no le gusta este comportamiento, utilice esta regla:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/99-udisks2.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{UDISKS_FILESYSTEM_SHARED}="1"
+</pre>
+<h2><span class="mw-headline" id="Consejos_y_Trucos">Consejos y Trucos</span></h2>
+<h3>
+<span id="Acceder_a_programadores_de_firmware_y_a_dispositivos_USB_de_comunicaci.C3.B3n_virtual"></span><span class="mw-headline" id="Acceder_a_programadores_de_firmware_y_a_dispositivos_USB_de_comunicación_virtual">Acceder a programadores de firmware y a dispositivos USB de comunicación virtual</span>
+</h3>
+<p>El siguiente conjunto de reglas permite a los usuarios normales (en el grupo «users») acceder al programador USB <a rel="nofollow" class="external text" href="http://www.ladyada.net/make/usbtinyisp/">USBtinyISP</a> para microcontroladores AVR y al USB genérico (SiLabs <a rel="nofollow" class="external text" href="http://www.silabs.com/products/interface/usbtouart">CP2102</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">enlace roto</a> 2020-08-06]</sup>) para el adaptador UART y para el programador <a rel="nofollow" class="external text" href="http://www.atmel.com/tools/AVRDRAGON.aspx?tab=overview">Atmel AVR Dragon</a> y <a rel="nofollow" class="external text" href="http://www.atmel.com/tools/AVRISPMKII.aspx">Atmel AVR ISP mkII</a> . Ajuste los permiso de acuerdo al caso. Verificado al 31-10-2012.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-embedded_devices.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># USBtinyISP Programmer rules
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1781", ATTRS{idProduct}=="0c9f", GROUP="users", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0479", GROUP="users", MODE="0666"
+# USBasp Programmer rules http://www.fischl.de/usbasp/
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="05dc", GROUP="users", MODE="0666"
+
+# Mdfly.com Generic (SiLabs CP2102) 3.3v/5v USB VComm adapter
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", GROUP="users", MODE="0666"
+
+#Atmel AVR Dragon (dragon_isp) rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2107", GROUP="users", MODE="0666"
+
+#Atmel AVR JTAGICEMKII rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2103", GROUP="users", MODE="0666"
+
+#Atmel Corp. AVR ISP mkII
+SUBSYSTEM=="usb", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2104", GROUP="users", MODE="0666"
+</pre>
+<h3><span class="mw-headline" id="Ejecutar_USB_al_insertar">Ejecutar USB al insertar</span></h3>
+<p>Consulte el artículo <a href="../en/Udisks.html" class="mw-redirect" title="Execute on USB insert">Execute on USB insert</a> o <a rel="nofollow" class="external text" href="https://igurublog.wordpress.com/downloads/script-devmon/">devmon wrapper script</a>.
+</p>
+<h3><span class="mw-headline" id="Detectar_nuevas_unidades_eSATA">Detectar nuevas unidades eSATA</span></h3>
+<p>Si la unidad eSATA no se detecta cuando se conecte, podemos intertar algunas cosas. Por ejemplo reiniciar con la unidad eSATA enchufada, o bien podría intentar lo siguente:
+</p>
+<pre># echo 0 0 0 | tee /sys/class/scsi_host/host*/scan
+</pre>
+<p>O puede instalar scsiadd (disponible en AUR) y probar esto:
+</p>
+<pre># scsiadd -s
+</pre>
+<p>Esperaremos para comprobar que la unidad se encuentra ahora en /dev. Si esto no funciona, podríamos probar con las órdenes anteriores mientras se ejecuta:
+</p>
+<pre># udevadm monitor
+</pre>
+<p>para ver qué está sucediendo realmente.
+</p>
+<h3><span class="mw-headline" id="Marca_como_interna_tanto_SATA-Ports_como_eSATA-Ports">Marca como interna tanto SATA-Ports como eSATA-Ports</span></h3>
+<p>Si ha conectado un puerto eSATA u otro adaptador eSATA, el  sistema todavía reconocerá este puerto como un disco duro SATA interno. GNOME y KDE le preguntará por su contraseña de root todo el tiempo. La siguiente regla marcará el SATA-Port especificado como un eSATA-Port externo. Con esto, un usuario normal de GNOME pueden conectar sus unidades de disco eSATA al puerto como una unidad USB, sin ningún tipo de contraseña de root y así sucesivamente.
+</p>
+<p><br>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/10-esata.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">DEVPATH=="/devices/pci0000:00/0000:00:1f.2/host4/*", ENV{UDISKS_SYSTEM}="0"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> el DEVPATH (ruta del dispositivo) se puede encontrar después de la conexión de la unidad de disco eSATA con la siguiente orden (sustituya sdb según su caso):
+<pre># udevadm info -q path -n /dev/sdb
+/devices/pci0000:00/0000:00:1f.2/host4/target4:0:0/4:0:0:0/block/sdb
+</pre>
+<pre># find /sys/devices/ -name sdb
+/sys/devices/pci0000:00/0000:00:1f.2/host4/target4:0:0/4:0:0:0/block/sdb
+</pre>
+</div>
+<h3>
+<span id="Configurar_nombres_est.C3.A1ticos_para_los_dispositivos"></span><span class="mw-headline" id="Configurar_nombres_estáticos_para_los_dispositivos">Configurar nombres estáticos para los dispositivos</span>
+</h3>
+<p>Debido a que udev carga todos los módulos de forma asíncrona, se pueden inicializar en un orden diferente en cada arranque. Esto puede dar como resultado dispositivos con nombres cambiados aleatoriamente. Udev permite crear reglas donde se utilicen nombres estáticos para los dispositivo:
+</p>
+<ul>
+<li>Véase <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">Persistent block device naming</a> para dispositivos de bloque.</li>
+<li>Véase <a href="../en/Network_configuration.html#Device_names" title="Network configuration">Network configuration#Device names</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> para dispositivos de red.</li>
+</ul>
+<h4><span class="mw-headline" id="Dispositivo_iscsi">Dispositivo iscsi</span></h4>
+<p>Compruebe la salida de scsi_id:
+</p>
+<pre>/usr/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/sdb
+3600601607db11e0013ab5a8e371ce111
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/75-iscsi.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#The iscsi device rules.
+#This will create an iscsi device for each of the targets.
+KERNEL=="sd*", SUBSYSTEM=="block", \
+     PROGRAM="/usr/lib/udev/scsi_id --whitelisted --replace-whitespace /dev/$name", \ RESULT=="3600601607db11e0013ab5a8e371ce111", \
+     NAME="isda"</pre>
+<h4>
+<span id="Dispositivos_de_v.C3.ADdeo"></span><span class="mw-headline" id="Dispositivos_de_vídeo">Dispositivos de vídeo</span>
+</h4>
+<p>Para configurar la cámara web, en primer lugar, consulte <a href="../en/Webcam_setup.html#Webcam_configuration" title="Webcam setup">Webcam configuration</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>.
+</p>
+<p>Si utilizamos múltiples cámaras web, útil por ejemplo con <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=motion">motion</a></span> (software detector de movimiento que toma imágenes de los dispositivos video4linux y/o de webcams), asignará los dispositivos de vídeo como /dev/video0..n al azar en el arranque. La solución recomendada es crear enlaces simbólicos que utilicen una regla udev (como en el ejemplo de la <a href="#Escribir_reglas_udev">sección anterior</a>).
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/83-webcam.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="05a9", ATTRS{idProduct}=="4519", SYMLINK+="video-cam1"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="08f6", SYMLINK+="video-cam2"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0840", SYMLINK+="video-cam3"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  El uso de otros nombres distintos de "/dev/video*" se romperá con la precarga de v4l1compat.so y, quizás, v4l2convert.so.</div>
+<h4><span class="mw-headline" id="Impresoras">Impresoras</span></h4>
+<p>Si utiliza varias impresoras, los dispositivos <code>/dev/lp[0-9]</code> serán asignados al azar en el arranque, que rompera, por ejemplo, la configuración de <a href="../es/CUPS.html" title="CUPS (Español)">CUPS</a>. 
+</p>
+<p>Puede crear la siguiente regla, que creará enlaces simbólicos en <code>/dev/lp/by-id</code> y <code>/dev/lp/by-path</code>, similar al esquema <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">Persistent block device naming</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/60-persistent-printer.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="remove", GOTO="persistent_printer_end"
+
+# This should not be necessary
+#KERNEL!="lp*", GOTO="persistent_printer_end"
+
+SUBSYSTEMS=="usb", IMPORT{builtin}="usb_id"
+ENV{ID_TYPE}!="printer", GOTO="persistent_printer_end"
+
+ENV{ID_SERIAL}=="?*", SYMLINK+="lp/by-id/$env{ID_BUS}-$env{ID_SERIAL}"
+
+IMPORT{builtin}="path_id"
+ENV{ID_PATH}=="?*", SYMLINK+="lp/by-path/$env{ID_PATH}"
+
+LABEL="persistent_printer_end"
+</pre>
+<h3>
+<span id="Despertar_desde_la_suspenci.C3.B3n_con_un_dispositivo_USB"></span><span class="mw-headline" id="Despertar_desde_la_suspención_con_un_dispositivo_USB">Despertar desde la suspención con un dispositivo USB</span>
+</h3>
+<p>En primer lugar, encuentre el ID del proveedor y del producto del dispositivo, por ejemplo:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lsusb | grep Logitech</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Bus 007 Device 002: ID 046d:c52b Logitech, Inc. Unifying Receiver</pre>
+<p>Ahora cambie el atributo <code>power/wakeup</code> del dispositivo y del controlador USB al que está conectado, que en este caso es <code>driver/usb7/power/wakeup</code>. Utilice la siguiente regla:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-wake-on-device.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c52b", ATTR{power/wakeup}="enabled", ATTR{driver/usb7/power/wakeup}="enabled"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Asegúrese también que el controlador del USB esté activado en <code>/proc/acpi/wakeup</code>.</div>
+<h2>
+<span id="Soluci.C3.B3n_de_problemas"></span><span class="mw-headline" id="Solución_de_problemas">Solución de problemas</span>
+</h2>
+<h3>
+<span id="Blacklisting_de_M.C3.B3dulos"></span><span class="mw-headline" id="Blacklisting_de_Módulos">Blacklisting de Módulos</span>
+</h3>
+<p>En casos extraños, udev puede cometer un error y cargar los módulos incorrectos. Para prevenir este comportamiento, se pueden introducir los módulos afectados en lista negra (<i>«blacklist»</i>). Udev nunca cargará los módulos que estén listados (<i>«blacklisted»</i>). Consulte <a href="../es/Kernel_module.html#Blacklisting" class="mw-redirect" title="Kernel modules (Español)">Blacklisting</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>. Ni al momento del arranque del sistema ni después cuando se produce un evento de conexión sobre la marcha es recibido (por ejemplo, conectando una unidad flash USB).
+</p>
+<h3><span class="mw-headline" id="udevd_falla_al_inicio">udevd falla al inicio</span></h3>
+<p>Después de migrar a LDAP o actulizar el sistema con LDAP-backed, udevd puede colgarse en el arranque apareciendo el mensaje «Starting UDev Daemon». Esto es causado, normalmente, porque udevd trata de buscar un nombre de LDAP, pero falla, porque la red no está todavía. La solución es asegurarse de que todos los nombres de grupo del sistema están presentes localmente.
+</p>
+<p>Extraiga los nombres de los grupos mencionados en las reglas de udev y los nombres de grupos realmente presentes en el sistema:
+</p>
+<pre># fgrep -r GROUP /etc/udev/rules.d/ /usr/lib/udev/rules.d | perl -nle '/GROUP\s*=\s*"(.*?)"/ &amp;&amp; print $1;' | sort | uniq &gt; udev_groups
+# cut -f1 -d: /etc/gshadow /etc/group | sort | uniq &gt; present_groups
+</pre>
+<p>Para ver las diferencias, hacer una comparación de lado a lado:
+</p>
+<pre># diff -y present_groups udev_groups
+...
+network							      &lt;
+nobody							      &lt;
+ntp							      &lt;
+optical								optical
+power							      |	pcscd
+rfkill							      &lt;
+root								root
+scanner								scanner
+smmsp							      &lt;
+storage								storage
+...
+</pre>
+<p>En este caso, el grupo pcscd, por alguna razón, no está presente en el sistema. Agregue, en consecuencia, los grupos que faltan, en este caso:
+</p>
+<pre># groupadd pcscd
+</pre>
+<p>Además, asegúrese de que los recursos locales se desbloquearon antes de recurrir a LDAP. El archivo de configuración <code>/etc/nsswitch.conf</code> debe contener la siguiente línea:
+</p>
+<pre>group: files ldap
+</pre>
+<h3><span class="mw-headline" id="Problemas_conocidos_con_el_Hardware">Problemas conocidos con el Hardware</span></h3>
+<h4><span class="mw-headline" id="Dispositivos_BusLogic_dejan_de_funcionar_y_causan_bloqueos_durante_el_arranque">Dispositivos BusLogic dejan de funcionar y causan bloqueos durante el arranque</span></h4>
+<p>Esto es un error en el kernel y todavía no se a provisto ningún arreglo.
+</p>
+<h4><span class="mw-headline" id="Dispositivos_extraibles_no_son_reconocidos_como_tales">Dispositivos extraibles no son reconocidos como tales</span></h4>
+<p>Cree una regla udev personalizada, configurando <code>UDISKS_SYSTEM_INTERNAL=0</code>. Para más detalles, consulte la manpage de udisks. 
+</p>
+<h3>
+<span id="Problemas_conocidos_con_la_carga_autom.C3.A1tica"></span><span class="mw-headline" id="Problemas_conocidos_con_la_carga_automática">Problemas conocidos con la carga automática</span>
+</h3>
+<h4>
+<span id="Problemas_de_sonido_con_algunos_m.C3.B3dulos_no_cargados_autom.C3.A1ticamente"></span><span class="mw-headline" id="Problemas_de_sonido_con_algunos_módulos_no_cargados_automáticamente">Problemas de sonido con algunos módulos no cargados automáticamente</span>
+</h4>
+<p>Algunos usuarios han reportado este problema de entradas antiguas en <code>/etc/modprobe.d/sound.conf</code>. Intente limpiar ese archivo y probar de nuevo.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> A partir de <code>udev&gt;=171</code>, los módulos de emulación de OSS, (<code>snd_seq_oss, snd_pcm_oss, snd_mixer_oss</code>), no vienen cargados automáticamente por defecto.</div>
+<h3><span class="mw-headline" id="Problemas_conocidos_para_usuarios_con_Kernel_personalizado">Problemas conocidos para usuarios con Kernel personalizado</span></h3>
+<h4><span class="mw-headline" id="Udev_no_se_ejecuta">Udev no se ejecuta</span></h4>
+<p>Asegúrese que tiene una versión del kernel 2.6.15 o superior. Los kernels anteriores no tienen las capacidades uevent necesarias para que udev realice la auto-carga.
+</p>
+<h3>
+<span id="Dispositivos_IDE_CD.2FDVD"></span><span class="mw-headline" id="Dispositivos_IDE_CD/DVD">Dispositivos IDE CD/DVD</span>
+</h3>
+<p>A partir de la versión 170, udev no es compatible con las unidades de CD-ROM/DVD-ROM, que vendrán cargadas como unidades tradicionales IDE con el módulo <code>ide_cd_mod</code> y vendrán identificadas como <code>/dev/hd*</code>. La unidad sigue siendo usable para las herramientas que acceden directamente al hardware, como cdparanoia, pero es invisible para los programas userspace más avanzados, como KDE.
+</p>
+<p>Un motivo por el cual el módulo ide_cd_mod se carga antes que otros, como sr_mod, podría ser debido, quizás, a que, por cualquier razón, el módulo piix viene cargado por initramfs. En ese caso, es posible reemplazarlo con ata_piix en el archivo <code>/etc/mkinitcpio.conf</code>.
+</p>
+<h3>
+<span id="Dispositivos_.C3.B3pticos_con_ID_de_grupo_ajustado_a_.C2.ABdisk.C2.BB"></span><span class="mw-headline" id="Dispositivos_ópticos_con_ID_de_grupo_ajustado_a_«disk»">Dispositivos ópticos con ID de grupo ajustado a «disk»</span>
+</h3>
+<p>Si el ID de grupo de la unidad de disco óptico está ajustado a <i>disk</i> y desea que esté configurado para <i>optical</i> tiene que crear una regla udev personalizada:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># permissions for IDE CD devices
+SUBSYSTEMS=="ide", KERNEL=="hd[a-z]", ATTR{removable}=="1", ATTRS{media}=="cdrom*", GROUP="optical"
+
+# permissions for SCSI CD devices
+SUBSYSTEMS=="scsi", KERNEL=="s[rg][0-9]*", ATTRS{type}=="5", GROUP="optical"</pre>
+<h2>
+<span id="V.C3.A9ase_tambi.C3.A9n"></span><span class="mw-headline" id="Véase_también">Véase también</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html">Udev Homepage</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.linux.com/news/hardware/peripherals/180950-udev">An Introduction to Udev</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">enlace roto</a> 2020-08-06]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://vger.kernel.org/vger-lists.html#linux-hotplug">Udev mailing list information</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting (Español)">Hardware detection and troubleshooting (Español)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Udev_(Espa%C3%B1ol)&amp;oldid=631556">https://wiki.archlinux.org/index.php?title=Udev_(Español)&amp;oldid=631556</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2020, at 08:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

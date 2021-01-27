@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Asterisk - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Asterisk rootpage-Asterisk skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Asterisk</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="http://www.asterisk.org">Asterisk</a> is a complete PBX (private branch exchange) in software. It runs on Linux, BSD, Windows and macOS and provides all of the features you would expect from a PBX and more. Asterisk does voice over IP in four protocols, and can interoperate with almost all standards-based telephony equipment using relatively inexpensive hardware.
+</p>
+<p>Asterisk provides voice-mail services with directory, call conferencing, interactive voice response and call queuing. It has support for three-way calling, caller ID services, ADSI, IAX, SIP, H.323 (as both client and gateway), MGCP (call manager only) and SCCP/Skinny. 
+</p>
+<p>This article will show you how to configure a simple in house network enabling us to use a SIP <a href="../en/List_of_applications.html#SIP_clients" class="mw-redirect" title="Softphone">softphone</a> to talk to another SIP softphone on your LAN.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#SIP"><span class="tocnumber">2.1</span> <span class="toctext">SIP</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Music_on_hold"><span class="tocnumber">2.2</span> <span class="toctext">Music on hold</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Voicemail"><span class="tocnumber">2.3</span> <span class="toctext">Voicemail</span></a></li>
+<li class="toclevel-2 tocsection-6">
+<a href="#Connecting_to_the_PSTN"><span class="tocnumber">2.4</span> <span class="toctext">Connecting to the PSTN</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7">
+<a href="#General_set-up"><span class="tocnumber">2.4.1</span> <span class="toctext">General set-up</span></a>
+<ul>
+<li class="toclevel-4 tocsection-8"><a href="#sip.conf"><span class="tocnumber">2.4.1.1</span> <span class="toctext">sip.conf</span></a></li>
+<li class="toclevel-4 tocsection-9"><a href="#extensions.conf"><span class="tocnumber">2.4.1.2</span> <span class="toctext">extensions.conf</span></a></li>
+<li class="toclevel-4 tocsection-10"><a href="#iax.conf"><span class="tocnumber">2.4.1.3</span> <span class="toctext">iax.conf</span></a></li>
+<li class="toclevel-4 tocsection-11"><a href="#extensions.conf_2"><span class="tocnumber">2.4.1.4</span> <span class="toctext">extensions.conf</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-12"><a href="#Sounds"><span class="tocnumber">2.5</span> <span class="toctext">Sounds</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#MeetMe"><span class="tocnumber">2.6</span> <span class="toctext">MeetMe</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#Asterisk_console_and_softphones"><span class="tocnumber">3</span> <span class="toctext">Asterisk console and softphones</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/asterisk/">asterisk</a></span><sup><small>AUR</small></sup> package. If you are using Cisco-based phones it is recommended to use the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/asterisk-cisco/">asterisk-cisco</a></span><sup><small>AUR</small></sup> package instead as this is prepatched with the presence patch. (See <a rel="nofollow" class="external text" href="https://issues.asterisk.org/jira/browse/ASTERISK-13145">https://issues.asterisk.org/jira/browse/ASTERISK-13145</a>)
+</p>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> the server with <code>asterisk.service</code>.
+</p>
+<p>You will also need a SIP <a href="../en/List_of_applications.html#SIP_clients" class="mw-redirect" title="Softphone">softphone</a> and at least two machines. Recommendations for SIP phones are <a rel="nofollow" class="external text" href="http://icanblink.com/">Blink</a> (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/blink/">blink</a></span><sup><small>AUR</small></sup>), <a rel="nofollow" class="external text" href="http://www.linphone.org/">Linphone</a> (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/liblinphone-git/">liblinphone-git</a></span><sup><small>AUR</small></sup>) or <a rel="nofollow" class="external text" href="http://www.counterpath.com/x-lite/">X-Lite</a> (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/xlite_bin/">xlite_bin</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup> package).
+</p>
+<p>To enable ilbc codec support add the following to the very beginning of the <code>build</code> section of the PKGBUILD:
+</p>
+<pre>cd ${srcdir}/${pkgname}-${pkgver}/contrib/scripts
+echo | ./get_ilbc_source.sh
+</pre>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Note that the following instructions assume that you want to use already obsoleted <code>sip</code> module. In order to do so you must allow it and at the same time assure that newer <code>pjsip</code> module is unloaded. In <code>/etc/asterisk/modules.conf</code> adjust the following:
+</p>
+<pre>noload =&gt; chan_pjsip.so
+noload =&gt; res_pjsip.so
+; noload =&gt; chan_sip.so # add comment at this line
+</pre>
+<h3><span class="mw-headline" id="SIP">SIP</span></h3>
+<p>Add this to the following file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/asterisk/sip.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+[me1]
+type=friend
+username=me1
+secret=PASSWORD
+host=dynamic
+context=house
+
+[me2]
+type=friend
+username=me2
+secret=PASSWORD
+host=dynamic
+context=house</pre>
+<p>This creates our two SIP users <code>me1</code> and <code>me2</code> with a password of <code>PASSWORD</code> in the <code>house</code> context. The context will be defined next.
+</p>
+<p>Add this to the following file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/asterisk/extensions.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[house]
+exten =&gt; 100,1,Dial(SIP/me1)
+exten =&gt; 101,1,Dial(SIP/me2)</pre>
+<p>This creates the context <code>house</code> and assigns extension 100 to the SIP user <code>me1</code>, and extension 101 to the SIP user <code>me2</code>.
+</p>
+<p>Now all thats left is to see if it works.
+</p>
+<h3><span class="mw-headline" id="Music_on_hold">Music on hold</span></h3>
+<p>Music on hold is a really sweet feature. And once again easy to install and configure.
+Edit <code>/etc/asterisk/musiconhold.conf</code> and add, or make sure it is uncommented:
+</p>
+<pre>[default]
+mode=files
+directory=mohmp3</pre>
+<p>And that is all there is to it. Just copy your favorite legally obtained MP3 to <code>/var/lib/asterisk/mohmp3</code>.
+</p>
+<h3><span class="mw-headline" id="Voicemail">Voicemail</span></h3>
+<p>Voicemail is another feature of asterisk. There are many ways to configure it, however this article only covers a simple approach.
+</p>
+<p>Create/edit your <code>voicemail.conf</code>:
+</p>
+<pre>[general]
+format=gsm|wav49|wav
+serveremail=asterisk
+attach=no
+mailcmd=/usr/sbin/sendmail -t
+maxmessage=180
+maxgreet=60
+
+[default]
+100 =&gt; 1234,Me,me@mydomain.com
+</pre>
+<p>What does this mean? Most of the <code>[general]</code> is pretty self-explanatory. However, do note that if you have postfix set up right the PBX will send an email notifying the user of a new voice-mail and if <code>attach=yes</code> is defined it will attach the file.
+</p>
+<p>Now for the actual mailbox. The format is:
+</p>
+<pre>mailbox =&gt; password,user,email
+</pre>
+<p>In this case, we gave 'Me' (email me@mydomain.com) mailbox 100, with a password of 1234.
+</p>
+<p>Now we have to have a way to leave messages to this voice-mail, and a way to access it. 
+For this, we go back to the <code>extensions.conf</code> and modify your existing entry as follows:
+</p>
+<pre>exten =&gt; 100,1,Dial(SIP/me1,20)
+exten =&gt; 100,n,Voicemail(u100@default)
+</pre>
+<p>The 20 on the end of the first 'exten' tells 'Dial()' to call for 20 seconds. If no one answers it heads to voice-mail box 100 in the default context.
+</p>
+<p>Next is actually accessing your voicemail. For this we add:
+</p>
+<pre>exten =&gt; 600,1,VoiceMailMain,s100@default
+</pre>
+<p>So when we call 600, the application 'VoiceMailMain' goes to 100 in the default context. The <code>s</code> allows for automatic login. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The 'VoiceMail' applications have a significant amount of options, so it is suggested reading over some additional documentation. This is just for a basic, home use setup.  Also note that it is generally a good idea to use extensions higher then your users extensions for accessing 'VoiceMail'. This way someone dialing 208 does not hit someone's voice-mail at 205.</div>
+<h3><span class="mw-headline" id="Connecting_to_the_PSTN">Connecting to the PSTN</span></h3>
+<p>Now that you have the previous setup, it is time to actually connect to the outside world. To do this, you will need a provider such as <a rel="nofollow" class="external text" href="https://www.onsip.com/">OnSIP</a>. Your provider should have instructions on connecting to asterisk, so this section is very general.
+</p>
+<h4><span class="mw-headline" id="General_set-up">General set-up</span></h4>
+<h5><span class="mw-headline" id="sip.conf">sip.conf</span></h5>
+<pre>[general]
+register =&gt; username:password@sip.specific.com
+
+[whatever]                   
+fromdomain=specific.com     
+host=sip.specific.com
+insecure=very    ; check with provider
+username=usernameduh
+secret=passwordduh
+type=peer</pre>
+<h5><span class="mw-headline" id="extensions.conf">extensions.conf</span></h5>
+<pre>[outboundwithCID]  ; this can be whatever
+exten =&gt; _1NXXNXXXXXX,1,SetCIDNum(15555551234)
+exten =&gt; _1NXXNXXXXXX,2,Dial(SIP/${EXTEN}@whatever)
+exten =&gt; _1NXXNXXXXXX,3,Congestion()
+exten =&gt; _1NXXNXXXXXX,103,Busy()
+
+[default]  ; This should be set in your sip.conf for incoming calls
+
+;These should to be changed to your actual number
+; ie     15555555555
+exten =&gt; 1NXXNXXXXXX,1,Answer()
+exten =&gt; 1NXXNXXXXXX,2,Playback(ttt-weasels)
+exten =&gt; 1NXXNXXXXXX,3,HangUp()</pre>
+<ul>
+<li>In the outbound context, any number dialed will be sent out to your service provider. The 'whatever' in the 2 priority should match what you have in your sip.conf.</li>
+<li>Of course, the inbound dial-plan can be modified to do what you want. For instance, you can have <code>Dial(SIP/me1)</code> so when someone calls your number they are routed to your SIP phone on your computer. Then add in voice-mail and so on.</li>
+</ul>
+<h5><span class="mw-headline" id="iax.conf">iax.conf</span></h5>
+<p>The first step is to log into FWD and enable their side of IAX. It is under extra features, and keep in mind that the authors claim it takes a little while to activate. 
+</p>
+<p>Now edit your iax.conf with the following in the 'general' section:
+</p>
+<pre>register =&gt; FWDNUMBER:PASSWORD@iax2.fwdnet.net 
+disallow = all
+allow = ulaw</pre>
+<p>And at the bottom add:
+</p>
+<pre>[iaxfwd]
+type=user
+context=fromiaxfwd
+auth=rsa
+inkeys=freeworlddialup</pre>
+<p>This allows calls from FWD.
+</p>
+<h5><span class="mw-headline" id="extensions.conf_2">extensions.conf</span></h5>
+<p>Place this at the top under '[globals]':
+</p>
+<pre>FWDNUMBER=MYFWDNUMBER ; your calling number
+FWDCIDNAME="MyName"; your caller id
+FWDPASSWORD=MYFWDPASSWORD ; your password
+FWDRINGS=sip/office ; the phone to ring
+FWDVMBOX=1000 ; the VM box for this user</pre>
+<p>Next, add this to a context for outgoing:
+</p>
+<pre>exten =&gt; _393.,1,SetCallerId,${FWDCIDNAME}
+exten =&gt; _393.,2,Dial(IAX2/${FWDNUMBER}:${FWDPASSWORD}@iax2.fwdnet.net/${EXTEN:3},60,r)
+exten =&gt; _393.,3,Congestion</pre>
+<p>You can change the '393' to whatever you want. This is what you will dial before dialing a 'fwd' number. For instance, to dial '744561' you would dial '393744561'.
+</p>
+<p>And lastly, the incoming calls:
+</p>
+<pre>[fromiaxfwd]
+exten =&gt; ${FWDNUMBER},1,Dial(${FWDRINGS},20,r)
+exten =&gt; ${FWDNUMBER},2,Voicemail,u${FWDVMBOX}
+exten =&gt; ${FWDNUMBER},102,Voicemail,b${FWDVMBOX}</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you have problems try removing the variables from <code>extensions.conf</code>. These instructions are from FWD's site and I have not been tested by this article's author.</div>
+<p>Extensions to try calling are 55555 (a volunteer maned test line) and 514 (conference).
+</p>
+<h3><span class="mw-headline" id="Sounds">Sounds</span></h3>
+<p>Sounds are stored in the folder <code>/var/lib/asterisk/xx</code>, <code>xx</code> stands for the code of the language for example "en" for English. To add new sounds copy them to the folder. Preserve the following folder structure:
+</p>
+<pre>/var/lib/asterisk/sounds/xx
+/var/lib/asterisk/sounds/xx/digits
+/var/lib/asterisk/sounds/xx/letters
+/var/lib/asterisk/sounds/xx/phonetic
+</pre>
+<p>Edit the language parameter in the <code>sip.conf</code>
+</p>
+<pre>[general]
+...
+language=en
+...</pre>
+<p>Possible sources for sounds are:
+</p>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://downloads.asterisk.org/pub/telephony/sounds/">http://downloads.asterisk.org/pub/telephony/sounds/</a></li>
+<li>
+<a rel="nofollow" class="external free" href="https://packages.debian.org/wheezy/all/asterisk-prompt-xx">https://packages.debian.org/wheezy/all/asterisk-prompt-xx</a>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://packages.debian.org/wheezy/all/asterisk-prompt-fr">fr</a></li>
+<li><a rel="nofollow" class="external text" href="https://packages.debian.org/wheezy/all/asterisk-prompt-de">de</a></li>
+<li>...</li>
+</ul>
+</li>
+<li><a rel="nofollow" class="external text" href="http://www.voip-info.org/wiki/view/Asterisk+sound+files+international">voip-info.org</a></li>
+</ul>
+<h3><span class="mw-headline" id="MeetMe">MeetMe</span></h3>
+<p>MeetMe is the application that allows you to do conference calling. Same as everything, basic setup is easy.
+</p>
+<p>Edit <code>meetme.conf</code>:
+</p>
+<pre>conf =&gt; 1000
+</pre>
+<p>Next is extensions.conf
+</p>
+<pre>exten =&gt; 999,1,MeetMe(1000|M)
+</pre>
+<p>Now dial 999 to get into conference 1000. The <code></code> enables music on hold if no one is in there. It will automatically go away when someone joins the conference.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You <i>must</i> have the zaptel package in order for MeetMe to work. Install it and run <code>modprobe ztdummy</code> before running asterisk. This provides digium timing for us without cards so we can utilize TDM.</div>
+<h2><span class="mw-headline" id="Asterisk_console_and_softphones">Asterisk console and softphones</span></h2>
+<p>Now lets get Asterisk going: 
+</p>
+<pre># asterisk -vvvvvvc
+</pre>
+<p>This will give us the Asterisk CLI with verbose output. If Asterisk is already running you will need to use:
+</p>
+<pre># asterisk -r
+</pre>
+<p>Now fire up your SIP clients and set them up with the information in the sip.conf. Switch back to your Asterisk CLI and you should see: 
+</p>
+<pre>Registered SIP 'me1' at 192.168.0.142 port 5061 expires 60
+</pre>
+<p>Now you should be able to dial <code>101</code> from <code>me1</code> and talk to <code>me2</code>.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>If you receive a 404 Not Found error check your <code>extensions.conf</code> and the number you dialed.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Telephony.html" title="Category:Telephony">Telephony</a></li>
+<li><a href="../en/Category:Voice_over_IP.html" title="Category:Voice over IP">Voice over IP</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Asterisk&amp;oldid=648101">https://wiki.archlinux.org/index.php?title=Asterisk&amp;oldid=648101</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 January 2021, at 12:39.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

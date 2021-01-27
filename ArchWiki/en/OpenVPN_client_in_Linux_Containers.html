@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>OpenVPN client in Linux Containers - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-OpenVPN_client_in_Linux_Containers rootpage-OpenVPN_client_in_Linux_Containers skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">OpenVPN client in Linux Containers</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/ArchWiki:Archive.html" class="mw-redirect" title="AirVPN">AirVPN</a></li>
+<li><a href="../en/Docker.html" title="Docker">Docker</a></li>
+<li><a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a></li>
+<li><a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a></li>
+<li><a href="../en/OpenVPN_server_in_Linux_Containers.html" title="OpenVPN server in Linux Containers">OpenVPN server in Linux Containers</a></li>
+<li><a href="../en/PeerGuardian_Linux.html" title="PeerGuardian Linux">PeerGuardian_Linux</a></li>
+<li><a href="../en/Systemd-nspawn.html" title="Systemd-nspawn">Systemd-nspawn</a></li>
+<li><a href="../en/Uncomplicated_Firewall.html" class="mw-redirect" title="Ufw">ufw</a></li>
+</ul>
+</div>
+<p>This article describes how to setup a <a href="../en/Linux_Containers.html" class="mw-redirect" title="Linux Container">Linux Container</a> to run OpenVPN in client mode with a "kill switch" for secure/private internet use.  Doing so offers a distinct advantage over using full-blown virtualization like <a href="../en/VirtualBox.html" title="VirtualBox">VirtualBox</a> or <a href="../en/QEMU.html" title="QEMU">QEMU</a> in that the resource overhead is minimal by comparison and able to run on low powered devices.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Container_setup"><span class="tocnumber">1</span> <span class="toctext">Container setup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#LXC_config"><span class="tocnumber">1.1</span> <span class="toctext">LXC config</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Needed_packages_within_the_container"><span class="tocnumber">1.2</span> <span class="toctext">Needed packages within the container</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Package_setup"><span class="tocnumber">1.3</span> <span class="toctext">Package setup</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5">
+<a href="#OpenVPN"><span class="tocnumber">1.3.1</span> <span class="toctext">OpenVPN</span></a>
+<ul>
+<li class="toclevel-4 tocsection-6"><a href="#Avoiding_DNS_leaks"><span class="tocnumber">1.3.1.1</span> <span class="toctext">Avoiding DNS leaks</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-7"><a href="#ufw"><span class="tocnumber">1.3.2</span> <span class="toctext">ufw</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#pgl"><span class="tocnumber">1.3.3</span> <span class="toctext">pgl</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Test_the_service"><span class="tocnumber">2</span> <span class="toctext">Test the service</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Container_setup">Container setup</span></h2>
+<p>Basic setup and understanding of <a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a> is required.  This article assumes that readers have a base LXC setup operational.  Newcomers to these are directed to the aforementioned article.
+</p>
+<h3><span class="mw-headline" id="LXC_config">LXC config</span></h3>
+<p>The container's config should be modified to include several key lines in order to both run OpenVPN and have internet programs (browsers, email clients, torrent clients, etc.) interact with the host system from within the LXC and from behind the VPN.
+</p>
+<p>For the example, the lxc is named "playtime" and a full config is shown:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/var/lib/lxc/playtime/config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+
+## for openvpn
+lxc.mount.entry = /dev/net dev/net none bind,create=dir
+lxc.cgroup.devices.allow = c 10:200 rwm
+</pre>
+<h3><span class="mw-headline" id="Needed_packages_within_the_container">Needed packages within the container</span></h3>
+<p>In addition to the base system, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openvpn">openvpn</a></span> is required and available from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.  A properly configured <a href="../en/Category:Firewalls.html" class="mw-redirect" title="Firewall">firewall</a> to run within the container is <i>highly</i> recommended.  The role of the firewall within the container is two fold:
+</p>
+<ol>
+<li>Provide a functional "kill switch" to maintain privacy should the connection to the VPN fail.</li>
+<li>Keep nasty stuff out.</li>
+</ol>
+<p>This guide uses <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ufw">ufw</a></span> which is very easy to configure, but other examples can certainly be used.
+</p>
+<h3><span class="mw-headline" id="Package_setup">Package setup</span></h3>
+<h4><span class="mw-headline" id="OpenVPN">OpenVPN</span></h4>
+<p>Configuration of OpenVPN is beyond the scope of this article.  Readers are encouraged to read the <a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a> article to properly setup the software for a given VPN provider.  Note that many private VPN providers include links to directly download a properly configured openvpn.opvn profile unique to their particular service.  For the purposes of this guide, <code>/etc/openvpn/client/myprofile.conf</code> will refer to that config.
+</p>
+<p>Verify openvpn functionality within the container; <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> openvpn via <code>openvpn-client@myprofile.service</code> and once satisfied <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> it to run at boot.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Users running openvpn within an <i>unprivileged</i> container will need to create a custom systemd unit to start it within the container.  Simply copy the package-provided <code>/usr/lib/systemd/system/openvpn-client@.service</code> to <code>/etc/systemd/system/openvpn-client@.service</code> and modify the new file commenting out the the line beginning with: <code>LimitNPROC...</code>
+</div>
+<h5><span class="mw-headline" id="Avoiding_DNS_leaks">Avoiding DNS leaks</span></h5>
+<p>Users are highly encouraged to setup openvpn with to manage <code>/etc/resolv.conf</code> via the instructions in <a href="../en/OpenVPN.html#DNS" title="OpenVPN">OpenVPN#DNS</a>.  Failure to do so may lead to DNS leaks if the host's DNS server is specified in said file.
+</p>
+<h4><span class="mw-headline" id="ufw">ufw</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following applies to inside the container.</div>
+<p>Configuration of <a href="../en/Uncomplicated_Firewall.html" class="mw-redirect" title="Ufw">ufw</a> is described in <a href="../en/OpenVPN.html#Firewall_configuration" title="OpenVPN">OpenVPN#Firewall configuration</a>.  Once modified as described, additional setup is simply to define the protocols to run (ssh, torrent, etc.) and also define the IP address or address range of the VPN provider.  Again, these are available from the private providers.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following needs to be executed as the root user; the "#" sign prefixing these commands per standard wiki notation has been omitted to allow for a clean copy/paste into a terminal.</div>
+<p>First setup the default deny policy and then allow whatever services are to pass though:
+</p>
+<pre>ufw default deny outgoing
+ufw default deny incoming
+ufw allow ssh
+ufw allow 1194
+ufw allow out 1194
+ufw allow out on tun0 from any to any
+ufw allow in on tun0 from any to any
+</pre>
+<p>Now add the VPN server IP addresses or ranges.  Note two entries for each IP address is required.  In the example below, only a single fictitious IP address is shown for illustrative purposes.
+</p>
+<pre>ufw allow in from 50.120.10.200 to any
+ufw allow out from 50.121.10.200 to any
+</pre>
+<p>Finally, add the internal LAN IP range to allow access regardless of VPN connectivity:
+</p>
+<pre>ufw allow from 192.168.0.0/24
+</pre>
+<p>Start ufw and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>ufw.service</code> to start at boot.
+</p>
+<pre># ufw enable
+</pre>
+<h4><span class="mw-headline" id="pgl">pgl</span></h4>
+<p>Additional protection can be had via using <a href="../en/PeerGuardian_Linux.html" class="mw-redirect" title="Pgl">pgl</a> within the container.  See: <a href="../en/PeerGuardian_Linux.html#Running_pgl_from_within_a_container" title="PeerGuardian Linux">PeerGuardian Linux#Running pgl from within a container</a>.
+</p>
+<h2><span class="mw-headline" id="Test_the_service">Test the service</span></h2>
+<p>From within the running container, (connected via ssh or via <code>lxc-attach -n playtime</code>) test the setup by exporting a browser to the host's machine X server:
+</p>
+<pre>$ DISPLAY=:0 firefox
+</pre>
+<p>The result should be a firefox window in the host's X server with the title, "Mozilla Firefox (playtime)."  A number of websites can be used to verify IP address and status of DNS entries.  Once such site is <a rel="nofollow" class="external text" href="http://ipleak.net">ipleak dot net</a>.
+</p>
+<p>At this point, the IP and DNS entries corresponding to <code>/etc/openvpn/client/myprofile.conf</code> should be displayed.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li>
+<li><a href="../en/Category:Virtualization.html" title="Category:Virtualization">Virtualization</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=OpenVPN_client_in_Linux_Containers&amp;oldid=626061">https://wiki.archlinux.org/index.php?title=OpenVPN_client_in_Linux_Containers&amp;oldid=626061</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 July 2020, at 11:57.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

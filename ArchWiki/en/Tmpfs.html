@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>tmpfs - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Tmpfs rootpage-Tmpfs skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">tmpfs</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+<a href="https://en.wikipedia.org/wiki/Tmpfs" class="extiw" title="wikipedia:Tmpfs">tmpfs</a> is a temporary filesystem that resides in memory and/or swap partition(s). Mounting directories as tmpfs can be an effective way of speeding up accesses to their files, or to ensure that their contents are automatically cleared upon reboot.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Temporary files in tmpfs directories can be recreated at boot by using <a href="../en/Systemd.html#systemd-tmpfiles_-_temporary_files" class="mw-redirect" title="Systemd-tmpfiles">systemd-tmpfiles</a>.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Usage"><span class="tocnumber">1</span> <span class="toctext">Usage</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Examples"><span class="tocnumber">2</span> <span class="toctext">Examples</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Disable_automatic_mount"><span class="tocnumber">3</span> <span class="toctext">Disable automatic mount</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Opening_symlinks_in_tmpfs_as_root_fails"><span class="tocnumber">4.1</span> <span class="toctext">Opening symlinks in tmpfs as root fails</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>Some directories where <span class="plainlinks archwiki-template-man" title="$ man 5 tmpfs"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/tmpfs.5">tmpfs(5)</a></span> is commonly used are <a rel="nofollow" class="external text" href="http://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html">/tmp</a>, <a rel="nofollow" class="external text" href="http://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s09.html">/var/lock</a> and <a rel="nofollow" class="external text" href="http://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html">/var/run</a>. Do <b>not</b> use it on <a rel="nofollow" class="external text" href="http://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html">/var/tmp</a>, because that folder is meant for temporary files that are preserved across reboots.
+</p>
+<p>Arch uses a tmpfs <code>/run</code> directory, with <code>/var/run</code> and <code>/var/lock</code> simply existing as symlinks for compatibility. It is also used for <code>/tmp</code> by the default systemd setup and does not require an entry in <a href="../en/Fstab.html" title="Fstab">fstab</a> unless a specific configuration is needed.
+</p>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=glibc">glibc</a></span> 2.2 and above expects tmpfs to be mounted at <code>/dev/shm</code> for
+<a href="https://en.wikipedia.org/wiki/Shared_memory#Support_on_Unix-like_systems" class="extiw" title="wikipedia:Shared memory">POSIX shared memory</a>. Mounting tmpfs at <code>/dev/shm</code> is handled automatically by <a href="../en/Systemd.html" title="Systemd">systemd</a> and manual configuration in <a href="../en/Fstab.html" title="Fstab">fstab</a> is not necessary.
+</p>
+<p>Generally, tasks and programs that run frequent read/write operations can benefit from using a tmpfs folder. Some applications can even receive a substantial gain by offloading some (or all) of their data onto the shared memory. For example, <a href="../en/Firefox/Profile_on_RAM.html" class="mw-redirect" title="Firefox on RAM">relocating the Firefox profile into RAM</a> shows a significant improvement in performance.
+</p>
+<h2><span class="mw-headline" id="Examples">Examples</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The actual memory/swap consumption depends on how much is used, as tmpfs partitions do not consume any memory until it is actually needed.</div>
+<p>By default, a tmpfs partition has its maximum size set to half of the available RAM, however it is possible to overrule this value.
+To explicitly set a maximum size, in this example to override the default <code>/tmp</code> mount, use the <code>size</code> mount option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">tmpfs   /tmp         tmpfs   rw,nodev,nosuid,size=2G          0  0</pre>
+<p>To specify a more secure mounting, specify the following mount option:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">tmpfs   /www/cache    tmpfs  rw,size=1G,nr_inodes=5k,noexec,nodev,nosuid,uid=<i>user</i>,gid=<i>group</i>,mode=1700 0 0</pre>
+<p>See the <span class="plainlinks archwiki-template-man" title="$ man 5 tmpfs"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/tmpfs.5">tmpfs(5)</a></span> man page and <a href="../en/Security.html#File_systems" title="Security">Security#File systems</a> for more information.
+</p>
+<p>Reboot for the changes to take effect. Note that although it may be tempting to simply run <code>mount -a</code> to make the changes effective immediately, this will make any files currently residing in these directories inaccessible (this is especially problematic for running programs with lockfiles, for example). However, if all of them are empty, it should be safe to run <code>mount -a</code> instead of rebooting (or mount them individually).
+</p>
+<p>After applying changes, verify that they took effect by looking at <code>/proc/mounts</code> and using <code>findmnt</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ findmnt /tmp</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">TARGET SOURCE FSTYPE OPTIONS
+/tmp   tmpfs  tmpfs  rw,nosuid,nodev,relatime</pre>
+<p>The tmpfs can also be temporarily resized without the need to reboot, for example when a large compile job needs to run soon. In this case, run:
+</p>
+<pre># mount -o remount,size=4G,noatime /tmp
+</pre>
+<h2><span class="mw-headline" id="Disable_automatic_mount">Disable automatic mount</span></h2>
+<p>Under <a href="../en/Systemd.html" title="Systemd">systemd</a>, <code>/tmp</code> is automatically mounted as a tmpfs, if it is not already a dedicated mountpoint (either tmpfs or on-disk) in <code>/etc/fstab</code>. To disable the automatic mount, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Mask">mask</a> the <code>tmp.mount</code> systemd unit.
+</p>
+<p>Files will no longer be stored in a tmpfs, but on the block device instead. The <code>/tmp</code> contents will now be preserved between reboots, which might not be the desired behavior. To regain the previous behavior and clean the <code>/tmp</code> folder automatically when restarting, consider using <span class="plainlinks archwiki-template-man" title="$ man 5 tmpfiles.d"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/tmpfiles.d.5">tmpfiles.d(5)</a></span>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/tmpfiles.d/tmp.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># see tmpfiles.d(5)
+# always enable /tmp folder cleaning
+D! /tmp 1777 root root 0
+
+# remove files in /var/tmp older than 10 days
+D /var/tmp 1777 root root 10d
+
+# namespace mountpoints (PrivateTmp=yes) are excluded from removal
+x /tmp/systemd-private-*
+x /var/tmp/systemd-private-*
+X /tmp/systemd-private-*/tmp
+X /var/tmp/systemd-private-*/tmp</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Opening_symlinks_in_tmpfs_as_root_fails">Opening symlinks in tmpfs as root fails</span></h3>
+<p>Considering <code>/tmp</code> is using tmpfs, change the current directory to <code>/tmp</code>, then create a file and create a symlink to that file in the same <code>/tmp</code> directory.  Permission denied errors are to be expected when attempting to read the symlink due to <code>/tmp</code> <a rel="nofollow" class="external text" href="https://wiki.ubuntu.com/Security/Features#Symlink_restrictions">having the sticky bit set</a>.
+</p>
+<p>This behavior can be controlled via <code>/proc/sys/fs/protected_symlinks</code> or simply via sysctl: <code>sysctl -w fs.protected_symlinks=0</code>. See <a href="../en/Sysctl.html#Configuration" title="Sysctl">Sysctl#Configuration</a> to make this permanent.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Changing this behavior can lead to security issues!</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/filesystems/tmpfs.html">Linux kernel documentation</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Tmpfs&amp;oldid=637974">https://wiki.archlinux.org/index.php?title=Tmpfs&amp;oldid=637974</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 October 2020, at 23:09.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

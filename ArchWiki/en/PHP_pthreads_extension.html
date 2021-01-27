@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>PHP pthreads extension - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-PHP_pthreads_extension rootpage-PHP_pthreads_extension skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">PHP pthreads extension</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>If you wish to have POSIX multi-threading you will need the pthreads extension (or the parallel extension for PHP 7.4+). To install the pthreads (<a rel="nofollow" class="external free" href="http://pecl.php.net/package/pthreads">http://pecl.php.net/package/pthreads</a>) or parallel (<a rel="nofollow" class="external free" href="https://pecl.php.net/package/parallel">https://pecl.php.net/package/parallel</a>) extension using <code>pecl</code> you are required to use a compiled version of PHP with the the thread safety support flag <code>--enable-maintainer-zts</code>. Currently, the most clean way to do this would be to rebuild the original package with the proper flag.
+</p>
+<p>Check what packages depend on the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=php">php</a></span> package, for example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">pacman -Qii php</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">:: php-apache: requires php
+:: php-apcu: requires php
+:: php-pear: requires php
+</pre>
+<p>Remove all of them including 'php', for example:
+</p>
+<pre>pacman -R php php-apache php-apcu php-pear</pre>
+<p>Clone Arch Linux's official package repository:
+</p>
+<pre>cd /opt/
+git clone <a rel="nofollow" class="external free" href="git://projects.archlinux.org/svntogit/packages.git">git://projects.archlinux.org/svntogit/packages.git</a>
+cd packages/php/repos/extra-x86_64
+</pre>
+<p>Change the file named <code>PKGBUILD</code> in this folder to add <code>--enable-maintainer-zts</code>, next to the other extensions. It should look like:
+</p>
+<pre>...
+--with-xsl=shared \
+--with-zip=shared \
+--with-zlib \
+--enable-maintainer-zts
+...
+</pre>
+<p>Make the new packages (you may need to edit permissions before):
+</p>
+<pre>makepkg -s</pre>
+<p>Install the packages you removed:
+</p>
+<pre>pacman -U \
+php-5.5.8-1-x86_64.pkg.tar.xz \
+php-apache-5.5.8-1-x86_64.pkg.tar.xz \
+php-pear-5.5.8-1-x86_64.pkg.tar.xz \
+</pre>
+<p>On some versions of PHP, <code>php-pear</code> is missing and it is needed to run <code>pecl</code>. As adding <code>--with-pear</code> in the file above does not solve it, you will need to install it separately:
+</p>
+<pre>cd /opt/packages/
+git clone <a rel="nofollow" class="external free" href="https://aur.archlinux.org/php-pear.git">https://aur.archlinux.org/php-pear.git</a>
+cd php-pear/
+makepkg -i</pre>
+<p>Then install pthreads:
+</p>
+<pre>pecl install pthreads</pre>
+<p>or install parallel for recent PHP versions:
+</p>
+<pre>pecl install parallel</pre>
+<p>If you installed parallel, you will need to edit <code>/etc/php/php.ini</code> and add the <code>parallel</code> extension, it should look like:
+</p>
+<pre>...
+;extension=odbc
+;zend_extension=opcache
+extension=parallel
+;extension=pdo_dblib
+...
+</pre>
+<h3>
+<span id="Install_the_.27apcu.27_package_for_APC_support_back"></span><span class="mw-headline" id="Install_the_'apcu'_package_for_APC_support_back">Install the 'apcu' package for APC support back</span>
+</h3>
+<pre>cd ../../../php-apcu/repos/extra-x86_64/
+makepkg -si
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Programming_languages.html" title="Category:Programming languages">Programming languages</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=PHP_pthreads_extension&amp;oldid=624939">https://wiki.archlinux.org/index.php?title=PHP_pthreads_extension&amp;oldid=624939</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 July 2020, at 23:38.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

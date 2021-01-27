@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>IPv6 tunnel broker setup - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-IPv6_tunnel_broker_setup rootpage-IPv6_tunnel_broker_setup skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">IPv6 tunnel broker setup</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Hurricane Electric offers a free <a rel="nofollow" class="external text" href="http://tunnelbroker.net/">tunnel broker</a> service that is relatively painless to use under Arch if you wish to add IPv6 connectivity to an IPv4-only host.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Registering_for_a_tunnel"><span class="tocnumber">1</span> <span class="toctext">Registering for a tunnel</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Setting_up_Hurricane_Electric_tunnel"><span class="tocnumber">2</span> <span class="toctext">Setting up Hurricane Electric tunnel</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#systemd-networkd"><span class="tocnumber">3</span> <span class="toctext">systemd-networkd</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Using_the_tunneling_with_dynamic_IPv4_IP"><span class="tocnumber">4</span> <span class="toctext">Using the tunneling with dynamic IPv4 IP</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Updating_via_cronjob"><span class="tocnumber">4.1</span> <span class="toctext">Updating via cronjob</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Updating_via_ddclient"><span class="tocnumber">4.2</span> <span class="toctext">Updating via ddclient</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Registering_for_a_tunnel">Registering for a tunnel</span></h2>
+<p>It is not that hard to do. Feel free to fill in the directions here if something seems tricky, but otherwise just go the tunnel broker site and complete the registration.
+</p>
+<h2><span class="mw-headline" id="Setting_up_Hurricane_Electric_tunnel">Setting up Hurricane Electric tunnel</span></h2>
+<p>Create the following systemd unit, replacing bold text with the IP addresses you got from HE:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are behind a NAT (typical home router setup), use your <i>local</i> IPv4 address for <code><i>client_IPv4_address</i></code>, e.g. <code>192.168.0.2</code>.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/he-ipv6.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=he.net IPv6 tunnel
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ip tunnel add he-ipv6 mode sit remote <i>server_IPv4_address</i> local <i>client_IPv4_address</i> ttl 255
+ExecStart=/usr/bin/ip link set he-ipv6 up mtu 1480
+ExecStart=/usr/bin/ip addr add <i>client_IPv6_address</i> dev he-ipv6
+ExecStart=/usr/bin/ip -6 route add ::/0 dev he-ipv6
+ExecStop=/usr/bin/ip -6 route del ::/0 dev he-ipv6
+ExecStop=/usr/bin/ip link set he-ipv6 down
+ExecStop=/usr/bin/ip tunnel del he-ipv6
+
+[Install]
+WantedBy=multi-user.target</pre>
+<p>Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>he-ipv6.service</code>.
+</p>
+<h2><span class="mw-headline" id="systemd-networkd">systemd-networkd</span></h2>
+<p>If <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> handles your network connections, it's probably a better idea to let it handle tunnel broker too (instead of using a <code>.service</code> file).
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/network/he-tunnel.netdev</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Match]
+ 
+[NetDev]
+Name=he-ipv6
+Kind=sit
+MTUBytes=1480
+ 
+[Tunnel]
+Local=&lt;local IPv4&gt;
+Remote=&lt;tunnel endpoint&gt;
+TTL=255
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/network/he-tunnel.network</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Match]
+Name=he-ipv6
+ 
+[Network]
+Address=&lt;local IPv6&gt;
+Gateway=&lt;IPv6 gateway&gt;
+DNS=2001:4860:4860::8888
+DNS=2001:4860:4860::8844
+</pre>
+<p>And, add this line to <code>[Network]</code> section of your default Internet connection <code>.network</code> file:
+</p>
+<pre>Tunnel=he-ipv6
+</pre>
+<h2><span class="mw-headline" id="Using_the_tunneling_with_dynamic_IPv4_IP">Using the tunneling with dynamic IPv4 IP</span></h2>
+<h3><span class="mw-headline" id="Updating_via_cronjob">Updating via cronjob</span></h3>
+<p>The simplest way of using tunelling with a dynamic IPv4 IP is to set up a cronjob that is going to periodically update your current address. The example URL and an <i>Update Key</i> can be found in the <i>Advanced</i> tab of the <i>Tunnel Details</i> page.
+</p>
+<p>To check if the update works, run the following command (replace <code><i>USERNAME</i></code>, <code><i>UPDATEKEY</i></code> and <code><i>TUNNELID</i></code> by the details of your account and tunnel):
+</p>
+<pre>$ wget -O - https://<i>USERNAME</i>:<i>UPDATEKEY</i>@ipv4.tunnelbroker.net/nic/update?hostname=<i>TUNNELID</i>
+</pre>
+<p>If it works, create a cronjob by opening <code>crontab -e</code> and adding a new line:
+</p>
+<pre>*/10 * * * * wget -q -O /dev/null https://<i>USERNAME</i>:<i>UPDATEKEY</i>@ipv4.tunnelbroker.net/nic/update?hostname=<i>TUNNELID</i>
+</pre>
+<h3><span class="mw-headline" id="Updating_via_ddclient">Updating via ddclient</span></h3>
+<p>Alternatively this can be configured by installing <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ddclient">ddclient</a></span> and configuring <code>/etc/ddclient.conf</code>:
+</p>
+<pre>protocol=dyndns2
+use=web
+web=checkip.dns.he.net
+server=ipv4.tunnelbroker.net
+ssl=yes
+login=<i>USERNAME</i>
+password=<i>UPDATEKEY</i>
+<i>TUNNELID</i>
+</pre>
+<p>And finally <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> <code>ddclient.service</code>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Networking.html" title="Category:Networking">Networking</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=IPv6_tunnel_broker_setup&amp;oldid=619673">https://wiki.archlinux.org/index.php?title=IPv6_tunnel_broker_setup&amp;oldid=619673</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 June 2020, at 11:08.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

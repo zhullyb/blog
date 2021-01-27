@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Squid (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Squid_简体中文 rootpage-Squid_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Squid (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>来自 Squid <a rel="nofollow" class="external text" href="http://www.squid-cache.org">官方网站</a>：
+</p>
+<dl><dd><i> <b>Squid</b> 是一个 Web 缓存代理，支持 HTTP, HTTPS, FTP, 以及更多。它通过缓存与重用经常请求的web页面，减少带宽使用同时提升了响应时间。Squid 具有可扩展的访问控制功能，同时可以使服务器加速。它运行在 Unix 和 Windows 中，采用 GNU GPL 协议发布。</i></dd></dl>
+<p>尽管 squid 在大型公司和学校中工作的很好，它也可以为个人家庭用户使用。然而如果你在寻找一个更轻量级的单用户代理，你可以尝试使用 <a href="../zh-CN/Polipo.html" title="Polipo (简体中文)">Polipo</a>。
+</p>
+<h2>
+<span id=".E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="安装">安装</span>
+</h2>
+<p><a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">安装</a>位于<a href="../zh-CN/Official_repositories.html" title="Official repositories (简体中文)">官方软件仓库</a>的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=squid">squid</a></span>。
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="配置">配置</span>
+</h2>
+<p>默认设置下，缓存目录会创建于 <code>/var/cache/squid</code>,同时正确的权限会被同时设置好。然而，为了更好的控制，我们需要深入 <code>/etc/squid/squid.conf</code>.
+</p>
+<p>所有的配置项都有注释，但是如果你想去掉注释的话，你可以运行：
+</p>
+<pre>sed -i "/^#/d;/^ *$/d" /etc/squid/squid.conf
+</pre>
+<p>下面的选项会对你有用。如果你没有这些选项，你可以添加进去。
+</p>
+<ul><li>
+<code>http_port</code> - 设置 Squid 绑定的代理端口。你可以将 Squid 绑定到多个端口，使用多个 http_port 行。默认情况下，Squid 绑定到 3128 端口。</li></ul>
+<pre>http_port 3128
+http_port 3129
+</pre>
+<ul><li>
+<code>http_access</code> - 这是访问控制列表，即谁被允许使用这个代理。默认只有 localhost 被允许访问这个代理。作为测试目的，你可以改变这个选项 <code>http_access deny all</code> 为 <code>http_access allow all</code>，这会允许所有人链接到你的代理。如果你想仅仅允许子网内访问，你可以使用：</li></ul>
+<pre>acl ip_acl src 192.168.1.0/24
+http_access allow ip_acl
+http_access deny all
+</pre>
+<ul><li>
+<code>cache_mgr</code> - 这是缓存管理员的 email 地址。</li></ul>
+<pre>cache_mgr squid.admin@example.com
+</pre>
+<ul><li>
+<code>shutdown_lifetime</code> - 指定当 squid 的 rc.d 脚本请求停止的时候等待的时间。如果你在你的桌面电脑上运行 squid，你也许需要设成短一点的时间值。</li></ul>
+<pre>shutdown_lifetime 10 seconds
+</pre>
+<ul><li>
+<code>cache_mem</code> - 这是你想让 squid 使用内存而不写入硬盘的内存量。Squid 的总内存使用量会超过这个值！默认这个值是 8MB，所以如果你有很多内存的话，你也许想增加这个值。</li></ul>
+<pre>cache_mem 64 MB
+</pre>
+<ul><li>
+<code>visible_hostname</code> - 可以在状态/错误信息中看到的 hostname。</li></ul>
+<pre>visible_hostname cerberus
+</pre>
+<ul>
+<li>
+<code>cache_peer</code> - 如果你想让 Squid 穿过另一个代理服务器，而不是直接连到 Internet，你需要在这里指定。</li>
+<li>
+<code>login</code> - 如果上层代理需要认证的话使用这个选项。</li>
+<li>
+<code>never_direct</code> - 如果你设定了上面的选项的话，可以告诉缓存不要直接连接到 Internet 请求页面。</li>
+</ul>
+<pre>cache_peer 10.1.1.100 parent 8080 0 no-query default login=user:password
+never_direct allow all
+</pre>
+<ul><li>
+<code>maximum_object_size</code> - 这是缓存部件的最大大小。默认这个值很小 (我认为是 256KB)，所以如果你有很多磁盘空间，你需要将这个值增大到一个合理的值。</li></ul>
+<pre>maximum_object_size 10 MB
+</pre>
+<ul><li>
+<code>cache_dir</code> - 这是你的缓存文件夹，存储缓存文件的位置。有很多个选项，但是格式大概是这样子：</li></ul>
+<pre>cache_dir diskd &lt;directory&gt; &lt;size in MB&gt; 16 256
+</pre>
+<p>所以，在一个学校的代理服务器中：
+</p>
+<pre>cache_dir diskd /cache0 200000 16 256
+</pre>
+<p>如果你改变了默认的缓存文件夹，你需要在启动 squid 前为文件夹设置合适的权限。否则会无法创建缓存文件夹并且停止运行。
+</p>
+<h2>
+<span id=".E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="启动">启动</span>
+</h2>
+<p>配置完成之后，你需要检查一下配置文件是否正确：
+</p>
+<pre># squid -k check
+</pre>
+<p>然后创建缓存目录：
+</p>
+<pre># squid -z
+</pre>
+<p>最后你可以启动 Squid:
+</p>
+<pre># systemctl start squid
+</pre>
+<p>开机启动：
+</p>
+<pre># systemctl enable squid
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Proxy_servers.html" title="Category:Proxy servers (简体中文)">Proxy servers (简体中文)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Squid_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=608101">https://wiki.archlinux.org/index.php?title=Squid_(简体中文)&amp;oldid=608101</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 25 April 2020, at 11:54.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

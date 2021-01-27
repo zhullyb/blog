@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>XWiki - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-XWiki rootpage-XWiki skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">XWiki</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="http://www.xwiki.org">XWiki</a> is an open-source enterprise-ready wiki written in Java, with a focus on extensibility.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Feel free to follow along on the <a rel="nofollow" class="external text" href="http://platform.xwiki.org/xwiki/bin/view/AdminGuide/Installation">XWiki Installation Guide</a>.  These instructions assume you will be using <a href="../en/Tomcat.html" title="Tomcat">Tomcat</a> and <a href="../en/PostgreSQL.html" title="PostgreSQL">PostgreSQL</a>.  It should not be too difficult to apply these guidelines to other combinations.
+</p>
+<ul>
+<li>Install <a href="../en/PostgreSQL.html" title="PostgreSQL">PostgreSQL</a>.</li>
+<li>For easier PostgreSQL administration, install <a href="../en/PhpPgAdmin.html" title="PhpPgAdmin">phpPgAdmin</a>.</li>
+<li>Install <a href="../en/Tomcat.html" title="Tomcat">Tomcat 7</a>.  (Do not forget <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tomcat-native">tomcat-native</a></span>.)</li>
+<li>Download the XWiki WAR file.</li>
+<li>Rename the WAR file to <code>xwiki</code>.</li>
+<li>Move the WAR file into the <code>/var/lib/tomcat7/webapps</code> directory.</li>
+<li>Tomcat should automatically extract the WAR file.  If not, restart Tomcat.</li>
+<li>At this point, you may find that a <code>data</code> directory has appeared in <code>/var/lib/tomcat7/webapps</code>.  Delete it.</li>
+<li>As root:</li>
+</ul>
+<pre># cd /var/lib/tomcat7
+# mkdir data
+# chown tomcat:tomcat data
+</pre>
+<ul>
+<li>Inside the <code>/var/lib/tomcat7/webapps/xwiki/WEB-INF</code> directory:
+<ul>
+<li>Open the <code>xwiki.cfg</code> file and alter the <code>xwiki.work.dir</code> field to read <code>/var/lib/tomcat7/data/xwiki</code>.</li>
+<li>Open the <code>xwiki.properties</code> file and alter the <code>container.persistentDirectory</code> field to read <code>/var/lib/tomcat7/data/xwiki</code>.</li>
+<li>Open the <code>hibernate.cfg.xml</code> file and:
+<ul>
+<li>Comment-out the section entitled "Configuration for the default database".</li>
+<li>Uncomment the section entitled "PostgreSQL Configuration".</li>
+<li>Modify the database name (in <code>connection.url</code>), username, and password as desired.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Create a role and database in PostgreSQL to match the hibernate configuration.</li>
+<li>Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/postgresql-jdbc/">postgresql-jdbc</a></span><sup><small>AUR</small></sup> from the <a href="../en/Arch_User_Repository.html" title="Arch User Repository">Arch User Repository</a>.</li>
+<li>As root:</li>
+</ul>
+<pre># cd /usr/share/java/tomcat7
+# ln -s /usr/share/java/postgresql-jdbc/postgresql-jdbc4.jar
+</pre>
+<ul>
+<li>Restart Tomcat.</li>
+<li>Launch the XWiki application by clicking on <code>/xwiki</code> in Tomcat Manager.</li>
+<li>Download the XAR file for XWiki and upload it to populate the empty Wiki.</li>
+</ul>
+<h2><span class="mw-headline" id="Nginx_proxy_configuration">Nginx proxy configuration</span></h2>
+<p>I found that instructing nginx to proxy to <code><a rel="nofollow" class="external free" href="http://localhost:8080/xwiki/">http://localhost:8080/xwiki/</a></code> did not work: the generated URLs were incorrect.  Contrary to what is indicated in the <a rel="nofollow" class="external text" href="http://platform.xwiki.org/xwiki/bin/view/AdminGuide/Configuration#HReverseproxysetup">XWiki documentation</a>, I could not make the URLs correct through the use of HTTP headers.
+</p>
+<p>The only solution I'm aware of so far is to create a new <code>Host</code> element in Tomcat's <code>server.xml</code> file:
+</p>
+<ul>
+<li>Duplicate the existing <code>Host</code> element and alter the <code>name</code> attribute to read <code>xwiki</code>.</li>
+<li>Alter the <code>appBase</code> attribute to read <code>/var/lib/tomcat7/webapps-xwiki</code>.</li>
+<li>Move the <code>xwiki</code> application from <code>/var/lib/tomcat7/webapps/xwiki</code> to <code>/var/lib/tomcat7/webapps-xwiki/ROOT</code>.</li>
+<li>Restart Tomcat</li>
+<li>Add <code>xwiki</code> as an alias to localhost in <code>/etc/hosts</code> (add it to the end of the 127.0.0.1 line).</li>
+<li>Instruct Nginx to proxy to <code><a rel="nofollow" class="external free" href="http://xwiki:8080/">http://xwiki:8080/</a></code> instead.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Wiki_software.html" title="Category:Wiki software">Wiki software</a></li>
+<li><a href="../en/Category:Web_applications.html" title="Category:Web applications">Web applications</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=XWiki&amp;oldid=504904">https://wiki.archlinux.org/index.php?title=XWiki&amp;oldid=504904</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 29 December 2017, at 09:37.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

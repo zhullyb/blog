@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>cgroups - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Cgroups rootpage-Cgroups skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">cgroups</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a></li>
+<li><a href="../en/Systemd-nspawn.html" title="Systemd-nspawn">systemd-nspawn</a></li>
+<li><a href="../en/Docker.html" title="Docker">Docker</a></li>
+<li><a href="../en/Limits.conf.html" title="Limits.conf">limits.conf</a></li>
+</ul>
+</div>
+<p><b>Control groups</b> (or <b>cgroups</b> as they are commonly known) are a feature provided by the Linux kernel to manage, restrict, and audit groups of processes. Compared to other approaches like the <span class="plainlinks archwiki-template-man" title="$ man 1 nice"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nice.1">nice(1)</a></span> command or <code>/etc/security/limits.conf</code>, cgroups are more flexible as they can operate on (sub)sets of processes (possibly with different system users).
+</p>
+<p>Control groups can be accessed with various tools:
+</p>
+<ul>
+<li>using directives in <a href="../en/Systemd.html" title="Systemd">systemd</a> unit files to specify limits for services and slices;</li>
+<li>by accessing the <code>cgroup</code> filesystem directly;</li>
+<li>via tools like <code>cgcreate</code>, <code>cgexec</code> and <code>cgclassify</code> (part of the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libcgroup/">libcgroup</a></span><sup><small>AUR</small></sup> package);</li>
+<li>using the "rules engine daemon" to automatically move certain users/groups/commands to groups (<code>/etc/cgrules.conf</code> and <code>/usr/lib/systemd/system/cgconfig.service</code>) (part of the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libcgroup/">libcgroup</a></span><sup><small>AUR</small></sup> package); and</li>
+<li>through other software such as <a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a> (LXC) virtualization.</li>
+</ul>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cgmanager">cgmanager</a></span> is <a rel="nofollow" class="external text" href="https://github.com/lxc/cgmanager/issues/32">deprecated</a> and unsupported as it does not work with systemd versions 232 and above.
+</p>
+<p>For Arch Linux, systemd is the preferred and easiest method of invoking and configuring cgroups as it is a part of default installation.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installing"><span class="tocnumber">1</span> <span class="toctext">Installing</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#With_systemd"><span class="tocnumber">2</span> <span class="toctext">With systemd</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Hierarchy"><span class="tocnumber">2.1</span> <span class="toctext">Hierarchy</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Find_cgroup_of_a_process"><span class="tocnumber">2.2</span> <span class="toctext">Find cgroup of a process</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#cgroup_resource_usage"><span class="tocnumber">2.3</span> <span class="toctext">cgroup resource usage</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Custom_cgroups"><span class="tocnumber">2.4</span> <span class="toctext">Custom cgroups</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#As_service"><span class="tocnumber">2.5</span> <span class="toctext">As service</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Service_unit_file"><span class="tocnumber">2.5.1</span> <span class="toctext">Service unit file</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Grouping_unit_under_a_slice"><span class="tocnumber">2.5.2</span> <span class="toctext">Grouping unit under a slice</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10"><a href="#As_root"><span class="tocnumber">2.6</span> <span class="toctext">As root</span></a></li>
+<li class="toclevel-2 tocsection-11">
+<a href="#As_unprivileged_user"><span class="tocnumber">2.7</span> <span class="toctext">As unprivileged user</span></a>
+<ul>
+<li class="toclevel-3 tocsection-12"><a href="#Switching_to_cgroups_v2"><span class="tocnumber">2.7.1</span> <span class="toctext">Switching to cgroups v2</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Controller_types"><span class="tocnumber">2.7.2</span> <span class="toctext">Controller types</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#User_Delegation"><span class="tocnumber">2.7.3</span> <span class="toctext">User Delegation</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#User-defined_slices"><span class="tocnumber">2.7.4</span> <span class="toctext">User-defined slices</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16"><a href="#Run-time_adjustment"><span class="tocnumber">2.8</span> <span class="toctext">Run-time adjustment</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17">
+<a href="#With_libcgroup"><span class="tocnumber">3</span> <span class="toctext">With libcgroup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-18"><a href="#Ad-hoc_groups"><span class="tocnumber">3.1</span> <span class="toctext">Ad-hoc groups</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Persistent_group_configuration"><span class="tocnumber">3.2</span> <span class="toctext">Persistent group configuration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#With_the_cgroup_virtual_filesystem"><span class="tocnumber">4</span> <span class="toctext">With the cgroup virtual filesystem</span></a></li>
+<li class="toclevel-1 tocsection-21">
+<a href="#Examples"><span class="tocnumber">5</span> <span class="toctext">Examples</span></a>
+<ul>
+<li class="toclevel-2 tocsection-22">
+<a href="#Matlab"><span class="tocnumber">5.1</span> <span class="toctext">Matlab</span></a>
+<ul>
+<li class="toclevel-3 tocsection-23"><a href="#With_systemd_2"><span class="tocnumber">5.1.1</span> <span class="toctext">With systemd</span></a></li>
+<li class="toclevel-3 tocsection-24"><a href="#With_libcgroup_2"><span class="tocnumber">5.1.2</span> <span class="toctext">With libcgroup</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-25"><a href="#Documentation"><span class="tocnumber">6</span> <span class="toctext">Documentation</span></a></li>
+<li class="toclevel-1 tocsection-26"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installing">Installing</span></h2>
+<p>Make sure you have one of these packages <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">installed</a> for automated cgroup handling:
+</p>
+<ul>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> - for controlling resources of a systemd service.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/libcgroup/">libcgroup</a></span><sup><small>AUR</small></sup> - set of standalone tools (<code>cgcreate</code>, <code>cgclassify</code>, persistence via <code>cgconfig.conf</code>).</li>
+</ul>
+<h2><span class="mw-headline" id="With_systemd">With systemd</span></h2>
+<h3><span class="mw-headline" id="Hierarchy">Hierarchy</span></h3>
+<p>Current cgroup hierarchy can be seen with <code>systemctl status</code> or <code>systemd-cgls</code> command.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ systemctl status</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">● myarchlinux
+    State: running
+     Jobs: 0 queued
+   Failed: 0 units
+    Since: Wed 2019-12-04 22:16:28 UTC; 1 day 4h ago
+   CGroup: /
+           ├─user.slice 
+           │ └─user-1000.slice 
+           │   ├─user@1000.service 
+           │   │ ├─gnome-shell-wayland.service 
+           │   │ │ ├─ 1129 /usr/bin/gnome-shell
+           │   │ ├─gnome-terminal-server.service 
+           │   │ │ ├─33519 /usr/lib/gnome-terminal-server
+           │   │ │ ├─37298 fish
+           │   │ │ └─39239 systemctl status
+           │   │ ├─init.scope 
+           │   │ │ ├─1066 /usr/lib/systemd/systemd --user
+           │   │ │ └─1067 (sd-pam)
+           │   └─session-2.scope 
+           │     ├─1053 gdm-session-worker [pam/gdm-password]
+           │     ├─1078 /usr/bin/gnome-keyring-daemon --daemonize --login
+           │     ├─1082 /usr/lib/gdm-wayland-session /usr/bin/gnome-session
+           │     ├─1086 /usr/lib/gnome-session-binary
+           │     └─3514 /usr/bin/ssh-agent -D -a /run/user/1000/keyring/.ssh
+           ├─init.scope 
+           │ └─1 /sbin/init
+           └─system.slice 
+             ├─systemd-udevd.service 
+             │ └─285 /usr/lib/systemd/systemd-udevd
+             ├─systemd-journald.service 
+             │ └─272 /usr/lib/systemd/systemd-journald
+             ├─NetworkManager.service 
+             │ └─656 /usr/bin/NetworkManager --no-daemon
+             ├─gdm.service 
+             │ └─668 /usr/bin/gdm
+             └─systemd-logind.service 
+               └─654 /usr/lib/systemd/systemd-logind
+</pre>
+<h3><span class="mw-headline" id="Find_cgroup_of_a_process">Find cgroup of a process</span></h3>
+<p>The cgroup name of a process can be found in <code>/proc/<i>PID</i>/cgroup</code>.
+</p>
+<p>For example, the cgroup of the shell:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/self/cgroup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">0::/user.slice/user-1000.slice/session-3.scope
+</pre>
+<h3><span class="mw-headline" id="cgroup_resource_usage">cgroup resource usage</span></h3>
+<p>The <code>systemd-cgtop</code> command can be used to see the resource usage:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ systemd-cgtop</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Control Group                            Tasks   %CPU   Memory  Input/s Output/s
+user.slice                                 540  152,8     3.3G        -        -
+user.slice/user-1000.slice                 540  152,8     3.3G        -        -
+user.slice/u…000.slice/session-1.scope     425  149,5     3.1G        -        -
+system.slice                                37      -   215.6M        -        -
+</pre>
+<h3><span class="mw-headline" id="Custom_cgroups">Custom cgroups</span></h3>
+<p><span class="plainlinks archwiki-template-man" title="$ man 5 systemd.slice"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.slice.5">systemd.slice(5)</a></span> systemd unit files can be used to define a custom cgroup configuration.  They must be placed in a systemd directory, such as <code>/etc/systemd/system/</code>.  The resource control options that can be assigned are documented in <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.resource-control"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.resource-control.5">systemd.resource-control(5)</a></span>.
+</p>
+<p>This is an example slice unit that only allows 30% of one CPU to be used:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/my.slice</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Slice]
+CPUQuota=30%</pre>
+<p>Remember to run <code>systemctl daemon-reload</code> to pick up any new or changed <code>.slice</code> files.
+</p>
+<h3><span class="mw-headline" id="As_service">As service</span></h3>
+<h4><span class="mw-headline" id="Service_unit_file">Service unit file</span></h4>
+<p>Resources can be directly specified in service definition or as a <a href="../en/Systemd.html#Drop-in_files" title="Systemd">Systemd#Drop-in files</a>
+</p>
+<pre>[Service]
+MemoryMax=1G # Limit service to 1 gigabyte</pre>
+<h4><span class="mw-headline" id="Grouping_unit_under_a_slice">Grouping unit under a slice</span></h4>
+<p>Service can be specified what slice to run in:
+</p>
+<pre>[Service]
+Slice=my.slice</pre>
+<h3><span class="mw-headline" id="As_root">As root</span></h3>
+<p><code>systemd-run</code> can be used to run a command in a specific slice. 
+</p>
+<pre>$ systemd-run --slice=<i>my.slice</i> <i>command</i>
+</pre>
+<p><code>--uid=<i>username</i></code> option can be used to spawn the command as specific user.
+</p>
+<pre>$ systemd-run --uid=<i>username</i> --slice=<i>my.slice</i> <i>command</i>
+</pre>
+<p>The <code>--shell</code> option can be used to spawn a command shell inside the slice.
+</p>
+<h3><span class="mw-headline" id="As_unprivileged_user">As unprivileged user</span></h3>
+<p>Unprivileged users can divide the resources provided to them into new cgroups, if some conditions are met.
+</p>
+<p>Cgroups v2 must be utilized for a non-root user to be allowed managing cgroup resources.
+</p>
+<h4><span class="mw-headline" id="Switching_to_cgroups_v2">Switching to cgroups v2</span></h4>
+<p>Arch Linux enables both v1 and v2 cgroups. However by default systemd mounts cgroup v1.
+</p>
+<p>Switching to cgroups v2 requires one of the following <a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel parameters</a> at boot time:
+</p>
+<ul>
+<li>
+<code>systemd.unified_cgroup_hierarchy=1</code> - Systemd will mount <code>/sys/fs/cgroup</code> as cgroup v2</li>
+<li>
+<code>cgroup_no_v1="all"</code> - The kernel will disable all v1 cgroup controllers</li>
+</ul>
+<p>Alternatively you can mount cgroups v2 manually:
+</p>
+<pre># mount -t cgroup2 none /sys/fs/cgroup
+</pre>
+<p>Verify that v2 cgroups have been mounted:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls /sys/fs/cgroup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">cgroup.controllers      cgroup.subtree_control  init.scope/      system.slice/
+cgroup.max.depth        cgroup.threads          io.cost.model    user.slice/
+cgroup.max.descendants  cpu.pressure            io.cost.qos
+cgroup.procs            cpuset.cpus.effective   io.pressure
+cgroup.stat             cpuset.mems.effective   memory.pressure
+</pre>
+<p>If you see something like this, you are still making use of v1 cgroups:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls /sys/fs/cgroup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">blkio/    cpu,cpuacct/  freezer/  net_cls@           perf_event/  systemd/
+cpu@      cpuset/       hugetlb/  net_cls,net_prio/  pids/        unified/
+cpuacct@  devices/      memory/   net_prio@          rdma/
+</pre>
+<h4><span class="mw-headline" id="Controller_types">Controller types</span></h4>
+<p>Not all resources can be controlled by user. 
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Controller</th>
+<th>Can be controlled by user</th>
+<th>Options
+</th>
+</tr>
+<tr>
+<td>cpu</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Requires delegation</td>
+<td>CPUAccounting, CPUWeight, CPUQuota, AllowedCPUs, AllowedMemoryNodes
+</td>
+</tr>
+<tr>
+<td>io</td>
+<td data-sort-value="3" style="background: #ffa; color: inherit; vertical-align: middle; text-align: center;">Requires delegation</td>
+<td>IOWeight, IOReadBandwidthMax, IOWriteBandwidthMax, IODeviceLatencyTargetSec
+</td>
+</tr>
+<tr>
+<td>memory</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>MemoryLow, MemoryHigh, MemoryMax, MemorySwapMax
+</td>
+</tr>
+<tr>
+<td>pids</td>
+<td data-sort-value="5" style="background: #afa; color: inherit; vertical-align: middle; text-align: center;">Yes</td>
+<td>TasksMax
+</td>
+</tr>
+<tr>
+<td>rdma</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td>?
+</td>
+</tr>
+<tr>
+<td>eBPF</td>
+<td data-sort-value="1" style="background: #faa; color: inherit; vertical-align: middle; text-align: center;">No</td>
+<td>IPAddressDeny, DeviceAllow, DevicePolicy
+</td>
+</tr>
+</tbody>
+</table>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> eBPF is technically not a controller but those systemd options implemented using it and only root is allowed to set them.</div>
+<h4><span class="mw-headline" id="User_Delegation">User Delegation</span></h4>
+<p>For user to control cpu and io resources, the resources need to be delegated. This can be done by creating a unit overload.
+</p>
+<p>For example if your user id is 1000:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># systemctl edit user@1000.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+Delegate=yes</pre>
+<p>Reboot and verify that the slice your user session is under has cpu and io controller:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /sys/fs/cgroup/user.slice/user-1000.slice/cgroup.controllers</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"><b>cpuset cpu io</b> memory pids
+</pre>
+<h4><span class="mw-headline" id="User-defined_slices">User-defined slices</span></h4>
+<p>The user slice files can be placed in <code>~/.config/systemd/user/</code>.
+</p>
+<p>To run the command under certain slice:
+</p>
+<pre>$ systemd-run --user --slice=<i>my.slice</i> <i>command</i>
+</pre>
+<p>You can also run your login shell inside the slice:
+</p>
+<pre>$ systemd-run --user --slice=<i>my.slice</i> --shell
+</pre>
+<h3><span class="mw-headline" id="Run-time_adjustment">Run-time adjustment</span></h3>
+<p>cgroups resources can be adjusted at run-time using <code>systemctl set-property</code> command. Option syntax is the same as in <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.resource-control"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.resource-control.5">systemd.resource-control(5)</a></span>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  The adjustments will be made <b>permanent</b> unless <code>--runtime</code> option is passed. Adjustments are saved at <code>/etc/systemd/system.control/</code> for system wide options and <code>.config/systemd/user.control/</code> for user options.</div>  
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Not all resources changes immediately take effect. For example, changing TaskMax will only take effect on spawning new processes.</div>
+<p>For example, cutting off internet access for all user sessions:
+</p>
+<pre>$ systemctl set-property user.slice IPAddressDeny=any
+</pre>
+<h2><span class="mw-headline" id="With_libcgroup">With libcgroup</span></h2>
+<p>You can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> the <code>cgconfig</code> service with systemd. This allows you to track any errors in <code>cgconfig.conf</code> more easily.
+</p>
+<h3><span class="mw-headline" id="Ad-hoc_groups">Ad-hoc groups</span></h3>
+<p>One of the powers of cgroups is that you can create "ad-hoc" groups on the fly. You can even grant the privileges to create custom groups to regular users. <code>groupname</code> is the cgroup name:
+</p>
+<pre># cgcreate -a <i>user</i> -t <i>user</i> -g memory,cpu:<i>groupname</i>
+</pre>
+<p>Now all the tunables in the group <code>groupname</code> are writable by your user:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -l /sys/fs/cgroup/memory/<i>groupname</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">total 0
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 cgroup.event_control
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 cgroup.procs
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 cpu.rt_period_us
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 cpu.rt_runtime_us
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 cpu.shares
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 notify_on_release
+-rwxrwxr-x 1 user root 0 Sep 25 00:39 tasks
+</pre>
+<p>Cgroups are hierarchical, so you can create as many subgroups as you like. If a normal user wants to run a <code>bash</code> shell under a new subgroup called <code>foo</code>:
+</p>
+<pre>$ cgcreate -g memory,cpu:<b>groupname/foo</b>
+$ <b>cgexec</b>    -g memory,cpu:groupname/foo <b>bash</b>
+</pre>
+<p>To make sure (only meaningful for legacy (v1) cgroups):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ cat /proc/self/cgroup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">11:memory:/groupname/foo
+6:cpu:/groupname/foo
+</pre>
+<p>A new subdirectory was created for this group. To limit the memory usage of all processes in this group to 10 MB, run the following:
+</p>
+<pre>$ echo 10000000 &gt; /sys/fs/cgroup/memory/groupname/foo/memory.limit_in_bytes
+</pre>
+<p>Note that the memory limit applies to RAM use only -- once tasks hit this limit, they will begin to swap. But it won't affect the performance of other processes significantly.
+</p>
+<p>Similarly you can change the CPU priority ("shares") of this group. By default all groups have 1024 shares. A group with 100 shares will get a ~10% portion of the CPU time:
+</p>
+<pre>$ echo 100 &gt; /sys/fs/cgroup/cpu/groupname/foo/cpu.shares
+</pre>
+<p>You can find more tunables or statistics by listing the cgroup directory.
+</p>
+<p>You can also change the cgroup of already running processes. To move all 'bash' commands to this group:
+</p>
+<pre>$ pidof bash
+13244 13266
+$ <b>cgclassify</b> -g memory,cpu:groupname/foo `pidof bash`
+$ cat /proc/13244/cgroup
+11:memory:/groupname/foo
+6:cpu:/groupname/foo
+</pre>
+<h3><span class="mw-headline" id="Persistent_group_configuration">Persistent group configuration</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> when using <a href="../en/Systemd.html" title="Systemd">Systemd</a> &gt; = 205 to manage cgroups, you can ignore this file entirely.
+</div>
+<p>If you want your cgroups to be created at boot, you can define them in <code>/etc/cgconfig.conf</code> instead. For example, the "groupname" has a permission for <code>$USER</code> and <i>users</i> of group <code>$GROUP</code> to manage limits and add tasks. A  <i>subgroup</i> "groupname/foo" group definitions would look like this: 
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cgconfig.conf </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">group <b>groupname</b> {
+  perm {
+# who can manage limits
+    admin {
+      uid = <b>$USER</b>;
+      gid = <b>$GROUP</b>;
+    }
+# who can add tasks to this group
+    task {
+      uid = <b>$USER</b>;
+      gid = <b>$GROUP</b>;
+    }
+  }
+# create this group in cpu and memory controllers
+  cpu { }
+  memory { }
+}
+
+group <b>groupname/foo</b> {
+  cpu {
+    <b>cpu.shares</b> = 100;
+  }
+  memory {
+    <b>memory.limit_in_bytes</b> = 10000000;
+  }
+}</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>Comments should begin at the start of a line! The <b>#</b> character for comments must appear as the first character of a line. Else, <i>cgconfigparser</i> will have problem parsing it but will only report <code>cgroup change of group failed</code> as the error, unless you started <i>cgconfig</i> with <a href="../en/Systemd.html" title="Systemd">Systemd</a>
+</li>
+<li>The permissions section is optional.</li>
+<li>The <code>/sys/fs/cgroup/</code> hierarchy directory containing all <i>controllers</i> sub-directories is already created and mounted at boot as a virtual file system. This gives the ability to create a new group entry with the <code><i>$CONTROLLER-NAME { }</i></code> command. If for any reason you want to create and mount hierachies in another place, you will then need to write a second entry in <code>/etc/cgconfig.conf</code> following this way :</li>
+</ul>
+<pre> mount {    
+   cpuset = /your/path/<i>groupname</i>;
+ }
+</pre>
+<p>This is equivalent to these shell commands:
+</p>
+<pre> # mkdir /your/path/<i>groupname</i>
+ # mount -t /your/path -o cpuset <i>groupname</i> /your/path/<i>groupname</i>
+</pre>
+</div>
+<h2><span class="mw-headline" id="With_the_cgroup_virtual_filesystem">With the cgroup virtual filesystem</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> this section must be integrated with the following sections (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Cgroups">Talk:Cgroups#</a>)</div>
+</div>
+<p>Starting with systemd 232, the <i>cgm</i> method described in the next section, this section will instead describe a manual method to limit memory usage.
+</p>
+<p>Create a new cgroup named <i>groupname</i>:
+</p>
+<pre># mkdir /sys/fs/cgroup/memory/<i>groupname</i>
+</pre>
+<p>Example: set the maximum memory limit to 100MB:
+</p>
+<pre># echo 100000000 &gt; /sys/fs/cgroup/memory/<i>groupname</i>/memory.limit_in_bytes
+</pre>
+<p>Move a process to the cgroup (note: only one PID can be written at a time, repeat this for each process that must be moved):
+</p>
+<pre># echo <i>pid</i> &gt; /sys/fs/cgroup/memory/<i>groupname</i>/cgroup.procs
+</pre>
+<h2><span class="mw-headline" id="Examples">Examples</span></h2>
+<h3><span class="mw-headline" id="Matlab">Matlab</span></h3>
+<p>Doing large calculations in <a href="../en/MATLAB.html" title="MATLAB">MATLAB</a> can crash your system, because Matlab does not have any protection against taking all your machine's memory or CPU. The following examples show a <i>cgroup</i> that constrains Matlab to first 6 CPU cores and 5 GB of memory.
+</p>
+<h4><span class="mw-headline" id="With_systemd_2">With systemd</span></h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/matlab.slice</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Slice]
+AllowedCPUs=0-5
+MemoryHigh=6G</pre>
+<p>Launch Matlab like this (be sure to use the right path):
+</p>
+<pre>$ systemd-run --user --slice=matlab.slice /opt/MATLAB/2012b/bin/matlab -desktop
+</pre>
+<h4><span class="mw-headline" id="With_libcgroup_2">With libcgroup</span></h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cgconfig.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">group matlab {
+    perm {
+        admin {
+            uid = <i>username</i>;
+        }
+        task {
+            uid = <i>username</i>;
+        }
+    }
+
+    cpuset {
+        cpuset.mems="0";
+        cpuset.cpus="0-5";
+    }
+    memory {
+        memory.limit_in_bytes = 5000000000;
+    }
+}</pre>
+<p>Change <code><i>username</i></code> to the user Matlab is run as.
+</p>
+<p>You can also restrict the CPU share with the <code>cpu</code> constraint.
+</p>
+<p>Launch Matlab like this (be sure to use the right path):
+</p>
+<pre>$ cgexec -g memory,cpuset:matlab /opt/MATLAB/2012b/bin/matlab -desktop
+</pre>
+<h2><span class="mw-headline" id="Documentation">Documentation</span></h2>
+<ul>
+<li>For information on controllers and what certain switches and tunables mean, refer to kernel's documentation <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html">v1</a> or <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">v2</a> (or install linux-docs and see <code>/usr/src/linux/Documentation/cgroup</code>)</li>
+<li>A detailed and complete Resource Management Guide can be found in the <a rel="nofollow" class="external text" href="http://docs.fedoraproject.org/en-US/Fedora/17/html-single/Resource_Management_Guide/index.html#sec-How_Control_Groups_Are_Organized">fedora project documentation</a>.</li>
+</ul>
+<p>For commands and configuration files, see relevant man pages, e.g. <code>man cgcreate</code> or <code>man cgrules.conf</code>
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://systemd.io/CGROUP_DELEGATION/">systemd cgroups hacker guide</a></li>
+<li><a rel="nofollow" class="external text" href="https://chrisdown.name/talks/cgroupv2/cgroupv2-fosdem.pdf">cgroupv2: Linux's new unified control group system</a></li>
+<li><span class="plainlinks archwiki-template-man" title="$ man 7 cgroups"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/cgroups.7">cgroups(7)</a></span></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+<li><a href="../en/Category:Virtualization.html" title="Category:Virtualization">Virtualization</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Cgroups&amp;oldid=625356">https://wiki.archlinux.org/index.php?title=Cgroups&amp;oldid=625356</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 July 2020, at 13:39.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

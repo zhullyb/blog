@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Booster - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Booster rootpage-Booster skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Booster</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Kernel_module.html" class="mw-redirect" title="Kernel modules">Kernel modules</a></li>
+<li><a href="../en/Minimal_initramfs.html" title="Minimal initramfs">Minimal initramfs</a></li>
+<li><a href="../en/General_troubleshooting.html#Boot_problems" class="mw-redirect" title="Boot debugging">Boot debugging</a></li>
+<li><a href="../en/Mkinitcpio.html" title="Mkinitcpio">Mkinitcpio</a></li>
+<li><a href="../en/Dracut.html" title="Dracut">dracut</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://github.com/anatol/booster">Booster</a> is a fast <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a> generator similar to <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> and <a href="../en/Dracut.html" title="Dracut">dracut</a>.
+Booster is inspired by <a rel="nofollow" class="external text" href="https://michael.stapelberg.ch/posts/2020-01-21-initramfs-from-scratch-golang/">distri project</a> and aims to create a small and fast init image.
+</p>
+<p>Booster consists of two major components:
+</p>
+<ul>
+<li>Initramfs generator <code>/usr/bin/booster</code> user-space tool. It is responsible for initramfs image generation.</li>
+<li>Generated images that are usually located at <code>/boot/</code> and used by the system boot loader to boot Linux OS.</li>
+</ul>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Install"><span class="tocnumber">1</span> <span class="toctext">Install</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Boot_loader_configuration"><span class="tocnumber">3</span> <span class="toctext">Boot loader configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#systemd-boot"><span class="tocnumber">3.1</span> <span class="toctext">systemd-boot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Enable_encryption"><span class="tocnumber">4</span> <span class="toctext">Enable encryption</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Clevis_encryption"><span class="tocnumber">4.1</span> <span class="toctext">Clevis encryption</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Debug"><span class="tocnumber">5</span> <span class="toctext">Debug</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Install">Install</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Booster is still in active development and it might not be fully stable yet. We recommend to keep another initramfs generator (e.g. <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a>) as a backup option.</div>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/booster-git/">booster-git</a></span><sup><small>AUR</small></sup>. The package installation hook will generate initramfs images, one per installed kernel (e.g. for <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span>). The images are located under <code>/boot</code> directory:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ ls -lh /boot/booster*</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">-rwxr-xr-x 1 root root 4.0M Dec 16 16:20 /boot/booster-linux.img
+</pre>
+<p>Optionally the image can build manually:
+</p>
+<pre>$ booster -output mybooster.img
+</pre>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Booster generator configuration is located at <code>/etc/booster.yaml</code>. If there is no configuration file then the default configuration (host-specific images, no network) is used.
+</p>
+<p>The configuration file helps to override the default behaviour. Here is a sample configuration:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/booster.yaml</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">network:
+  dhcp: on
+  # 'dhcp' cannot be used together with 'ip'
+  ip: 10.0.2.15/24
+  gateway: 10.0.2.255
+universal: false
+modules: nvidia,kernel/sound/usb/
+</pre>
+<p><code>network</code> is for network configuration. If this node is omitted then no network is initialized at the boot time. The network can be configured with static ip (nodes <code>ip</code> and <code>gateway</code>) or with dhcp4 (node <code>dhcp</code>).
+</p>
+<p><code>universal</code> option enables universal images. Universal images include a large set of kernel drivers/tools. By default a host-specific image is generated, such images contain modules used by the current host only.
+</p>
+<p><code>modules</code> adds extra modules to the generated image. You can use reference modules either by its name or file path or path to directory with modules (directory name always ends with <code>/</code> symbol). Note that the booster generator resolves module dependencies and adds them to the image as well.
+</p>
+<h2><span class="mw-headline" id="Boot_loader_configuration">Boot loader configuration</span></h2>
+<p>Once the image is generated it is time to configure the <a href="../en/Arch_boot_process.html#Boot_loader" title="Arch boot process">boot loader</a>.
+</p>
+<h3><span class="mw-headline" id="systemd-boot">systemd-boot</span></h3>
+<p>To enable the new initramfs image with <a href="../en/Systemd-boot.html" title="Systemd-boot">systemd-boot</a> simply create a new boot loader entry like this one:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/boot/loader/entries/booster.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">title Arch Linux with booster
+linux /vmlinuz-linux
+initrd /booster-linux.img
+options root=UUID=08f83949-bcbb-47bb-bc17-089aaa59e17e rw</pre>
+<p>Where the root filesystem is referenced by <code>UUID=08f83949-bcbb-47bb-bc17-089aaa59e17e</code>. To find your root device UUID run <code>blkid /dev/<i>ROOTDEVICE</i></code>. 
+</p>
+<h2><span class="mw-headline" id="Enable_encryption">Enable encryption</span></h2>
+<p>Booster supports LUKS based full disk encryption out of the box. Generator does not need any extra configuration. And for initramfs you need to append information about the LUKS partition where the root resides. This is done with either <code>rd.luks.uuid=<i>LUKSUUID</i></code> or <code>rd.luks.name=<i>LUKSUUID</i>=<i>LUKSNAME</i></code> <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> that you need to specify in your boot loader configuration file. <code><i>LUKSUUID</i></code> specifies <a href="../en/Persistent_block_device_naming.html#by-uuid" class="mw-redirect" title="UUID">UUID</a> of the encrypted LUKS partition that needs to be unlocked by booster. Pay attention that the UUID does not contain any quotes. <code><i>LUKSNAME</i></code> specifies name of the unlocked partition (as in <code>/dev/mapper/<i>NAME</i></code>).
+</p>
+<p>No image rebuild is required. Once the boot loader configuration is done, reboot the computer. After that you will see a <code>Enter passphrase for <i>YOURROOT</i>:</code> prompt at the boot time asking for a password for the encrypted root partition.
+</p>
+<h3><span class="mw-headline" id="Clevis_encryption">Clevis encryption</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Create a separate page for non-booster specific clevis information</div>
+<p>Passwords manually entered by a user is a traditional and widely used way to unlock encrypted LUKS partitions. But it has a few disadvantages:
+</p>
+<ul>
+<li>It requires manual intervention and thus does not work with setups that require automatic boot (e.g. a large server farm).</li>
+<li>An average human brain is capable of remembering relatively simple passwords (~20-30 bits of entropy) that are much weaker than keys used for modern block ciphers (128/256 bits).</li>
+</ul>
+<p>A solution for it would be encrypting data with a strong key stored securely somewhere else, for example at your <a href="../en/Trusted_Platform_Module.html" class="mw-redirect" title="TPM">TPM</a> chip or <a href="../en/YubiKey.html" title="YubiKey">YubiKey</a> or some network service. <a rel="nofollow" class="external text" href="https://github.com/latchset/clevis/">Clevis</a> is a framework that implements this idea. It allows to encrypt (in terms of clevis <i>bind</i>) data with a pluggable <i>pin</i>. Currently clevis implements 3 pins:
+</p>
+<ul>
+<li>TPM2 data binding</li>
+<li>Network service (called <a rel="nofollow" class="external text" href="https://github.com/latchset/tang">Tang</a>) data binding</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing" class="extiw" title="wikipedia:Shamir's Secret Sharing">Shamir's Secret Sharing</a> that allows you to combine other pins.</li>
+</ul>
+<p>Booster supports all 3 types of pin.
+</p>
+<p>To use clevis please install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=clevis">clevis</a></span> package. Here is an example of data binding with TPM2 (works only if you have a <a href="../en/Trusted_Platform_Module.html" class="mw-redirect" title="TPM">TPM</a> chip at your computer):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ clevis encrypt tpm2 '{}' &lt;&lt;&lt; 'hello, world'</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">eyJhbGciOiJkaXIiLCJjbGV2aXMiOnsicGluIjoidHBtMiIsInRwbTIiOnsiaGFzaCI6InNoYTI1NiIsImp3a19wcml2IjoiQU80QUlJQkxxT3FVenVDU1FmWkprNmdDN2wzMW43V3M2Y2FZd0VZS1BSR3Q0OHJEQUJBV2Z4M3pTUUNUTmtHZE9BM2FZd2RTZk9GcXZWdnVlQ3lPamFsWldCT2R4RlJKSzl5ZVRCM0pkNFktcF9HalhhNmlnLWxxNmtmMHZTWWkzOWMxVEpES1RYRVZTdnlXSlpEbGdxQ0JPMVNxeGJBd2tfSnIyRlRNY3hvNGtpSmNtMEVjbWd5dFdyME00QmcySlg4aVo3MEt1MTVjNzFORU5Ra3RjdGMtREhBVGFQcHJ2VzI2Z3d1YmUxckRfX19aV2tHaG9mX053M0M1OHlOcXF2RUpPZUwzNTZHNXJHNVVtYmUtWWV4Ujl2SEppZWlua3ZaNTJoMFVRYWVNSm9LYjJuNjlVTGZHb2J1NElTN20iLCJqd2tfcHViIjoiQUM0QUNBQUxBQUFFMGdBQUFCQUFJQ2poWDBVeTJKZVpSNU9pRU0ySktSeEtnUElYQ3dGNnRNR09NTDZ0ZnE5aiIsImtleSI6ImVjYyJ9fSwiZW5jIjoiQTI1NkdDTSJ9..1P2Emag_4k-GlhyY.MuQQYPa8QHrysZ74uA.0ddDxfZA3R-cCmaKu5yUZA
+</pre>
+<p>This long base64-encoded message is our text encrypted with an internal TPM key. It can be decrypted at the current computer only. Trying to decrypt it from another computer (or rather with another TPM chip) will return an error.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ clevis decrypt tpm2 '{}' &lt;&lt;&lt; 'eyJhbGciOiJkaXIiLCJjbGV2aXMiOnsicGluIjoidHBtMiIsInRwbTIiOnsiaGFzaCI6InNoYTI1NiIsImp3a19wcml2IjoiQU80QUlJQkxxT3FVenVDU1FmWkprNmdDN2wzMW43V3M2Y2FZd0VZS1BSR3Q0OHJEQUJBV2Z4M3pTUUNUTmtHZE9BM2FZd2RTZk9GcXZWdnVlQ3lPamFsWldCT2R4RlJKSzl5ZVRCM0pkNFktcF9HalhhNmlnLWxxNmtmMHZTWWkzOWMxVEpES1RYRVZTdnlXSlpEbGdxQ0JPMVNxeGJBd2tfSnIyRlRNY3hvNGtpSmNtMEVjbWd5dFdyME00QmcySlg4aVo3MEt1MTVjNzFORU5Ra3RjdGMtREhBVGFQcHJ2VzI2Z3d1YmUxckRfX19aV2tHaG9mX053M0M1OHlOcXF2RUpPZUwzNTZHNXJHNVVtYmUtWWV4Ujl2SEppZWlua3ZaNTJoMFVRYWVNSm9LYjJuNjlVTGZHb2J1NElTN20iLCJqd2tfcHViIjoiQUM0QUNBQUxBQUFFMGdBQUFCQUFJQ2poWDBVeTJKZVpSNU9pRU0ySktSeEtnUElYQ3dGNnRNR09NTDZ0ZnE5aiIsImtleSI6ImVjYyJ9fSwiZW5jIjoiQTI1NkdDTSJ9..1P2Emag_4k-GlhyY.MuQQYPa8QHrysZ74uA.0ddDxfZA3R-cCmaKu5yUZA'</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">hello, world
+</pre>
+<p>Clevis allows to bind LUKS partitions as well, e.g.
+</p>
+<pre># clevis luks bind -d /dev/nvme0n1p2 tpm2 '{}'
+</pre>
+<p>Creates a LUKS slot with a password encrypted by your TPM chip. It can be verified by running
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cryptsetup luksDump /dev/nvme0n1p2</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+Tokens:
+ 0: clevis
+   Keyslot:  1
+...
+</pre>
+<p>It shows that one <i>clevis</i> token appeared. LUKS uses these tokens to store metadata about passwords stored <i>somewhere else</i> (e.g. at TPM chip). Please refer to clevis documentation for more information.
+</p>
+<p>Booster is able to read the LUKS tokens, decode clevis information, reconstruct the password and unlock the partition automatically.
+</p>
+<p>Partitions bound to <i>tpm2</i> or <i>sss</i> pins do not require any booster-side configuration. <i>Tang</i> (network binding) pin requires network enabled. Please refer to <a href="#Configuration">#Configuration</a> section for more information on network configuration.
+</p>
+<h2><span class="mw-headline" id="Debug">Debug</span></h2>
+<p>If booster has issues and does not work as expected then please enable debug output that provides extra information about what is going on:
+</p>
+<ul>
+<li>for generator there is a <code>-debug</code> command line flag: <code>booster -debug</code>.</li>
+<li>for init there is a <code>booster.debug=1</code> <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a>.</li>
+</ul>
+<p>If you believe it is an issue with booster itself then please file a ticket here <a rel="nofollow" class="external free" href="https://github.com/anatol/booster/issues">https://github.com/anatol/booster/issues</a>
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://github.com/anatol/booster/blob/develop/README.md">upstream README</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Booster&amp;oldid=649118">https://wiki.archlinux.org/index.php?title=Booster&amp;oldid=649118</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 17 January 2021, at 09:11.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

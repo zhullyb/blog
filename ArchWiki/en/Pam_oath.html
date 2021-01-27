@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>pam_oath - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Pam_oath rootpage-Pam_oath skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">pam_oath</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Initiative_for_Open_Authentication.html" class="mw-redirect" title="OATH">OATH</a></li>
+<li><a href="../en/Google_Authenticator.html" title="Google Authenticator">Google Authenticator</a></li>
+<li><a href="../en/YubiKey.html" title="YubiKey">YubiKey</a></li>
+</ul>
+</div>
+<p>The <a rel="nofollow" class="external text" href="http://www.nongnu.org/oath-toolkit/index.html">OATH Toolkit</a> provides one-time password (OTP) components for authentication systems. It contains a PAM authentication module that supports <a href="https://en.wikipedia.org/wiki/HMAC-based_One-time_Password_Algorithm" class="extiw" title="w:HMAC-based One-time Password Algorithm">HOTP</a> and <a href="https://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm" class="extiw" title="w:Time-based One-time Password Algorithm">TOTP</a> as described by their <i>informational</i> RFC, RFC <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc4226">4226</a> and <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc6238">6328</a> respectively. The OTP generator applications are available for iOS, Android, Blackberry and other devices. Similar to <a href="../en/Google_Authenticator.html" title="Google Authenticator">Google Authenticator</a> the authentication mechanism integrates into the Linux <a href="../en/PAM.html" title="PAM">PAM</a> system. This guide shows the installation and configuration of this mechanism.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Setting_up_the_oath"><span class="tocnumber">2</span> <span class="toctext">Setting up the oath</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Setting_up_the_PAM"><span class="tocnumber">3</span> <span class="toctext">Setting up the PAM</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Logging_with_an_oath_pass"><span class="tocnumber">4</span> <span class="toctext">Logging with an oath pass</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=oath-toolkit">oath-toolkit</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Setting_up_the_oath">Setting up the oath</span></h2>
+<p>The oath seed is an hexadecimal number that should be unique per user. To generate a new seed for a user, you could use the following command line:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ head -10 /dev/urandom | sha512sum | cut -b 1-30</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">1ab4321412aebcw
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The above output seed is used as example seed in this article and <b>must not</b> be used.</div>
+<p>There needs to be one oath per user and link to it in a configuration file <code>/etc/users.oath</code>. While being root create the file and insert the user seed:
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use T bigger than 60. You will get (OATH_UNKNOWN_USER: Cannot find information about user).</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/users.oath</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Option User Prefix Seed
+HOTP/T30/6 <i>user</i> - <i>1ab4321412aebcw</i>
+</pre>
+<p>If you want only event based OTP, create this file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/users.oath</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Option User Prefix Seed
+HOTP <i>user</i> - <i>1ab4321412aebcw</i>
+</pre>
+<p>Make sure that the file can only be accessed by root:
+</p>
+<pre># chmod 600 /etc/users.oath
+# chown root /etc/users.oath
+</pre>
+<h2><span class="mw-headline" id="Setting_up_the_PAM">Setting up the PAM</span></h2>
+<p>To enable oath for a specific service only, like ssh, you can edit the file <code>/etc/pam.d/sshd</code> and add at the beginning of the file the following line:
+</p>
+<pre>auth	  sufficient pam_oath.so usersfile=/etc/users.oath window=30 digits=6
+</pre>
+<p>This will allow authentication if you just enter the right oath code. You can make it a requirement and let the rest of the pam stack be processed if you use the following line instead:
+</p>
+<pre>auth	  required pam_oath.so usersfile=/etc/users.oath window=30 digits=6
+</pre>
+<p>For ssh login to work make sure that both <code>ChallengeResponseAuthentication</code> and <code>UsePAM</code> options are enabled:
+</p>
+<pre>ChallengeResponseAuthentication yes
+UsePAM yes
+</pre>
+<p>If you want to force OATH request-response even if there is a working public/private key authentication also add the following:
+</p>
+<pre>AuthenticationMethods publickey,keyboard-interactive
+PasswordAuthentication yes
+</pre>
+<h2><span class="mw-headline" id="Logging_with_an_oath_pass">Logging with an oath pass</span></h2>
+<p>Use oathtool for getting the one time password and further information.
+</p>
+<p>To get some information about the tool, run
+</p>
+<pre>$ oathtool --help
+</pre>
+<p>For logging in with TOTP (HOTP/T30/6... in users.oath):
+</p>
+<pre>$ oathtool -v --totp -d6 <i>1ab4321412aebcw</i>
+</pre>
+<p>If you are logging in with HOTP (HOTP... in users.oath):
+</p>
+<pre>$ oathtool -v -d6 <i>1ab4321412aebcw</i>
+</pre>
+<p>Of course replace <code><i>1ab4321412aebcw</i></code> by the seed corresponding to your user. It will display something like that:
+</p>
+<pre>Hex secret: 1ab4321412aebc
+Base32 secret: DK2DEFASV26A====
+Digits: 6
+Window size: 0
+Start counter: 0x0 (0)
+
+820170
+</pre>
+<p>The last number is actually the code you can use to log in right now, but more interestingly the Base32 secret, is actually what we need to generate a QR code for this user. To do so install the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qrencode">qrencode</a></span> to run the following command:
+</p>
+<pre>$ qrencode -o <i>user</i>.png 'otpauth://totp/<i>user</i>@<i>machine</i>?secret=<i>DK2DEFASV26A===='</i>
+</pre>
+<p>Of course change <i>user</i>, <i>machine</i> and <code><i>DK2DEFASV26A====</i></code> accordingly. Once done, you can visualize your QR code with your preferred image visualizer application and use that to configure your phone. Alternatively you may generate the QR code directly onto terminal with:
+</p>
+<pre>$ qrencode -t UTF8 'otpauth://totp/<i>user</i>@<i>machine</i>?secret=<i>DK2DEFASV26A===='</i>
+</pre>
+<p>It is pretty straight forward to use FreeOTP to then take a screenshot of that <i>.png</i> (or ASCII-art like image) and get it to display OTP pass when needed.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The secret key of your users is the most important information in this system. Once you setup a phone to provide OTP, it does have that key. The qr code in that <i>.png</i> file does have that key. You need to take extra care of this file. They should only be stored on encrypted medium (Your phone need to be using encryption for any sane level of security). If not even confined in a sandbox like Samsung Knox to prevent third party application to potentially access them.</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://spod.cx/blog/two-factor-ssh-auth-with-pam_oath-google-authenticator.shtml">Two-factor time based (TOTP) SSH authentication with pam_oath and Google Authenticator</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.nongnu.org/oath-toolkit/pam_oath.html">pam_oath manual</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Secure_Shell.html" title="Category:Secure Shell">Secure Shell</a></li>
+<li><a href="../en/Category:Authentication.html" title="Category:Authentication">Authentication</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Pam_oath&amp;oldid=640479">https://wiki.archlinux.org/index.php?title=Pam_oath&amp;oldid=640479</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 November 2020, at 15:46.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

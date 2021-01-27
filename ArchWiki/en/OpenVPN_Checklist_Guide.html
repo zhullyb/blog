@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>OpenVPN Checklist Guide - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-OpenVPN_Checklist_Guide rootpage-OpenVPN_Checklist_Guide skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">OpenVPN Checklist Guide</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article summarizes the install process required for OpenVPN. See <a href="../en/OpenVPN.html" title="OpenVPN">OpenVPN</a> instead for a walkthrough.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Install"><span class="tocnumber">1</span> <span class="toctext">Install</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Prepare_data"><span class="tocnumber">2</span> <span class="toctext">Prepare data</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Generate_the_certificates"><span class="tocnumber">3</span> <span class="toctext">Generate the certificates</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Setting_up_the_server"><span class="tocnumber">4</span> <span class="toctext">Setting up the server</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Setting_up_the_clients"><span class="tocnumber">5</span> <span class="toctext">Setting up the clients</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Install">Install</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the packages <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openvpn">openvpn</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=easy-rsa">easy-rsa</a></span>.
+</p>
+<h2><span class="mw-headline" id="Prepare_data">Prepare data</span></h2>
+<ul>
+<li>Copy <code>/etc/easy-rsa</code> to <code>/etc/openvpn/easy-rsa</code> and cd there</li>
+<li>Edit the <code>vars</code> file with the information you want. Read <a href="../en/Easy-RSA.html" class="mw-redirect" title="Create a Public Key Infrastructure Using the easy-rsa Scripts">Create a Public Key Infrastructure Using the easy-rsa Scripts</a> for details.</li>
+<li>Clean up any previous keys:</li>
+</ul>
+<pre># easyrsa clean-all</pre>
+<h2><span class="mw-headline" id="Generate_the_certificates">Generate the certificates</span></h2>
+<ul><li>Create a seed for the CA creation</li></ul>
+<pre># dd if=/dev/urandom of=pki/.rnd bs=256 count=1</pre>
+<ul><li>Create the "certificate authority" key</li></ul>
+<pre># easyrsa build-ca nopass</pre>
+<ul><li>Create certificate and private key for the server</li></ul>
+<pre># easyrsa build-server-full <i>&lt;server-name&gt;</i> nopass</pre>
+<ul><li>Create the Diffie-Hellman pem file for the server.</li></ul>
+<pre># easyrsa gen-dh</pre>
+<ul><li>Create a certificate for each client.</li></ul>
+<pre># easyrsa build-client-full <i>&lt;client-name&gt;</i> nopass</pre>
+<p>All certificates are stored in <code>pki</code> directory. If you mess up, you can start all over by doing a <code>easyrsa clean-all</code>
+</p>
+<p>Copy to each client the <code>ca.crt</code>, and their respective crt and key files.
+</p>
+<h2><span class="mw-headline" id="Setting_up_the_server">Setting up the server</span></h2>
+<ul><li>Create <code>/etc/openvpn/server/myvpnserver.conf</code> with a content like this:</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/server/myvpnserver.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">port <i>&lt;port&gt;</i>
+proto tcp
+dev tun0
+
+ca /etc/openvpn/easy-rsa/pki/ca.crt
+cert /etc/openvpn/easy-rsa/pki/issued/<i>&lt;server-name&gt;</i>.crt
+key /etc/openvpn/easy-rsa/pki/private/<i>&lt;server-name&gt;</i>.key
+dh /etc/openvpn/easy-rsa/pki/<i>&lt;your pem file&gt;</i>
+
+server <i>&lt;desired base ip&gt;</i> 255.255.255.0
+ifconfig-pool-persist ipp.txt
+keepalive 10 120
+comp-lzo
+user nobody
+group nobody
+persist-key
+persist-tun
+status /var/log/openvpn-status.log
+verb 3
+
+log-append /var/log/openvpn
+status /tmp/vpn.status 10
+</pre>
+<ul><li>Start and, optionally, enable for autostart on boot, the daemon. (In this example, is <code>openvpn-server@myvpnserver.service</code>)</li></ul>
+<p>Read <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">Daemon</a> for more information.
+</p>
+<h2><span class="mw-headline" id="Setting_up_the_clients">Setting up the clients</span></h2>
+<ul><li>Create a .conf file for each client like this:</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/openvpn/client/a-client-conf-file.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">client
+remote <i>&lt;server&gt;</i> <i>&lt;port&gt;</i>
+dev tun0
+proto tcp
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+verb 2
+ca ca.crt
+cert <i>&lt;client crt file with full path&gt;</i>
+key <i>&lt;client key file with full path&gt;</i>
+comp-lzo
+</pre>
+<ul><li>Start the connection with</li></ul>
+<pre># openvpn a-client-conf-file.conf &amp;</pre>
+<p>Optionally, enable for autostart on boot the daemon. (In this example, is <code>openvpn-client@a-client-conf-file.service</code>)
+</p>
+<p>Read <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">Daemon</a> for more information.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Virtual_Private_Network.html" title="Category:Virtual Private Network">Virtual Private Network</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=OpenVPN_Checklist_Guide&amp;oldid=633708">https://wiki.archlinux.org/index.php?title=OpenVPN_Checklist_Guide&amp;oldid=633708</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 30 August 2020, at 00:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

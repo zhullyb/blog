@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd-nspawn (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd-nspawn_Español rootpage-Systemd-nspawn_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd-nspawn (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../es/Systemd.html" title="Systemd (Español)">systemd (Español)</a></li>
+<li><a href="../en/Linux_Containers.html" title="Linux Containers">Linux Containers</a></li>
+<li><a href="../es/Systemd-networkd.html" title="Systemd-networkd (Español)">systemd-networkd (Español)</a></li>
+<li><a href="../en/Docker.html" title="Docker">Docker</a></li>
+<li><a href="../en/Linux_Containers.html#Systemd_considerations_.28required.29" class="mw-redirect" title="Lxc-systemd">Lxc-systemd</a></li>
+</ul>
+</div>
+<p><i>systemd-nspawn</i> es parecido al comando <a href="../es/Chroot.html" class="mw-redirect" title="Change root (Español)">chroot</a>, pero es un <i>chroot en esteroides</i>.
+</p>
+<p><i>systemd-nspawn</i> puede ser usado para ejecutar un comando o un sistema operativo en contenedor de <i>namespace</i> muy ligero. Es mas poderoso que <a href="../es/Chroot.html" class="mw-redirect" title="Change root (Español)">chroot</a> ya que virtualiza toda estructura del sistema de archivos, así como el árbol de procesos, los sub sistemas IPC y los nombres de dominio y del servidor.
+</p>
+<p><i>systemd-nspawn</i> limita el acceso a varias interfaces del kernel como <code>/sys</code>, <code>/proc/sys</code> o <code>/sys/fs/selinux</code> en modo de lectura unicamente. Interfaces de red y el tiempo del sistema no se pueden modificar desde el contenedor. Nodos de dispositivos no se pueden crear. El sistema anfitrión no se puede reiniciar y módulos del kernel no se pueden montar desde el contenedor.
+</p>
+<p>Este mecanismo difiere de <a href="../en/Linux_Containers.html#Systemd_considerations_.28required.29" class="mw-redirect" title="Lxc-systemd">Lxc-systemd</a> o <a href="../en/Libvirt.html" title="Libvirt">Libvirt</a>-lxc, ya que es una herramienta mucho mas fácil de configurar.
+</p>
+<p><br>
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Instalaci%C3%B3n"><span class="tocnumber">1</span> <span class="toctext">Instalación</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Ejemplos"><span class="tocnumber">2</span> <span class="toctext">Ejemplos</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#Crear_e_iniciar_Arch_Linux_en_un_contenedor"><span class="tocnumber">2.1</span> <span class="toctext">Crear e iniciar Arch Linux en un contenedor</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#Crear_un_Arch_Linux_i686_dentro_de_un_anfitri%C3%B3n_x86_64"><span class="tocnumber">2.1.1</span> <span class="toctext">Crear un Arch Linux i686 dentro de un anfitrión x86_64</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5"><a href="#Crear_un_ambiente_Debian_o_Ubuntu"><span class="tocnumber">2.2</span> <span class="toctext">Crear un ambiente Debian o Ubuntu</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Activar_inicio_autom%C3%A1tico_de_los_contenedores"><span class="tocnumber">2.3</span> <span class="toctext">Activar inicio automático de los contenedores</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Manejo_de_contenedores"><span class="tocnumber">3</span> <span class="toctext">Manejo de contenedores</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#machinectl"><span class="tocnumber">3.1</span> <span class="toctext">machinectl</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Utilidades_de_systemd"><span class="tocnumber">3.2</span> <span class="toctext">Utilidades de systemd</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id="Instalaci.C3.B3n"></span><span class="mw-headline" id="Instalación">Instalación</span>
+</h2>
+<p><i>systemd-nspawn</i> es parte y viene empaquetado con <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span>.
+</p>
+<h2><span class="mw-headline" id="Ejemplos">Ejemplos</span></h2>
+<h3><span class="mw-headline" id="Crear_e_iniciar_Arch_Linux_en_un_contenedor">Crear e iniciar Arch Linux en un contenedor</span></h3>
+<p>En primer lugar <a href="../es/Help:Reading.html#Instalaci%C3%B3n_de_paquetes" title="Help:Reading (Español)">instale</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>.
+</p>
+<p>Cree un directorio para mantener el contenedor. En este ejemplo se usará <code>~/MyContainer</code>. 
+</p>
+<p>Use <i>pacstrap</i> para instalar un sistema básico de arch dentro del contenedor. Como mínimo es necesario instalar el grupo de paquetes <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=base">base</a></span>. 
+</p>
+<pre># pacstrap -i -c -d ~/MyContainer base [pkgs/grupos adicionales]
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> El parametro <code>-i</code> <b>omitira</b> auto confirmación en la selección de paquetes. Ya que no es necesario instalar el kernel en el contenedor, lo puede remover de la lista de selección para ahorrar espacio. Vea <a href="../es/Pacman.html#Utilizaci%C3%B3n" title="Pacman (Español)">pacman#Utilización</a>.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> El paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-firmware">linux-firmware</a></span> requerido por <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>, que esta incluido en el grupo de paquetes <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=base">base</a></span> no es necesario para ejecutar el contenedor. Este causa algunos problemas con <code>systemd-tmpfiles-setup.service</code> durante el arranque del contenedor con <code>systemd-nspawn</code>. Es posible instalar el grupo <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=base">base</a></span> excluyendo el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> y sus dependecias al construir el contenedor con <code># pacstrap -i -c -d ~/MyContainer base --ignore linux [additional pkgs/groups]</code>. El parámetro <code>--ignore</code> es pasado a <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pacman">pacman</a></span>. Vea <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/46591">FS#46591</a> para más información.
+</div>
+<p>Cuando la instalación ha finalizado, arranque el contenedor ejecutando:
+</p>
+<pre># systemd-nspawn -b -D ~/MyContainer
+</pre>
+<p>El parámetro <code>-b</code> arranca el contenedor (v.g. ejecuta <code>systemd</code> como PID=1), en lugar de simplemente iniciar una shell, y el parámetro <code>-D</code> especifica el directorio que se usara como directorio raíz del contenedor.
+</p>
+<p>Después que el contenedor arranque, inicie sesión con el usuario "root" sin contraseña.
+</p>
+<p>El contenedor se puede apagar ejecutando <code>poweroff</code> desde dentro del contenedor. Desde el sistema anfitrión, los contenedores se pueden controlar con la herramienta <a href="#machinectl">machinectl</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Para terminar la <i>sesión</i> estando dentro del contenedor, oprima <code>Ctrl</code> y rápidamente presione <code>]</code> tres veces. Teclados con disposición diferente a US, deben usar <code>%</code> en lugar de <code>]</code>.</div>
+<p><br>
+</p>
+<h4>
+<span id="Crear_un_Arch_Linux_i686_dentro_de_un_anfitri.C3.B3n_x86_64"></span><span class="mw-headline" id="Crear_un_Arch_Linux_i686_dentro_de_un_anfitrión_x86_64">Crear un Arch Linux i686 dentro de un anfitrión x86_64</span>
+</h4>
+<p>Es posible instalar un sistema mínimo de Arch Linux i686 dentro de un directorio y usarlo como un contenedor de systemd-nspawn en lugar de usar <a href="../es/Chroot.html" class="mw-redirect" title="Change root (Español)">chroot</a> o <a href="../en/Category:Virtualization.html" class="mw-redirect" title="Virtualization">virtualización</a>. Esto es útil para examinar la compilación de <code>PKGBUILD</code> en un sistema de i686. Este seguro de usar <code>pacman.conf</code> <b>sin</b> el repositorio <code>multilib</code>.
+</p>
+<pre> # pacman_conf=/tmp/pacman.conf # este es pacman.conf sin multilib
+ # mkdir /mnt/i686-archlinux
+ # linux32 pacstrap -C "$pacman_conf" -di /mnt/i686-archlinux base base-devel
+</pre>
+<p>Se puede dejar el paquete <code>linux</code> fuera del grupo <code>base</code>, ya que el sistema creado no pretende ser encendido en hardware real o virtual.
+</p>
+<p>Para arrancar el sistema i686 resultante como una instancia de systemd-nspawn, ejecute:
+</p>
+<pre> # linux32 systemd-nspawn -D /mnt/i686-archlinux
+</pre>
+<h3><span class="mw-headline" id="Crear_un_ambiente_Debian_o_Ubuntu">Crear un ambiente Debian o Ubuntu</span></h3>
+<p><a href="../es/Help:Reading.html#Instalaci%C3%B3n_de_paquetes" title="Help:Reading (Español)">Instale</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=debootstrap">debootstrap</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gnupg1/">gnupg1</a></span><sup><small>AUR</small></sup>, y uno de estos paquetes: <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=debian-archive-keyring">debian-archive-keyring</a></span> o <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ubuntu-keyring">ubuntu-keyring</a></span> (obviamente instale el llavero del distro que quiere).
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> <i>systemd-nspawn</i> requiere que el sistema operativo dentro del contenedor ejecute systemd como PID 1 y que <i>systemd-nspawn</i> este instalado en el contenedor. Esto quiere decir que Ubuntu antes de la version 15.04 no funcionaran, y configuraciones extras para cambiar de upstart a systemd son necesarias. También asegurese que el paquete <code>systemd-container</code> esta instalado en el contenedor.
+</div>
+<p>Desde este punto es relativamente trivial crear un ambiente con Debian o Ubuntu:
+</p>
+<pre># cd /var/lib/machines
+# debootstrap &lt;nombrecodigo&gt; myContainer &lt;url-repositorio&gt;
+</pre>
+<p>Para Debian nombres código validos son "stable" o "testing", también nombres de publicaciones "stretch" and "sid". Para Ubuntu el nombre código puede ser "xenial" o "zesty". Una lista completa de nombres codigo esta en <code>/usr/share/debootstrap/scripts</code>. 
+</p>
+<p>En caso de una imagen de Debian la "url-repositorio" puede ser <code><a rel="nofollow" class="external free" href="http://deb.debian.org/debian/">http://deb.debian.org/debian/</a></code>. Para Ubuntu la "url-repositorio" puede ser <code><a rel="nofollow" class="external free" href="http://archive.ubuntu.com/ubuntu/">http://archive.ubuntu.com/ubuntu/</a></code>.
+</p>
+<p>A diferencia de Arch, Debian y Ubuntu no dejaran iniciar sesión sin una contraseña. Para establecer la contraseña de root inicie sesión con el parámetro <code>-b</code> y cambie la contraseña:
+</p>
+<pre># systemd-nspawn -D myContainer
+# passwd
+# logout
+</pre>
+<p>Si los comandos de arriba no funcionaron, es posible arrancar el contenedor y ejecutar estos comandos:
+</p>
+<pre># systemd-nspawn -b -D myContainer  # Arranca el contenedor
+# machinectl shell root@myContainer /bin/bash  # Obtenga una shell con root
+# passwd
+# logout
+</pre>
+<h3>
+<span id="Activar_inicio_autom.C3.A1tico_de_los_contenedores"></span><span class="mw-headline" id="Activar_inicio_automático_de_los_contenedores">Activar inicio automático de los contenedores</span>
+</h3>
+<p>Al usar un contenedor frecuentemente, seria deseable iniciarlo al arrancar el sistema anfitrión.
+</p>
+<p><a href="../es/Systemd.html#Utilizar_las_unidades" title="Systemd (Español)">Active</a> el target <code>machines.target</code>, después ejecute <code>systemd-nspawn@<i>myContainer</i>.service</code>, donde <code>myContainer</code> es un contenedor de nspawn ubicado en <code>/var/lib/machines</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> Para personalizar el arranque de los contenedores, edite <code>/etc/systemd/nspawn/<i>myContainer</i>.nspawn</code>. Vea <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.nspawn"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.nspawn.5">systemd.nspawn(5)</a></span> para todas las opciones.
+</div>
+<h2><span class="mw-headline" id="Manejo_de_contenedores">Manejo de contenedores</span></h2>
+<h3><span class="mw-headline" id="machinectl">machinectl</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> La herramienta <i>machinectl</i> requiere <a href="../es/Systemd.html" title="Systemd (Español)">systemd</a> y que el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dbus">dbus</a></span> este instalado en el contenedor. Vea <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/685">[1]</a> para más detalles en la discusión.</div>
+<p>El manejo de contenedores es efectuado principalmente con el comando <code>machinectl</code>. Vea <span class="plainlinks archwiki-template-man" title="$ man 1 machinectl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/machinectl.1">machinectl(1)</a></span> para más detalles.
+</p>
+<p>Ejemplos:
+</p>
+<p>Inicie una shell dentro de un contenedor que ya ha iniciado:
+</p>
+<pre>$ machinectl login <i>MyContainer</i>
+</pre>
+<p>Mostrar informacion detallada sobre un contenedor:
+</p>
+<pre>$ machinectl status <i>MyContainer</i>
+</pre>
+<p>Reinicie un contenedor:
+</p>
+<pre>$ machinectl reboot <i>MyContainer</i>
+</pre>
+<p>Apague un contenedor:
+</p>
+<pre>$ machinectl poweroff <i>MyContainer</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Sugerencia:</strong> Apagar y reiniciar se pueden ejecutar desde dentro de una sesión del contenedor, ejecutando los comandos de <i>systemctl</i> <code>poweroff</code> o <code>reboot</code>.</div>
+<p>Descargar una imagen:
+</p>
+<pre># machinectl pull-tar <i>URL</i> <i>name</i>
+</pre>
+<h3><span class="mw-headline" id="Utilidades_de_systemd">Utilidades de systemd</span></h3>
+<p>Bastantes de las utilidades de systemd han sido actualizadas para que funcionen con contenedores. Herramientas que generalmente proporcionan un parámetro <code>-M, --machine=</code> tomaran el nombre del contenedor como argumento.
+</p>
+<p>Ejemplos.
+</p>
+<p>Ver el histórico de una maquina especifica:
+</p>
+<pre>$ journalctl -M <i>MyContainer</i>
+</pre>
+<p>Mostrar el contenido del grupo de control:
+</p>
+<pre>$ systemd-cgls -M <i>MyContainer</i>
+</pre>
+<p>Mostrar el tiempo de arranque del contenedor:
+</p>
+<pre>$ systemd-analyze -M <i>MyContainer</i>
+</pre>
+<p>Para una perspectiva de los recursos usados:
+</p>
+<pre>$ systemd-cgtop
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Virtualization.html" title="Category:Virtualization (Español)">Virtualization (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd-nspawn_(Espa%C3%B1ol)&amp;oldid=648355">https://wiki.archlinux.org/index.php?title=Systemd-nspawn_(Español)&amp;oldid=648355</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 January 2021, at 12:06.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

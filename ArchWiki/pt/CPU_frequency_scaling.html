@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>CPU frequency scaling (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-CPU_frequency_scaling_Português rootpage-CPU_frequency_scaling_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">CPU frequency scaling (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/CPU_frequency_scaling.html" title="CPU frequency scaling">CPU frequency scaling</a>. Data da última tradução: 2020-06-19. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=CPU_frequency_scaling&amp;diff=0&amp;oldid=620983">alterações</a> na versão em inglês.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artigos relacionados</p>
+<ul>
+<li><a href="../en/Power_management.html" class="mw-redirect" title="Power saving">Economia de energia</a></li>
+<li><a href="../en/Laptop_Mode_Tools.html" title="Laptop Mode Tools">Laptop Mode Tools</a></li>
+<li><a href="../en/PHC.html" title="PHC">PHC</a></li>
+</ul>
+</div>
+<p>A escala de frequência da CPU permite que o sistema operacional aumente ou diminua a frequência da CPU para economizar energia. Frequências de CPU podem ser escalonadas automaticamente dependendo da carga do sistema, em resposta a eventos ACPI, ou manualmente por programas espaço do usuário.
+</p>
+<p>O escalonamento de frequência da CPU é implementado no kernel do Linux, a infraestrutura é chamada de <i>cpufreq</i>. Desde o kernel 3.4, os módulos necessários são carregados automaticamente e o <a href="#Escalonando_reguladores">regulador ondemand</a> recomendado é ativado por padrão. No entanto, as ferramentas de espaço do usuário, como <a href="#cpupower">cpupower</a>, <a href="../en/Acpid.html" title="Acpid">acpid</a>, <a href="../en/Laptop_Mode_Tools.html" title="Laptop Mode Tools">Laptop Mode Tools</a> ou ferramentas GUI fornecidas para o seu ambiente de área de trabalho, ainda podem ser usadas para configuração avançada.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Ferramentas_de_espa%C3%A7o_do_usu%C3%A1rio"><span class="tocnumber">1</span> <span class="toctext">Ferramentas de espaço do usuário</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#thermald"><span class="tocnumber">1.1</span> <span class="toctext">thermald</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#i7z"><span class="tocnumber">1.2</span> <span class="toctext">i7z</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#cpupower"><span class="tocnumber">1.3</span> <span class="toctext">cpupower</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#cpupower-gui"><span class="tocnumber">1.4</span> <span class="toctext">cpupower-gui</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Drivers_de_frequ%C3%AAncia_de_CPU"><span class="tocnumber">2</span> <span class="toctext">Drivers de frequência de CPU</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Configurando_frequ%C3%AAncias_m%C3%A1xima_e_m%C3%ADnima"><span class="tocnumber">2.1</span> <span class="toctext">Configurando frequências máxima e mínima</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Desabilitando_Turbo_Boost"><span class="tocnumber">2.2</span> <span class="toctext">Desabilitando Turbo Boost</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#intel_pstate"><span class="tocnumber">2.2.1</span> <span class="toctext">intel_pstate</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#acpi-cpufreq"><span class="tocnumber">2.2.2</span> <span class="toctext">acpi-cpufreq</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#x86_energy_perf_policy"><span class="tocnumber">2.2.3</span> <span class="toctext">x86_energy_perf_policy</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Escalonando_reguladores"><span class="tocnumber">3</span> <span class="toctext">Escalonando reguladores</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13">
+<a href="#Ajustando_o_regulador_ondemand"><span class="tocnumber">3.1</span> <span class="toctext">Ajustando o regulador ondemand</span></a>
+<ul>
+<li class="toclevel-3 tocsection-14"><a href="#Trocando_o_limite"><span class="tocnumber">3.1.1</span> <span class="toctext">Trocando o limite</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Taxa_de_amostragem"><span class="tocnumber">3.1.2</span> <span class="toctext">Taxa de amostragem</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Tornar_as_altera%C3%A7%C3%B5es_permanentes"><span class="tocnumber">3.1.3</span> <span class="toctext">Tornar as alterações permanentes</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17"><a href="#Intera%C3%A7%C3%A3o_com_eventos_da_ACPI"><span class="tocnumber">4</span> <span class="toctext">Interação com eventos da ACPI</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#Concess%C3%A3o_de_privil%C3%A9gios_no_GNOME"><span class="tocnumber">5</span> <span class="toctext">Concessão de privilégios no GNOME</span></a></li>
+<li class="toclevel-1 tocsection-19">
+<a href="#Solu%C3%A7%C3%A3o_de_problemas"><span class="tocnumber">6</span> <span class="toctext">Solução de problemas</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#Limita%C3%A7%C3%A3o_de_frequ%C3%AAncias_da_BIOS"><span class="tocnumber">6.1</span> <span class="toctext">Limitação de frequências da BIOS</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21"><a href="#Veja_tamb%C3%A9m"><span class="tocnumber">7</span> <span class="toctext">Veja também</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Ferramentas_de_espa.C3.A7o_do_usu.C3.A1rio"></span><span class="mw-headline" id="Ferramentas_de_espaço_do_usuário">Ferramentas de espaço do usuário</span>
+</h2>
+<h3><span class="mw-headline" id="thermald">thermald</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=thermald">thermald</a></span> é um daemon do Linux usado para evitar o superaquecimento de plataformas. Esse daemon monitora a temperatura e aplica compensação usando os métodos de resfriamento disponíveis.
+</p>
+<p>Por padrão, ele monitora a temperatura da CPU usando sensores de temperatura digital da CPU disponíveis e mantém a temperatura da CPU sob controle, antes que o hardware execute uma ação de correção agressiva. Se houver um sensor de temperatura da pele em sysfs térmicos, ele tentará manter a temperatura da pele abaixo de 45°C.
+</p>
+<p>A unit de systemd associada é <code>thermald.service</code>, que deve ser <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Inicia">iniciada</a> e <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Habilita">habilitada</a>.
+</p>
+<h3><span class="mw-headline" id="i7z">i7z</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=i7z">i7z</a></span> é uma ferramenta de relatório de CPUs i7 (e agora i3, i5) para o Linux. Pode ser iniciada de um Terminal com o comando <code>i7z</code> ou como interface gráfica com <code>i7z-gui</code>.
+</p>
+<h3><span class="mw-headline" id="cpupower">cpupower</span></h3>
+<p>O <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cpupower">cpupower</a></span> é um conjunto de utilitários do espaço de usuário projetado para auxiliar no dimensionamento de frequência da CPU. O pacote não é necessário para usar o escalonamento, mas é altamente recomendado porque ele fornece utilitários de linha de comando úteis e um serviço <a href="../pt/Systemd.html" title="Systemd (Português)">systemd</a> para alterar o gerenciador na inicialização.
+</p>
+<p>O arquivo de configuração do <i>cpupower</i> encontra-se em <code>/etc/default/cpupower</code>. Esse arquivo de configuração é lido por um script em bash em <code>/usr/lib/systemd/scripts/cpupower</code> que é ativado por <i>systemd</i> com <code>cpupower.service</code>. Você pode querer <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Habilitar">habilitar</a> <code>cpupower.service</code> para iniciar na inicialização.
+</p>
+<h3><span class="mw-headline" id="cpupower-gui">cpupower-gui</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cpupower-gui/">cpupower-gui</a></span><sup><small>AUR</small></sup> é um utilitário gráfico desenvolvido para auxiliar no dimensionamento da frequência da CPU. A GUI é baseada em <a href="../pt/GTK.html" title="GTK (Português)">GTK</a> e deve fornecer as mesmas opções que <i>cpupower</i>. O <i>cpupower-gui</i> pode alterar a frequência e o regulador máximo/mínimo da CPU para cada núcleo. O aplicativo manipula a concessão de privilégios por meio do <a href="../en/Polkit.html" title="Polkit">polkit</a> e permite que qualquer usuário do <a href="../pt/Users_and_groups.html#Gerenciamento_de_grupo" class="mw-redirect" title="Grupo de usuários">grupo de usuários</a> <code>wheel</code> altere a frequência e o regulador.
+</p>
+<h2>
+<span id="Drivers_de_frequ.C3.AAncia_de_CPU"></span><span class="mw-headline" id="Drivers_de_frequência_de_CPU">Drivers de frequência de CPU</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>O módulo nativo da CPU é carregado automaticamente.</li>
+<li>O driver de escala de energia <code>pstate</code> é usado automaticamente para CPUs Intel modernas, em vez dos outros drivers abaixo. Este driver tem prioridade sobre outros drivers e é embutido em vez de ser um módulo. Este driver é usado automaticamente para o Sandy Bridge e CPUs mais recentes. Se você encontrar um problema ao usar este driver, adicione <code>intel_pstate=disable</code> à sua linha do kernel. Você pode usar os mesmos utilitários de espaço do usuário com este driver, <b>mas não pode controlá-lo</b>.</li>
+<li>Mesmo o comportamento do estado P mencionado acima pode ser influenciado com <code>/sys/devices/system/cpu/intel_pstate</code>, por exemplo, o Intel Turbo Boost pode ser desativado com <code>echo 1 &gt; /sys/devices/system/cpu/intel_pstate/no_turbo</code> como usuário root para manter baixas as temperaturas da CPU.</li>
+<li>Controle adicional para os modernos processadores da Intel está disponível com o <a rel="nofollow" class="external text" href="https://01.org/linux-thermal-daemon">Linux Thermal Daemon</a> (disponível como <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=thermald">thermald</a></span>), que proativamente controla a térmica usando estados P, estados T e o driver da clamp de energia da Intel. Thermald também pode ser usado para CPUs Intel mais antigas. Se os drivers mais recentes não estiverem disponíveis, o daemon será revertido para registros específicos do modelo x86 e o "subsistema cpufreq" do Linux para controlar o resfriamento do sistema.</li>
+</ul>
+</div>
+<p><i>cpupower</i> requer módulos para conhecer os limites da CPU nativa:
+</p>
+<table class="wikitable sortable">
+<tbody>
+<tr>
+<th>Módulo</th>
+<th>Descrição
+</th>
+</tr>
+<tr>
+<td>intel_pstate</td>
+<td>Esse driver implementa um driver de escalonamento com um controlador interno para processadores Intel Core (Sandy Bridge e mais recentes).
+</td>
+</tr>
+<tr>
+<td>acpi-cpufreq</td>
+<td>Driver CPUFreq que utiliza os estados de desempenho do processador ACPI. Este driver também possui suporte ao Intel Enhanced SpeedStep (anteriormente com suporte pelo módulo speedstep-centrino obsoleto).
+</td>
+</tr>
+<tr>
+<td>speedstep-lib</td>
+<td>Driver CPUFreq para processadores habilitados para Intel SpeedStep (principalmente Atoms e Pentiums mais antigos (até III))
+</td>
+</tr>
+<tr>
+<td>powernow-k8</td>
+<td>Driver CPUFreq para processadores K8/K10 Athlon 64/Opteron/Phenom. Desde o Linux 3.7, "acpi-cpufreq" será automaticamente usado para CPUs mais modernas desta família.
+</td>
+</tr>
+<tr>
+<td>pcc-cpufreq</td>
+<td>Este controlador possui suporte a interface de Processing Clocking Control da Hewlett-Packard e Microsoft Corporation, que é útil em alguns servidores ProLiant.
+</td>
+</tr>
+<tr>
+<td>p4-clockmod</td>
+<td>Driver CPUFreq para processadores Intel Pentium 4/Xeon/Celeron que reduz a temperatura da CPU, ignorando os relógios. (Você provavelmente deseja usar um driver SpeedStep).
+</td>
+</tr>
+</tbody>
+</table>
+<p>Para ver uma lista completa de módulos disponíveis, execute:
+</p>
+<pre>$ ls /usr/lib/modules/$(uname -r)/kernel/drivers/cpufreq/
+</pre>
+<p>Carregue o módulo apropriado (veja <a href="../pt/Kernel_module.html" class="mw-redirect" title="Módulos de kernel">Módulos de kernel</a> para detalhes). Depois que o driver cpufreq apropriado é carregado, informações detalhadas sobre a(s) CPU(s) podem ser exibidas executando
+</p>
+<pre>$ cpupower frequency-info
+</pre>
+<h3>
+<span id="Configurando_frequ.C3.AAncias_m.C3.A1xima_e_m.C3.ADnima"></span><span class="mw-headline" id="Configurando_frequências_máxima_e_mínima">Configurando frequências máxima e mínima</span>
+</h3>
+<p>Em alguns casos, pode ser necessário definir manualmente as frequências máxima e mínima.
+</p>
+<p>Para definir a frequência máxima do relógio (<code><i>freq_do_clock</i></code> é uma frequência de relógio com unidades: GHz, MHz):
+</p>
+<pre># cpupower frequency-set -u <i>freq_do_clock</i>
+</pre>
+<p>Para definir uma frequência de clock mínima:
+</p>
+<pre># cpupower frequency-set -d <i>freq_do_clock</i>
+</pre>
+<p>Para definir a CPU para executar em uma frequência especificada:
+</p>
+<pre># cpupower frequency-set -f <i>freq_do_clock</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Para ajustar apenas para um único core de CPU, acrescente <code>-c <i>número_do_core</i></code>.</li>
+<li>As frequências máxima e mínima do regulador podem ser definidas em <code>/etc/default/cpupower</code>.</li>
+</ul>
+</div>
+<p>Alternativamente, você pode definir a frequência manualmente:
+</p>
+<pre># echo <i>valor</i> &gt; /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq
+</pre>
+<p>Os valores disponíveis podem ser definidos em <code>/sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies</code> ou similar. <a rel="nofollow" class="external autonumber" href="https://software.intel.com/sites/default/files/comment/1716807/how-to-change-frequency-on-linux-pub.txt">[1]</a>
+</p>
+<h3><span class="mw-headline" id="Desabilitando_Turbo_Boost">Desabilitando Turbo Boost</span></h3>
+<h4><span class="mw-headline" id="intel_pstate">intel_pstate</span></h4>
+<pre># echo 1 &gt; /sys/devices/system/cpu/intel_pstate/no_turbo
+</pre>
+<h4><span class="mw-headline" id="acpi-cpufreq">acpi-cpufreq</span></h4>
+<ol><li>echo 0 &gt; /sys/devices/system/cpu/cpufreq/boost</li></ol>
+<h4><span class="mw-headline" id="x86_energy_perf_policy">x86_energy_perf_policy</span></h4>
+<p>Com <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=x86_energy_perf_policy">x86_energy_perf_policy</a></span>:
+</p>
+<pre># x86_energy_perf_policy --turbo-enable 0
+</pre>
+<h2><span class="mw-headline" id="Escalonando_reguladores">Escalonando reguladores</span></h2>
+<p>Os reguladores (veja a tabela abaixo) são esquemas de energia para a CPU. Apenas um pode estar ativo de cada vez. Para detalhes, veja a <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/cpu-freq/governors.txt">documentação do kernel</a> na fonte do kernel.
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Regulador</th>
+<th>Descrição
+</th>
+</tr>
+<tr>
+<td>performance</td>
+<td>Executa a CPU na frequência máxima.
+</td>
+</tr>
+<tr>
+<td>powersave</td>
+<td>Executa a CPU na frequência mínima.
+</td>
+</tr>
+<tr>
+<td>userspace</td>
+<td>Execute a CPU nas frequências especificadas pelo usuário.
+</td>
+</tr>
+<tr>
+<td>ondemand</td>
+<td>Escalona a frequência dinamicamente conforme a carga atual. Pula para a frequência mais alta e então volta conforme o tempo de ociosidade aumenta.
+</td>
+</tr>
+<tr>
+<td>conservative</td>
+<td>Escalona a frequência dinamicamente conforme a carga atual. Escalona a frequência de forma mais gradual que o "ondemand".
+</td>
+</tr>
+<tr>
+<td>schedutil</td>
+<td>Seleção de frequência da CPU controlada pelo agendador <a rel="nofollow" class="external autonumber" href="https://lwn.net/Articles/682391/">[2]</a>, <a rel="nofollow" class="external autonumber" href="https://lkml.org/lkml/2016/3/17/420">[3]</a>.
+</td>
+</tr>
+</tbody>
+</table>
+<p>Dependendo do driver de escalonamento, um dos reguladores serão carregados por padrão:
+</p>
+<ul>
+<li>
+<code>ondemand</code> para CPUs AMD e Intel mais antigos.</li>
+<li>
+<code>powersave</code> para CPUs Intel mais novas usando o driver <code>intel_pstate</code> (Sandy Bridge e mais novas).</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> O driver <code>intel_pstate</code> possui suporte apenas aos reguladores de desempenho e de economia de energia, mas ambos fornecem escalonamento dinâmico. O regulador de desempenho <a rel="nofollow" class="external text" href="http://www.phoronix.com/scan.php?page=news_item&amp;px=MTM3NDQ">deve oferecer melhor funcionalidade de economia de energia do que o antigo controlador "ondemand"</a>.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> Use as ferramentas de monitoramento da CPU (para temperaturas, voltagens, etc.) ao alterar o regulador padrão.</div>
+<p>Para ativar um regulador em particular, execute:
+</p>
+<pre># cpupower frequency-set -g <i>regulador</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Para ajustar apenas para um único core de CPU, acrescente <code>-c <i>número_do_core</i></code> ao comando acima.</li>
+<li>A ativação de um regulador requer que um <a href="../pt/Kernel_module.html" class="mw-redirect" title="Módulo de kernel">módulo de kernel</a> específico (chamado <code>cpufreq_<i>regulador</i></code>) esteja carregado. Desde o kernel 3.4, esses módulos são carregados automaticamente.</li>
+</ul>
+</div>
+<p>Alternativamente, você pode ativar um regulador a cada CPU disponível manualmente com:
+</p>
+<pre># echo <i>regulador</i> &gt; /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+</pre>
+<p>sendo <code><i>regulador</i></code> o nome do regulador, relacionado na tabela acima, que você deseja ativar.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Para monitorar a velocidade de CPU em tempo real, execute:
+<pre>$ watch grep \"cpu MHz\" /proc/cpuinfo
+</pre>
+</div>
+<h3><span class="mw-headline" id="Ajustando_o_regulador_ondemand">Ajustando o regulador ondemand</span></h3>
+<p>Veja a <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/cpu-freq/governors.txt">documentação do kernel</a> para detalhes.
+</p>
+<h4><span class="mw-headline" id="Trocando_o_limite">Trocando o limite</span></h4>
+<p>Para definir o limite <i>(threshold)</i> para avançar para outra frequência:
+</p>
+<pre># echo -n <i>percentagem</i> &gt; /sys/devices/system/cpu/cpufreq/&lt;regulador&gt;/up_threshold
+</pre>
+<p>Para definir o limite para retroceder para outra frequência:
+</p>
+<pre># echo -n <i>percentagem</i> &gt; /sys/devices/system/cpu/cpufreq/&lt;regulador&gt;/down_threshold
+</pre>
+<h4><span class="mw-headline" id="Taxa_de_amostragem">Taxa de amostragem</span></h4>
+<p>A taxa de amostragem determina com que frequência o controlador verifica a sintonia da CPU. <code>sampling_down_factor</code> é um ajuste que multiplica a taxa de amostragem quando a CPU está com a frequência de clock mais alta, atrasando a avaliação da carga e melhorando o desempenho. Os valores permitidos para <code>sampling_down_factor</code> são de 1 a 100.000. Esse ajuste não tem efeito sobre o comportamento em frequências/cargas de CPU mais baixas.
+</p>
+<p>Para ler o valor (padrão = 1), execute:
+</p>
+<pre>$ cat /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
+</pre>
+<p>Para definir o valor, execute:
+</p>
+<pre># echo -n <i>valor</i> &gt; /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
+</pre>
+<h4>
+<span id="Tornar_as_altera.C3.A7.C3.B5es_permanentes"></span><span class="mw-headline" id="Tornar_as_alterações_permanentes">Tornar as alterações permanentes</span>
+</h4>
+<p>Para que o escalonamento desejado seja habilitado na inicialização, <a href="../pt/Kernel_module.html#Usando_arquivos_em_/etc/modprobe.d/" class="mw-redirect" title="Módulos de kernel">opções de módulo do kernel</a> e <a href="../pt/Systemd.html#Arquivos_tempor%C3%A1rios" title="Systemd (Português)">systemd (Português)#Arquivos temporários</a> são métodos regulares.
+</p>
+<p>Por exemplo, alterar o up_threshold para 10:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/tmpfiles.d/ondemand.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">w- /sys/devices/system/cpu/cpufreq/ondemand/up_threshold - - - - 10</pre>
+<p>No entanto, em alguns casos, pode haver condições de corrida, conforme observado em <a href="../pt/Systemd.html#Arquivos_tempor%C3%A1rios" title="Systemd (Português)">systemd (Português)#Arquivos temporários</a>, podem existir e é possível usar o <a href="../en/Udev.html" title="Udev">udev</a> para evitá-los.
+</p>
+<p>Por exemplo, para configurar o controlador de escala do núcleo da CPU <code>0</code> para desempenho enquanto o driver de escala for <code>acpi_cpufreq</code>, crie a seguinte regra de udev:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-scaling-governor.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SUBSYSTEM=="module", ACTION=="add", KERNEL=="acpi_cpufreq", RUN+="/bin/sh -c 'echo performance &gt; /sys/devices/system/cpu/cpufreq/policy0/scaling_governor'"</pre>
+<p>Para ter a regra já aplicada no <i>initramfs</i>, siga o exemplo em <a href="../en/Udev.html#Debug_output" title="Udev">udev#Debug output</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Alternativamente, configure o utilitário <a href="#cpupower">cpupower</a> e habilite seu serviço de systemd.</div>
+<h2>
+<span id="Intera.C3.A7.C3.A3o_com_eventos_da_ACPI"></span><span class="mw-headline" id="Interação_com_eventos_da_ACPI">Interação com eventos da ACPI</span>
+</h2>
+<p>Os usuários podem configurar os reguladores de escala para alternar automaticamente com base em diferentes eventos ACPI, como conectar o adaptador AC ou fechar uma tampa do laptop. Um exemplo rápido é dado abaixo, no entanto, pode valer a pena ler o artigo completo sobre <a href="../en/Acpid.html" title="Acpid">acpid</a>.
+</p>
+<p>Eventos são definidos em <code>/etc/acpi/handler.sh</code>. Se o pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acpid">acpid</a></span> estiver instalado, o arquivo já deverá existir e ser executável. Por exemplo, para alterar o regulador de escala de <code>performance</code> para <code>conservative</code> quando o adaptador de CA for desconectado e alterá-lo de volta, se reconectar:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/acpi/handler.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[...]
+
+ac_adapter)
+    case "$2" in
+        AC*)
+            case "$4" in
+                00000000)
+                    echo "conservative" &gt;/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+                    echo -n $minspeed &gt;$setspeed
+                    #/etc/laptop-mode/laptop-mode start
+                ;;
+                00000001)
+                    echo "performance" &gt;/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+                    echo -n $maxspeed &gt;$setspeed
+                    #/etc/laptop-mode/laptop-mode stop
+                ;;
+            esac
+        ;;
+        *) logger "ACPI action undefined: $2" ;;
+    esac
+;;
+
+[...]
+</pre>
+<h2>
+<span id="Concess.C3.A3o_de_privil.C3.A9gios_no_GNOME"></span><span class="mw-headline" id="Concessão_de_privilégios_no_GNOME">Concessão de privilégios no GNOME</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> systemd introduziu o logind que lida com ações consolekit e policykit. O código a seguir não funciona. Com logind, basta editar no arquivo <code>/usr/share/polkit-1/actions/org.gnome.cpufreqselector.policy</code> os elementos &lt;defaults&gt; conforme a suas necessidades e o manual do polkit <a rel="nofollow" class="external autonumber" href="https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html">[4]</a>.</div>
+<p><a href="../pt/GNOME.html" title="GNOME (Português)">GNOME</a> tem um miniaplicativo legal para mudar o regulador na hora. Para usá-lo sem a necessidade de inserir a senha de root, basta criar o seguinte arquivo:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/var/lib/polkit-1/localauthority/50-local.d/org.gnome.cpufreqselector.pkla</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[org.gnome.cpufreqselector]
+Identity=unix-user:<i>usuário</i>
+Action=org.gnome.cpufreqselector
+ResultAny=no
+ResultInactive=no
+ResultActive=yes</pre>
+<p>sendo <code><i>usuário</i></code> o nome de usuário interessado.
+</p>
+<p>O pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/desktop-privileges/">desktop-privileges</a></span><sup><small>AUR</small></sup> no <a href="../pt/Arch_User_Repository.html" class="mw-redirect" title="AUR (Português)">AUR</a> contém um arquivo <code>.pkla</code> para autorizar todos os usuários do <a href="../pt/Users_and_groups.html#Gerenciamento_de_grupo" class="mw-redirect" title="Grupo de usuários">grupo de usuários</a> <code>power</code> para alterar o regulador.
+</p>
+<h2>
+<span id="Solu.C3.A7.C3.A3o_de_problemas"></span><span class="mw-headline" id="Solução_de_problemas">Solução de problemas</span>
+</h2>
+<ul><li>Alguns aplicativos, como <a href="../en/Ntop.html" title="Ntop">ntop</a>, não respondem bem ao escalonamento automático de frequência. No caso de ntop, isso pode resultar em falhas de segmentação e muitas informações perdidas, pois mesmo o regulador <code>on-demand</code> não pode alterar a frequência com rapidez suficiente quando muitos pacotes chegam de repente à interface de rede monitorada que não pode ser manipulado pela velocidade atual do processador.</li></ul>
+<ul><li>Algumas CPUs podem sofrer um desempenho ruim com as configurações padrão do regulador <code>on-demand</code> (por exemplo, vídeos em flash que não reproduzem suavemente ou animações instáveis de janelas). Em vez de desativar completamente o escalonamento de frequência para resolver esses problemas, a agressividade do escalonamento de frequência pode ser aumentada diminuindo a variável <i>up_threshold</i> do <a href="../en/Sysctl.html" title="Sysctl">sysctl</a> para cada CPU. Veja <a href="#Trocando_o_limite">como alterar o limite do regulador sob demanda</a>.</li></ul>
+<ul><li>Às vezes, o regulador sob demanda pode não acelerar até a frequência máxima, mas um passo abaixo. Isto pode ser resolvido ajustando o valor de max_freq para ligeiramente mais alto que o máximo real. Por exemplo, se a faixa de frequência da CPU for de 2,00 GHz a 3,00 GHz, configurar max_freq para 3,01 GHz pode ser uma boa ideia.</li></ul>
+<ul><li>Algumas combinações de drivers e chips de som <a href="../pt/Advanced_Linux_Sound_Architecture.html" class="mw-redirect" title="ALSA (Português)">ALSA</a> podem causar saltos de áudio enquanto o regulador muda entre as frequências, e a mudança de volta para um regulador que não muda muda a parada do áudio.</li></ul>
+<h3>
+<span id="Limita.C3.A7.C3.A3o_de_frequ.C3.AAncias_da_BIOS"></span><span class="mw-headline" id="Limitação_de_frequências_da_BIOS">Limitação de frequências da BIOS</span>
+</h3>
+<p>Algumas configurações de CPU/BIOS podem ter dificuldades para escalar até a frequência máxima ou escalar para frequências mais altas. Isso é provavelmente causado por eventos do BIOS dizendo ao sistema operacional para limitar a frequência resultando em <code>/sys/devices/system/cpu/cpu0/cpufreq/bios_limit</code> definido como um valor mais baixo.
+</p>
+<p>Ou você acabou de fazer uma configuração específica no utilitário de configuração da BIOS (frequência, gerenciamento térmico, etc.), você pode culpar uma BIOS com bugs/desatualizada ou a BIOS pode ter uma razão séria para limitar a CPU por conta própria.
+</p>
+<p>Razões como essa podem ser (supondo que sua máquina seja um notebook) que a bateria está desconectada (ou quase no fim da vida útil), então você está apenas em energia da fonte de alimentação. Neste caso, uma fonte de alimentação fraca pode não fornecer eletricidade suficiente para atender às demandas de pico extremo pelo sistema geral e, como não há bateria para ajudar, isso pode levar à perda de dados, corrupção de dados ou, no pior dos casos, até mesmo danos ao hardware!
+</p>
+<p>Nem todos as BIOS limitam a frequência da CPU neste caso, mas, por exemplo, a maioria dos thinkpads IBM/Lenovo. Consulte thinkwiki para obter mais <a rel="nofollow" class="external text" href="http://www.thinkwiki.org/wiki/Problem_with_CPU_frequency_scaling">informações relacionadas a thinkpad sobre este tópico</a>.
+</p>
+<p>Se você verificou que não há apenas uma configuração estranha do BIOS e sabe o que está fazendo, pode fazer com que o Kernel ignore essas limitações do BIOS.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> Certifique-se de ler e entender a seção acima. A limitação de frequência da CPU é um recurso de segurança da sua BIOS e você não deve precisar contorná-la.</div>
+<p>Um parâmetro especial deve ser passado para o módulo do processador.
+</p>
+<p>Para tentar isso temporariamente, alerte o valor em <code>/sys/module/processor/parameters/ignore_ppc</code> de <code>0</code> para <code>1</code>.
+</p>
+<p>Para definir permanentemente, <a href="../pt/Kernel_module.html#Op%C3%A7%C3%B5es_de_configura%C3%A7%C3%A3o_de_m%C3%B3dulos" class="mw-redirect" title="Módulos de kernel">Módulos de kernel#Opções de configuração de módulos</a> descreve alternativas. Por exemplo, você pode adicionar <code>processor.ignore_ppc=1</code> à sua linha de inicialização de kernel ou crie
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/ignore_ppc.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Se a frequência de sua máquina for limitada de forma errada pela BIOS, isso deve ajudar
+options processor ignore_ppc=1</pre>
+<h2>
+<span id="Veja_tamb.C3.A9m"></span><span class="mw-headline" id="Veja_também">Veja também</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/cpu-freq/index.html">Linux CPUFreq - documentação do kernel</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.reddit.com/r/linux/comments/1hdogn/acpi_cpufreq_or_intel_pstates/">Explicação compreensiva de pstate</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/Documentation/cpu-freq/boost.txt">Controle de impulsão de processador</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../pt/Category:Power_management.html" title="Category:Power management (Português)">Power management (Português)</a></li>
+<li><a href="../pt/Category:CPU.html" title="Category:CPU (Português)">CPU (Português)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=CPU_frequency_scaling_(Portugu%C3%AAs)&amp;oldid=628942">https://wiki.archlinux.org/index.php?title=CPU_frequency_scaling_(Português)&amp;oldid=628942</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 August 2020, at 21:24.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

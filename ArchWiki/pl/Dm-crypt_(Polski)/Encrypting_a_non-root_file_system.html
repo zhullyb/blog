@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt (Polski)/Encrypting a non-root file system (Polski) - ArchWiki</title>
+<link rel="stylesheet" href="../../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_Polski_Encrypting_a_non-root_file_system_Polski rootpage-Dm-crypt_Polski skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt (Polski)/Encrypting a non-root file system (Polski)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../../pl/Dm-crypt.html" title="Dm-crypt (Polski)">Dm-crypt (Polski)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+Poniżej przedstawiono przykłady szyfrowania wtórnego, tj. Innego niż root, systemu plików z dm-crypt.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Overview"><span class="tocnumber">1</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Partycja"><span class="tocnumber">2</span> <span class="toctext">Partycja</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#R%C4%99czne_zak%C5%82adanie_i_odmontowywanie"><span class="tocnumber">2.1</span> <span class="toctext">Ręczne zakładanie i odmontowywanie</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Automatyczne_odblokowywanie_i_montowanie"><span class="tocnumber">2.2</span> <span class="toctext">Automatyczne odblokowywanie i montowanie</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Podczas_startu_systemu"><span class="tocnumber">2.2.1</span> <span class="toctext">Podczas startu systemu</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#Przy_logowaniu_u%C5%BCytkownika"><span class="tocnumber">2.2.2</span> <span class="toctext">Przy logowaniu użytkownika</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Loop_device"><span class="tocnumber">3</span> <span class="toctext">Loop device</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#R%C4%99czne_montowanie_i_odmontowywanie"><span class="tocnumber">3.1</span> <span class="toctext">Ręczne montowanie i odmontowywanie</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Overview">Overview</span></h2>
+<p>Szyfrowanie dodatkowego systemu plików zazwyczaj chroni tylko poufne dane, pozostawiając niezaszyfrowany system operacyjny i pliki programów. Jest to przydatne do szyfrowania zewnętrznego nośnika, takiego jak dysk USB, aby można go było bezpiecznie przenieść na inne komputery. Można również wybrać szyfrowanie zestawów danych osobno w zależności od tego, kto ma do nich dostęp.
+</p>
+<p>Ponieważ <a href="../../en/Dm-crypt.html" title="Dm-crypt">dm-crypt</a> jest warstwą szyfrowania blokowego, szyfruje tylko pełne urządzenia, pełne partycje i urządzenia pętli. Szyfrowanie pojedynczych plików wymaga warstwy szyfrowania na poziomie systemu plików, takiej jak <a href="../../en/ECryptfs.html" title="ECryptfs">eCryptfs</a> lub <a href="../../en/EncFS.html" title="EncFS">EncFS</a>. Zobacz <a href="../../pl/Data-at-rest_encryption.html" class="mw-redirect" title="Disk encryption (Polski)">Disk encryption (Polski)</a>, aby uzyskać ogólne informacje na temat zabezpieczania prywatnych danych.
+</p>
+<h2><span class="mw-headline" id="Partycja">Partycja</span></h2>
+<p>Ten przykład obejmuje szyfrowanie partycji <code>/home</code>, ale można ją zastosować do dowolnej innej porównywalnej partycji innej niż root, zawierającej dane użytkownika.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Możesz mieć katalog pojedynczego użytkownika <code>/home</code> na partycji lub utworzyć wspólną partycję dla wszystkich partycji użytkownika <code>/home</code>
+</div>
+<p>Najpierw upewnij się, że partycja jest pusta (nie ma do niej podłączonego systemu plików). Usuń partycję i utwórz pustą, jeśli ma system plików. Następnie przygotuj partycję przez jej bezpieczne usunięcie, zobacz <a href="../../en/Dm-crypt/Drive_preparation.html#Secure_erasure_of_the_hard_disk_drive" title="Dm-crypt/Drive preparation">Dm-crypt/Drive preparation#Secure erasure of the hard disk drive</a>. 
+</p>
+<p>Następnie ustaw nagłówek LUKS na
+</p>
+<pre># cryptsetup <i>options</i> luksFormat --type luks2 <i>device</i>
+</pre>
+<p>Zamień urządzenie na poprzednio utworzoną partycję. zobacz <a href="../../pl/Dm-crypt_(Polski)/Device_encryption.html#Opcje_szyfrowania_z_dm-crypt" class="mw-redirect" title="Dm-crypt/Device encryption (Polski)">Dm-crypt/Device encryption (Polski)#Opcje szyfrowania z dm-crypt</a> po szczegóły, takie jak dostępne opcje.
+</p>
+<p><br>
+Aby uzyskać dostęp do zaszyfrowanej partycji, odblokuj ją za pomocą urządzenia mapującego, używając:
+</p>
+<pre># cryptsetup open <i>device</i> <i>name</i>
+</pre>
+<p>Po odblokowaniu partycji będzie ona dostępna pod adresem <code>/dev/mapper/<i>name</i></code>. Teraz stwórz a <a href="../../en/File_systems.html" class="mw-redirect" title="File system">System plików</a> do wyboru z:
+</p>
+<pre># mkfs.<i>fstype</i> /dev/mapper/<i>name</i>
+</pre>
+<p>Zamontuj system plików na <code>/home</code> lub jeśli powinien być dostępny tylko dla jednego użytkownika na <code>/home/<i>username</i></code>, zobacz <a href="#R%C4%99czne_montowanie_i_odmontowywanie">#Ręczne montowanie i odmontowywanie</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Odmontuj i zamontuj jeden raz, aby sprawdzić, czy mapowanie działa zgodnie z oczekiwaniami.</div>
+<h3>
+<span id="R.C4.99czne_zak.C5.82adanie_i_odmontowywanie"></span><span class="mw-headline" id="Ręczne_zakładanie_i_odmontowywanie">Ręczne zakładanie i odmontowywanie</span>
+</h3>
+<p>Aby zamontować partycję:
+</p>
+<pre># cryptsetup open <i>device</i> <i>name</i>
+# mount -t <i>fstype</i> /dev/mapper/<i>name</i> /mnt/home
+</pre>
+<p>Aby odmontować:
+</p>
+<pre># umount /mnt/home
+# cryptsetup close <i>name</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a href="../../en/File_manager_functionality.html#Mounting" class="mw-redirect" title="GVFS">GVFS</a> can also mount encrypted partitions. One can use a file manager with gvfs support (e.g. <a href="../../en/Thunar.html" title="Thunar">Thunar</a>) to mount the partition, and a password dialog will pop-up. For other desktops, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/zulucrypt/">zulucrypt</a></span><sup><small>AUR</small></sup> also provides a GUI.</div>
+<h3><span class="mw-headline" id="Automatyczne_odblokowywanie_i_montowanie">Automatyczne odblokowywanie i montowanie</span></h3>
+<p>Istnieją trzy różne rozwiązania do automatyzacji procesu odblokowywania partycji i montowania jej systemu plików.
+</p>
+<h4><span class="mw-headline" id="Podczas_startu_systemu">Podczas startu systemu</span></h4>
+<p>Użycie pliku konfiguracyjnego <code>/etc/crypttab</code> powoduje automatyczne odblokowanie podczas uruchamiania systemu. Jest to zalecane rozwiązanie, jeśli chcesz użyć jednej wspólnej partycji na wszystkich partycjach domowych użytkownika lub automatycznie zamontować inne zaszyfrowane urządzenie blokowe.
+</p>
+<p>Zobacz <a href="../../en/Dm-crypt/System_configuration.html#crypttab" title="Dm-crypt/System configuration">Dm-crypt/System configuration#crypttab</a> w przypadku odniesień i <a href="../../en/Dm-crypt/System_configuration.html#Mounting_at_boot_time" title="Dm-crypt/System configuration">Dm-crypt/System configuration#Mounting at boot time</a> na przykład skonfigurować. 
+</p>
+<h4>
+<span id="Przy_logowaniu_u.C5.BCytkownika"></span><span class="mw-headline" id="Przy_logowaniu_użytkownika">Przy logowaniu użytkownika</span>
+</h4>
+<p>Za pomocą <i>pam_exec</i> możliwe jest odblokowanie (<i>cryptsetup open</i>) partycja przy logowaniu użytkownika: jest to zalecane rozwiązanie, jeśli chcesz mieć katalog domowy pojedynczego użytkownika na partycji. zobacz <a href="../../en/Dm-crypt/Mounting_at_login.html" title="Dm-crypt/Mounting at login">dm-crypt/Mounting at login</a>.
+</p>
+<p>Odblokowanie przy logowaniu użytkownika jest również możliwe dzięki <a href="../../en/Pam_mount.html" title="Pam mount">pam_mount</a>.
+</p>
+<h2><span class="mw-headline" id="Loop_device">Loop device</span></h2>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Należy zauważyć, że za pomocą losetup bezpośrednio można uniknąć całkowicie, wykonując alternatywną metodę:
+<pre># dd if=/dev/urandom of=key.img bs=20M count=1
+# cryptsetup --align-payload=1 --hash=sha512 --cipher=serpent-xts-plain64 --key-size=512 -i 30000 luksFormat key.img
+# cryptsetup open key.img lukskey</pre>
+<p>Za mało pliku dostaniesz <code>Requested offset is beyond real size of device /dev/loop0</code> błąd, ale jako przybliżone odniesienie tworzenie pliku 4MiB spowoduje jego pomyślne zaszyfrowanie. <a rel="nofollow" class="external autonumber" href="https://wiki.gentoo.org/wiki/Custom_Initramfs#Encrypted_keyfile">[1]</a>
+</p>
+</div>
+<p>Urządzenie z pętlą umożliwia mapowanie urządzenia blokowego do pliku za pomocą standardowego narzędzia util-linux <code>losetup</code>. Plik może wówczas zawierać system plików, który może być używany podobnie jak każdy inny system plików. Wielu użytkowników wie <a href="../../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a> jako narzędzie do tworzenia zaszyfrowanych kontenerów. Mniej więcej taką samą funkcjonalność można osiągnąć za pomocą systemu plików loopback zaszyfrowanego za pomocą LUKS i pokazano go w poniższym przykładzie.
+</p>
+<p>Najpierw zacznij od utworzenia zaszyfrowanego kontenera, używając odpowiedniego <a href="../../en/Random_number_generation.html" class="mw-redirect" title="Random number generator">random number generator</a>
+</p>
+<pre># dd if=/dev/urandom of=/bigsecret bs=1M count=10
+</pre>
+<p>Spowoduje to utworzenie dużego pliku o rozmiarze 10 megabajtów. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Aby uniknąć konieczności zmiany <a href="../../en/Dm-crypt/Device_encryption.html#Loopback_filesystem" title="Dm-crypt/Device encryption">rozmiaru kontenera</a>  w późniejszym czasie, upewnij się, że jest większy niż całkowity rozmiar plików, które mają być zaszyfrowane, aby przynajmniej hostować powiązane metadane potrzebne w wewnętrznym systemie plików. Jeśli zamierzasz używać trybu LUKS, jego nagłówek metadanych wymaga od jednego do dwóch megabajtów.</div>
+<p><br>
+Następnie utwórz węzeł device <code>/dev/loop0</code>, abyśmy mogli zamontować / używać naszego kontenera:
+</p>
+<pre># losetup /dev/loop0 /bigsecret
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Jeśli to daje błąd <code>/dev/loop0: No such file or directory</code>, musisz najpierw załadować moduł jądra za pomocą <code>modprobe loop</code>. Obecnie urządzenia pętli (Kernel 3.2) są tworzone na żądanie. Poproś o nowe urządzenie z pętlą <code># losetup -f</code>.</div>
+<p>Odtąd procedura jest taka sama jak w przypadku <a href="#Partycja">#Partycja</a>, z wyjątkiem faktu, że kontener jest już randomizowany i nie będzie wymagał kolejnego bezpiecznego usunięcia.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Kontenery z dm-crypt mogą być bardzo elastyczne. Spójrz na funkcje i dokumentację <a href="../../en/Tomb.html" title="Tomb">Tomb</a>. Zapewnia <i>dm-crypt</i> szybką i elastyczną obsługę.</div>
+<h3>
+<span id="R.C4.99czne_montowanie_i_odmontowywanie"></span><span class="mw-headline" id="Ręczne_montowanie_i_odmontowywanie">Ręczne montowanie i odmontowywanie</span>
+</h3>
+<p>Aby odmontować kontener:
+</p>
+<pre># umount /mnt/secret
+# cryptsetup close secret
+# losetup -d /dev/loop0
+</pre>
+<p>Aby ponownie zamontować kontener:
+</p>
+<pre># losetup /dev/loop0 /bigsecret
+# cryptsetup open /dev/loop0 secret
+# mount -t ext4 /dev/mapper/secret /mnt/secret
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../../pl/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption (Polski)">Data-at-rest encryption (Polski)</a></li>
+<li><a href="../../pl/Category:File_systems.html" title="Category:File systems (Polski)">File systems (Polski)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt_(Polski)/Encrypting_a_non-root_file_system_(Polski)&amp;oldid=615538">https://wiki.archlinux.org/index.php?title=Dm-crypt_(Polski)/Encrypting_a_non-root_file_system_(Polski)&amp;oldid=615538</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 24 May 2020, at 15:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

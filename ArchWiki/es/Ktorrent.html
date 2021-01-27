@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Ktorrent (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Ktorrent_Español rootpage-Ktorrent_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Ktorrent (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Ktorrent.html" title="Ktorrent">Ktorrent</a> revisada por última vez el <b>2019-04-12</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Ktorrent&amp;diff=0&amp;oldid=570955">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<p><a rel="nofollow" class="external text" href="https://www.kde.org/applications/internet/ktorrent/">Ktorrent</a> es un cliente de BitTorrent para KDE.
+</p>
+<h2>
+<span id="Instalaci.C3.B3n"></span><span class="mw-headline" id="Instalación">Instalación</span>
+</h2>
+<p>Instale el paquete <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ktorrent">ktorrent</a></span>.
+</p>
+<h2>
+<span id="Script_para_administrarlo_en_l.C3.ADnea_de_.C3.B3rdenes"></span><span class="mw-headline" id="Script_para_administrarlo_en_línea_de_órdenes">Script para administrarlo en línea de órdenes</span>
+</h2>
+<p>Dado que Ktorrent es una aplicación de solo GUI, afortunadamente tiene una interfaz DBUS, por lo que puede usar scripts para administrarlo en línea de órdenes (por ejemplo desde SSH).
+</p>
+<p>Aquí está el script que uso. Lo encontré en internet en un foro de OpenSuse (creado por amaurea) e integré nuevas órdenes para establecer velocidad máxima de subida/descarga y para suspender/reanudar la actividad de ktorrent. 
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/kt</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/env bash
+#
+# Public domain script by amaurea/amaur on IRC (freenode for example).
+#   Modified by trapanator to support download/upload rate setting and
+#                          to suspend/resume ktorrent network activity
+#
+# gary example
+#   qdbus org.kde.ktorrent /core startAll
+
+
+case $1 in
+        help)
+                echo "kt: A simple console interface for ktorrent.
+Usage: In the following \"id\" indicates either a torrent hash or index.
+       [] indicates optional arguments.
+
+       kt start [id]: If ktorrent is not running, start it. Otherwise,
+                      if id is given, start that torrent, otherwise start
+                      all torrents.
+       kt quit: Quit ktorrent.
+       kt load url: Load the torrent given by url. Note that the torrent must
+                    be manually startet afterwards.
+       kt ls: Print a list of all torrents, of the format: index hash name.
+       kt info [id]: Print more detailed info about the selected (or all)
+                     torrent(s).
+       kt stop [id]: Stop the torrent given by id, or all if id is missing.
+       kt name [id]: Like ls, but names only.
+       kt remove id: Remove the torrent given by id (but not the actual files).
+       kt clear: Remove all torrents.
+       kt files [id]: List information about the files of the selected torrent.
+       kt pri [id] [priority]: Give the selected torrent the given priority.
+       kt pri [id] [file index] [priority]: Set the priority of the given file.
+       kt pri [id] equal: Give all files of the torrent the same priority.
+       kt pri [id] first: Download the first files in the torrent first.
+       kt stu [n] set upload rate to n.
+       kt sdu [n] set download rate to n.
+       kt suspend   suspend all torrents.
+       kt resume    resume all torrents."
+       exit ;;
+esac
+pid=$(pidof ktorrent)
+if [ ! $pid ]; then
+    case "$1" in
+        start)
+            ktorrent --display :0.0 ;;
+        *)
+            echo "ktorrent is not running!" ;;
+    esac
+    exit
+fi
+eval "export $(perl -pne 's/\0/\n/g' /proc/$(pidof ktorrent)/environ | fgrep -a DBUS_SESSION_BUS_ADDRESS)"
+loc="org.kde.ktorrent"
+cmd="qdbus $loc"
+case "$1" in
+ stu)
+  if [ "$2" ]; then
+   qdbus org.kde.ktorrent /settings setMaxUploadRate $2
+   qdbus org.kde.ktorrent /settings apply
+  else echo "upload rate missing!" ;  fi ;;
+ std)
+  if [ "$2" ]; then
+   qdbus org.kde.ktorrent /settings setMaxDownloadRate $2
+   qdbus org.kde.ktorrent /settings apply
+  else echo "download rate missing!" ;  fi ;;
+ suspend)
+  qdbus org.kde.ktorrent /core org.ktorrent.core.setSuspended true ;;
+ resume)
+  qdbus org.kde.ktorrent /core org.ktorrent.core.setSuspended false ;;
+    load)
+        res=$($cmd /core loadSilently "$2" 1) ;;
+    list|ls)
+        torrents=$($cmd /core torrents)
+        i=0
+        for torrent in $torrents; do
+            name=$($cmd /torrent/$torrent name)
+            printf "%d %s %s\n" $i $torrent "$name"
+            i=$(($i+1))
+        done ;;
+    info)
+        if [ "$2" ]; then
+            if (( ${#2} &lt; 4 )); then
+                torrents=($($cmd /core torrents))
+                torrents=${torrents[$2]}
+            else torrents=$2; fi
+        else torrents=$($cmd /core torrents); fi
+        i=0
+        for torrent in $torrents; do
+            name=$($cmd /torrent/$torrent name)
+            size=$($cmd /torrent/$torrent totalSize)
+            dsize=$($cmd /torrent/$torrent bytesToDownload)
+            prog=$($cmd /torrent/$torrent bytesDownloaded)
+            speed=$($cmd /torrent/$torrent downloadSpeed)
+            seed=$($cmd /torrent/$torrent seedersConnected)
+            leech=$($cmd /torrent/$torrent leechersConnected)
+            priority=$($cmd /torrent/$torrent priority)
+            sl=$(printf "[%d|%d]" $seed $leech)
+            pri=$(printf "(%d)" $priority)
+            printf "%3.0lf%% of %11d %4.0lf kb/s %8s %4s %s\n" $((100*$prog/$dsize)) $dsize $(($speed/1000)) $sl $pri "$name"
+            i=$(($i+1))
+        done ;;
+    name|stop|start|remove|files)
+        if (( ${#2} &lt; 4 )); then
+            torrents=($($cmd /core torrents))
+            torrent=${torrents[$2]}
+        else torrent=$2; fi
+        case "$1" in
+            name)
+                $cmd /torrent/$torrent name ;;
+            start)
+                if [ "$2" ]; then res=$($cmd /core start $torrent)
+                else res=$($cmd /core startAll); fi;;
+            stop)
+                if [ "$2" ]; then res=$($cmd /core stop $torrent)
+                else res=$($cmd /core stopAll); fi;;
+            remove)
+                # qdbus boolean bug workaround: use dbus-send instead
+                res=$(dbus-send --type=method_call --dest=$loc /core org.ktorrent.core.remove string:"$torrent" boolean:false) ;;
+            files)
+                n=$($cmd /torrent/$torrent numFiles)
+                for (( i=0; i &lt; $n; i++ )); do
+                    path=$($cmd /torrent/$torrent filePath $i)
+                    pct=$($cmd /torrent/$torrent filePercentage $i)
+                    size=$($cmd /torrent/$torrent fileSize $i)
+                    priority=$($cmd /torrent/$torrent filePriority $i)
+                    printf "%d %3.0lf%% of %11d [%d] %s\n" $i $pct $size $priority "$path"
+                done ;;
+        esac ;;
+    pri|priority|prioritize)
+        if [ $3 ]; then
+            if (( ${#2} &lt; 4 )); then
+                torrents=($($cmd /core torrents))
+                torrent=${torrents[$2]}
+            else torrent=$2; fi
+            if [ ! $torrent ]; then exit; fi
+            n=$($cmd /torrent/$torrent numFiles)
+            if [ $4 ]; then
+                res=$($cmd /torrent/$torrent setFilePriority $3 $4)
+            else
+                case $3 in
+                    equal|equalize)
+                        for (( i=0; i &lt; $n; i++ )); do
+                            res=$($cmd /torrent/$torrent setFilePriority $i 40)
+                        done ;;
+                    inc|increasing)
+                        for (( i=0; i &lt; $n; i++ )); do
+                            pri=$(printf "%2.0lf" $(((4*$i/$n+3)*10)))
+                            res=$($cmd /torrent/$torrent setFilePriority $i $pri)
+                        done ;;
+                    dec|decreasing)
+                        for (( i=0; i &lt; $n; i++ )); do
+                            pri=$(printf "%2.0lf" $(((4*($n-$i-1)/$n+3)*10)))
+                            res=$($cmd /torrent/$torrent setFilePriority $i $pri)
+                        done ;;
+                    first)
+                        m=$(($n &lt; 3 ? $n : 3))
+                        for (( i=0; i &lt; $m; i++ )); do
+                            res=$($cmd /torrent/$torrent setFilePriority $i $(((6-$i)*10)))
+                        done
+                        for (( i=3; i &lt; $n; i++ )) do
+                            res=$($cmd /torrent/$torrent setFilePriority $i 30)
+                        done ;;
+                    *)
+                        res=$($cmd /torrent/$torrent setPriority $3) ;;
+                esac
+            fi
+        else echo Too few arguments!; fi ;;
+    clear)
+        torrents=$($cmd /core torrents)
+        for torrent in $torrents; do
+            res=$(dbus-send --type=method_call --dest=$loc /core org.ktorrent.core.remove string:"$torrent" boolean:false)
+        done ;;
+    quit)
+        res=$($cmd /MainApplication quit) ;;
+    *)
+        echo "Unrecognized command: '$1'" ;;
+esac
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:BitTorrent.html" title="Category:BitTorrent (Español)">BitTorrent (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Ktorrent_(Espa%C3%B1ol)&amp;oldid=571239">https://wiki.archlinux.org/index.php?title=Ktorrent_(Español)&amp;oldid=571239</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 April 2019, at 06:38.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

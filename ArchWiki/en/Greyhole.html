@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Greyhole - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Greyhole rootpage-Greyhole skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Greyhole</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Samba.html" title="Samba">Samba</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="http://www.greyhole.net/">Greyhole</a> is an application that uses <a href="../en/Samba.html" title="Samba">Samba</a> to create a storage pool of all your available hard drives (whatever their size, however they are connected), and allows you to create redundant copies of the files you store, in order to prevent data loss when part of your hardware fails.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/greyhole/">greyhole</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This process is taken from the USAGE file that is supplied with Greyhole.</div>
+<p>1. Setup Samba
+Edit <code>/etc/samba/smb.conf</code> and add the following 2 lines to the <code>[global]</code> section
+</p>
+<pre>unix extensions = no
+wide links = yes</pre>
+<p>For each of your shares, add a '<code>dfree command</code>' and '<code>vfs objects</code>' lines, as seen below.
+Example share definition:
+</p>
+<pre>[share_name]
+    path = /path/to/share_name
+    create mask = 0770
+    directory mask = 0770
+    read only = no
+    available = yes
+    browseable = yes
+    writable = yes
+    guest ok = no
+    printable = no
+    dfree command = /usr/bin/greyhole-dfree
+    vfs objects = greyhole</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">Restart</a> <code>smb.service</code>.
+</p>
+<p>2. Setup and start MySQL as described in <a href="../en/MariaDB.html" title="MariaDB">MariaDB</a>.
+</p>
+<p>3. Customize the greyhole configuration at <code>/etc/greyhole.conf</code>
+</p>
+<p>4. For each directory you defined as 'storage_pool_directories', execute the following command, to create a hidden file in the root directory of each partition:
+</p>
+<pre># touch &lt;dir&gt;/.greyhole_uses_this</pre>
+<p>Those files will be used to differentiate an empty mount from a now-gone mount. i.e. Greyhole will output a warning if this file is not in the root directory where it is about to try to save a file, and it will not use that directory. This will prevent Greyhole from filling the / partition when a partition is unmounted!
+</p>
+<p>5. The following is needed to work around problems with the CIFS client.  This can be added to your /etc/rc.local or you can add cifs to the modules section of rc.conf and use modprobe.d to set OplockEnabled.
+</p>
+<pre># modprobe cifs
+# echo 0 &gt; /proc/fs/cifs/OplockEnabled
+</pre>
+<p>6. Configure PHP
+Open /etc/php/php.ini in your favorite editor.
+Set <code>date.timezone</code> and uncomment <code>extension=pdo_mysql</code>.
+</p>
+<p>7. <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> <code>greyhole.service</code>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Storage.html" title="Category:Storage">Storage</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Greyhole&amp;oldid=621641">https://wiki.archlinux.org/index.php?title=Greyhole&amp;oldid=621641</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 June 2020, at 15:07.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

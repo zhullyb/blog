@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Git server - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Git_server rootpage-Git_server skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Git server</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article gives an overview on how to host a <a href="../en/Git.html" title="Git">Git</a> server. For more information, refer to the <a rel="nofollow" class="external text" href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git on the Server chapter</a> of the Pro Git book.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Protocols"><span class="tocnumber">1</span> <span class="toctext">Protocols</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#General"><span class="tocnumber">1.1</span> <span class="toctext">General</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#SSH"><span class="tocnumber">1.2</span> <span class="toctext">SSH</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Smart_HTTP"><span class="tocnumber">1.3</span> <span class="toctext">Smart HTTP</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Apache"><span class="tocnumber">1.3.1</span> <span class="toctext">Apache</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Git"><span class="tocnumber">1.4</span> <span class="toctext">Git</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Access_control"><span class="tocnumber">2</span> <span class="toctext">Access control</span></a></li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Web_interfaces"><span class="tocnumber">3</span> <span class="toctext">Web interfaces</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Simple_web_applications"><span class="tocnumber">3.1</span> <span class="toctext">Simple web applications</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Advanced_web_applications"><span class="tocnumber">3.2</span> <span class="toctext">Advanced web applications</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Protocols">Protocols</span></h2>
+<p>Refer to <a rel="nofollow" class="external text" href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git on the Server - The Protocols</a> for a detailed description along with pros and cons.
+</p>
+<h3><span class="mw-headline" id="General">General</span></h3>
+<p><a rel="nofollow" class="external text" href="https://miracoin.wordpress.com/2014/11/25/step-by-step-guide-on-setting-up-git-server-in-arch-linux-pushable/">Step by Step Guide on Setting Up git Server</a> describes setting up an unsecured server on Arch. 
+</p>
+<p>By default, the git user is expired ("Your account has expired; please contact your system administrator").  Use <a href="/index.php?title=Chage&amp;action=edit&amp;redlink=1" class="new" title="Chage (page does not exist)">chage</a> to remove the expiration condition, e.g. as follows:
+</p>
+<pre>chage -E -1 git
+</pre>
+<h3><span class="mw-headline" id="SSH">SSH</span></h3>
+<p>You only need to set up an <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH server</a>.
+</p>
+<p>You are able to secure the SSH user account even more allowing only push and pull commands on this user account. This is done by replacing the default login shell by git-shell. Described in <a rel="nofollow" class="external text" href="https://git-scm.com/book/en/v2/Git-on-the-Server-Setting-Up-the-Server">Setting Up the Server</a>.
+</p>
+<p>When securing the git server created using the instructions in <a href="#General">#General</a> with the instructions of this clause (<a href="#SSH">#SSH</a>), the following additional steps are needed on Arch:
+</p>
+<dl>
+<dt>correct home directory</dt>
+<dd>In order for ssh to be able to read /src/git/.ssh/authorized_keys, the home directory for git in /etc/passwd needs to be changed from "/" to "/srv/git".</dd>
+<dt>correct base path when home directory is corrected</dt>
+<dd>In order for git to serve the repositories, the --base-path in "/usr/lib/systemd/system/git-daemon\@.service" need to be changed to "/srv/git" if the repositories are served from git's home directory.</dd>
+</dl>
+<h3><span class="mw-headline" id="Smart_HTTP">Smart HTTP</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> There are many <a href="../en/List_of_applications/Internet.html#Web_servers" class="mw-redirect" title="Web server">web servers</a> with CGI support. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Git_server">Talk:Git server#</a>)</div>
+</div>
+<p>The <span class="plainlinks archwiki-template-man" title="$ man 1 git-http-backend"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/git-http-backend.1">git-http-backend(1)</a></span> is a CGI program, allowing efficient cloning, pulling and pushing over HTTP(S).
+</p>
+<h4><span class="mw-headline" id="Apache">Apache</span></h4>
+<p>The setup for this is rather simple as all you need to have installed is the <a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a>, with <code>mod_cgi</code>, <code>mod_alias</code>, and <code>mod_env</code> enabled) and of course, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=git">git</a></span>.
+</p>
+<p>Once you have your basic setup running, add the following to your Apache configuration file, which is usually located at:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/httpd/conf/httpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;Directory "/usr/lib/git-core*"&gt;
+    Require all granted
+&lt;/Directory&gt;
+ 
+SetEnv GIT_PROJECT_ROOT /srv/git
+SetEnv GIT_HTTP_EXPORT_ALL
+ScriptAlias /git/ /usr/lib/git-core/git-http-backend/
+</pre>
+<p>This assumes your Git repositories are located at <code>/srv/git</code> and that you want to access them via something like: <code>http(s)://your_address.tld/git/your_repo.git</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Make sure that Apache can read and write to your repositories.</div>
+<p>For more detailed documentation, visit the following links:
+</p>
+<ul>
+<li><a rel="nofollow" class="external free" href="https://git-scm.com/book/en/v2/Git-on-the-Server-Smart-HTTP">https://git-scm.com/book/en/v2/Git-on-the-Server-Smart-HTTP</a></li>
+<li><a rel="nofollow" class="external free" href="https://git-scm.com/docs/git-http-backend">https://git-scm.com/docs/git-http-backend</a></li>
+</ul>
+<h3><span class="mw-headline" id="Git">Git</span></h3>
+<p>The Git protocol is not encrypted or authenticated, and only allows read access.
+</p>
+<p>The Git daemon (<span class="plainlinks archwiki-template-man" title="$ man 1 git-daemon"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/git-daemon.1">git-daemon(1)</a></span>) can be <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">started</a> with <code>git-daemon.socket</code>.
+</p>
+<p>The service uses the <code>--export-all</code> and <code>--base-path</code> parameters to serve all repositories placed in <code>/srv/git/</code>.
+</p>
+<h2><span class="mw-headline" id="Access_control">Access control</span></h2>
+<p>For fine-grained access control, the following solutions are available:
+</p>
+<ul><li>
+<b><a href="../en/Gitolite.html" title="Gitolite">Gitolite</a></b> — An access control layer on top of Git, written in Perl.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/sitaramc/gitolite">https://github.com/sitaramc/gitolite</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gitolite">gitolite</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Gitosis.html" title="Gitosis">Gitosis</a></b> — Software for hosting Git repositories, written in Python.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/tv42/gitosis">https://github.com/tv42/gitosis</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gitosis-git/">gitosis-git</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<p>Note that if you are willing to create <a href="../en/Users_and_groups.html" class="mw-redirect" title="User account">user accounts</a> for all of the people that should have access to the repositories and do not need access control at the level of git objects (like branches), you can also use standard <a href="../en/File_permissions_and_attributes.html" class="mw-redirect" title="File permissions">file permissions</a> for access control.<a rel="nofollow" class="external autonumber" href="https://github.com/sitaramc/gitolite/blob/d74e58b5de8c78bddd29b009ba2d606f7fcb4f2d/doc/overkill.mkd">[1]</a>
+</p>
+<h2><span class="mw-headline" id="Web_interfaces">Web interfaces</span></h2>
+<h3><span class="mw-headline" id="Simple_web_applications">Simple web applications</span></h3>
+<ul>
+<li>
+<a href="../en/Gitweb.html" title="Gitweb">Gitweb</a> — the default web interface that comes with Git</li>
+<li>
+<b><a href="../en/Cgit.html" title="Cgit">cgit</a></b> — A web interface for git written in plain C.</li>
+</ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://git.zx2c4.com/cgit/">http://git.zx2c4.com/cgit/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cgit">cgit</a></span>
+</dd></dl>
+<h3><span class="mw-headline" id="Advanced_web_applications">Advanced web applications</span></h3>
+<ul><li>
+<b><a href="../en/Gitea.html" title="Gitea">Gitea</a></b> — Painless self-hosted Git service. Community managed fork of Gogs.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://gitea.io">https://gitea.io</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gitea">gitea</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/GitLab.html" title="GitLab">GitLab</a></b> — Project management and code hosting application, written in Ruby.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://gitlab.com/gitlab-org/gitlab-ce">https://gitlab.com/gitlab-org/gitlab-ce</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gitlab">gitlab</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="../en/Gogs.html" title="Gogs">Gogs</a></b> — Self Hosted Git Service, written in Go.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://gogs.io">https://gogs.io</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gogs/">gogs</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Version_Control_System.html" title="Category:Version Control System">Version Control System</a></li>
+<li><a href="../en/Category:Servers.html" title="Category:Servers">Servers</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Git_server&amp;oldid=624926">https://wiki.archlinux.org/index.php?title=Git_server&amp;oldid=624926</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 July 2020, at 18:39.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

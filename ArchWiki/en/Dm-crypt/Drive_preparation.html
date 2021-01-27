@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt/Drive preparation - ArchWiki</title>
+<link rel="stylesheet" href="../../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_Drive_preparation rootpage-Dm-crypt skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt/Drive preparation</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../../en/Dm-crypt.html" title="Dm-crypt">Dm-crypt</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../../en/Data-at-rest_encryption.html#Preparing_the_disk" title="Data-at-rest encryption">Data-at-rest encryption#Preparing the disk</a></li>
+<li><a href="../../en/Securely_wipe_disk.html" title="Securely wipe disk">Securely wipe disk</a></li>
+</ul>
+</div>
+<p>Before encrypting a drive, it is recommended to perform a secure erase of the disk by overwriting the entire drive with random data. To prevent cryptographic attacks or unwanted <a href="../../en/File_recovery.html" title="File recovery">file recovery</a>, this data is ideally indistinguishable from data later written by dm-crypt. For a more comprehensive discussion see <a href="../../en/Data-at-rest_encryption.html#Preparing_the_disk" title="Data-at-rest encryption">Data-at-rest encryption#Preparing the disk</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Secure_erasure_of_the_hard_disk_drive"><span class="tocnumber">1</span> <span class="toctext">Secure erasure of the hard disk drive</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Generic_methods"><span class="tocnumber">1.1</span> <span class="toctext">Generic methods</span></a></li>
+<li class="toclevel-2 tocsection-3">
+<a href="#dm-crypt_specific_methods"><span class="tocnumber">1.2</span> <span class="toctext">dm-crypt specific methods</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#dm-crypt_wipe_on_an_empty_disk_or_partition"><span class="tocnumber">1.2.1</span> <span class="toctext">dm-crypt wipe on an empty disk or partition</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href="#dm-crypt_wipe_free_space_after_installation"><span class="tocnumber">1.2.2</span> <span class="toctext">dm-crypt wipe free space after installation</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#dm-crypt_wipe_free_space_after_installation_(via_re-encryption)"><span class="tocnumber">1.2.3</span> <span class="toctext">dm-crypt wipe free space after installation (via re-encryption)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7"><a href="#Wipe_LUKS_header"><span class="tocnumber">1.3</span> <span class="toctext">Wipe LUKS header</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Partitioning"><span class="tocnumber">2</span> <span class="toctext">Partitioning</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Physical_partitions"><span class="tocnumber">2.1</span> <span class="toctext">Physical partitions</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Stacked_block_devices"><span class="tocnumber">2.2</span> <span class="toctext">Stacked block devices</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Btrfs_subvolumes"><span class="tocnumber">2.3</span> <span class="toctext">Btrfs subvolumes</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Boot_partition_(GRUB)"><span class="tocnumber">2.4</span> <span class="toctext">Boot partition (GRUB)</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Secure_erasure_of_the_hard_disk_drive">Secure erasure of the hard disk drive</span></h2>
+<p>In deciding which method to use for secure erasure of a hard disk drive, remember that this needs only to be performed once for as long as the drive is used as an encrypted drive.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make appropriate backups of valuable data prior to starting!</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> When wiping large amount of data, the process will take several hours to several days to complete.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 
+<ul>
+<li>The process of filling an encrypted drive can take over a day to complete on a multi-terabyte disk. In order not to leave the machine unusable during the operation, it may be worth to do it from a system already installed on another drive, rather than from the live Arch installation system.</li>
+<li>For <a href="../../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSDs</a>, as a best effort to minimize <a href="../../en/Securely_wipe_disk.html#Flash_memory" title="Securely wipe disk">flash memory</a> cache artifacts, consider performing a <a href="../../en/Solid_state_drive/Memory_cell_clearing.html" class="mw-redirect" title="SSD memory cell clearing">SSD memory cell clearing</a> <i>prior</i> to instructions below.</li>
+</ul>
+</div>
+<h3><span class="mw-headline" id="Generic_methods">Generic methods</span></h3>
+<p>For detailed instructions on how to erase and prepare a drive consult <a href="../../en/Securely_wipe_disk.html" title="Securely wipe disk">Securely wipe disk</a>.
+</p>
+<h3><span class="mw-headline" id="dm-crypt_specific_methods">dm-crypt specific methods</span></h3>
+<p>The following two methods are specific for dm-crypt and are mentioned because they are very fast and can be performed after a partition setup too. 
+</p>
+<p>The <a rel="nofollow" class="external text" href="https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions#2-setup">cryptsetup FAQ</a> (item 2.19 "<i>How can I wipe a device with crypto-grade randomness?</i>") mentions a very simple procedure to use an existing dm-crypt-volume to wipe all free space accessible on the underlying block device with random data by acting as a simple pseudorandom number generator. It is also claimed to protect against disclosure of usage patterns. That is because encrypted data is practically indistinguishable from random.
+</p>
+<h4><span class="mw-headline" id="dm-crypt_wipe_on_an_empty_disk_or_partition">dm-crypt wipe on an empty disk or partition</span></h4>
+<p>First, create a temporary encrypted container on the partition (using the form <code>sdXY</code>) or complete device (using the form <code>sdX</code>) to be encrypted: 
+</p>
+<pre># cryptsetup open --type plain -d /dev/urandom /dev/&lt;block-device&gt; to_be_wiped
+</pre>
+<p>You can verify that it exists:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lsblk</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">NAME          MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sda             8:0    0  1.8T  0 disk
+└─to_be_wiped 252:0    0  1.8T  0 crypt
+</pre>
+<p>Wipe the container with zeros. A use of <code>if=/dev/urandom</code> is not required as the encryption cipher is used for randomness.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># dd if=/dev/zero of=/dev/mapper/to_be_wiped status=progress</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">dd: writing to ‘/dev/mapper/to_be_wiped’: No space left on device</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 
+<ul>
+<li>Using <i>dd</i> with the <code>bs=</code> option, e.g. <code>bs=1M</code>, is frequently used to increase disk throughput of the operation.</li>
+<li>To perform a check of the operation, zero the partition before creating the wipe container. After the wipe command <code>blockdev --getsize64 <i>/dev/mapper/container</i></code> can be used to get the exact container size as root. Now <i>od</i> can be used to spotcheck whether the wipe overwrote the zeroed sectors, e.g. <code>od -j <i>containersize - blocksize</i></code> to view the wipe completed to the end.</li>
+</ul>
+</div>
+<p>Finally, close the temporary container:
+</p>
+<pre># cryptsetup close to_be_wiped
+</pre>
+<p>When encrypting an entire system, the next step is <a href="#Partitioning">#Partitioning</a>. If just encrypting a partition, continue <a href="../../en/Dm-crypt/Encrypting_a_non-root_file_system.html#Partition" title="Dm-crypt/Encrypting a non-root file system">dm-crypt/Encrypting a non-root file system#Partition</a>.
+</p>
+<h4><span class="mw-headline" id="dm-crypt_wipe_free_space_after_installation">dm-crypt wipe free space after installation</span></h4>
+<p>Users who did not have time for the wipe procedure before <a href="../../en/Dm-crypt/Encrypting_an_entire_system.html" title="Dm-crypt/Encrypting an entire system">installation</a>, can achieve a similar effect once the encrypted system is booted and the filesystems are mounted. However, consider if the concerned filesystem may have set up reserved space, e.g. for the root user, or another <a href="../../en/Disk_quota.html" title="Disk quota">disk quota</a> mechanism, that that may limit the wipe even when performed by the root user: some parts of the underlying block device might not get written to at all.
+</p>
+<p>To execute the wipe, temporarily fill the remaining free space of the partition by writing to a file inside the encrypted container:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># dd if=/dev/zero of=/file/in/container status=progress</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">dd: writing to ‘/file/in/container’: No space left on device</pre>
+<p>Sync the cache to disk and then delete the file to reclaim the free space.
+</p>
+<pre># sync
+# rm /file/in/container
+</pre>
+<p>The above process has to be repeated for every partition blockdevice created and filesystem in it. For example, setting-up <a href="../../en/Dm-crypt/Encrypting_an_entire_system.html#LVM_on_LUKS" title="Dm-crypt/Encrypting an entire system">LVM on LUKS</a>, the process has to be performed for every logical volume.
+</p>
+<h4>
+<span id="dm-crypt_wipe_free_space_after_installation_.28via_re-encryption.29"></span><span class="mw-headline" id="dm-crypt_wipe_free_space_after_installation_(via_re-encryption)">dm-crypt wipe free space after installation (via re-encryption)</span>
+</h4>
+<p>Alternatively, for users who want to completely wipe free space without re-installation, this can be achieved by <a href="../../en/Dm-crypt/Device_encryption.html#Re-encrypting_devices" title="Dm-crypt/Device encryption">re-encrypting LUKS devices</a>. It needs to be performed once per LUKS device. But please note that this process can be slower (e.g ~50MB/s on a desktop HDD).
+</p>
+<h3><span class="mw-headline" id="Wipe_LUKS_header">Wipe LUKS header</span></h3>
+<p>A partition using LUKS consists of two parts: the header and the encrypted data. The header contains keys without which it is practically impossible to recover the data. If creating a new partition or decommissioning the drive it <i>may</i> be sufficient to remove that part instead of wiping the whole device. For caveats see the note at the bottom of this section.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The operation is irreversible and will not ask for confirmation, so be careful.</div>
+<p>To erase all keys use the following command:
+</p>
+<pre># cryptsetup erase <i>device</i>
+</pre>
+<p>Make sure there is no active slots left by invoking:
+</p>
+<pre># cryptsetup luksDump <i>device</i>
+</pre>
+<p>Additionally the LUKS header itself may be removed to prevent <code>cryptsetup</code> from detecting it in the future, by invoking <a href="../../en/Device_file.html#wipefs" class="mw-redirect" title="Wipefs">wipefs</a> after the keys are erased:
+</p>
+<pre># wipefs -a <i>device</i>
+</pre>
+<p>The encrypted data remains in place and its protection is only as good as the encryption used. As of 2020 there is no known practical way of accessing the data, but that may change in the future. It is up to the user to weight security and privacy against the time needed to perform a proper wiping of the entire disk.
+</p>
+<p>On some storage media, in particular flash-based, it may be impossible to reliably overwrite data. The LUKS header with keys may remain stored in a location inaccessible to the operating system. If that is a concern, <a href="../../en/Securely_wipe_disk.html#hdparm" class="mw-redirect" title="Securely Wipe HDD">ATA Secure Erase</a> must be used. The operation is supposed to erase all blocks on the device, including those not visible to software. See <a rel="nofollow" class="external text" href="https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions#5-security-aspects">cryptsetup FAQ 5.19</a> for details.
+</p>
+<h2><span class="mw-headline" id="Partitioning">Partitioning</span></h2>
+<p>This section only applies when encrypting an entire system. After the drive(s) has/have been securely overwritten, a proper partitioning scheme will have to be accurately chosen, taking into account the requirements of dm-crypt, and the effects that the various choices will have on the management of the resulting system.
+</p>
+<p>It is important to note from now that in <a href="#Boot_partition_(GRUB)">almost</a> every case there has to be a separate partition for <code>/boot</code> that must remain unencrypted, because the bootloader needs to access the <code>/boot</code> directory where it will load the initramfs/encryption modules needed to load the rest of the system (see <a href="../../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a> for details). If this raises security concerns, see <a href="../../en/Dm-crypt/Specialties.html#Securing_the_unencrypted_boot_partition" title="Dm-crypt/Specialties">dm-crypt/Specialties#Securing the unencrypted boot partition</a>.
+</p>
+<p>Another important factor to take into account is how the swap area and system suspension will be handled, see <a href="../../en/Dm-crypt/Swap_encryption.html" title="Dm-crypt/Swap encryption">dm-crypt/Swap encryption</a>.
+</p>
+<h3><span class="mw-headline" id="Physical_partitions">Physical partitions</span></h3>
+<p>In the simplest case, the encrypted layers can be based directly on the physical partitions; see <a href="../../en/Partitioning.html" title="Partitioning">Partitioning</a> for the methods to create them. Just like in an unencrypted system, a root partition is sufficient, besides another for <code>/boot</code> as noted above. This method allows deciding which partitions to encrypt and which to leave unencrypted, and works the same regardless of the number of disks involved. It will also be possible to add or remove partitions in the future, but resizing a partition will be limited by the size of the disk that is hosting it. Finally note that separate passphrases or keys are required to open each encrypted partition, even though this can be automated during boot using the <code>crypttab</code> file, see <a href="../../en/Dm-crypt/System_configuration.html#crypttab" title="Dm-crypt/System configuration">Dm-crypt/System configuration#crypttab</a>.
+</p>
+<h3><span class="mw-headline" id="Stacked_block_devices">Stacked block devices</span></h3>
+<p>If more flexibility is needed, though, dm-crypt can coexist with other stacked block devices like <a href="../../en/LVM.html" title="LVM">LVM</a> and <a href="../../en/RAID.html" title="RAID">RAID</a>. The encrypted containers can either reside below or on top of other stacked block devices:
+</p>
+<ul>
+<li>If the LVM/RAID devices are created on top of the encrypted layer, it will be possible to add, remove and resize the file systems of the same encrypted partition liberally, and only one key or passphrase will be required for all of them. Since the encrypted layer resides on a physical partition, though, it will not be possible to exploit the ability of LVM and RAID to span multiple disks.</li>
+<li>If the encrypted layer is created on top of LVM/RAID devices, it will still be possible to reorganize the file systems in the future, but with added complexity, since the encryption layers will have to be adjusted accordingly. Moreover, separate passphrases or keys will be required to open each encrypted device. This, however, is the only choice for systems that need encrypted file systems to span multiple disks.</li>
+</ul>
+<h3><span class="mw-headline" id="Btrfs_subvolumes">Btrfs subvolumes</span></h3>
+<p><a href="../../en/Btrfs.html" title="Btrfs">Btrfs</a>'s built-in <a href="../../en/Btrfs.html#Subvolumes" title="Btrfs">subvolumes feature</a> can be used with dm-crypt, fully replacing the need for LVM if no other file systems are required. However note that swap files were <a rel="nofollow" class="external text" href="https://btrfs.wiki.kernel.org/index.php/FAQ#Does_btrfs_support_swap_files.3F">not supported</a> by brtrfs before Linux 5.0, so an <a href="../../en/Dm-crypt/Swap_encryption.html" class="mw-redirect" title="Encrypted swap">encrypted swap</a> partition is necessary if <a href="../../en/Swap.html" title="Swap">swap</a> is desired on Linux &lt;5.0 (e.g. <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span>). See also <a href="../../en/Dm-crypt/Encrypting_an_entire_system.html#Btrfs_subvolumes_with_swap" title="Dm-crypt/Encrypting an entire system">Dm-crypt/Encrypting an entire system#Btrfs subvolumes with swap</a>.
+</p>
+<h3>
+<span id="Boot_partition_.28GRUB.29"></span><span class="mw-headline" id="Boot_partition_(GRUB)">Boot partition (GRUB)</span>
+</h3>
+<p>See <a href="../../en/Dm-crypt/Encrypting_an_entire_system.html#Encrypted_boot_partition_(GRUB)" title="Dm-crypt/Encrypting an entire system">dm-crypt/Encrypting an entire system#Encrypted boot partition (GRUB)</a>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../../en/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption">Data-at-rest encryption</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt/Drive_preparation&amp;oldid=645868">https://wiki.archlinux.org/index.php?title=Dm-crypt/Drive_preparation&amp;oldid=645868</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 18 December 2020, at 10:48.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

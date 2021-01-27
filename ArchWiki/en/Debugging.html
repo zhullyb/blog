@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Debugging - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Debugging rootpage-Debugging skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Debugging</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/General_troubleshooting.html" title="General troubleshooting">General troubleshooting</a></li>
+<li><a href="../en/Bug_reporting_guidelines.html" class="mw-redirect" title="Reporting bug guidelines">Reporting bug guidelines</a></li>
+<li><a href="../en/Debug_-_Getting_Traces.html" title="Debug - Getting Traces">Debug - Getting Traces</a></li>
+<li><a href="../en/General_troubleshooting.html#Boot_problems" class="mw-redirect" title="Boot debugging">Boot debugging</a></li>
+</ul>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> This article might as well be about debugging in general, so that other useful tools like <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ltrace">ltrace</a></span> can be added here. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Debugging">Talk:Debugging#</a>)</div>
+</div>
+<p>This page is mainly about how to gather more information in connection with bug reports. Even though the word "debug" is used, it's not intended as a guide for how to debug programs while developing.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#When_an_application_fails"><span class="tocnumber">1</span> <span class="toctext">When an application fails</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Run_it_from_the_commandline"><span class="tocnumber">1.1</span> <span class="toctext">Run it from the commandline</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Check_availability_of_a_core_dump"><span class="tocnumber">1.2</span> <span class="toctext">Check availability of a core dump</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Segmentation_faults"><span class="tocnumber">2</span> <span class="toctext">Segmentation faults</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Gdb"><span class="tocnumber">2.1</span> <span class="toctext">Gdb</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Improved_gdb_output"><span class="tocnumber">2.2</span> <span class="toctext">Improved gdb output</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Valgrind"><span class="tocnumber">2.3</span> <span class="toctext">Valgrind</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Missing_files_or_libraries"><span class="tocnumber">3</span> <span class="toctext">Missing files or libraries</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Strace"><span class="tocnumber">3.1</span> <span class="toctext">Strace</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#LD_DEBUG"><span class="tocnumber">3.2</span> <span class="toctext">LD_DEBUG</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Readelf"><span class="tocnumber">3.3</span> <span class="toctext">Readelf</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#If_it_is_not_written_in_C_or_C++,_but_perhaps_in_Python"><span class="tocnumber">4</span> <span class="toctext">If it is not written in C or C++, but perhaps in Python</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#Report_the_bug"><span class="tocnumber">5</span> <span class="toctext">Report the bug</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="When_an_application_fails">When an application fails</span></h2>
+<h3><span class="mw-headline" id="Run_it_from_the_commandline">Run it from the commandline</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> There should be no need to check that files in <code>/usr/bin/</code> are executable, the below command could just be <code>pacman -Ql <i>packagename</i> | grep ' /usr/bin/.'</code>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Debugging">Talk:Debugging#</a>)</div>
+</div>
+<p>If an application suddenly crashes, try running it from a <a href="../en/List_of_applications/Utilities.html#Terminal_emulators" class="mw-redirect" title="Terminal emulator">terminal emulator</a>. Type in the name of the application in lowercase letters. If you do not know the name of the executable, only the name of the package, the following command can find the name of the executable. Replace <i>packagename</i> with the name of the package:
+</p>
+<pre>for f in $(pacman -Qlq <i>packagename</i> | grep /bin/); do file $f 2&gt;/dev/null | grep -q executable &amp;&amp; basename $f; done
+</pre>
+<h3><span class="mw-headline" id="Check_availability_of_a_core_dump">Check availability of a core dump</span></h3>
+<p>A core dump is a file containing a process's address space (memory) when the process terminates unexpectedly. If the application is compiled in a debug-friendly way, the "core" file can be used to find out where things went wrong. 
+</p>
+<p>The location of core dumps may vary depending on the operating system configuration. See <a href="../en/Core_dump.html" title="Core dump">core dump</a> to find whether generation of core dump files is enabled on your system and where do they go.
+</p>
+<h2><span class="mw-headline" id="Segmentation_faults">Segmentation faults</span></h2>
+<p>There are several techniques that can be used to figure out what went wrong. Put your detective hat on.
+</p>
+<h3><span class="mw-headline" id="Gdb">Gdb</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gdb">gdb</a></span> is an ancient and well tested application for debugging applications. See <a href="../en/Debug_-_Getting_Traces.html#Getting_the_trace" title="Debug - Getting Traces">Debug - Getting Traces#Getting the trace</a> for more instructions how to use it to obtain a trace. While running from <code>gdb</code> you might have to wait for the segfault. Afterwards, post the trace to a <a href="../en/List_of_applications.html#Pastebin_clients" title="List of applications">Pastebin client</a> and include the URL in your bug report.
+</p>
+<h3><span class="mw-headline" id="Improved_gdb_output">Improved gdb output</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Debug_-_Getting_Traces.html" title="Debug - Getting Traces">Debug - Getting Traces</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> Same subject (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Debugging">Talk:Debugging#</a>)</div>
+</div>
+<p>First <a href="../en/Arch_Build_System.html" title="Arch Build System">recompile</a> the application in question with debug options. Make sure that <code>debug</code> and <code>!strip</code> are in the options array in the PKGBUILD, for example:
+</p>
+<pre>options=(debug !strip)
+</pre>
+<p>Then install the package and run it again with gdb, as above.
+</p>
+<p>If you have a "core" file, it can be used together with gdb to get a backtrace:
+</p>
+<pre>$ gdb appname core
+bt full
+</pre>
+<h3><span class="mw-headline" id="Valgrind">Valgrind</span></h3>
+<p>Assuming you have an unstripped binary without inlined functions, it is usually a good idea to also run that program through <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=valgrind">valgrind</a></span>. <i>valgrind</i> is a tool that emulates a CPU and usually shows where things go wrong or provide additional info in addition to gdb.
+</p>
+<pre>$ valgrind appname
+</pre>
+<p>it will provide a lot of helpful debug output if there is a crash. Consider <code>-v</code> and <code>--leak-check=full</code> to get even more info.
+</p>
+<p>Alternatively, use:
+</p>
+<pre>$ valgrind --tool=callgrind appname
+</pre>
+<p>and run the output through <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=kcachegrind">kcachegrind</a></span> to graphically explore the functions the program uses. If a program hangs, this makes it easier to pinpoint the location of the error.
+</p>
+<h2><span class="mw-headline" id="Missing_files_or_libraries">Missing files or libraries</span></h2>
+<h3><span class="mw-headline" id="Strace">Strace</span></h3>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=strace">strace</a></span> finds out in detail what an application is actually doing. If an application tries to open a file that is not there, it can be discovered by strace.
+</p>
+<p>For finding which files a program named <i>appname</i> tries to open:
+</p>
+<pre>$ strace -eopen appname
+</pre>
+<p>Save the output, post it to a <a href="../en/List_of_applications.html#Pastebin_clients" title="List of applications">Pastebin client</a> and keep the URL in handy.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If you wish to grep the output from strace, you can try:
+<p><code>strace -o /dev/stdout appname | grep <i>string</i></code>
+</p>
+</div>
+<h3><span class="mw-headline" id="LD_DEBUG">LD_DEBUG</span></h3>
+<p>Setting <code>LD_DEBUG=files</code> gives another overview of what files an application is looking for. For an application named <i>appname</i>:
+</p>
+<pre>LD_DEBUG=files appname &gt; appname.log 2&gt;&amp;1
+</pre>
+<p>The output will end up in <code>appname.log</code>.
+</p>
+<p>For more information, see <span class="plainlinks archwiki-template-man" title="$ man 8 ld-linux"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ld-linux.8">ld-linux(8)</a></span>.
+</p>
+<h3><span class="mw-headline" id="Readelf">Readelf</span></h3>
+<p>If you get "no such file or directory" when running an application, try the following command:
+</p>
+<pre>$ readelf -a /usr/bin/appname | grep interp
+</pre>
+<p>(replace /usr/bin/appname with the location of your executable)
+</p>
+<p>Make sure the interpreter in question (like /lib/ld-linux-x86-64.so.2) actually exists. Install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ld-lsb">ld-lsb</a></span> from the <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> if need be.
+</p>
+<h2>
+<span id="If_it_is_not_written_in_C_or_C.2B.2B.2C_but_perhaps_in_Python"></span><span class="mw-headline" id="If_it_is_not_written_in_C_or_C++,_but_perhaps_in_Python">If it is not written in C or C++, but perhaps in Python</span>
+</h2>
+<p>Use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=file">file</a></span> on the executable to get more information (replace "appname" with your executable):
+</p>
+<pre>$ file /usr/bin/<i>appname</i>
+</pre>
+<p>If it says "ELF" it is a binary executable and is usually written in C or C++. If it says "Python script" you know you are dealing with an application written in Python.
+</p>
+<p>If it is a shell script, open up the shell script in a text editor and see (usually at the bottom of the file) if you can find the name of the real application (ELF file). You can then temporarily put "gdb" right in the shellscript, before the name of the executable, for debugging purposes. See the sections about gdb further up. Prefix the command with <code>gdb --args</code> if the executable in question needs arguments as well.
+</p>
+<p>For pure shell scripts, you can also use <code>bash -x <i>script_name</i></code> or <code>bash -xv <i>script_name</i></code>.
+</p>
+<p>For Python applications, the output will often say which file and line number the crash occured at. If you are proficient with Python, you can try to fix this and include the fix in the bug report.
+</p>
+<h2><span class="mw-headline" id="Report_the_bug">Report the bug</span></h2>
+<p>Please report a bug at <a rel="nofollow" class="external free" href="https://bugs.archlinux.org">https://bugs.archlinux.org</a> and possibly also directly to the developers of the application in question, then include a link in the Arch Linux bug report. This helps us all.
+</p>
+<p>However, if you think there is something wrong with the application itself, and not with how it is packaged, report the bug directly to upstream (which means the developers of the application). Normally, software streams from developers, through packagers/maintainers and down to users. Upstream means the other way, so for this case: directly to the developers of an application.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Backtraces">Gentoo guide for getting useful backtraces</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Development.html" title="Category:Development">Development</a></li>
+<li><a href="../en/Category:System_administration.html" title="Category:System administration">System administration</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Debugging&amp;oldid=618535">https://wiki.archlinux.org/index.php?title=Debugging&amp;oldid=618535</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 6 June 2020, at 13:28.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

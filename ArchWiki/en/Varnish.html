@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Varnish - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Varnish rootpage-Varnish skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Varnish</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://www.varnish-cache.org/">Varnish Cache</a> is a web application accelerator also known as a caching HTTP reverse proxy. You install it in front of any server that speaks HTTP and configure it to cache the contents.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=varnish">varnish</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Customizing_Varnish">Customizing Varnish</span></h2>
+<p>By default, varnish comes configured in <code>/etc/varnish/default.vcl</code> to use <b>localhost:8080</b> as the only backend, default.vcl is called by the default systemd varnish.service file :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"> /usr/lib/systemd/system/varnish.service </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Web Application Accelerator
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/varnishd -a 0.0.0.0:80 -f /etc/varnish/default.vcl -T localhost:6082 -s malloc,64M -u nobody -g nobody -F
+ExecReload=/usr/bin/varnish-vcl-reload
+
+[Install]
+WantedBy=multi-user.target</pre>
+<p>systemctl enable merely makes a symlink to the default
+</p>
+<pre>$ systemctl enable varnish
+ln -s '/usr/lib/systemd/system/varnish.service' '/etc/systemd/system/multi-user.target.wants/varnish.service'</pre>
+<p>Override the defaults in the unit file by using systemctl edit. 
+</p>
+<pre>$ systemctl edit varnish.service</pre>
+<p>To override ExecStart use an empty ExecStart line first and then an ExecStart with the new values. Eg.
+</p>
+<pre>[Service]
+ExecStart=
+ExecStart=/usr/bin/varnishd -j unix,user=nobody -F -a :6081 -T localhost:6082 -f /etc/varnish/default.vcl -S /etc/varnish/secret -s malloc,1G
+</pre>
+<p>Also, if you change the config file <code>/etc/varnish/default.vcl</code> you'll need to reload varnish:
+</p>
+<pre>$ systemctl reload varnish.service</pre>
+<p>or restart
+</p>
+<pre>$ systemctl restart varnish.service</pre>
+<h3><span class="mw-headline" id="Manual_VCL_load">Manual VCL load</span></h3>
+<p>If the previous VCL configuration reload failed, try loading the VCL file manually:
+</p>
+<ol>
+<li>Connect to the varnish console: <pre>$ varnishadm -T localhost:6082</pre>
+</li>
+<li>Load the default VCL. Make sure it has at least one backend: <pre>varnish&gt; vcl.load default /etc/varnish/default.vcl</pre>
+</li>
+<li>Make it active: <pre>varnish&gt; vcl.use default</pre>
+</li>
+<li>Start the child proccess (optional): <pre>varnish&gt; start</pre>
+</li>
+</ol>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Proxy_servers.html" title="Category:Proxy servers">Proxy servers</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Varnish&amp;oldid=631930">https://wiki.archlinux.org/index.php?title=Varnish&amp;oldid=631930</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 August 2020, at 06:14.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

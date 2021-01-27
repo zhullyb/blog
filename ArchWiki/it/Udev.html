@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>udev (Italiano) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Udev_Italiano rootpage-Udev_Italiano skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">udev (Italiano)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> <span style="color:red;">please use the first argument of the template to provide a brief explanation.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Udev_(Italiano)">Talk:Udev (Italiano)#</a>)</div>
+</div>
+<p>udev sostituisce in tutte le loro funzioni sia <code>hotplug</code> che <code>hwdetect</code>.
+</p>
+<p>"udev" è il device manager per il kernel Linux. Principalmente, si occupa di creare i file relativi alle periferiche in <code>/dev</code>. Esso è il successore di devfs ed hotplug, si occupa infatti dell'intera cartella <code>/dev</code> ed delle eventuali modifiche, come l'inserimento o la rimozione di periferiche, avrà il compito di gestire le operazioni in userspace ed eventualmente caricherà i firmware relativi alle periferiche.
+</p>
+<p>udev carica i moduli del kernel simultaneamente, ciò può quindi comportare una maggiore velocità di avvio del sistema. Comunque uno svantaggio è che non sempre i moduli vengono caricati nel solito ordine ad ogni avvio, questo può causare problemi ad alcune schede audio o di rete(se sono presenti due o più di queste schede). Vedere più avanti per maggiori informazioni riguardo a questo problema.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installazione"><span class="tocnumber">1</span> <span class="toctext">Installazione</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Le_regole_di_udev"><span class="tocnumber">2</span> <span class="toctext">Le regole di udev</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Trucchi_e_consigli"><span class="tocnumber">3</span> <span class="toctext">Trucchi e consigli</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#UDisks"><span class="tocnumber">3.1</span> <span class="toctext">UDisks</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#UDisks_Wrapper"><span class="tocnumber">3.1.1</span> <span class="toctext">UDisks Wrapper</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#UDisks_Shell_Functions"><span class="tocnumber">3.1.2</span> <span class="toctext">UDisks Shell Functions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7">
+<a href="#Mount_automatico_delle_periferiche_USB"><span class="tocnumber">3.2</span> <span class="toctext">Mount automatico delle periferiche USB</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente"><span class="tocnumber">3.2.1</span> <span class="toctext">Mount in /media; usando l'etichetta della partizione se presente</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_con_supporto_alla_cifratura_LUKS"><span class="tocnumber">3.2.2</span> <span class="toctext">Mount in /media; usando l'etichetta della partizione se presente; con supporto alla cifratura LUKS</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_consentire_agli_utenti_lo_smontaggio"><span class="tocnumber">3.2.3</span> <span class="toctext">Mount in /media;  usando l'etichetta della partizione se presente; consentire agli utenti lo smontaggio</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#Mount_in_/mnt;_creando_un_link_simbolico_in_/media"><span class="tocnumber">3.2.4</span> <span class="toctext">Mount in /mnt; creando un link simbolico in /media</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#Mount_in_/media_solo_se_la_partizione_ha_una_etichetta"><span class="tocnumber">3.2.5</span> <span class="toctext">Mount in /media <i>solo</i> se la partizione ha una etichetta</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_usando_ntfs-3g"><span class="tocnumber">3.2.6</span> <span class="toctext">Mount in /media; usando l'etichetta della partizione se presente; usando ntfs-3g</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Mount_delle_SD_card"><span class="tocnumber">3.2.7</span> <span class="toctext">Mount delle SD card</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Mount_dei_CD"><span class="tocnumber">3.2.8</span> <span class="toctext">Mount dei CD</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Accedere_a_Firmware_Programmers_ed_a_USB_Virtual_Comm_Devices"><span class="tocnumber">3.2.9</span> <span class="toctext">Accedere a Firmware Programmers ed a USB Virtual Comm Devices</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-17"><a href="#Eseguire_all%E2%80%99inserimento_di_un_USB"><span class="tocnumber">3.3</span> <span class="toctext">Eseguire all’inserimento di un USB</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Mount_dei_supporti_di_memoria_interni_come_utente_non_privilegiato"><span class="tocnumber">3.4</span> <span class="toctext">Mount dei supporti di memoria interni come utente non privilegiato</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Marchiare_le_porte_SATA_interne_come_porte_eSATA"><span class="tocnumber">3.5</span> <span class="toctext">Marchiare le porte SATA interne come porte eSATA</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20">
+<a href="#Risoluzione_di_problemi"><span class="tocnumber">4</span> <span class="toctext">Risoluzione di problemi</span></a>
+<ul>
+<li class="toclevel-2 tocsection-21"><a href="#Inserire_i_moduli_in_blacklist"><span class="tocnumber">4.1</span> <span class="toctext">Inserire i moduli in blacklist</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#udevd_fallisce_all%E2%80%99avvio"><span class="tocnumber">4.2</span> <span class="toctext">udevd fallisce all’avvio</span></a></li>
+<li class="toclevel-2 tocsection-23">
+<a href="#Problemi_noti_relativi_all'hardware"><span class="tocnumber">4.3</span> <span class="toctext">Problemi noti relativi all'hardware</span></a>
+<ul>
+<li class="toclevel-3 tocsection-24"><a href="#Le_periferiche_BusLogic_smettono_di_funzionare_e_quindi_causano_un_blocco_durante_la_fase_di_avvio."><span class="tocnumber">4.3.1</span> <span class="toctext">Le periferiche BusLogic smettono di funzionare e quindi causano un blocco durante la fase di avvio.</span></a></li>
+<li class="toclevel-3 tocsection-25"><a href="#Periferiche_rimovibili_non_vengono_riconosciute_come_tali"><span class="tocnumber">4.3.2</span> <span class="toctext">Periferiche rimovibili non vengono riconosciute come tali</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-26">
+<a href="#Problemi_noti_relativi_al_caricamento_automatico_dei_moduli"><span class="tocnumber">4.4</span> <span class="toctext">Problemi noti relativi al caricamento automatico dei moduli</span></a>
+<ul>
+<li class="toclevel-3 tocsection-27"><a href="#Moduli_per_lo_scaling_della_frequenza_della_CPU"><span class="tocnumber">4.4.1</span> <span class="toctext">Moduli per lo scaling della frequenza della CPU</span></a></li>
+<li class="toclevel-3 tocsection-28"><a href="#Problemi_con_l'audio_o_alcuni_moduli_non_vengono_caricati_automaticamente"><span class="tocnumber">4.4.2</span> <span class="toctext">Problemi con l'audio o alcuni moduli non vengono caricati automaticamente</span></a></li>
+<li class="toclevel-3 tocsection-29"><a href="#Ordinamento_delle_periferiche,_schede_di_rete/audio_che_cambiano_ordine_ad_ogni_avvio"><span class="tocnumber">4.4.3</span> <span class="toctext">Ordinamento delle periferiche, schede di rete/audio che cambiano ordine ad ogni avvio</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-30">
+<a href="#Problemi_noti_legati_all'uso_di_Kernel_personalizzati"><span class="tocnumber">4.5</span> <span class="toctext">Problemi noti legati all'uso di Kernel personalizzati</span></a>
+<ul>
+<li class="toclevel-3 tocsection-31"><a href="#Udev_non_si_avvia"><span class="tocnumber">4.5.1</span> <span class="toctext">Udev non si avvia</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-32"><a href="#Periferiche_IDE_CD/DVD"><span class="tocnumber">4.6</span> <span class="toctext">Periferiche IDE CD/DVD</span></a></li>
+<li class="toclevel-2 tocsection-33"><a href="#Le_periferiche_ottiche_hanno_l'ID_del_gruppo_impostato_a_disk"><span class="tocnumber">4.7</span> <span class="toctext">Le periferiche ottiche hanno l'ID del gruppo impostato a disk</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-34"><a href="#Altre_risorse"><span class="tocnumber">5</span> <span class="toctext">Altre risorse</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installazione">Installazione</span></h2>
+<p>Udev è ora parte di <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> e viene installato di default su Arch Linux. Vedere <span class="plainlinks archwiki-template-man" title="$ man 8 systemd-udevd.service"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd-udevd.service.8">systemd-udevd.service(8)</a></span> per ulteriori informazioni.
+</p>
+<h2><span class="mw-headline" id="Le_regole_di_udev">Le regole di udev</span></h2>
+<p>Le regole di udev scritte dall'amministratore di sistema, si trovano in <code>/etc/udev/rules.d/</code>, questi file avranno l'estensione <code>.rules</code>. Le regole fornite dall'installazione di vari pacchetti si trovano in <code>/lib/udev/rules.d/</code>. Nel caso in cui esistano due regole con lo stesso nome sia sotto <code>/lib</code> che sotto <code>/etc</code>, la regola che si trova nella cartella <code>/etc</code> avrà la precedenza.
+</p>
+<p>Per maggiori informazioni su come scrivere regole per udev consultare <a rel="nofollow" class="external text" href="http://www.reactivated.net/writing_udev_rules.html">il sito(in inglese)</a>.
+</p>
+<p>Per ottenere una lista dei possibili attributi di una periferica utilizzabili dalle regole di udev:
+</p>
+<pre># udevadm info -a -n [nome periferica]
+</pre>
+<p>Sostituendo [nome periferica] con la periferica del sistema, come '/dev/sda' oppure '/dev/ttyUSB0'.
+</p>
+<p>Udev rileva i cambiamenti alle file delle regole automaticamente, quindi i cambiamenti avranno effetto immediato senza dover riavviare udev. Comunque, le regole non verranno applicate automaticamente alle periferiche preesistenti, quindi le periferiche rimovibili come le periferiche USB, probabilmente dovranno essere rimosse e reinserite perché le nuove regole siano applicate.
+</p>
+<h2><span class="mw-headline" id="Trucchi_e_consigli">Trucchi e consigli</span></h2>
+<h3><span class="mw-headline" id="UDisks">UDisks</span></h3>
+<p><a href="../it/Pacman.html" title="Pacman (Italiano)">Installare</a> il pacchetto <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/udisks/">udisks</a></span><sup><small>AUR</small></sup> e tutte le periferiche verranno montate automaticamente in GNOME e KDE SC 4.6. Non sarà necessario utilizzare regole aggiuntive per questo metodo. In aggiunta, se si utilizza HAL solamente per il mount automatico delle periferiche, a questo punto sarà possibile rimuoverlo.
+</p>
+<h4><span class="mw-headline" id="UDisks_Wrapper">UDisks Wrapper</span></h4>
+<p>Un UDisks wrapper ha il vantaggio di essere molto facile da installare e non necessita(oppure solo in minima parte) di configurazioni. Il wrapper monterà automaticamente CD, DVD e le periferiche di archiviazione rimovibili.
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://igurublog.wordpress.com/downloads/script-devmon/">devmon</a> - (<a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages.php?ID=45842">disponibile su AUR</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup>) Si tratta di un script Bash, privo di configurazione, esso permette di effettuare l'automount di periferiche CD/DVD e di dischi esterni. Permette anche di eseguire applicazioni o comandi dopo il mount, di ignorare specifiche periferiche o specifiche etichette dei volumi, e di effettuare l'umount delle periferiche rimovibili.</li>
+<li>
+<a href="../en/Udisks.html" class="mw-redirect" title="Udiskie">udiskie</a> - Scritto in Python. Permette il mount automatico e lo smontaggio con ogni utente.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages.php?ID=38723">udisksevt</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup> - Scritto in Haskell. Permette il mount automatico ad ogni utente. Ideato per essere integrato con <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/traydevice/">traydevice</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup>.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages.php?ID=46572">udisksvm</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup> è uno script Bash che usa udisks e <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/traydevice/">traydevice</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">broken link</a>: package not found]</sup> per effettuare l'automount delle periferiche rimovibili, e ne consente il controllo tramite una interfaccia grafica, mediante l'uso di una icona nell'area di notifica utilizzando i click del mouse per smontare, rimontare o espellere le periferiche.</li>
+</ul>
+<h4><span class="mw-headline" id="UDisks_Shell_Functions">UDisks Shell Functions</span></h4>
+<p>Mentre UDisks include dei semplici metodi di mount(ed umount) delle periferiche anche da linea di comando, può essere fastidioso eseguire i comandi ogni volta. Queste funzioni della shell garantiranno un uso più veloce e facile.
+</p>
+<ul><li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=109307">udisks_functions</a> - Scritto per Bash.</li></ul>
+<ul><li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=117674">bashmount</a> - bashmount <a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages.php?ID=48524">(AUR)</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup> è uno script bash strutturato a menù, ed ha un semplice file di configurazione che lo rende semplice da configurare ed implementare.</li></ul>
+<h3><span class="mw-headline" id="Mount_automatico_delle_periferiche_USB">Mount automatico delle periferiche USB</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  Nelle seguenti regole, le opzioni per il comando mount sono definite con <code>ENV{mount_options}="relatime"</code>, consultare <span class="plainlinks archwiki-template-man" title="$ man 8 mount"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mount.8">mount(8)</a></span>(ed eventualmente <span class="plainlinks archwiki-template-man" title="$ man 8 ntfs-3g"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ntfs-3g.8">ntfs-3g(8)</a></span>) per tutte le possibili opzioni, leggere <a href="../en/Improving_performance.html#Mount_options" title="Improving performance">Improving performance#Mount options</a> per informazioni relative alle performance.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  L'opzione <code>users</code> per il comando mount <b>non</b> permetterà comunque agli utenti di smontare il filesystem.</div>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> L'opzione <code>noexec</code> impedisce l'esecuzione di programmi residenti sul filesystem montato.</div>
+<h4>
+<span id="Mount_in_.2Fmedia.3B_usando_l.27etichetta_della_partizione_se_presente"></span><span class="mw-headline" id="Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente">Mount in /media; usando l'etichetta della partizione se presente</span>
+</h4>
+<p>La seguente regola imposta il mount automatico delle partizioni/periferiche identificate come <code>/dev/sd*</code> (pendrive USB, hard disk esterni ed in alcuni casi SD card).
+Se esiste una etichetta, allora il mount sarà effettuato in <code>/media/&lt;etichetta&gt;</code>, altrimenti in <code>/media/usbhd-sd*</code> (esempio: /media/usbhd-sdb1):
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-media-by-label-auto-mount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="sd[a-z][0-9]", GOTO="media_by_label_auto_mount_end"
+
+# Importa le informazioni sui Filesystem
+IMPORT{program}="/sbin/blkid -o udev -p %N"
+
+# Individua l'etichetta se esiste, altrimenti ne crea una
+ENV{ID_FS_LABEL}!="", ENV{dir_name}="%E{ID_FS_LABEL}"
+ENV{ID_FS_LABEL}=="", ENV{dir_name}="usbhd-%k"
+
+# Opzioni globali per il comando mount 
+ACTION=="add", ENV{mount_options}="relatime"
+# Opzioni di mount specifiche per i filesystem
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"
+
+# Effettua il mount della periferica
+ACTION=="add", RUN+="/bin/mkdir -p /media/%E{dir_name}", RUN+="/bin/mount -o $env{mount_options} /dev/%k /media/%E{dir_name}"
+
+# Effettua la pulizia delle directory alla rimozione della periferica
+ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/umount -l /media/%E{dir_name}", RUN+="/bin/rmdir /media/%E{dir_name}"
+
+# Uscita
+LABEL="media_by_label_auto_mount_end"
+</pre>
+<h4>
+<span id="Mount_in_.2Fmedia.3B_usando_l.27etichetta_della_partizione_se_presente.3B_con_supporto_alla_cifratura_LUKS"></span><span class="mw-headline" id="Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_con_supporto_alla_cifratura_LUKS">Mount in /media; usando l'etichetta della partizione se presente; con supporto alla cifratura LUKS</span>
+</h4>
+<p>Come nella regola precedente, ma in questo caso nella periferica risiede una partizione con un filesystem criptato con LUKS, verrà aperto una finestra di <code>xterm</code> dove si dovrà inserire la passphrase(supponendo che xterm sia già installato). Consultare anche <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=696239#p696239">questo post sul forum internazionale</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  Può essere necessario modificare il percorso di <code>cryptsetup</code>, a seconda della versione (es: &lt; 1.1.1_rc2-1).</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-media-by-label-auto-mount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="sd[a-z]*", GOTO="media_by_label_auto_mount_end"
+ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="media_by_label_auto_mount_end"
+
+# Non effettua il mount di file system già montati in altri percorsi per evitare che in /media si creino voci per tutte le partizioni locali
+ACTION=="add", PROGRAM=="/bin/grep -q ' /dev/%k ' /proc/self/mountinfo", GOTO="media_by_label_auto_mount_end"
+
+# Apre la partizione LUKS se necessario
+PROGRAM=="/sbin/blkid -o value -s TYPE %N",  RESULT=="crypto_LUKS", ENV{crypto}="mapper/", ENV{device}="/dev/mapper/%k"
+ENV{crypto}=="", ENV{device}="%N"
+ACTION=="add", ENV{crypto}!="", PROGRAM=="/usr/bin/xterm -display :0.0 -e 'echo Password for /dev/%k; /sbin/cryptsetup luksOpen %N %k'"
+ACTION=="add", ENV{crypto}!="", TEST!="/dev/mapper/%k", GOTO="media_by_label_auto_mount_end"
+
+# Opzioni globali per il comando mount
+ACTION=="add", ENV{mount_options}="noatime"
+# opzioni di mount specifiche per i filesystem
+ACTION=="add", PROGRAM=="/sbin/blkid -o value -s TYPE %E{device}", RESULT=="vfat|ntfs", ENV{mount_options}="%E{mount_options},utf8,gid=100,umask=002"
+
+# Individua l'etichetta se esiste, altrimenti ne crea una
+PROGRAM=="/sbin/blkid -o value -s LABEL %E{device}", ENV{dir_name}="%c"
+# Utilizza basename per to gestire etichette come ../mnt/foo
+PROGRAM=="/usr/bin/basename '%E{dir_name}'", ENV{dir_name}="%c"
+ENV{dir_name}=="", ENV{dir_name}="usbhd-%k"
+
+# Effettua il mount della periferica
+ACTION=="add", ENV{dir_name}!="", RUN+="/bin/mkdir -p '/media/%E{dir_name}'", RUN+="/bin/mount -o %E{mount_options} /dev/%E{crypto}%k '/media/%E{dir_name}'"
+
+# Effettua la pulizia delle directory alla rimozione della periferica
+ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/umount -l '/media/%E{dir_name}'"
+ACTION=="remove", ENV{crypto}!="", RUN+="/sbin/cryptsetup luksClose %k"
+ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/rmdir '/media/%E{dir_name}'"
+
+# Uscita
+LABEL="media_by_label_auto_mount_end"
+</pre>
+<h4>
+<span id="Mount_in_.2Fmedia.3B_usando_l.27etichetta_della_partizione_se_presente.3B_consentire_agli_utenti_lo_smontaggio"></span><span class="mw-headline" id="Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_consentire_agli_utenti_lo_smontaggio">Mount in /media;  usando l'etichetta della partizione se presente; consentire agli utenti lo smontaggio</span>
+</h4>
+<p>Questa è una variante della regola precedente. Utilizza <code>pmount</code> (che dovrà essere già installato) anziché <code>mount</code>, consentendo agli utenti senza privilegi di root di smontare le periferiche montate da udev, e di rimuovere automaticamente il punto di mount. Sarà necessario specificare nel comando <code>RUN</code> della regola il nome utente(nell'esempio 'tomk'), rendendo questa regola non adatta a sistemi multi utente. Il supporto a LUKS è stato rimosso dal seguente esempio ma può essere reinserito come nel precedente esempio. Si dovrà modificare l'uso del comando <code>/bin/su</code> in modo da essere eseguito dall'utente giusto per il proprio sistema. Notare che il punto di mount rimarrà se la periferica è montata, ed il sistema, avente la cartella <code>/media</code> persistente, viene spento, dato che lo script <code>rc.shutdown</code> userà <code>umount</code>, che non rimuoverà il punto di mount. Per impedire che nella cartella <code>/media</code> rimangano i vecchi punti di mount, una soluzione è quella di effettuare il mount della cartella <code>/media</code> come <code>tmpfs</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-media-by-label-with-pmount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="sd[a-z]*", GOTO="media_by_label_auto_mount_end"
+ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="media_by_label_auto_mount_end"
+
+# Individua l'etichetta
+PROGRAM=="/sbin/blkid -o value -s LABEL %N", ENV{dir_name}="%c"
+# utilizza basename per to gestire etichette come ../mnt/foo 
+PROGRAM=="/usr/bin/basename '%E{dir_name}'", ENV{dir_name}="%c"
+ENV{dir_name}=="", ENV{dir_name}="usbhd-%k"
+
+ACTION=="add", ENV{dir_name}!="", RUN+="/bin/su tomk -c '/usr/bin/pmount %N %E{dir_name}'"
+ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/su tomk -c '/usr/bin/pumount /media/%E{dir_name}'"
+LABEL="media_by_label_auto_mount_end"
+</pre>
+<h4>
+<span id="Mount_in_.2Fmnt.3B_creando_un_link_simbolico_in_.2Fmedia"></span><span class="mw-headline" id="Mount_in_/mnt;_creando_un_link_simbolico_in_/media">Mount in /mnt; creando un link simbolico in /media</span>
+</h4>
+<p>La seguente regola non utilizza l'etichetta per la creazione del punto di mount; invece effettua il mount delle periferiche come usbhd-sdXY in <code>/mnt</code> (esempio: /mnt/usbhd-sdb1) e crea un link simbolico in <code>/media</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-mnt-auto-mount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="sd[a-z][0-9]", GOTO="mnt_auto_mount_end"
+
+# Opzioni globali per il comando mount
+ACTION=="add", ENV{mount_options}="relatime"
+# Opzioni specifiche dei filesystem
+ACTION=="add", IMPORT{program}="/sbin/blkid -o udev -p %N"
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"
+
+# Effettua il mount in /mnt e crea il link simbolico in /media
+ACTION=="add", RUN+="/bin/mkdir -p /mnt/usbhd-%k", RUN+="/bin/mount -o $env{mount_options} /dev/%k /mnt/usbhd-%k", RUN+="/bin/ln -s /mnt/usbhd-%k /media/usbhd-%k"
+
+# Effettua la pulizia delle directory alla rimozione della periferica
+ACTION=="remove", RUN+="/bin/rm -f /media/usbhd-%k", RUN+="/bin/umount -l /mnt/usbhd-%k", RUN+="/bin/rmdir /mnt/usbhd-%k"
+
+# Uscita
+LABEL="mnt_auto_mount_end"
+</pre>
+<h4>
+<span id="Mount_in_.2Fmedia_solo_se_la_partizione_ha_una_etichetta"></span><span class="mw-headline" id="Mount_in_/media_solo_se_la_partizione_ha_una_etichetta">Mount in /media <i>solo</i> se la partizione ha una etichetta</span>
+</h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-media-by-label-only-auto-mount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="sd[a-z][0-9]", GOTO="media_by_label_only_auto_mount_end"
+
+# Importa le informazioni sul Filesystem
+IMPORT{program}="/sbin/blkid -o udev -p %N"
+ENV{ID_FS_LABEL}=="", GOTO="media_by_label_only_auto_mount_end"
+
+# Opzioni globali per il comando mount 
+ACTION=="add", ENV{mount_options}="relatime"
+# Opzioni specifiche dei filesystem
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"
+
+# Effettua il mount della periferica
+ACTION=="add", RUN+="/bin/mkdir -p /media/$env{ID_FS_LABEL}", RUN+="/bin/mount -o $env{mount_options} /dev/%k /media/$env{ID_FS_LABEL}"
+
+# Effettua la pulizia delle directory alla rimozione della periferica
+ACTION=="remove", ENV{ID_FS_LABEL}!="", RUN+="/bin/umount -l /media/$env{ID_FS_LABEL}", RUN+="/bin/rmdir /media/$env{ID_FS_LABEL}"
+
+# Uscita
+LABEL="media_by_label_only_auto_mount_end"
+</pre>
+<h4>
+<span id="Mount_in_.2Fmedia.3B_usando_l.27etichetta_della_partizione_se_presente.3B_usando_ntfs-3g"></span><span class="mw-headline" id="Mount_in_/media;_usando_l'etichetta_della_partizione_se_presente;_usando_ntfs-3g">Mount in /media; usando l'etichetta della partizione se presente; usando ntfs-3g</span>
+</h4>
+<p>Ecco un altro esempio, in questo caso viene usato <code>ntfs-3g</code> per accedere in lettura e scrittura sui filesystem NTFS:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/10-my-media-automount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># vim:enc=utf-8:nu:ai:si:et:ts=4:sw=4:ft=udevrules:
+#
+# /etc/udev/rules.d/10-my-media-automount.rules
+
+# il controllo inizia da sdb ignorando il disco di sistema
+KERNEL!="sd[b-z]*", GOTO="my_media_automount_end"
+ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="my_media_automount_end"
+
+# importa alcune informazioni utili come variabili
+IMPORT{program}="/sbin/blkid -o udev -p %N"
+
+# Individua l'etichetta se esiste, altrimenti ne crea una
+ENV{ID_FS_LABEL}!="", ENV{dir_name}="%E{ID_FS_LABEL}"
+ENV{ID_FS_LABEL}=="", ENV{dir_name}="usbhd-%k"
+
+# crea la directory in /media
+ACTION=="add", RUN+="/bin/mkdir -p '/media/%E{dir_name}'"
+
+# Opzioni globali per il comando mount 
+ACTION=="add", ENV{mount_options}="relatime"
+# opzioni di mount specifiche per i filesystem (imposta i permessi 777/666 su cartelle/file per ntfs/vfat) 
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},gid=100,dmask=000,fmask=111,utf8"
+
+# mount automatico per i filesystem ntfs usando ntfs-3g
+ACTION=="add", ENV{ID_FS_TYPE}=="ntfs", RUN+="/bin/mount -t ntfs-3g -o %E{mount_options} /dev/%k '/media/%E{dir_name}'"
+# mount automatico per gli altri filesystem
+ACTION=="add", ENV{ID_FS_TYPE}!="ntfs", RUN+="/bin/mount -t auto -o %E{mount_options} /dev/%k '/media/%E{dir_name}'"
+
+# Effettua la pulizia delle directory alla rimozione della periferica
+ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/umount -l '/media/%E{dir_name}'", RUN+="/bin/rmdir '/media/%E{dir_name}'"
+
+# Uscita
+LABEL="my_media_automount_end"
+</pre>
+<h4><span class="mw-headline" id="Mount_delle_SD_card">Mount delle SD card</span></h4>
+<p>Le regole sopra possono essere usate anche per il mount automatico delle schede SD, basterà sostituire <code>sd[a-z][0-9]</code> con <code>mmcblk[0-9]p[0-9]</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/11-sd-cards-auto-mount.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">KERNEL!="mmcblk[0-9]p[0-9]", GOTO="sd_cards_auto_mount_end"
+
+# Opzioni globali per il comando mount
+ACTION=="add", ENV{mount_options}="relatime"
+# Opzioni specifiche del filesystem 
+ACTION=="add", IMPORT{program}="/sbin/blkid -o udev -p %N"
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"
+
+ACTION=="add", RUN+="/bin/mkdir -p /media/sd-%k", RUN+="/bin/ln -s /media/sd-%k /mnt/sd-%k", RUN+="/bin/mount -o $env{mount_options} /dev/%k /media/sd-%k"
+ACTION=="remove", RUN+="/bin/umount -l /media/sd-%k", RUN+="/bin/rmdir /media/sd-%k"
+LABEL="sd_cards_auto_mount_end"
+</pre>
+<h4><span class="mw-headline" id="Mount_dei_CD">Mount dei CD</span></h4>
+<p>Per effettuare l’auto mount dei cd basterà avere installato e configurato uno dei <a href="#UDisks_Wrapper">UDisks wrapper</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  Forse questo può essere unito con la sezione Udiscks wrapper.</div>
+<h4><span class="mw-headline" id="Accedere_a_Firmware_Programmers_ed_a_USB_Virtual_Comm_Devices">Accedere a Firmware Programmers ed a USB Virtual Comm Devices</span></h4>
+<p>La seguente regola consente a normali utenti (appartenenti al gruppo "users") la possibilità di accedere ad <a rel="nofollow" class="external text" href="http://www.ladyada.net/make/usbtinyisp/">USBtinyISP</a> programmatori per micro controllori AVR ed a generici (SiLabs <a rel="nofollow" class="external text" href="http://www.silabs.com/products/interface/usbtouart">CP2102</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup>) adattatori da USB a UART. Modificare i permessi secondo le esigenze. Verificato il 11-02-2010.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/50-embedded_devices.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># USBtinyISP Programmer
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1781", ATTRS{idProduct}=="0c9f", GROUP="users", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0479", GROUP="users", MODE="0666"
+
+# USBasp Programmer rules http://www.fischl.de/usbasp/
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="05dc", GROUP="users", MODE="0666"
+
+# Mdfly.com Generic (SiLabs CP2102) 3.3v/5v USB VComm adapter
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", GROUP="users", MODE="0666"
+</pre>
+<h3>
+<span id="Eseguire_all.E2.80.99inserimento_di_un_USB"></span><span class="mw-headline" id="Eseguire_all’inserimento_di_un_USB">Eseguire all’inserimento di un USB</span>
+</h3>
+<p>Consultare la guida riguardante l'<a href="../it/Execute_on_USB_insert.html" title="Execute on USB insert (Italiano)">esecuzione di programmi all'inserimento di una pennina USB</a>, oppure il <a rel="nofollow" class="external text" href="https://igurublog.wordpress.com/downloads/script-devmon/">il sito dello script wrapper devmon</a>.
+</p>
+<h3><span class="mw-headline" id="Mount_dei_supporti_di_memoria_interni_come_utente_non_privilegiato">Mount dei supporti di memoria interni come utente non privilegiato</span></h3>
+<p>Se si vuole effettuare il mount di periferiche interne in KDE oppure in GNOME (ma anche in altri Desktop Environment) come utente non privilegiato(senza necessità di inserire la password per elevare i privilegi), basterà creare il seguente file in <a href="../en/Polkit.html" class="mw-redirect" title="PolicyKit">PolicyKit</a> Local Autority:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/polkit-1/localauthority/50-local.d/50-filesystem-mount-system-internal.pkla</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Mount a system-internal device]
+Identity=*
+Action=org.freedesktop.udisks.filesystem-mount-system-internal
+ResultActive=yes
+</pre>
+<h3><span class="mw-headline" id="Marchiare_le_porte_SATA_interne_come_porte_eSATA">Marchiare le porte SATA interne come porte eSATA</span></h3>
+<p>Se si connette una dock eSATA oppure un qualsiasi adattatore eSATA il sistema riconoscerà queste porte come SATA interne. GNOME e KDE richiederanno quindi la password di root per effettuarne il mount. La seguente regola marchia come eSATA la porta SATA interna specificata. In questo modo un utente normale su GNOME potrà quindi connettere i propri dischi eSata che verranno trattati come dischi USB, senza bisogno di inserire la password di root.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/10-esata.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">DEVPATH=="/devices/pci0000:00/0000:00:1f.2/host4/*", ENV{UDISKS_SYSTEM_INTERNAL}="0"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong>  Il valore di DEVPATH può essere ottenuto dopo la connessione del disco eSATA mediante il seguente comando(sostituire <code>sdb</code> a seconda delle proprie esigenze):
+<pre># find /sys/devices/ -name sdb
+/sys/devices/pci0000:00/0000:00:1f.2/host4/target4:0:0/4:0:0:0/block/sdb
+</pre>
+</div>
+<h2><span class="mw-headline" id="Risoluzione_di_problemi">Risoluzione di problemi</span></h2>
+<h3><span class="mw-headline" id="Inserire_i_moduli_in_blacklist">Inserire i moduli in blacklist</span></h3>
+<p>In rari casi, udev può sbagliarsi e caricare il modulo sbagliato. Per prevenire ciò il modulo in questione può essere inserito in una blacklist.Consultare <a href="../it/Kernel_module.html" class="mw-redirect" title="Blacklisting (Italiano)">blacklisting</a> per maggiori informazioni. Una volta inserito nella blacklist udev non caricherà questo modulo, ne durante la fase di avvio <i>ne</i> in caso di inserimento di periferiche hotplug(durante l'inserimento di una pennina USB).
+</p>
+<h3>
+<span id="udevd_fallisce_all.E2.80.99avvio"></span><span class="mw-headline" id="udevd_fallisce_all’avvio">udevd fallisce all’avvio</span>
+</h3>
+<p>Dopo un passaggio ad LDAP oppure dopo un aggiornamento di un sistema LDAP-backend può accadere che <code>udevd</code> non si avvii correttamente, lo si nota alla comparsa del messaggio <code>Starting UDev Daemon</code>. Questo solitamente è causato da <code>udevd</code> che cerca di ottenere un nome da LDAP ma non ci riesce, perché la rete non è ancora attiva. La soluzione consiste nell’assicurarsi che tutti i nomi dei gruppi del sistema siano presenti localmente.
+</p>
+<p>Ottenere l’elenco dei gruppi a cui fa riferimento udev, all’interno delle sue regole, e l’elenco dei gruppi attualmente presenti nel sistema:
+</p>
+<pre># fgrep -r GROUP /etc/udev/rules.d/ /lib/udev/rules.d | perl -nle '/GROUP\s*=\s*"(.*?)"/ &amp;&amp; print $1;' | sort | uniq &gt; udev_groups
+# cut -f1 -d: /etc/gshadow /etc/group | sort | uniq &gt; present_groups
+</pre>
+<p>Per vedere le differenze, effettuare un <code>diff</code> affiancato(side-by-side):
+</p>
+<pre># diff -y present_groups udev_groups
+...
+network                                      &lt;
+nobody                                       &lt;
+ntp                                          &lt;
+optical                                      optical
+power                                        |    pcscd
+rfkill                                       &lt;
+root                                         root
+scanner                                      scanner
+smmsp                                        &lt; 
+storage                                      storage
+...
+</pre>
+<p>In questo caso, il gruppo <code>pcscd</code> per qualche ragione non è presente nel sistema. Aggiungere quindi i gruppi mancanti:
+</p>
+<pre># groupadd pcscd
+</pre>
+<p>Assicurarsi anche che le risorse siano bloccate prima di riabilitare LDAP. Nel File <code>/etc/nsswitch.conf</code> dovrebbe essere presente questa riga:
+</p>
+<pre>group: files ldap
+</pre>
+<h3>
+<span id="Problemi_noti_relativi_all.27hardware"></span><span class="mw-headline" id="Problemi_noti_relativi_all'hardware">Problemi noti relativi all'hardware</span>
+</h3>
+<h4><span class="mw-headline" id="Le_periferiche_BusLogic_smettono_di_funzionare_e_quindi_causano_un_blocco_durante_la_fase_di_avvio.">Le periferiche BusLogic smettono di funzionare e quindi causano un blocco durante la fase di avvio.</span></h4>
+<p>Questo è un bug del kernel e non è stato ancora risolto.
+</p>
+<h4><span class="mw-headline" id="Periferiche_rimovibili_non_vengono_riconosciute_come_tali">Periferiche rimovibili non vengono riconosciute come tali</span></h4>
+<p>Creare una regola per udev, impostando <code>UDISKS_SYSTEM_INTERNAL=0</code>.Per maggiori informazioni consultare le pagine di manuale di udisks.
+</p>
+<h3><span class="mw-headline" id="Problemi_noti_relativi_al_caricamento_automatico_dei_moduli">Problemi noti relativi al caricamento automatico dei moduli</span></h3>
+<h4><span class="mw-headline" id="Moduli_per_lo_scaling_della_frequenza_della_CPU">Moduli per lo scaling della frequenza della CPU</span></h4>
+<p>L'attuale meccanismo di identificazione del modulo per lo scaling della frequenza non è adeguato, quindi per adesso è stato rimosso dal processo di caricamento automatico dei moduli. Per utilizzare lo <a href="../it/CPU_frequency_scaling.html" title="CPU frequency scaling (Italiano)">scaling della frequenza della CPU</a>, sarà necessario caricare il modulo appropriato esplicitamente all'interno dell'array <code>MODULES</code> in <code>/etc/rc.conf</code>.
+</p>
+<h4>
+<span id="Problemi_con_l.27audio_o_alcuni_moduli_non_vengono_caricati_automaticamente"></span><span class="mw-headline" id="Problemi_con_l'audio_o_alcuni_moduli_non_vengono_caricati_automaticamente">Problemi con l'audio o alcuni moduli non vengono caricati automaticamente</span>
+</h4>
+<p>Alcuni utenti hanno segnalato questo problema relativo a vecchie configurazioni presenti in <code>/etc/modprobe.d/sound.conf</code>. Si consiglia di ripulire il file e riprovare.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> A partire da <code>udev&gt;=171</code>, il moduli relativi ad OSS (<code>snd_seq_oss, snd_pcm_oss, snd_mixer_oss</code>) non vengono caricati automaticamente di default.</div>
+<h4>
+<span id="Ordinamento_delle_periferiche.2C_schede_di_rete.2Faudio_che_cambiano_ordine_ad_ogni_avvio"></span><span class="mw-headline" id="Ordinamento_delle_periferiche,_schede_di_rete/audio_che_cambiano_ordine_ad_ogni_avvio">Ordinamento delle periferiche, schede di rete/audio che cambiano ordine ad ogni avvio</span>
+</h4>
+<p>Dato che udev carica i moduli in modo asincrono, questi vengono inizializzati in ordine differente. Questo può causare il cambiamento casuale del loro nome. Ad esempio con due schede di rete, può capitare che il loro ordine venga invertito da <code>eth0</code> ad <code>eth1</code>.
+</p>
+<p>Un metodo per ordinare le schede di rete è quello di usare una regola che imposti staticamente il nome ad ogni interfaccia di rete. Creare il seguente file per associare al MAC adresss di ogni scheda di rete un determinato nome di interfaccia:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/10-network.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SUBSYSTEM=="net", ATTR{address}=="aa:bb:cc:dd:ee:ff", NAME="lan0"
+SUBSYSTEM=="net", ATTR{address}=="ff:ee:dd:cc:bb:aa", NAME="wlan0"
+</pre>
+<p>Alcune cose da notare:
+</p>
+<ul>
+<li>Per ottenere il MAC adress di ogni scheda, usare il seguente comando: <code>udevadm info -a -p /sys/class/net/&lt;yourdevice&gt; </code>
+</li>
+<li>Assicurarsi di usare caratteri minuscoli per i MAC adress in questa regola. Non funzionerà se si usano caratteri maiuscoli.</li>
+<li>Alcuni utenti hanno problemi a chiamare le interfacce secondo la vecchia nomenclatura: eth0, eth1 ecc. Provare con nomi come "lan" o "wlan" se si ha questo problema.</li>
+</ul>
+<p>Non dimenticare di aggiornare il proprio <code>/etc/rc.conf</code> ed ogni altra configurazione che utilizzi la vecchia nomenclatura! .
+</p>
+<p>Un ulteriore metodo per impostare i nomi alle interfacce di rete viene descritto nella <a href="../it/Network_configuration.html#Nomi_delle_interfacce_differenti" class="mw-redirect" title="Configuring Network (Italiano)">pagina del wiki</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup> relativa alla configurazione della rete .
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Con una versione recente di udev, questo problema dovrebbe essere risolto automaticamente grazie al programma <code>/lib/udev/write_net_rules</code> che esegue lo script <code>75-persistent-net-generator.rules</code> che crea il file <code>70-persistent-net.rules</code>.</div>
+<h3>
+<span id="Problemi_noti_legati_all.27uso_di_Kernel_personalizzati"></span><span class="mw-headline" id="Problemi_noti_legati_all'uso_di_Kernel_personalizzati">Problemi noti legati all'uso di Kernel personalizzati</span>
+</h3>
+<h4><span class="mw-headline" id="Udev_non_si_avvia">Udev non si avvia</span></h4>
+<p>Assicurarsi che il kernel in uso sia ad una versione uguale o successiva alla 2.6.32. Le versioni precedenti non di dispongono degli uevent necessari ad udev per il caricamento automatico dei moduli.
+</p>
+<h3>
+<span id="Periferiche_IDE_CD.2FDVD"></span><span class="mw-headline" id="Periferiche_IDE_CD/DVD">Periferiche IDE CD/DVD</span>
+</h3>
+<p>A partire dalla versione 170 udev non supporta più le periferiche CD-ROM/DVD-ROM, che verranno caricate come periferiche IDE dal modulo <code>ide_cd_mod</code> e verranno identificate come <code>/dev/hd*</code>. Le periferiche saranno utilizzabili dai tool che accedono direttamente all'hardware, come <code>cdparanoia</code>, ma saranno invisibili ad altri programmi come KDE.
+</p>
+<p>Un motivo per cui il modulo <code>ide_cd_mod</code> viene caricato piuttosto che altri, come <code>st_mod</code> può essere ad esempio che per qualche motivo il modulo <code>piix</code> viene caricato dall'initramfs. In questo caso è possibile sostituirlo con <code>ata_piix</code> nel proprio <code>/etc/mkinitcpio.conf</code>
+</p>
+<h3>
+<span id="Le_periferiche_ottiche_hanno_l.27ID_del_gruppo_impostato_a_disk"></span><span class="mw-headline" id="Le_periferiche_ottiche_hanno_l'ID_del_gruppo_impostato_a_disk">Le periferiche ottiche hanno l'ID del gruppo impostato a disk</span>
+</h3>
+<p>Se l'ID delle periferiche ottiche è impostato su <code>disk</code> e si vuole cambiare in <code>optical</code> sarà necessario creare una regola personalizzata di udev:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># permissions for IDE CD devices
+SUBSYSTEMS=="ide", KERNEL=="hd[a-z]", ATTR{removable}=="1", ATTRS{media}=="cdrom*", GROUP="optical"
+
+# permissions for SCSI CD devices
+SUBSYSTEMS=="scsi", KERNEL=="s[rg][0-9]*", ATTRS{type}=="5", GROUP="optical"</pre>
+<h2><span class="mw-headline" id="Altre_risorse">Altre risorse</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html">Homepage di Udev(in inglese)</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup>
+</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.linux.com/news/hardware/peripherals/180950-udev">Una introduzione ad Udev(in inglese)</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">link interrotto</a> 2020-08-06]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://vger.kernel.org/vger-lists.html#linux-hotplug">Mailing list informativa di Udev</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../it/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting (Italiano)">Hardware detection and troubleshooting (Italiano)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Udev_(Italiano)&amp;oldid=631557">https://wiki.archlinux.org/index.php?title=Udev_(Italiano)&amp;oldid=631557</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2020, at 08:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

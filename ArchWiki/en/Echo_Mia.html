@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Echo Mia - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Echo_Mia rootpage-Echo_Mia skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Echo Mia</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> No structure. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Echo_Mia">Talk:Echo Mia#</a>)</div>
+</div>
+<p>This article will discuss how to setting up the Echo Mia (Midi) soundcard to work under Arch, and how to resolve the hardware mixing issue in ALSA. 
+It also implies that <a href="../en/Advanced_Linux_Sound_Architecture.html" class="mw-redirect" title="ALSA">ALSA</a> is set up properly. Proper software mixing is found to be possible with dmix with a slightly tweaked <code>~/.asoundrc</code>.
+</p>
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>The Arch kernel includes the Mia modules necessary, however the firmware needs to be obtained by installing the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-firmware">alsa-firmware</a></span> package.
+After the firmware is installed, you should consider <a href="../en/Kernel_module.html#Blacklisting" class="mw-redirect" title="Blacklisting">blacklisting</a> other sound card modules.
+</p>
+<p>Reboot again, confirm that the module is loaded, and is able to play sound.
+</p>
+<p>The <i>echomixer</i> program should be installed from the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=alsa-tools">alsa-tools</a></span> package. <i>echomixer</i> makes it easier to set up and manage the virtual channels (subdevices) of your soundcard.
+</p>
+<h2><span class="mw-headline" id="Hardware_mixing">Hardware mixing</span></h2>
+<p>When the card is set up, and plays sound correctly, the last part is tricking to make the hardware mixing work as it should. If hardware mixing is already working properly, the last part of this page should be of no interest.
+However, if the sound card is unable to have more than one stream at the same time, this fix should work around it.
+</p>
+<p>As suspected in this forum thread <a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=36508">[1]</a>, Mia is unable to let ALSA pick a free subdevice for the sound card. A stereo stream is considered as two streams for Mia, but ALSA thinks this as one stream, leading to the crash that it will pick a busy subdevice each time it tries to play another stream. To work around this, we have to force ALSA to pick other subdevices. We can do this by splitting the card into four different devices. Example of <code>/etc/asound.conf</code>:
+</p>
+<pre># /etc/asound.conf
+# Hardware mixing for Mia
+pcm.!default{
+  type hw
+  card 0
+  subdevice 0
+}
+ctl.!default{
+  type hw
+  card 0
+}
+pcm.mia1{
+  type hw
+  card 0
+  subdevice 2
+}
+pcm.mia2{
+  type hw
+  card 0
+  subdevice 4
+}
+pcm.mia3{
+  type hw
+  card 0
+  subdevice 6
+}
+</pre>
+<p>As long as we have programs that are able to pick different devices for ALSA, we can route certain programs to certain devices. For programs that only use the default device, it will be defaulted to use subdevice 0 (and 1). 
+Many popular programs are able to pick devices for themselves. A normal setup of flashplayer in web browser, movie player and a music player can be designated their own devices, which also allows separate volume control of these. 
+Refer to each programs manuals on how to configure these properly.
+</p>
+<p>The dmix alternative if hardware mixing becomes too much of a mess can work with this setup (assumes that MIA is card #0. YMMV):
+</p>
+<pre>pcm.!default {
+  type plug
+  slave.pcm "dmixer"
+}
+pcm.dmixer {
+  type dmix
+  ipc_key 2048
+  slave {
+    pcm "hw:0,0,0" # Changing the "obvious" hw:0,0 to hw:0,0,0 saves the day ...
+    period_time 0
+    period_size 1024
+    buffer_size 4096
+    rate 44100
+  }
+  bindings {
+    0 0
+    1 1
+  }
+}
+ctl.!default {
+  type hw
+  card 0
+}
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Sound.html" title="Category:Sound">Sound</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Echo_Mia&amp;oldid=497205">https://wiki.archlinux.org/index.php?title=Echo_Mia&amp;oldid=497205</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 18 November 2017, at 02:11.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

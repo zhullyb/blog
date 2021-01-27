@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>rsync - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Rsync rootpage-Rsync skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">rsync</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/System_backup.html" title="System backup">System backup</a></li>
+<li><a href="../en/Synchronization_and_backup_programs.html" title="Synchronization and backup programs">Synchronization and backup programs</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://rsync.samba.org/">rsync</a> is an open source utility that provides fast incremental file transfer.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Front-ends"><span class="tocnumber">1.1</span> <span class="toctext">Front-ends</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3">
+<a href="#As_cp/mv_alternative"><span class="tocnumber">2</span> <span class="toctext">As cp/mv alternative</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Trailing_slash_caveat"><span class="tocnumber">2.1</span> <span class="toctext">Trailing slash caveat</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#As_a_backup_utility"><span class="tocnumber">3</span> <span class="toctext">As a backup utility</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Automated_backup"><span class="tocnumber">3.1</span> <span class="toctext">Automated backup</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Automated_backup_with_SSH"><span class="tocnumber">3.2</span> <span class="toctext">Automated backup with SSH</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Automated_backup_with_NetworkManager"><span class="tocnumber">3.3</span> <span class="toctext">Automated backup with NetworkManager</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Automated_backup_with_systemd_and_inotify"><span class="tocnumber">3.4</span> <span class="toctext">Automated backup with systemd and inotify</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Differential_backup_on_a_week"><span class="tocnumber">3.5</span> <span class="toctext">Differential backup on a week</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Snapshot_backup"><span class="tocnumber">3.6</span> <span class="toctext">Snapshot backup</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Full_system_backup"><span class="tocnumber">3.7</span> <span class="toctext">Full system backup</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Restore_a_backup"><span class="tocnumber">3.8</span> <span class="toctext">Restore a backup</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#File_system_cloning"><span class="tocnumber">4</span> <span class="toctext">File system cloning</span></a></li>
+<li class="toclevel-1 tocsection-15">
+<a href="#rsync_daemon"><span class="tocnumber">5</span> <span class="toctext">rsync daemon</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16">
+<a href="#Example_configuration"><span class="tocnumber">5.1</span> <span class="toctext">Example configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-17"><a href="#Sharing_from_a_list_of_files"><span class="tocnumber">5.1.1</span> <span class="toctext">Sharing from a list of files</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-18"><a href="#See_also"><span class="tocnumber">6</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rsync">rsync</a></span> package.
+</p>
+<p><i>rsync</i> must be installed on both the source and the destination machine.
+</p>
+<h3><span class="mw-headline" id="Front-ends">Front-ends</span></h3>
+<ul><li>
+<b>Grsync</b> — GTK front-end.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://www.opbyte.it/grsync/">http://www.opbyte.it/grsync/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=grsync">grsync</a></span>
+</dd></dl>
+<ul><li>
+<b>gutback</b> — rsync wrapper written in Shell.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/gutenye/gutbackup">https://github.com/gutenye/gutbackup</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/gutbackup/">gutbackup</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>JotaSync</b> — Java Swing GUI for rsync with integrated scheduler.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://trixon.se/projects/jotasync/">https://trixon.se/projects/jotasync/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/jotasync/">jotasync</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b>luckyBackup</b> — Qt front-end written in C++.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://luckybackup.sourceforge.net/index.html">http://luckybackup.sourceforge.net/index.html</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/luckybackup/">luckybackup</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<p>Other tools using rsync are <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rdiff-backup">rdiff-backup</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/osync/">osync</a></span><sup><small>AUR</small></sup>.
+</p>
+<h2>
+<span id="As_cp.2Fmv_alternative"></span><span class="mw-headline" id="As_cp/mv_alternative">As cp/mv alternative</span>
+</h2>
+<p>rsync can be used as an advanced alternative for the <code>cp</code> or <code>mv</code> command, especially for copying larger files:
+</p>
+<pre>$ rsync -P source destination
+</pre>
+<p>The <code>-P</code> option is the same as <code>--partial --progress</code>, which keeps partially transferred files and shows a progress bar during transfer.
+</p>
+<p>You may want to use the <code>-r</code>/<code>--recursive</code> option to recurse into directories.
+</p>
+<p>Files can be copied locally as with cp, but the motivating purpose of rsync is to copy files remotely, i.e. between two different hosts. Remote locations can be specified with a host-colon syntax:
+</p>
+<pre>$ rsync source host:destination
+</pre>
+<p>or
+</p>
+<pre>$ rsync host:source destination
+</pre>
+<p>Network file transfers use the <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a> protocol by default and <code>host</code> can be a real hostname or a predefined profile/alias from <code>.ssh/config</code>.
+</p>
+<p>Whether transferring files locally or remotely, rsync first creates a file-list containing information (by default, it is the file size and last modification timestamp) which will then be used to determine if a file needs to be constructed. For each file to be constructed, a weak and strong checksum is found for all blocks such that each block is of length <b>S</b> bytes, non-overlapping, and has an offset which is divisible by <b>S</b>. Using this information a large file can be constructed using rsync without having to transfer the entire file. For a more detailed practical explanation and detailed mathematical explanation refer to <a rel="nofollow" class="external text" href="https://rsync.samba.org/how-rsync-works.html">how rsync works</a> and <a rel="nofollow" class="external text" href="https://rsync.samba.org/tech_report/tech_report.html">the rsync algorithm</a>, respectively.
+</p>
+<p>To use sane defaults quickly, you could use some aliases:
+</p>
+<pre>function cpr() {
+  rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"
+} 
+function mvr() {
+  rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"
+}</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The use of the term <i>checksum</i> is <b>not</b> interchangeable with the behavior of the <code>--checksum</code> option. The <code>--checksum</code> option affects the file skip heuristic used prior to any file being transferred. Independent of <code>--checksum</code>, a <i>checksum</i> is always used for the block-based file construction which is how rynsc transfers a file.</div>
+<h3><span class="mw-headline" id="Trailing_slash_caveat">Trailing slash caveat</span></h3>
+<p>Arch by default uses GNU cp (part of GNU <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=coreutils">coreutils</a></span>). However, rsync follows the convention of BSD cp, which gives special treatment to source directories with a trailing slash "/". Although
+</p>
+<pre>$ rsync -r source destination
+</pre>
+<p>creates a directory "destination/source" with the contents of "source", the command
+</p>
+<pre>$ rsync -r source/ destination
+</pre>
+<p>copies all of the files in "source/" directly into "destination", with no intervening subdirectory - just as if you had invoked it as
+</p>
+<pre>$ rsync -r source/. destination
+</pre>
+<p>This behavior is different from that of GNU cp, which treats "source" and "source/" identically (but not "source/."). Also, some shells automatically append the trailing slash when tab-completing directory names. Because of these factors, there can be a tendency among new or occasional rsync users to forget about rsync's different behavior, and inadvertently create a mess or even overwrite important files by leaving the trailing slash on the command line.
+</p>
+<p>Thus it can be prudent to use a wrapper script to automatically remove trailing slashes before invoking rsync:
+</p>
+<pre>#!/bin/zsh
+new_args=();
+for i in "$@"; do
+    case $i in /) i=/;; */) i=${i%/};; esac
+    new_args+=$i;
+done
+exec rsync "${(@)new_args}"
+</pre>
+<p>This script can be put somewhere in the path, and aliased to rsync in the shell init file.
+</p>
+<h2><span class="mw-headline" id="As_a_backup_utility">As a backup utility</span></h2>
+<p>The rsync protocol can easily be used for backups, only transferring files that have changed since the last backup. This section describes a very simple scheduled backup script using rsync, typically used for copying to removable media.
+</p>
+<h3><span class="mw-headline" id="Automated_backup">Automated backup</span></h3>
+<p>For the sake of this example, the script is created in the <code>/etc/cron.daily</code> directory, and will be run on a daily basis if a cron <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a> is installed and properly configured. Configuring and using <a href="../en/Cron.html" title="Cron">cron</a> is outside the scope of this article.
+</p>
+<p>First, create a script containing the appropriate command options:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cron.daily/backup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+rsync -a --delete --quiet /path/to/backup /location/of/backup</pre>
+<dl>
+<dt><code>-a</code></dt>
+<dd>indicates that files should be archived, meaning that most of their characteristics are preserved (but <b>not</b> ACLs, hard links or extended attributes such as capabilities)</dd>
+<dt><code>--delete</code></dt>
+<dd>means files deleted on the source are to be deleted on the backup as well</dd>
+</dl>
+<p>Here, <code>/path/to/backup</code> should be changed to what needs to be backed-up (e.g. <code>/home</code>) and <code>/location/of/backup</code> is where the backup should be saved (e.g. <code>/media/disk</code>).
+</p>
+<p>Finally, the script must be executable:
+</p>
+<pre># chmod +x /etc/cron.daily/backup
+</pre>
+<h3><span class="mw-headline" id="Automated_backup_with_SSH">Automated backup with SSH</span></h3>
+<p>If backing-up to a remote host using <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a>, use this script instead:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cron.daily/backup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+rsync -a --delete --quiet -e ssh /path/to/backup remoteuser@remotehost:/location/of/backup
+</pre>
+<dl>
+<dt><code>-e ssh</code></dt>
+<dd>tells rsync to use SSH</dd>
+<dt><code>remoteuser</code></dt>
+<dd>is the user on the host <code>remotehost</code>
+</dd>
+<dt><code>-a</code></dt>
+<dd>groups all these options <code>-rlptgoD</code> (recursive, links, perms, times, group, owner, devices)</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+Rsync will try to modify any previously backed up files on the target machine to match their current state at the source machine, with each incremental backup. This means that when backing up files that are owned by root over SSH (and when preserving permissions and ownerships such as with the <code>-a</code> option), root access to the target machine is needed. The preferred way to achieve this for automation is to set up the SSH daemon to allow root to login using a <a rel="nofollow" class="external text" href="https://unix.stackexchange.com/a/92397">public key without password</a> and run the rsync command as root.</div>
+<h3><span class="mw-headline" id="Automated_backup_with_NetworkManager">Automated backup with NetworkManager</span></h3>
+<p>This script starts a backup when network connection is established.
+</p>
+<p>First, create a script containing the appropriate command options:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/NetworkManager/dispatcher.d/backup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+if [ x"$2" = "xup" ] ; then
+        rsync --force --ignore-errors -a --delete --bwlimit=2000 --files-from=files.rsync /path/to/backup /location/to/backup
+fi</pre>
+<dl>
+<dt><code>-a</code></dt>
+<dd>group all this options <code>-rlptgoD</code> recursive, links, perms, times, group, owner, devices</dd>
+<dt><code>--files-from</code></dt>
+<dd>read the relative path of <code>/path/to/backup</code> from this file</dd>
+<dt><code>--bwlimit</code></dt>
+<dd>limit I/O bandwidth; KBytes per second</dd>
+</dl>
+<p>The script must be owned by root (see <a href="../en/NetworkManager.html#Network_services_with_NetworkManager_dispatcher" title="NetworkManager">NetworkManager#Network services with NetworkManager dispatcher</a> for details).
+</p>
+<h3><span class="mw-headline" id="Automated_backup_with_systemd_and_inotify">Automated backup with systemd and inotify</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>Due to the limitations of inotify and systemd (see <a rel="nofollow" class="external text" href="http://www.quora.com/Linux-Kernel/Inotify-monitoring-of-directories-is-not-recursive-Is-there-any-specific-reason-for-this-design-in-Linux-kernel">this question and answer</a>), recursive filesystem monitoring is not possible. Although you can watch a directory and its contents, it will not recurse into subdirectories and watch the contents of them; you must explicitly specify every directory to watch, even if that directory is a child of an already watched directory.</li>
+<li>This setup is based on a <a href="../en/Systemd/User.html" title="Systemd/User">systemd/User</a> instance.</li>
+</ul>
+</div>
+<p>Instead of running time interval backups with time based schedules, such as those implemented in <a href="../en/Cron.html" title="Cron">cron</a>, it is possible to run a backup every time one of the files you are backing up changes. <code>systemd.path</code> units use <code>inotify</code> to monitor the filesystem, and can be used in conjunction with <code>systemd.service</code> files to start any process (in this case your <a class="mw-selflink selflink">rsync</a> backup) based on a filesystem event.
+</p>
+<p>First, create the <code>systemd.path</code> file that will monitor the files you are backing up:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/backup.path</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Checks if paths that are currently being backed up have changed
+
+[Path]
+PathChanged=%h/documents
+PathChanged=%h/music
+
+[Install]
+WantedBy=default.target
+</pre>
+<p>Then create a <code>systemd.service</code> file that will be activated when it detects a change. By default a service file of the same name as the path unit (in this case <code>backup.path</code>) will be activated, except with the <code>.service</code> extension instead of <code>.path</code> (in this case <code>backup.service</code>).
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you need to run multiple rsync commands, use <code>Type=oneshot</code>. This allows you to specify multiple <code>ExecStart=</code> parameters, one for each <a class="mw-selflink selflink">rsync</a> command, that will be executed. Alternatively, you can simply write a script to perform all of your backups, just like <a href="../en/Cron.html" title="Cron">cron</a> scripts.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/backup.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Backs up files
+
+[Service]
+ExecStart=/usr/bin/rsync %h/./documents %h/./music -CERrltm --delete ubuntu:
+</pre>
+<p>Now all you have to do is <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a>/enable <code>backup.path</code> like a normal systemd service and it will start monitoring file changes and automatically start <code>backup.service</code>.
+</p>
+<h3><span class="mw-headline" id="Differential_backup_on_a_week">Differential backup on a week</span></h3>
+<p>This is a useful option of rsync, resulting in a full backup (on each run) and keeping a differential backup copy of changed files only in a separate directory for each day of a week.
+</p>
+<p>First, create a script containing the appropriate command options:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cron.daily/backup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+DAY=$(date +%A)
+
+if [ -e /location/to/backup/incr/$DAY ] ; then
+  rm -fr /location/to/backup/incr/$DAY
+fi
+
+rsync -a --delete --quiet --inplace --backup --backup-dir=/location/to/backup/incr/$DAY /path/to/backup/ /location/to/backup/full/</pre>
+<dl>
+<dt><code>--inplace</code></dt>
+<dd>implies <code>--partial</code> update destination files in-place</dd>
+</dl>
+<h3><span class="mw-headline" id="Snapshot_backup">Snapshot backup</span></h3>
+<p>The same idea can be used to maintain a tree of snapshots of your files. In other words, a directory with date-ordered copies of the files. The copies are made using hardlinks, which means that only files that did change will occupy space. Generally speaking, this is the idea behind Apple's TimeMachine.
+</p>
+<p>This basic script is easy to implement and creates quick incremental snapshots using the <code>--link-dest</code> option to hardlink unchanged files: 
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/snapbackup.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+# Basic snapshot-style rsync backup script 
+
+# Config
+OPT="-aPh"
+LINK="--link-dest=/snapshots/username/last/" 
+SRC="/home/username/files/"
+SNAP="/snapshots/username/"
+LAST="/snapshots/username/last"
+date=`date "+%Y-%b-%d:_%T"`
+
+# Run rsync to create snapshot
+rsync $OPT $LINK $SRC ${SNAP}$date
+
+# Remove symlink to previous snapshot
+rm -f $LAST
+
+# Create new symlink to latest snapshot for the next backup to hardlink
+ln -s ${SNAP}$date $LAST
+</pre>
+<p>There must be a symlink to a full backup already in existence as a target for <code>--link-dest</code>. If the most recent snapshot is deleted, the symlink will need to be recreated to point to the most recent snapshot. If <code>--link-dest</code> does not find a working symlink, rsync will proceed to copy all source files instead of only the changes. 
+</p>
+<p>A more sophisticated version keeps an up-to-date full backup <code>$SNAP/latest</code> and in case a certain number of files has changed since the last full backup, it creates a snapshot <code>$SNAP/$DATETAG</code> of the current full-backup utilizing <code>cp -al</code> to hardlink unchanged files:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/rsnapshot.sh</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/bash
+
+## my own rsync-based snapshot-style backup procedure
+## (cc) marcio rps AT gmail.com
+
+# config vars
+
+SRC="/home/username/files/" #dont forget trailing slash!
+SNAP="/snapshots/username"
+OPTS="-rltgoi --delay-updates --delete --chmod=a-w"
+MINCHANGES=20
+
+# run this process with real low priority
+
+ionice -c 3 -p $$
+renice +12  -p $$
+
+# sync
+
+rsync $OPTS $SRC $SNAP/latest &gt;&gt; $SNAP/rsync.log
+
+# check if enough has changed and if so
+# make a hardlinked copy named as the date
+
+COUNT=$( wc -l $SNAP/rsync.log|cut -d" " -f1 )
+if [ $COUNT -gt $MINCHANGES ] ; then
+        DATETAG=$(date +%Y-%m-%d)
+        if [ ! -e $SNAP/$DATETAG ] ; then
+                cp -al $SNAP/latest $SNAP/$DATETAG
+                chmod u+w $SNAP/$DATETAG
+                mv $SNAP/rsync.log $SNAP/$DATETAG
+               chmod u-w $SNAP/$DATETAG
+         fi
+fi
+</pre>
+<p>To make things really, really simple this script can be run from a <a href="../en/Systemd/Timers.html" title="Systemd/Timers">systemd/Timers</a> unit.
+</p>
+<h3><span class="mw-headline" id="Full_system_backup">Full system backup</span></h3>
+<p>This section is about using <i>rsync</i> to transfer a copy of the entire <code>/</code> tree, excluding a few selected directories. This approach is considered to be better than <a href="../en/Disk_cloning.html" title="Disk cloning">disk cloning</a> with <code>dd</code> since it allows for a different size, partition table and filesystem to be used, and better than copying with <code>cp -a</code> as well, because it allows greater control over file permissions, attributes, <a href="../en/Access_Control_Lists.html" title="Access Control Lists">Access Control Lists</a> and <a href="../en/File_permissions_and_attributes.html#Extended_attributes" class="mw-redirect" title="Extended attributes">extended attributes</a>.
+</p>
+<p><i>rsync</i> will work even while the system is running, but files changed during the transfer may or may not be transferred, which can cause undefined behavior of some programs using the transferred files.
+</p>
+<p>This approach works well for migrating an existing installation to a new hard drive or <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a>.
+</p>
+<p>Run the following command as root to make sure that rsync can access all system files and preserve the ownership:
+</p>
+<pre># rsync -aAXHv --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / <i>/path/to/backup</i>
+</pre>
+<p>By using the <code>-aAX</code> set of options, the files are transferred in archive mode which ensures that symbolic links, devices, permissions, ownerships, modification times, <a href="../en/Access_Control_Lists.html" class="mw-redirect" title="ACL">ACLs</a>, and extended attributes are preserved, assuming that the target <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a> supports the feature. The option <code>-H</code> preserves hard links, but uses more memory.
+</p>
+<p>The <code>--exclude</code> option causes files that match the given patterns to be excluded. The directories <code>/dev</code>, <code>/proc</code>, <code>/sys</code>, <code>/tmp</code>, and <code>/run</code> are included in the above command, but the <i>contents</i> of those directories are excluded. This is because they are populated on boot, but the directories themselves are not created. <code>/lost+found</code> is filesystem-specific. The command above depends on brace expansion available in both the <a rel="nofollow" class="external text" href="https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html">bash</a> and <a rel="nofollow" class="external text" href="http://zsh.sourceforge.net/Doc/Release/Expansion.html#Brace-Expansion">zsh</a> shells. When using a different <a href="../en/Command-line_shell.html" class="mw-redirect" title="Shell">shell</a>, <code>--exclude</code> patterns should be repeated manually. Quoting the exclude patterns will avoid expansion by the <a href="../en/Command-line_shell.html" class="mw-redirect" title="Shell">shell</a>, which is necessary, for example, when backing up over <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a>. Ending the excluded paths with <code>*</code> ensures that the directories themselves are created if they do not already exist.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>If you plan on backing up your system somewhere other than <code>/mnt</code> or <code>/media</code>, do not forget to add it to the list of exclude patterns to avoid an infinite loop.</li>
+<li>If there are any bind mounts in the system, they should be excluded as well so that the bind mounted contents is copied only once.</li>
+<li>If you use a <a href="../en/Swap.html#Swap_file" class="mw-redirect" title="Swap file">swap file</a>, make sure to exclude it as well.</li>
+<li>Consider if you want to backup the <code>/home/</code> directory. If it contains your data it might be considerably larger than the system. Otherwise consider excluding unimportant sub-directories such as  <code>/home/*/.thumbnails/*</code>, <code>/home/*/.cache/mozilla/*</code>, <code>/home/*/.cache/chromium/*</code>, and <code>/home/*/.local/share/Trash/*</code>, depending on software installed on the system.</li>
+<li>If <a href="../en/File_manager_functionality.html#Mounting" class="mw-redirect" title="GVFS">GVFS</a> is installed, <code>/home/*/.gvfs</code> must be excluded to prevent rsync errors.</li>
+<li>If <a href="../en/Dhcpcd.html" title="Dhcpcd">Dhcpcd</a> ≥ 9.0.0 is installed, exclude the <code>/var/lib/dhcpcd/*</code> directory as it mounts several system directories as sub-directories there.</li>
+</ul>
+</div>
+<p>You may want to include additional <a class="mw-selflink selflink">rsync</a> options, or remove some, such as the following. See <span class="plainlinks archwiki-template-man" title="$ man 1 rsync"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/rsync.1">rsync(1)</a></span> for the full list.
+</p>
+<ul>
+<li>If you run on a system with very low memory, consider removing <code>-H</code> option; however, it should be no problem on most modern machines. There can be many hard links on the file system depending on the software used (e.g. if you are using <a href="../en/Flatpak.html" title="Flatpak">Flatpak</a>). Many hard links reside under the <code>/usr/</code> directory.</li>
+<li>You may want to add rsync's <code>--delete</code> option if you are running this multiple times to the same backup directory. In this case make sure that the source path does not end with <code>/*</code>, or this option will only have effect on the files inside the subdirectories of the source directory, but it will have no effect on the files residing directly inside the source directory.</li>
+<li>If you use any sparse files, such as virtual disks, <a href="../en/Docker.html" title="Docker">Docker</a> images and similar, you should add the <code>-S</code> option.</li>
+<li>The <code>--numeric-ids</code> option will disable mapping of user and group names; instead, numeric group and user IDs will be transfered. This is useful when backing up over <a href="../en/Secure_Shell.html" class="mw-redirect" title="SSH">SSH</a> or when using a live system to backup different system disk.</li>
+<li>Choosing <code>--info=progress2</code> option instead of <code>-v</code> will show the overall progress info and transfer speed instead of the list of files being transferred.</li>
+<li>To avoid crossing a filesystem boundary when recursing, add the option <code>-x</code>/<code>--one-file-system</code>. This will prevent backing up any mount point in the hierarchy.</li>
+</ul>
+<h3><span class="mw-headline" id="Restore_a_backup">Restore a backup</span></h3>
+<p>If you wish to restore a backup, use the same rsync command that was executed but with the source and destination reversed.
+</p>
+<h2><span class="mw-headline" id="File_system_cloning">File system cloning</span></h2>
+<p>rsync provides a way to do a copy of all data in a file system while preserving as much information as possible, including the file system metadata. It is a procedure of data cloning on a file system level where source and destination file systems do not need to be of the same type. It can be used for backing up, file system migration or data recovery.
+</p>
+<p>rsync's <i>archive</i> mode comes close to being fit for the job, but it does not back up the special file system metadata such as access control lists, extended attributes or sparse file properties. For successful cloning at the file system level, some additional options need to be provided:
+</p>
+<pre>rsync -qaHAXS SOURCE_DIR DESTINATION_DIR
+</pre>
+<p>And their meaning is (from the manpage):
+</p>
+<pre>--hard-links, -H         preserve hard links
+--acls, -A               preserve ACLs (implies --perms)
+--xattrs, -X             preserve extended attributes
+--sparse, -S             turn sequences of nulls into sparse blocks
+</pre>
+<p>Additionally, use <code>-x</code> if you have other filesystems mounted under the tree that you want to exclude from the copy.
+Produced copy can be simply reread and checked (for example after a data recovery attempt) at the file system level with <code>diff</code>'s recursive option:
+</p>
+<pre>diff -r SOURCE_DIR DESTINATION_DIR
+</pre>
+<p>It is possible to do a successful file system migration by using rsync as described in this article and updating the <a href="../en/Fstab.html" title="Fstab">fstab</a> and <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Bootloader">bootloader</a> as described in <a href="../en/Migrate_installation_to_new_hardware.html" title="Migrate installation to new hardware">Migrate installation to new hardware</a>. This essentially provides a way to convert any root file system to another one.
+</p>
+<h2><span class="mw-headline" id="rsync_daemon">rsync daemon</span></h2>
+<p><i>rsync</i> can be run as daemon on a server listening on port <code>873</code>.
+</p>
+<p>Edit the template <code>/etc/rsyncd.conf</code>, configure a share and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> the <code>rsyncd.service</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> As of <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=rsync">rsync</a></span> 3.2.0-1 the package adopted the upstream systemd unit files <code>rsyncd.service</code> and <code>rsyncd@.service</code>. The change for <code>ProtectHome</code> has been commented, the security feature <code>ProtectSystem=full</code> under the <code>[Service]</code> section is still active. This makes the <code>/boot/</code>, <code>/etc/</code> and <code>/usr/</code> directories read-only. If you need rsyncd write system directories you can <a href="../en/Systemd.html#Editing_provided_units" class="mw-redirect" title="Edit">edit</a> the unit and set <code>ProtectSystem=off</code> in the <code>[Service]</code> section of the overriding snippet.</div>
+<p>Usage from client, e.g. list server content:
+</p>
+<pre>$ rsync rsync://<i>server/share</i>
+</pre>
+<p>transfer file from client to server: 
+</p>
+<pre>$ rsync <i>local-file</i> rsync://<i>server/share/</i>
+</pre>
+<p>Consider iptables to open port <code>873</code> and user authentication.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> All transferred data including user authentication are not encrypted.</div>
+<h3><span class="mw-headline" id="Example_configuration">Example configuration</span></h3>
+<h4><span class="mw-headline" id="Sharing_from_a_list_of_files">Sharing from a list of files</span></h4>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/rsyncd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+
+# Needed when crossing filesystem boundaries.
+#use chroot  = no
+read only = yes
+
+...
+
+[sync]
+    path         = /
+# List of files to copy.
+    include from = /backup.list
+# Exclude the rest.
+    exclude      = *</pre>
+<p>Inside the file list, all the <i>intermediary paths</i> are necessary, except when the <code>***</code> wildcard is used:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/backup.list</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/etc/
+/etc/conf.d/
+/etc/conf.d/hwclock
+/etc/fonts/***
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>More usage examples can be searched in the <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewforum.php?id=27">Community Contributions</a> and <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewforum.php?id=33">General Programming</a> forums</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.pointsoftware.ch/en/howto-local-and-remote-snapshot-backup-using-rsync-with-hard-links/">Howto – local and remote snapshot backup using rsync with hard links</a><sup title="Last check status: 404">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-04-02 ⓘ]</sup> Includes file deduplication with hard-links, MD5 integrity signature, 'chattr' protection, filter rules, disk quota, retention policy with exponential distribution (backups rotation while saving more recent backups than older)</li>
+<li><a rel="nofollow" class="external text" href="https://stackoverflow.com/questions/5527068/how-do-you-use-an-identity-file-with-rsync">Using SSH keys/identity files with rsync</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Synchronization.html" title="Category:Synchronization">Synchronization</a></li>
+<li><a href="../en/Category:Backup.html" title="Category:Backup">Backup</a></li>
+<li><a href="../en/Category:Commands.html" title="Category:Commands">Commands</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Rsync&amp;oldid=646584">https://wiki.archlinux.org/index.php?title=Rsync&amp;oldid=646584</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 06:13.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

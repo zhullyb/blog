@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Hard Drive Active Protection System - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Hard_Drive_Active_Protection_System rootpage-Hard_Drive_Active_Protection_System skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Hard Drive Active Protection System</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>Hard Drive Active Protection System (<b>HDAPS</b>) protects your hard drive from sudden shocks (such as dropping or banging your laptop on a desk). It does this by parking the disk heads, so that shocks do not cause them to crash into the drive's platters. Hopefully, this will prevent catastrophic failure.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a> drives do not need HDAPS as they lack any mechanical components.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Shock_detection"><span class="tocnumber">1</span> <span class="toctext">Shock detection</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#tp_smapi"><span class="tocnumber">1.1</span> <span class="toctext">tp_smapi</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Invert_module_parameter"><span class="tocnumber">1.2</span> <span class="toctext">Invert module parameter</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Shock_protection"><span class="tocnumber">2</span> <span class="toctext">Shock protection</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#hdapsd"><span class="tocnumber">2.1</span> <span class="toctext">hdapsd</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#GUI_Utilities"><span class="tocnumber">3</span> <span class="toctext">GUI Utilities</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Shock_detection">Shock detection</span></h2>
+<p>Your hardware needs to support some kind of shock detection.  This is usually in the form of an accelerometer built into your laptop's motherboard.  If you have the hardware, you also need a way to communicate what the hardware is detecting to your operating system.  This section describes drivers to communicate the accelerometer's state to the OS so it can detect and protect against shocks.
+</p>
+<h3><span class="mw-headline" id="tp_smapi">tp_smapi</span></h3>
+<p><a href="../en/Tp_smapi.html" title="Tp smapi">tp_smapi</a> is a set of drivers for many ThinkPad laptops.  It is highly recommended if you have a supported ThinkPad, even if you do not plan to use HDAPS.  Among a plethora of other useful things, tp_smapi represents the accelerometer output as joystick devices <code>/dev/input/js#</code> (Note! This could interfere with other joystick devices on your system).  
+</p>
+<p>Install tp_smapi from the community repository. After a reboot, this will activate most of the drivers, represented through the <code>/sys/devices/platform/smapi</code> filesystem.
+</p>
+<p>The kernel provides its own HDAPS drivers.  Previously, it was necessary to manually <code>insmod</code> the module via <code>/etc/rc.local</code> to prevent the default drivers from being loaded.  The <a href="../en/Tp_smapi.html" title="Tp smapi">tp_smapi</a> package from community now installs <code>hdaps.ko</code> to <a rel="nofollow" class="external text" href="http://www.mail-archive.com/arch-dev-public@archlinux.org/msg01995.html">/lib/modules/$(uname -r)/updates</a>, which will let it supercede the built-in module.  Thus, you can simply add <code>hdaps</code> to your <code>MODULES</code> array.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> According to <a rel="nofollow" class="external text" href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=628829">this bug report</a>, certain ThinkPad laptops use different firmware which tp_smapi does not support and is unlikely to support in the near future. This includes the following series: Edge, SL, L, X1xxe. Only one of these is listed in the "unsupported hardware" page for the project, however, and that listing suggests that the x121e should mostly work. I get the same error with the x121e listed at the bottom of the bug report as a different and more fundamental problem, though, so it may be that some models of the x121e are mostly supported and others are entirely unsupported.</div>
+<h3><span class="mw-headline" id="Invert_module_parameter">Invert module parameter</span></h3>
+<p>For some ThinkPads, the invert module parameter is needed in order to handle the X and Y rotation axes correctly. In that case, you can add the option in <code>/etc/modprobe.d/modprobe.conf</code>:
+</p>
+<pre>options hdaps invert=1
+</pre>
+<p><code>invert=1</code> is an example value used for a ThinkPad T410. The invert option takes the following values:
+</p>
+<ul>
+<li>invert=1 invert both X and Y axes;</li>
+<li>invert=2 invert the X axes (uninvert if already both axes inverted)</li>
+<li>invert=4 swap X and Y (takes place before inverting)</li>
+</ul>
+<p>Note that options can be summed. For instance, invert=5 swaps the axes and inverts them. The maximum value of invert is obviously 7. If you do not know which option is correct for you, just try them out with hdaps-gl or some other GUI (see below). Alternatively, you can determine the exact value for your thinkpad model from <a rel="nofollow" class="external text" href="http://www.thinkwiki.org/wiki/Tp_smapi">this table</a> under the column labelled "HDAPS axis orientation".
+</p>
+<p>As an alternative to reloading the <code>hdaps</code> module, the <code>invert</code> value can also be written directly to <code>/sys/devices/platform/hdaps/invert</code>.
+</p>
+<h2><span class="mw-headline" id="Shock_protection">Shock protection</span></h2>
+<p>Now that your hardware is reporting its shock detection to the OS, we need to do something with this data. This section describes software utilities to transform the sensor output into shock protection.
+</p>
+<h3><span class="mw-headline" id="hdapsd">hdapsd</span></h3>
+<p>hdapsd monitors the output of the HDAPS joystick devices to determine if a shock is about to occur, then tells the kernel to park the disk heads.
+</p>
+<p>You should check your "Load cycle count" in <a href="../en/S.M.A.R.T..html" class="mw-redirect" title="SMART">SMART</a> when setting up hdaps, if it is too sensitive the head would park too often and load cycle count would rise too rapidly.
+</p>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=hdapsd">hdapsd</a></span>. You can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> the hdapsd daemon with <code>hdapsd@device.service</code>, however you don't need to enable it.
+</p>
+<p>The package installs udev rules. Udev will start one hdapsd instance for each rotational, non-removable disk it finds.
+For more information, see the <a rel="nofollow" class="external text" href="https://github.com/evgeni/hdapsd#systemd-and-udev-integration:Link">hdapsd github page</a>
+</p>
+<p>You can adjust the parameters, with which hdapsd is run by providing your own unit file as explained in the <a href="../en/Systemd.html#Editing_provided_units" title="Systemd">systemd article</a>, for example the following file will adjust sensitivity and logging behaviour of the hdaps daemon:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/hdapsd.service.d/sensitivity.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+ExecStart=
+ExecStart=/usr/bin/hdapsd --sensitivity=40 -blp
+</pre>
+<p>And reload the configuration.
+</p>
+<h2><span class="mw-headline" id="GUI_Utilities">GUI Utilities</span></h2>
+<p>Utilities exist to monitor hdapsd's status so you know what is going on while you are using your laptop. These are entirely optional.
+</p>
+<p><b>HDAPS monitor</b> — KDE4 plasmoid for HDAPS monitoring.
+</p>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://store.kde.org/content/show.php/?content=103481">https://store.kde.org/content/show.php/?content=103481</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/kdeplasma-applets-hdaps-monitor/">kdeplasma-applets-hdaps-monitor</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<p><b>xfce4-hdaps</b> — Xfce4 panel applet that can represents the current status of your hard drive.
+</p>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://michael.orlitzky.com/code/xfce4-hdaps.xhtml">http://michael.orlitzky.com/code/xfce4-hdaps.xhtml</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/xfce4-hdaps/">xfce4-hdaps</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<p><b>HDAPSicon</b> — Formerly thinkhdaps, standalone GTK applet for HDAPS disk protection status.
+</p>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/thpani/thinkhdaps">https://github.com/thpani/thinkhdaps</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/hdapsicon-git/">hdapsicon-git</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<p><b>hdaps-gl</b> — Simple OpenGL application showing the 3D animation of your Thinkpad. Similar to the apllication Lenovo distributes with Windows.
+</p>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://github.com/evgeni/hdapsd">https://github.com/evgeni/hdapsd</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/hdaps-gl/">hdaps-gl</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.thinkwiki.org/wiki/How_to_protect_the_harddisk_through_APS">How to protect the harddisk through APS at ThinkWiki</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.thinkwiki.org/wiki/HDAPS">HDAPS at ThinkWiki</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Laptops.html" title="Category:Laptops">Laptops</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Hard_Drive_Active_Protection_System&amp;oldid=579978">https://wiki.archlinux.org/index.php?title=Hard_Drive_Active_Protection_System&amp;oldid=579978</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 August 2019, at 19:29.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

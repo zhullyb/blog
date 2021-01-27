@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Sudo - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Sudo rootpage-Sudo skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Sudo</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Users_and_groups.html" title="Users and groups">Users and groups</a></li>
+<li><a href="../en/Su.html" title="Su">su</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://www.sudo.ws/sudo/">Sudo</a> allows a system administrator to delegate authority to give certain users—or groups of users—the ability to run commands as root or another user while providing an audit trail of the commands and their arguments.
+</p>
+<p>Sudo is an alternative to <a href="../en/Su.html" title="Su">su</a> for running commands as root. Unlike <a href="../en/Su.html" title="Su">su</a>, which launches a root shell that allows all further commands root access, sudo instead grants temporary privilege escalation to a single command. By enabling root privileges only when needed, sudo usage reduces the likelihood that a typo or a bug in an invoked command will ruin the system.
+</p>
+<p>Sudo can also be used to run commands as other users; additionally, sudo logs all commands and failed access attempts for security auditing.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Usage"><span class="tocnumber">2</span> <span class="toctext">Usage</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Configuration"><span class="tocnumber">3</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Defaults_skeleton"><span class="tocnumber">3.1</span> <span class="toctext">Defaults skeleton</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#View_current_settings"><span class="tocnumber">3.2</span> <span class="toctext">View current settings</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Using_visudo"><span class="tocnumber">3.3</span> <span class="toctext">Using visudo</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Example_entries"><span class="tocnumber">3.4</span> <span class="toctext">Example entries</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Sudoers_default_file_permissions"><span class="tocnumber">3.5</span> <span class="toctext">Sudoers default file permissions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Tips_and_tricks"><span class="tocnumber">4</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Disable_password_prompt_timeout"><span class="tocnumber">4.1</span> <span class="toctext">Disable password <i>prompt</i> timeout</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Add_terminal_bell_to_the_password_prompt"><span class="tocnumber">4.2</span> <span class="toctext">Add terminal bell to the password prompt</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Passing_aliases"><span class="tocnumber">4.3</span> <span class="toctext">Passing aliases</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Disable_per-terminal_sudo"><span class="tocnumber">4.4</span> <span class="toctext">Disable per-terminal sudo</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Reduce_the_number_of_times_you_have_to_type_a_password"><span class="tocnumber">4.5</span> <span class="toctext">Reduce the number of times you have to type a password</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Environment_variables"><span class="tocnumber">4.6</span> <span class="toctext">Environment variables</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Root_password"><span class="tocnumber">4.7</span> <span class="toctext">Root password</span></a></li>
+<li class="toclevel-2 tocsection-17">
+<a href="#Disable_root_login"><span class="tocnumber">4.8</span> <span class="toctext">Disable root login</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#kdesu"><span class="tocnumber">4.8.1</span> <span class="toctext">kdesu</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-19"><a href="#Harden_with_sudo_example"><span class="tocnumber">4.9</span> <span class="toctext">Harden with sudo example</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#Configure_sudo_using_drop-in_files_in_/etc/sudoers.d"><span class="tocnumber">4.10</span> <span class="toctext">Configure sudo using drop-in files in /etc/sudoers.d</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#Editing_files"><span class="tocnumber">4.11</span> <span class="toctext">Editing files</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#Enable_insults"><span class="tocnumber">4.12</span> <span class="toctext">Enable insults</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23">
+<a href="#Troubleshooting"><span class="tocnumber">5</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-24"><a href="#SSH_problem_without_TTY"><span class="tocnumber">5.1</span> <span class="toctext">SSH problem without TTY</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#Permissive_umask"><span class="tocnumber">5.2</span> <span class="toctext">Permissive umask</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sudo">sudo</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>To begin using <code>sudo</code> as a non-privileged user, it must be properly configured. See <a href="#Configuration">#Configuration</a>.
+</p>
+<p>To use <i>sudo</i>, simply prefix a command and its arguments with <code>sudo</code> and a space:
+</p>
+<pre>$ sudo <i>cmd</i>
+</pre>
+<p>For example, to use pacman:
+</p>
+<pre>$ sudo pacman -Syu
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 8 sudo"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudo.8">sudo(8)</a></span> for more information.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Create an intro discussing <code>Defaults</code>, perhaps with a table that lists common settings (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sudo">Talk:Sudo#</a>)</div>
+</div>
+<h3><span class="mw-headline" id="Defaults_skeleton">Defaults skeleton</span></h3>
+<p><span class="plainlinks archwiki-template-man" title="$ man 5 sudoers"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudoers.5#SUDOERS_OPTIONS">sudoers(5) § SUDOERS OPTIONS</a></span> lists all the options that can be used with the <code>Defaults</code> command in the <code>/etc/sudoers</code> file.
+</p>
+<p>See <a rel="nofollow" class="external autonumber" href="https://gist.github.com/AladW/7eca9799b9ea624eca31">[1]</a> for a list of options (parsed from the version 1.8.7 source code) in a format optimized for <code>sudoers</code>.
+</p>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 5 sudoers"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudoers.5">sudoers(5)</a></span> for more information, such as configuring the password timeout.
+</p>
+<h3><span class="mw-headline" id="View_current_settings">View current settings</span></h3>
+<p>Run <code>sudo -ll</code> to print out the current sudo configuration, or <code>sudo -lU <i>user</i></code> for a specific user.
+</p>
+<h3><span class="mw-headline" id="Using_visudo">Using visudo</span></h3>
+<p>The configuration file for sudo is <code>/etc/sudoers</code>. It should <b>always</b> be edited with the <span class="plainlinks archwiki-template-man" title="$ man 8 visudo"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/visudo.8">visudo(8)</a></span> command. <i>visudo</i> locks the <code>sudoers</code> file, saves edits to a temporary file, and checks it for syntax errors before copying it to <code>/etc/sudoers</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>It is imperative that <code>sudoers</code> be free of syntax errors! Any error makes sudo unusable. <b>Always</b> edit it with <i>visudo</i> to prevent errors.</li>
+<li>
+<span class="plainlinks archwiki-template-man" title="$ man 8 visudo"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/visudo.8">visudo(8)</a></span> warns that configuring <i>visudo</i> to honor the user environment variables for their editor of choice may be a security hole, since it allows the user with <i>visudo</i> privileges to run arbitrary commands as root without logging simply by setting that variable to something else.</li>
+</ul>
+</div>
+<p>The default editor for <i>visudo</i> is <i>vi</i>. The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=sudo">sudo</a></span> package is compiled with <code>--with-env-editor</code> and honors the use of the <code>SUDO_EDITOR</code>, <code>VISUAL</code> and <code>EDITOR</code> variables. <code>EDITOR</code> is not used when <code>VISUAL</code> is set.
+</p>
+<p>To establish <a href="../en/Nano.html" title="Nano">nano</a> as the <i>visudo</i> editor for the duration of the current shell session, export <code>EDITOR=nano</code>; to use a different editor just once simply set the variable before calling <i>visudo</i>:
+</p>
+<pre># EDITOR=nano visudo
+</pre>
+<p>Alternatively you may edit a copy of the <code>/etc/sudoers</code> file and check it using <code>visudo -c -f <i>/copy/of/sudoers</i></code>. This might come in handy in case you want to circumvent locking the file with <i>visudo</i>.
+</p>
+<p>To change the editor permanently, see <a href="../en/Environment_variables.html#Per_user" title="Environment variables">Environment variables#Per user</a>. To change the editor of choice permanently system-wide only for <i>visudo</i>, add the following to <code>/etc/sudoers</code> (assuming <a href="../en/Nano.html" title="Nano">nano</a> is your preferred editor):
+</p>
+<pre># Reset environment by default
+Defaults      env_reset
+# Set default EDITOR to nano, and do not allow visudo to use EDITOR/VISUAL.
+Defaults      editor=/usr/bin/nano, !env_editor
+</pre>
+<h3><span class="mw-headline" id="Example_entries">Example entries</span></h3>
+<p>To allow a user to gain full root privileges when they precede a command with <code>sudo</code>, add the following line:
+</p>
+<pre>USER_NAME   ALL=(ALL) ALL
+</pre>
+<p>To allow a user to run all commands as any user but only on the machine with hostname <code>HOST_NAME</code>:
+</p>
+<pre>USER_NAME   HOST_NAME=(ALL) ALL
+</pre>
+<p>To allow members of group <code>wheel</code> sudo access:
+</p>
+<pre>%wheel      ALL=(ALL) ALL
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> When creating new administrators, it is often desirable to enable sudo access for the <code>wheel</code> group and <a href="../en/Users_and_groups.html#Other_examples_of_user_management" title="Users and groups">add the user to it</a>, since by default <a href="../en/Polkit.html#Administrator_identities" title="Polkit">Polkit</a> treats the members of the <code>wheel</code> group as administrators. If the user is not a member of <code>wheel</code>, software using Polkit may ask to authenticate using the root password instead of the user password.</div>
+<p>To disable asking for a password for user <code>USER_NAME</code>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This will allow any process running with your user name to use sudo without asking for permission.</div>
+<pre>Defaults:USER_NAME      !authenticate
+</pre>
+<p>Enable explicitly defined commands only for user <code>USER_NAME</code> on host <code>HOST_NAME</code>:
+</p>
+<pre>USER_NAME HOST_NAME=/usr/bin/halt,/usr/bin/poweroff,/usr/bin/reboot,/usr/bin/pacman -Syu
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The most customized option should go at the end of the file, as the later lines overrides the previous ones. In particular such a line should be after the <code>%wheel</code> line if your user is in this group.</div>
+<p>Enable explicitly defined commands only for user <code>USER_NAME</code> on host <code>HOST_NAME</code> without password:
+</p>
+<pre>USER_NAME HOST_NAME= NOPASSWD: /usr/bin/halt,/usr/bin/poweroff,/usr/bin/reboot,/usr/bin/pacman -Syu
+</pre>
+<p>A detailed <code>sudoers</code> example is available at <code>/usr/share/doc/sudo/examples/sudoers</code>. Otherwise, see the <span class="plainlinks archwiki-template-man" title="$ man 5 sudoers"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudoers.5">sudoers(5)</a></span> for detailed information.
+</p>
+<h3><span class="mw-headline" id="Sudoers_default_file_permissions">Sudoers default file permissions</span></h3>
+<p>The owner and group for the <code>sudoers</code> file must both be 0. The file permissions must be set to 0440. These permissions are set by default, but if you accidentally change them, they should be changed back immediately or sudo will fail.
+</p>
+<pre># chown -c root:root /etc/sudoers
+# chmod -c 0440 /etc/sudoers
+</pre>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Disable_password_prompt_timeout">Disable password <i>prompt</i> timeout</span></h3>
+<p>A common annoyance is a long-running process that runs on a background terminal somewhere that runs with normal permissions and elevates only when needed. This leads to a sudo password prompt which goes unnoticed and times out, at which point the process dies and the work done is lost or, at best, cached. Common advice is to enable passwordless sudo, or extend the timeout of sudo remembering a password. Both of these have negative security implications. The <b>prompt</b> timeout can also be disabled and since that does not serve any reasonable security purpose it should be the solution here:
+</p>
+<pre>Defaults passwd_timeout=0
+</pre>
+<h3><span class="mw-headline" id="Add_terminal_bell_to_the_password_prompt">Add terminal bell to the password prompt</span></h3>
+<p>To draw attention to a sudo prompt in a background terminal, users can simply make it echo a <a href="https://en.wikipedia.org/wiki/Bell_character" class="extiw" title="wikipedia:Bell character">bell character</a>:
+</p>
+<pre>Defaults passprompt="^G[sudo] password for %p: "
+</pre>
+<p>Note the <code>^G</code> is a literal bell character. E.g. in <a href="../en/Vim.html" title="Vim">vim</a>, insert using the sequence <code>Ctrl+v</code> <code>Ctrl+g</code>, or in <a href="../en/Nano.html" title="Nano">nano</a>, <code>Alt+v</code> <code>Ctrl+g</code>.
+</p>
+<h3><span class="mw-headline" id="Passing_aliases">Passing aliases</span></h3>
+<p>If you use a lot of aliases, you might have noticed that they do not carry over to the root account when using sudo. However, there is an easy way to make them work. Simply add the following to your <code>~/.bashrc</code> or <code>/etc/bash.bashrc</code>:
+</p>
+<pre>alias sudo='sudo '
+</pre>
+<h3><span class="mw-headline" id="Disable_per-terminal_sudo">Disable per-terminal sudo</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This will let any process use your sudo session.</div>
+<p>If you are annoyed by sudo's defaults that require you to enter your password every time you open a new terminal, set <code>timestamp_type</code> to <code>global</code>:
+</p>
+<pre>Defaults timestamp_type=global
+</pre>
+<h3><span class="mw-headline" id="Reduce_the_number_of_times_you_have_to_type_a_password">Reduce the number of times you have to type a password</span></h3>
+<p>If you are annoyed that you have to re-enter your password every 5 minutes (default), you can change this by setting a longer value for <code>timestamp_timeout</code> (in minutes):
+</p>
+<pre>Defaults timestamp_timeout=10
+</pre>
+<p>If you are using a lot of sudo commands on a row, it is more logical to refresh the timeout every time you use sudo than
+to increase <code>timestamp_timeout</code>. Refreshing the timeout can be done with <code>sudo -v</code> (whereas <code>sudo -K</code> revokes immediately).
+</p>
+<p>You might want to automate this by adding the following to your <code>.bashrc</code>:
+</p>
+<pre>alias sudo='sudo -v; sudo '
+</pre>
+<p>It is also possible to use a bash function; for more details see <a rel="nofollow" class="external text" href="https://unix.stackexchange.com/questions/584725/expand-certain-aliases-from-within-sudo-bash-function">stackexchange</a>.
+</p>
+<h3><span class="mw-headline" id="Environment_variables">Environment variables</span></h3>
+<p>If you have a lot of environment variables, or you export your proxy settings via <code>export http_proxy="..."</code>, when using sudo these variables do not get passed to the root account unless you run sudo with the <code>-E</code> option.
+</p>
+<pre>$ sudo -E pacman -Syu
+</pre>
+<p>The recommended way of preserving environment variables is to append them to <code>env_keep</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sudoers</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Defaults env_keep += "ftp_proxy http_proxy https_proxy no_proxy"
+</pre>
+<h3><span class="mw-headline" id="Root_password">Root password</span></h3>
+<p>Users can configure sudo to ask for the root password instead of the user password by adding <code>targetpw</code> (target user, defaults to root) or <code>rootpw</code> to the Defaults line in <code>/etc/sudoers</code>:
+</p>
+<pre>Defaults targetpw
+</pre>
+<p>To prevent exposing your root password to users, you can restrict this to a specific group:
+</p>
+<pre>Defaults:%wheel targetpw
+%wheel ALL=(ALL) ALL
+</pre>
+<h3><span class="mw-headline" id="Disable_root_login">Disable root login</span></h3>
+<p>Users may wish to disable the root login. Without root, attackers must first guess a user name configured as a sudoer as well as the user password. See for example <a href="../en/OpenSSH.html#Deny" title="OpenSSH">OpenSSH#Deny</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Be careful, you may lock yourself out by disabling root login. Sudo is not automatically installed and its default configuration allows neither passwordless root access nor root access with your own password. Ensure a user is properly configured as a sudoer <i>before</i> disabling the root account!</li>
+<li>If you have changed your sudoers file to use rootpw as default, then do not disable root login with any of the following commands!</li>
+<li>If you are already locked out, see <a href="../en/Reset_lost_root_password.html" class="mw-redirect" title="Password recovery">Password recovery</a> for help.</li>
+</ul>
+</div>
+<p>The account can be locked via <code>passwd</code>:
+</p>
+<pre># passwd -l root
+</pre>
+<p>A similar command unlocks root.
+</p>
+<pre>$ sudo passwd -u root
+</pre>
+<p>Alternatively, edit <code>/etc/shadow</code> and replace the root's encrypted password with "!":
+</p>
+<pre>root:!:12345::::::
+</pre>
+<p>To enable root login again:
+</p>
+<pre>$ sudo passwd root
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> To get to an interactive root prompt, even after disabling the <i>root</i> account, use <code>sudo -i</code>.</div>
+<h4><span class="mw-headline" id="kdesu">kdesu</span></h4>
+<p>kdesu may be used under <a href="../en/KDE.html" title="KDE">KDE</a> to launch GUI applications with root privileges. It is possible that by default kdesu will try to use su even if the root account is disabled. Fortunately one can tell kdesu to use sudo instead of su. Create/edit the file <code>~/.config/kdesurc</code>:
+</p>
+<pre>[super-user-command]
+super-user-command=sudo
+</pre>
+<p>or use the following command:
+</p>
+<pre>$ kwriteconfig5 --file kdesurc --group super-user-command --key super-user-command sudo
+</pre>
+<p>Alternatively, install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/kdesudo/">kdesudo</a></span><sup><small>AUR</small></sup>, which has the added advantage of tab-completion for the command following.
+</p>
+<h3><span class="mw-headline" id="Harden_with_sudo_example">Harden with sudo example</span></h3>
+<p>Let us say you create 3 users: admin, devel, and joe. The user "admin" is used for journalctl, systemctl, mount, kill, and iptables; "devel" is used for installing packages, and editing config files; and "joe" is the user you log in with. To let "joe" reboot, shutdown, and use netctl we would do the following:
+</p>
+<p>Edit <code>/etc/pam.d/su</code> and <code>/etc/pam.d/su-l</code>
+Require user be in the wheel group, but do not put anyone in it.
+</p>
+<pre>#%PAM-1.0
+auth            sufficient      pam_rootok.so
+# Uncomment the following line to implicitly trust users in the "wheel" group.
+#auth           sufficient      pam_wheel.so trust use_uid
+# Uncomment the following line to require a user to be in the "wheel" group.
+auth            required        pam_wheel.so use_uid
+auth            required        pam_unix.so
+account         required        pam_unix.so
+session         required        pam_unix.so
+</pre>
+<p>Limit SSH login to the 'ssh' group. Only "joe" will be part of this group.
+</p>
+<pre>groupadd -r ssh
+gpasswd -a joe ssh
+echo 'AllowGroups ssh' &gt;&gt; /etc/ssh/sshd_config
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">Restart</a> <code>sshd.service</code>.
+</p>
+<p>Add users to other groups.
+</p>
+<pre>for g in power network ;do ;gpasswd -a joe $g ;done
+for g in network power storage ;do ;gpasswd -a admin $g ;done
+</pre>
+<p>Set permissions on configs so devel can edit them.
+</p>
+<pre>chown -R devel:root /etc/{http,openvpn,cups,zsh,vim,screenrc}
+</pre>
+<pre>Cmnd_Alias  POWER       =   /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
+Cmnd_Alias  STORAGE     =   /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
+Cmnd_Alias  SYSTEMD     =   /usr/bin/journalctl, /usr/bin/systemctl
+Cmnd_Alias  KILL        =   /usr/bin/kill, /usr/bin/killall
+Cmnd_Alias  PKGMAN      =   /usr/bin/pacman
+Cmnd_Alias  NETWORK     =   /usr/bin/netctl
+Cmnd_Alias  FIREWALL    =   /usr/bin/iptables, /usr/bin/ip6tables
+Cmnd_Alias  SHELL       =   /usr/bin/zsh, /usr/bin/bash
+%power      ALL         =   (root)  NOPASSWD: POWER
+%network    ALL         =   (root)  NETWORK
+%storage    ALL         =   (root)  STORAGE
+root        ALL         =   (ALL)   ALL
+admin       ALL         =   (root)  SYSTEMD, KILL, FIREWALL
+devel	    ALL         =   (root)  PKGMAN
+joe	    ALL         =   (devel) SHELL, (admin) SHELL 
+</pre>
+<p>With this setup, you will almost never need to login as the Root user.
+</p>
+<p>"joe" can connect to his home WiFi.
+</p>
+<pre>sudo netctl start home
+sudo poweroff
+</pre>
+<p>"joe" can not use netctl as any other user.
+</p>
+<pre>sudo -u admin -- netctl start home
+</pre>
+<p>When "joe" needs to use journalctl or kill run away process he can switch to that user.
+</p>
+<pre>sudo -i -u devel
+sudo -i -u admin
+</pre>
+<p>But "joe" cannot switch to the root user.
+</p>
+<pre>sudo -i -u root
+</pre>
+<p>If "joe" want to start a gnu-screen session as admin he can do it like this:
+</p>
+<pre>sudo -i -u admin
+admin% chown admin:tty `echo $TTY`
+admin% screen
+</pre>
+<h3>
+<span id="Configure_sudo_using_drop-in_files_in_.2Fetc.2Fsudoers.d"></span><span class="mw-headline" id="Configure_sudo_using_drop-in_files_in_/etc/sudoers.d">Configure sudo using drop-in files in /etc/sudoers.d</span>
+</h3>
+<p><i>sudo</i> parses files contained in the directory <code>/etc/sudoers.d/</code>. This means that instead of editing <code>/etc/sudoers</code>, you can change settings in standalone files and drop them in that directory. This has two advantages:
+</p>
+<ul>
+<li>There is no need to edit a <code>sudoers.pacnew</code> file;</li>
+<li>If there is a problem with a new entry, you can remove the offending file instead of editing <code>/etc/sudoers</code> (but see the warning below).</li>
+</ul>
+<p>The format for entries in these drop-in files is the same as for <code>/etc/sudoers</code> itself. To edit them directly, use <code>visudo -f /etc/sudoers.d/<i>somefile</i></code>. See <span class="plainlinks archwiki-template-man" title="$ man 5 sudoers"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudoers.5#Including_other_files_from_within_sudoers">sudoers(5) § Including other files from within sudoers</a></span> for details.
+</p>
+<p>The files in <code>/etc/sudoers.d/</code> directory are parsed in lexicographical order, file names containing <code>.</code> or <code>~</code> are skipped. To avoid sorting problems, the file names should begin with two digits, e.g. <code>01_foo</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The order of entries in the drop-in files is important: make sure that the statements do not override themselves.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> The files in <code>/etc/sudoers.d/</code> are just as fragile as <code>/etc/sudoers</code> itself: any improperly formatted file will prevent <code>sudo</code> from working.  Hence, for the same reason it is strongly advised to use <code>visudo</code>
+</div>
+<h3><span class="mw-headline" id="Editing_files">Editing files</span></h3>
+<p><code>sudo -e</code> or <code>sudoedit</code> lets you edit a file as another user while still running the text editor as your user.
+</p>
+<p>This is especially useful for editing files as root without elevating the privilege of your text editor, for more details read <span class="plainlinks archwiki-template-man" title="$ man 8 sudo"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sudo.8#e">sudo(8) § e</a></span>.
+</p>
+<p>Note that you can set the editor to any program, so for example one can use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=meld">meld</a></span> to manage <a href="../en/Pacman/Pacnew_and_Pacsave.html" title="Pacman/Pacnew and Pacsave">pacnew</a> files:
+</p>
+<pre>$ SUDO_EDITOR=meld sudo -e /etc/<i>file</i>{,.pacnew<i>}</i>
+</pre>
+<h3><span class="mw-headline" id="Enable_insults">Enable insults</span></h3>
+<p>Users can enable insults easter egg in sudo by adding the following line in sudoers file with <code>visudo</code>.
+</p>
+<p>Upon entering an incorrect password this will replace <code>Sorry, try again.</code> message with humorous insults.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sudoers</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Defaults insults</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="SSH_problem_without_TTY">SSH problem without TTY</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="#Configuration">#Configuration</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> <span style="color:red;">please use the second argument of the template to provide more detailed indications.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sudo">Talk:Sudo#</a>)</div>
+</div>
+<p>SSH does not allocate a tty by default when running a remote command. Without a allocated tty, sudo cannot prevent the password from being displayed. You can use ssh's <code>-t</code> option to force it to allocate a tty.
+</p>
+<p>The <code>Defaults</code> option <code>requiretty</code> only allows the user to run sudo if they have a tty.
+</p>
+<pre># Disable "ssh hostname sudo &lt;cmd&gt;", because it will show the password in clear text. You have to run "ssh -t hostname sudo &lt;cmd&gt;".
+#
+#Defaults    requiretty
+</pre>
+<h3><span class="mw-headline" id="Permissive_umask">Permissive umask</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="#Configuration">#Configuration</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> <span style="color:red;">please use the second argument of the template to provide more detailed indications.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sudo">Talk:Sudo#</a>)</div>
+</div>
+<p>Sudo will union the user's <a href="../en/Umask.html" title="Umask">umask</a> value with its own umask (which defaults to 0022). This prevents sudo from creating files with more open permissions than the user's umask allows. While this is a sane default if no custom umask is in use, this can lead to situations where a utility run by sudo may create files with different permissions than if run by root directly. If errors arise from this, sudo provides a means to fix the umask, even if the desired umask is more permissive than the umask that the user has specified. Adding this (using <code>visudo</code>) will override sudo's default behavior:
+</p>
+<pre>Defaults umask = 0022
+Defaults umask_override
+</pre>
+<p>This sets sudo's umask to root's default umask (0022) and overrides the default behavior, always using the indicated umask regardless of what umask the user as set.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+<li><a href="../en/Category:Commands.html" title="Category:Commands">Commands</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Sudo&amp;oldid=648993">https://wiki.archlinux.org/index.php?title=Sudo&amp;oldid=648993</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 15 January 2021, at 20:05.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

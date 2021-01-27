@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Install Arch Linux from existing Linux (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Install_Arch_Linux_from_existing_Linux_Português rootpage-Install_Arch_Linux_from_existing_Linux_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Install Arch Linux from existing Linux (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Install_Arch_Linux_from_existing_Linux.html" title="Install Arch Linux from existing Linux">Install Arch Linux from existing Linux</a>. Data da última tradução: 2020-04-14. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_from_existing_Linux&amp;diff=0&amp;oldid=606165">alterações</a> na versão em inglês.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artigos relacionados</p>
+<ul>
+<li><a href="../pt/Install_Arch_Linux_via_SSH.html" class="mw-redirect" title="Instalar a partir de SSH">Instalar a partir de SSH</a></li>
+</ul>
+</div>
+<p>Este documento descreve o processo de inicialização necessário para instalar o Arch Linux a partir de um sistema host Linux em execução.
+Após o bootstrapping, a instalação prossegue conforme descrito no <a href="../pt/Installation_guide.html" class="mw-redirect" title="Guia de instalação">guia de instalação</a>.
+</p>
+<p>Instalar o Arch Linux de um Linux existente é útil para:
+</p>
+<ul>
+<li>instalar remotamente o Arch Linux, p.ex. um servidor raiz (virtual)</li>
+<li>substituir um Linux existente sem um LiveCD (ver <a href="#Substituindo_o_sistema_existente_sem_um_LiveCD">#Substituindo o sistema existente sem um LiveCD</a>)</li>
+<li>criar uma nova distribuição ou <a href="../pt/Arch-based_distributions.html" class="mw-redirect" title="Distribuições baseadas no Arch">LiveMedia baseada no Arch Linux</a>
+</li>
+<li>criar um ambiente de chroot do Arch Linux, p.ex.: contêiner base de Docker</li>
+<li><a href="../en/Diskless_system.html" class="mw-redirect" title="Diskless network boot NFS root">rootfs-over-NFS para terminais burros</a></li>
+</ul>
+<p>O objetivo do procedimento de inicialização é configurar um ambiente a partir do qual os scripts do <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span> (como o <code>pacstrap</code> e <code>arch-chroot</code>) podem ser executados.
+</p>
+<p>Se o sistema hospedeiro funciona no Arch Linux, isso pode ser conseguido simplesmente instalando <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>. Se o sistema hospedeiro executar outra distribuição Linux, primeiro você precisará configurar um chroot baseado no Arch Linux.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Este guia exige que o sistema hospedeiro existente seja capaz de executar os novos programas de arquitetura do Arch Linux alvo. Isso significa que tem que ser uma máquina x86_64.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Atenção:</strong> Certifique-se de compreender cada passo antes de prosseguir. É fácil destruir seu sistema ou perder dados críticos, e seu provedor de serviços provavelmente cobrará muito para ajudá-lo a recuperar.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Backup_e_prepara%C3%A7%C3%A3o"><span class="tocnumber">1</span> <span class="toctext">Backup e preparação</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#De_um_host_executando_o_Arch_Linux"><span class="tocnumber">2</span> <span class="toctext">De um host executando o Arch Linux</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Criar_uma_nova_instala%C3%A7%C3%A3o_do_Arch"><span class="tocnumber">2.1</span> <span class="toctext">Criar uma nova instalação do Arch</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Criar_uma_c%C3%B3pia_exata_de_uma_instala%C3%A7%C3%A3o_do_Arch_existente"><span class="tocnumber">2.2</span> <span class="toctext">Criar uma cópia exata de uma instalação do Arch existente</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#De_um_host_executando_outra_distribui%C3%A7%C3%A3o_Linux"><span class="tocnumber">3</span> <span class="toctext">De um host executando outra distribuição Linux</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Usando_pacman_do_sistema_hospedeiro"><span class="tocnumber">3.1</span> <span class="toctext">Usando pacman do sistema hospedeiro</span></a></li>
+<li class="toclevel-2 tocsection-7">
+<a href="#Criando_um_chroot"><span class="tocnumber">3.2</span> <span class="toctext">Criando um chroot</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#M%C3%A9todo_A:_Usando_a_imagem_do_bootstrap_(recomendado)"><span class="tocnumber">3.2.1</span> <span class="toctext">Método A: Usando a imagem do bootstrap (recomendado)</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#M%C3%A9todo_B:_Usando_a_imagem_LiveCD"><span class="tocnumber">3.2.2</span> <span class="toctext">Método B: Usando a imagem LiveCD</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10">
+<a href="#Usando_um_ambiente_chroot"><span class="tocnumber">3.3</span> <span class="toctext">Usando um ambiente chroot</span></a>
+<ul>
+<li class="toclevel-3 tocsection-11"><a href="#Inicializando_o_chaveiro_do_pacman"><span class="tocnumber">3.3.1</span> <span class="toctext">Inicializando o chaveiro do pacman</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#Selecionando_um_espelho_e_baixando_ferramentas_b%C3%A1sicas"><span class="tocnumber">3.3.2</span> <span class="toctext">Selecionando um espelho e baixando ferramentas básicas</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-13">
+<a href="#Dicas_de_instala%C3%A7%C3%A3o"><span class="tocnumber">3.4</span> <span class="toctext">Dicas de instalação</span></a>
+<ul>
+<li class="toclevel-3 tocsection-14">
+<a href="#Host_baseado_no_debian"><span class="tocnumber">3.4.1</span> <span class="toctext">Host baseado no debian</span></a>
+<ul>
+<li class="toclevel-4 tocsection-15"><a href="#/dev/shm"><span class="tocnumber">3.4.1.1</span> <span class="toctext">/dev/shm</span></a></li>
+<li class="toclevel-4 tocsection-16"><a href="#/dev/pts"><span class="tocnumber">3.4.1.2</span> <span class="toctext">/dev/pts</span></a></li>
+<li class="toclevel-4 tocsection-17"><a href="#lvmetad"><span class="tocnumber">3.4.1.3</span> <span class="toctext">lvmetad</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-18"><a href="#Host_baseado_no_Fedora"><span class="tocnumber">3.4.2</span> <span class="toctext">Host baseado no Fedora</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19"><a href="#Coisas_para_verificar_antes_de_reiniciar"><span class="tocnumber">4</span> <span class="toctext">Coisas para verificar antes de reiniciar</span></a></li>
+<li class="toclevel-1 tocsection-20">
+<a href="#Substituindo_o_sistema_existente_sem_um_LiveCD"><span class="tocnumber">5</span> <span class="toctext">Substituindo o sistema existente sem um LiveCD</span></a>
+<ul>
+<li class="toclevel-2 tocsection-21"><a href="#Defina_a_parti%C3%A7%C3%A3o_antiga_de_swap_como_nova_parti%C3%A7%C3%A3o_raiz"><span class="tocnumber">5.1</span> <span class="toctext">Defina a partição antiga de swap como nova partição raiz</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#Instala%C3%A7%C3%A3o"><span class="tocnumber">5.2</span> <span class="toctext">Instalação</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id="Backup_e_prepara.C3.A7.C3.A3o"></span><span class="mw-headline" id="Backup_e_preparação">Backup e preparação</span>
+</h2>
+<p>Faça backup de todos os seus dados, incluindo correios, servidores web, etc. Tenha todas as informações ao seu alcance. Preserve todas as configurações do seu servidor, hostnames, etc.
+</p>
+<p>Aqui está uma lista de dados que você provavelmente precisará:
+</p>
+<ul>
+<li>Endereço IP</li>
+<li>hostname(s), (nota: servidores raiz são principalmente também parte do domínio dos provedores, verifique ou salve seu <code>/etc/hosts</code> antes de excluir)</li>
+<li>Servidor DNS (verifique <code>/etc/resolv.conf</code>)</li>
+<li>Chaves SSH (se outras pessoas trabalham no seu servidor, elas terão de aceitar novas chaves, caso contrário. Isso inclui chaves do seu Apache, seus servidores de e-mail, seu servidor SSH e outros.)</li>
+<li>Informações de hardware (placa de rede, etc. Consulte o seu <code>/etc/modules.conf</code> pré-instalado)</li>
+<li>Arquivos de configuração Grub.</li>
+</ul>
+<p>Em geral, é uma boa ideia ter uma cópia local do diretório original <code>/etc</code> no seu disco rígido local.
+</p>
+<h2><span class="mw-headline" id="De_um_host_executando_o_Arch_Linux">De um host executando o Arch Linux</span></h2>
+<p>Instale o pacote <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>.
+</p>
+<p>Siga <a href="../pt/Installation_guide.html#Montar_os_sistemas_de_arquivos" class="mw-redirect" title="Guia de instalação">Guia de instalação#Montar os sistemas de arquivos</a> para montar o sistema de arquivos que será usado para o diretório raiz bem como todos os outros pontos de montagem necessários. Se você já usa o diretório <code>/mnt</code> para alguma outra coisa, basta criar outro diretório como <code>/mnt/install</code> e usá-lo como a base de pontos de montagem para o resto da instalação.
+</p>
+<p>Nesta fase, o Arch Linux pode ser instalado do zero ou pode espelhar a instalação do host. As duas opções são descritas a seguir.
+</p>
+<h3>
+<span id="Criar_uma_nova_instala.C3.A7.C3.A3o_do_Arch"></span><span class="mw-headline" id="Criar_uma_nova_instalação_do_Arch">Criar uma nova instalação do Arch</span>
+</h3>
+<p>Siga <a href="../pt/Installation_guide.html#Instala%C3%A7%C3%A3o" class="mw-redirect" title="Guia de instalação">Guia de instalação#Instalação</a>.
+</p>
+<p>No procedimento, o primeiro passo, <a href="../pt/Installation_guide.html#Selecionar_os_espelhos" class="mw-redirect" title="Guia de instalação">Guia de instalação#Selecionar os espelhos</a>, pode ser pulado, já que o host já deve ter a lista de espelhos correta.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> 
+<ul>
+<li>Para evitar baixar novamente todos os pacotes, considere seguir <a href="../pt/e746729236f459b9c753b9b9307aab6d.html#Cache_do_pacman_compartilhado_na_rede" class="mw-redirect" title="Pacman/Dicas e truques">Pacman/Dicas e truques#Cache do pacman compartilhado na rede</a> ou use a opção <code>-c</code> do <i>pacstrap</i> para usar o cache de pacotes do host.</li>
+<li>Quando o gerenciador de boot Grub é usado, o comando <code>grub-mkconfig</code> pode detectar dispositivos incorretamente. Isso resultará em <code>Erro:nenhuma partição</code> ao tentar inicializar a partir do pendrive. Para resolver este problema, a partir do host executando o Arch Linux, monte as partições recém-instaladas, use <i>arch-chroot</i> na nova partição, depois instale e configure o grub. A última etapa pode requerer a desativação de <i>lvmetad</i> do <code>/etc/lvm/lvm.conf</code> configurando <code>use_lvmetad=0</code>.</li>
+</ul>
+</div>
+<h3>
+<span id="Criar_uma_c.C3.B3pia_exata_de_uma_instala.C3.A7.C3.A3o_do_Arch_existente"></span><span class="mw-headline" id="Criar_uma_cópia_exata_de_uma_instalação_do_Arch_existente">Criar uma cópia exata de uma instalação do Arch existente</span>
+</h3>
+<p>É possível replicar uma instalação existente do Arch Linux copiando o sistema de arquivos do host para a nova partição e fazer alguns ajustes nela para torná-la inicializável e única.
+</p>
+<p>O primeiro passo é copiar os arquivos do host para a nova partição montada, para isso, considere o uso da abordagem exibida em <a href="../en/Rsync.html#Full_system_backup" title="Rsync">rsync#Full system backup</a>.
+</p>
+<p>Em seguida, siga o procedimento descrito em <a href="../pt/Installation_guide.html#Configurar_o_sistema" class="mw-redirect" title="Guia de instalação">Guia de instalação#Configurar o sistema</a> com algumas advertências e etapas adicionais:
+</p>
+<ul>
+<li>
+<a href="../pt/Installation_guide.html#Fuso_hor%C3%A1rio" class="mw-redirect" title="Guia de instalação">Guia de instalação#Fuso horário</a>, <a href="../pt/Installation_guide.html#Localiza%C3%A7%C3%A3o" class="mw-redirect" title="Guia de instalação">Guia de instalação#Localização</a> e  <a href="../pt/Installation_guide.html#Senha_do_root" class="mw-redirect" title="Guia de instalação">Guia de instalação#Senha do root</a> podem ser ignorados</li>
+<li>
+<a href="../pt/Installation_guide.html#Initramfs" class="mw-redirect" title="Guia de instalação">Guia de instalação#Initramfs</a> pode ser necessário especialmente se estiver alterando o sistema de arquivos, por exemplo, para <a href="../pt/Ext4.html" title="Ext4 (Português)">ext4</a> para <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a>
+</li>
+<li>Sobre <a href="../pt/Installation_guide.html#Gerenciador_de_boot" class="mw-redirect" title="Guia de instalação">Guia de instalação#Gerenciador de boot</a>, é necessário reinstalar o gerenciador de boot</li>
+<li>Exclua <code>/etc/machine-id</code> de forma que um novo, único, seja gerado na próxima inicialização</li>
+</ul>
+<p>Se a instalação espelhada do Arch puder ser usada em uma configuração diferente ou com outro hardware, considere as seguintes operações adicionais:
+</p>
+<ul>
+<li>Use a atualização do <a href="../en/Microcode.html" title="Microcode">microcódigo</a> da CPU adaptada para o sistema alvo durante o passo <a href="../pt/Installation_guide.html#Gerenciador_de_boot" class="mw-redirect" title="Guia de instalação">Guia de instalação#Gerenciador de boot</a>
+</li>
+<li>Se algum <a href="../pt/Xorg.html#Configura%C3%A7%C3%A3o" title="Xorg (Português)">Xorg (Português)#Configuração</a> específico foi apresentado no host e pode estar incompleto com o sistema alvo, siga <a href="../pt/Moving_an_existing_install_into_(or_out_of)_a_virtual_machine.html#Desabilitar_quaisquer_arquivos_relacionados_a_Xorg" class="mw-redirect" title="Movendo uma instalação existente para dentro (ou fora) de uma máquina virtual">Movendo uma instalação existente para dentro (ou fora) de uma máquina virtual#Desabilitar quaisquer arquivos relacionados a Xorg</a>
+</li>
+<li>Faça qualquer outro ajuste apropriado para o sistema de destino, como reconfigurar a rede ou o áudio.</li>
+</ul>
+<h2>
+<span id="De_um_host_executando_outra_distribui.C3.A7.C3.A3o_Linux"></span><span class="mw-headline" id="De_um_host_executando_outra_distribuição_Linux">De um host executando outra distribuição Linux</span>
+</h2>
+<p>Existem várias ferramentas que automatizam uma grande parte das etapas descritas nas subseções a seguir. Consulte as respectivas páginas para obter instruções detalhadas.
+</p>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/tokland/arch-bootstrap">arch-bootstrap</a> (Bash)</li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/gh2o/digitalocean-debian-to-arch">digitalocean-debian-to-arch</a> (disco de repartição, específico para DigitalOCean)</li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/hartwork/image-bootstrap">image-bootstrap</a> (Python)</li>
+<li>
+<a rel="nofollow" class="external text" href="https://gitlab.com/drizzt/vps2arch">vps2arch</a> (Bash)</li>
+</ul>
+<p>A maneira manual é apresentada nas seguintes subseções. A ideia é fazer o <a href="../pt/Pacman.html" title="Pacman (Português)">pacman</a> funcionar diretamente no sistema hospedeiro ou executar um sistema Arch dentro do sistema host, com a instalação real sendo executada a partir do sistema Arch. O sistema aninhado está contido dentro de um chroot.
+</p>
+<h3><span class="mw-headline" id="Usando_pacman_do_sistema_hospedeiro">Usando pacman do sistema hospedeiro</span></h3>
+<p>O <a rel="nofollow" class="external text" href="https://git.archlinux.org/pacman.git/">Pacman</a> pode ser compilado na maioria das distribuições Linux e usado diretamente no sistema hospedeiro para inicializar o Arch Linux. O <a rel="nofollow" class="external text" href="https://git.archlinux.org/arch-install-scripts.git/about/">arch-install-scripts</a> deve ser executado sem problemas diretamente dos fontes baixados em qualquer distribuição recente.
+</p>
+<p>Algumas distribuições fornecem um pacote para o <i>pacman</i> e/ou <i>arch-install-scripts</i> em seus repositórios oficiais, que podem ser usados para essa finalidade. Até fevereiro de 2019, o Gentoo é conhecido por fornecer o pacote <i>pacman</i>, e o Alpine Linux e o Fedora são conhecidos por fornecer <i>pacman</i> e <i>arch-install-scripts</i>.
+</p>
+<h3><span class="mw-headline" id="Criando_um_chroot">Criando um chroot</span></h3>
+<p>Dois métodos para configurar e entrar no chroot são apresentados abaixo, do mais fácil ao mais complicado. Selecione apenas um dos dois métodos. Então, continue em <a href="#Usando_um_ambiente_chroot">#Usando um ambiente chroot</a>.
+</p>
+<h4>
+<span id="M.C3.A9todo_A:_Usando_a_imagem_do_bootstrap_.28recomendado.29"></span><span class="mw-headline" id="Método_A:_Usando_a_imagem_do_bootstrap_(recomendado)">Método A: Usando a imagem do bootstrap (recomendado)</span>
+</h4>
+<p>Baixe a imagem <i>bootstrap</i> de um <a rel="nofollow" class="external text" href="https://archlinux.org/download">espelho</a> (<i>mirror</i>) em <code>/tmp</code>.
+</p>
+<p>Você também pode baixar a assinatura (mesma URL com <code>.sig</code> adicionado) e <a href="../en/GnuPG.html#Verify_a_signature" title="GnuPG">verificá-la com GnuPG</a>.
+</p>
+<p>Extraia o tarball:
+</p>
+<pre># tar xzf &lt;caminho-para-imagem-bootstrap&gt;/archlinux-bootstrap-*-x86_64.tar.gz
+</pre>
+<p>Selecione um servidor de repositório editando <code>/tmp/root.x86_64/etc/pacman.d/mirrorlist</code>.
+</p>
+<p>Entre no <i>chroot</i>
+</p>
+<ul><li>Se bash 4 ou posterior estiver instalado, e unshare tiver suporte às opções --fork e --pid:</li></ul>
+<pre># /tmp/root.x86_64/bin/arch-chroot /tmp/root.x86_64/
+</pre>
+<ul><li>Do contrário, execute os seguintes comandos:</li></ul>
+<pre># mount --bind /tmp/root.x86_64 /tmp/root.x86_64
+# cd /tmp/root.x86_64
+# cp /etc/resolv.conf etc
+# mount -t proc /proc proc
+# mount --make-rslave --rbind /sys sys
+# mount --make-rslave --rbind /dev dev
+# mount --make-rslave --rbind /run run    # (presumindo que /run existe no sistema)
+# chroot /tmp/root.x86_64 /bin/bash
+</pre>
+<h4>
+<span id="M.C3.A9todo_B:_Usando_a_imagem_LiveCD"></span><span class="mw-headline" id="Método_B:_Usando_a_imagem_LiveCD">Método B: Usando a imagem LiveCD</span>
+</h4>
+<p>É possível montar a imagem raiz da mídia mais recente de instalação do Arch Linux e, em seguida, fazer <i>chroot</i> nela. Este método tem a vantagem de fornecer uma instalação funcional do Arch Linux no direito do sistema host sem a necessidade de prepará-lo instalando pacotes específicos.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Antes de prosseguir, verifique se a versão mais recente de <a rel="nofollow" class="external text" href="http://squashfs.sourceforge.net/">squashfs</a> está instalada no sistema host. Caso contrário, esperam-se erros como os a seguir: <code>FATAL ERROR aborting: uncompress_inode_table: failed to read block</code>.</div>
+<ul><li>A imagem raiz pode ser encontrada em um dos <a rel="nofollow" class="external text" href="https://archlinux.org/download">espelhos</a> em <code>arch/x86_64/</code>. O formato squashfs não é editável, portanto, desfazemos o "squash" na imagem raiz e a montamos.</li></ul>
+<ul><li>Para fazer um "unsquash" na imagem raiz, execute</li></ul>
+<pre># unsquashfs airootfs.sfs
+</pre>
+<ul><li>Antes de fazer <a href="../pt/Chroot.html" title="Chroot (Português)">chroot</a> para ela, precisamos configurar alguns pontos de montagem e copiar o resolv.conf para conectividade.</li></ul>
+<pre># mount --bind squashfs-root squashfs-root
+# mount -t proc none squashfs-root/proc
+# mount -t sysfs none squashfs-root/sys
+# mount -o bind /dev squashfs-root/dev
+# mount -o bind /dev/pts squashfs-root/dev/pts  ## importante para o pacman (para verificação de assinatura)
+# cp -L /etc/resolv.conf squashfs-root/etc  ## Isso é necessário para usar conectividade com o chroot
+</pre>
+<ul><li>Agora, tudo está preparado para fazer chroot para dentro do ambiente Arch recém-instalado</li></ul>
+<pre># chroot squashfs-root bash
+</pre>
+<h3><span class="mw-headline" id="Usando_um_ambiente_chroot">Usando um ambiente chroot</span></h3>
+<p>O ambiente <i>bootstrap</i> é realmente minimalista (sem <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nano">nano</a></span> ou <code>lvm2</code>). Portanto, precisamos configurar o pacman para baixar outros pacotes necessários.
+</p>
+<h4><span class="mw-headline" id="Inicializando_o_chaveiro_do_pacman">Inicializando o chaveiro do pacman</span></h4>
+<p>Antes de iniciar a instalação, as chaves do pacman precisam ser configuradas. Antes de executar os dois comandos a seguir, leia <a href="../pt/ad0572c90ce42e4a7199fb549b4c78af.html#Inicializando_o_chaveiro" class="mw-redirect" title="Pacman-key (Português)">pacman-key (Português)#Inicializando o chaveiro</a> para entender os requisitos de entropia:
+</p>
+<pre># pacman-key --init
+# pacman-key --populate archlinux
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> A instalação e execução <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=haveged">haveged</a></span> deve ser feito no sistema hospedeiro, já que não é possível instalar pacotes antes de inicializar o chaveiro do pacman e porque <i>systemd</i> vai detectar que está sendo executado em um <i>chroot</i> e <a rel="nofollow" class="external text" href="https://superuser.com/questions/688733/start-a-systemd-service-inside-chroot">vai ignorar requisição de ativação</a>.
+Se você for executar <code>ls -Ra /</code> em outro console (TTY, terminal, sessão SSH...), não tenha medo de executá-lo em um loop algumas vezes: cinco ou seis execuções do hospedeiro provou ser suficiente para gerar entropia suficiente em um servidor burro remoto.</div>
+<h4>
+<span id="Selecionando_um_espelho_e_baixando_ferramentas_b.C3.A1sicas"></span><span class="mw-headline" id="Selecionando_um_espelho_e_baixando_ferramentas_básicas">Selecionando um espelho e baixando ferramentas básicas</span>
+</h4>
+<p>Após <a href="../pt/Mirrors.html#Habilitando_um_espelho_espec%C3%ADfico" class="mw-redirect" title="Espelhos">selecionar um espelho</a>, <a href="../pt/Mirrors.html#For%C3%A7ar_o_pacman_a_renovar_as_listas_de_pacotes" class="mw-redirect" title="Espelhos">renove as listas de pacotes</a> e <a href="../pt/Help:Reading.html#Instala%C3%A7%C3%A3o_de_pacotes" class="mw-redirect" title="Instale">instale</a> o que você precisa: {<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/groups/x86_64/base-devel/">base-devel</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=parted">parted</a></span> etc.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> 
+<ul>
+<li>Como ainda não há nenhum editor de texto, você precisa sair do arch-chroot e editar a mirrorlist usando o editor de texto do host.</li>
+<li>Quando você tentar instalar pacotes com o pacman, você pode obter <code><i>erro: não foi possível determinar o ponto de montagem do cachedir: /var/cache/pacman/pkg</i></code>. Para contornar isso, você pode usar <pre>mount --bind <i>diretório-para-livecd-ou-bootstrap</i> <i>diretório-para-livecd-ou-bootstrap</i></pre> antes de fazer chroot. Veja <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/46169">FS#46169</a>.</li>
+</ul>
+</div>
+<h3>
+<span id="Dicas_de_instala.C3.A7.C3.A3o"></span><span class="mw-headline" id="Dicas_de_instalação">Dicas de instalação</span>
+</h3>
+<p>Você pode prosseguir agora para <a href="../pt/Installation_guide.html#Parti%C3%A7%C3%A3o_dos_discos" class="mw-redirect" title="Guia de instalação">Guia de instalação#Partição dos discos</a> e seguir o resto do <a href="../pt/Installation_guide.html" class="mw-redirect" title="Guia de instalação">Guia de instalação</a>.
+</p>
+<p>Alguns sistemas hospedeiros ou configurações podem exigir determinadas etapas adicionais. Veja as seções abaixo para obter dicas.
+</p>
+<h5><span class="mw-headline" id="Host_baseado_no_debian">Host baseado no debian</span></h5>
+<h6>
+<span id=".2Fdev.2Fshm"></span><span class="mw-headline" id="/dev/shm">/dev/shm</span>
+</h6>
+<p>Em alguns sistemas baseados no Debian, <i>pacstrap</i> pode produzir o seguinte erro:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pacstrap /mnt base</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">==&gt; Creating install root at /mnt
+mount: mount point /mnt/dev/shm is a symbolic link to nowhere
+==&gt; ERROR: failed to setup API filesystems in new root
+</pre>
+<p>Isso porque em algumas versões do Debian, <code>/dev/shm</code> aponta para <code>/run/shm</code> enquanto no chroot baseado no Arch, <code>/run/shm</code> não existe e o link está quebrado. Para corrigir esse erro, cria um diretório <code>/run/shm</code>:
+</p>
+<pre># mkdir /run/shm
+</pre>
+<h6>
+<span id=".2Fdev.2Fpts"></span><span class="mw-headline" id="/dev/pts">/dev/pts</span>
+</h6>
+<p>Ao instalar <code>archlinux-2015.07.01-x86_64</code> a partir de um host Debian 7, o seguinte erro impediu <a rel="nofollow" class="external text" href="https://projects.archlinux.org/arch-install-scripts.git/tree/pacstrap.in">pacstrap</a> e <a href="../pt/Chroot.html#Usando_arch-chroot" title="Chroot (Português)">arch-chroot</a> de funcionar:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># pacstrap -i /mnt</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">mount: mount point /mnt/dev/pts does not exist
+==&gt; ERROR: failed to setup chroot /mnt
+</pre>
+<p>Aparentemente, é porque esses dois scripts usam uma função em comum. <code>chroot_setup()</code><a rel="nofollow" class="external autonumber" href="https://projects.archlinux.org/arch-install-scripts.git/tree/common#n76">[1]</a> depende em novos recursos do <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=util-linux">util-linux</a></span>, que são incompatíveis com Debian 7 <i>userland</i> (veja <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/45737">FS#45737</a>).
+</p>
+<p>A solução para <i>pacstrap</i> é executar manualmente seus <a rel="nofollow" class="external text" href="https://projects.archlinux.org/arch-install-scripts.git/tree/pacstrap.in#n77">várias tarefas</a>, mas use o <a href="../pt/Chroot.html#Usando_chroot" title="Chroot (Português)">procedimento regular</a> para montaros sistemas de arquivos do kernel no diretório alvo (<code>"$newroot"</code>):
+</p>
+<pre># newroot=/mnt
+# mkdir -m 0755 -p "$newroot"/var/{cache/pacman/pkg,lib/pacman,log} "$newroot"/{dev,run,etc}
+# mkdir -m 1777 -p "$newroot"/tmp
+# mkdir -m 0555 -p "$newroot"/{sys,proc}
+# mount --bind "$newroot" "$newroot"
+# mount -t proc /proc "$newroot/proc"
+# mount --rbind /sys "$newroot/sys"
+# mount --rbind /run "$newroot/run"
+# mount --rbind /dev "$newroot/dev"
+# pacman -r "$newroot" --cachedir="$newroot/var/cache/pacman/pkg" -Sy base base-devel ... ## adicione os pacotes que quiser
+# cp -a /etc/pacman.d/gnupg "$newroot/etc/pacman.d/"       ## copiar chaveiro
+# cp -a /etc/pacman.d/mirrorlist "$newroot/etc/pacman.d/"  ## copiar lista de espelhos
+</pre>
+<p>Em vez de usar <i>arch-chroot</i> para <a href="../pt/Installation_guide.html#Chroot" class="mw-redirect" title="Guia de instalação">Guia de instalação#Chroot</a>, basta usar:
+</p>
+<pre># chroot "$newroot"
+</pre>
+<h6><span class="mw-headline" id="lvmetad">lvmetad</span></h6>
+<p>A tentativa de criar <a href="../pt/LVM.html#Volumes_l%C3%B3gicos" title="LVM (Português)">volumes lógicos</a> <a href="../pt/LVM.html" title="LVM (Português)">LVM</a> de um ambiente <code>archlinux-bootstrap-2015.07.01-x86_64</code> em um host Debian 7 resultaram no seguinte erro:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># lvcreate -L 20G lvm -n root</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+  /dev/lvm/root: not found: device not cleared
+  Aborting. Failed to wipe start of new LV.</pre>
+<p>(A criação de volume físico e grupo de volumes funcionaram apesar de <code>/run/lvm/lvmetad.socket: connect failed: No such file or directory</code> estar sendo exibido.)
+</p>
+<p>Isso poderia ser facilmente contornado criando os volumes lógicos fora do chroot (do host Debian). Eles estão disponíveis uma vez que executados chroot novamente.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Esse problema não surgiu ao instalar de um host Debian 7 sem <i>lvmetad</i> habilitado. A bagunça recomendada com <code>/etc/lvm/lvm.conf</code> parece bastante propenso a erros (2015-07-26). (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Install_from_existing_Linux">Talk:Install from existing Linux</a>)</div>
+</div>
+<p>Também, se o sistema que você está usando tiver lvm, você pode ter a seguinte saída:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># grub-install --target=i386-pc --recheck /dev/main/archroot</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Installing for i386-pc platform.
+  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+  /run/lvm/lvmetad.socket: connect failed: No such file or directory
+  WARNING: Failed to connect to lvmetad. Falling back to internal scanning.</pre>
+<p>Isso porque o Debian não usa lvmetad por padrão. Você precisa editar <code>/etc/lvm/lvm.conf</code> e definir <code>use_lvmetad</code> para <code>0</code>:
+</p>
+<pre>use_lvmetad = 0
+</pre>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Esse problema é com LVM no Debian ou com tentar instalar Arch no LVM? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Install_from_existing_Linux">Talk:Install from existing Linux</a>)</div>
+</div>
+<p>Isto irá desencadear mais tarde um erro na inicialização no estágio initrd. Portanto, você deve alterá-lo depois da geração grub. Em um software RAID + LVM, as etapas seriam as seguintes:
+</p>
+<ul>
+<li>Após instalar o sistema, verifique seu <a href="../pt/Mkinitcpio.html" title="Mkinitcpio (Português)">Mkinitcpio</a> e as configurações do gerenciador de boot <i>(boot loader)</i>. Veja <a href="../pt/Arch_boot_process.html#Gerenciador_de_boot" class="mw-redirect" title="Processo de inicialização do Arch">Processo de inicialização do Arch#Gerenciador de boot</a> para uma lista de gerenciadores de inicialização.</li>
+<li>Você pode precisar alterar seu <code>/etc/mdadm.conf</code> para refletir suas configurações de <a href="../en/RAID.html" title="RAID">RAID</a> (se aplicável).</li>
+<li>Você pode precisar alterar seu<code>HOOKS</code> e <code>MODULES</code> de acordo com seus requisitos de <a href="../pt/LVM.html" title="LVM (Português)">LVM</a> e <a href="../en/RAID.html" title="RAID">RAID</a>: <code>MODULES="dm_mod" HOOKS="base udev <b>mdadm_udev</b> ... block <b>lvm2</b> filesystems ..."</code>
+</li>
+<li>Você provavelmente vai precisar gerar novas imagens initrd com mkinitcpio. Veja <a href="../pt/Mkinitcpio.html#Cria%C3%A7%C3%A3o_e_ativa%C3%A7%C3%A3o_de_imagem" title="Mkinitcpio (Português)">Mkinitcpio#Criação e ativação de imagem</a>.</li>
+<li>Defina <code>use_lvmetad = 0</code> em <code>/etc/lvm/lvm.conf</code>.</li>
+<li>Atualize as configurações de seu gerenciador de boot. Veja a página wiki de seu gerenciador de boot para detalhes.</li>
+<li>Defina <code>use_lvmetad = 1</code> em <code>/etc/lvm/lvm.conf</code>.</li>
+</ul>
+<h5><span class="mw-headline" id="Host_baseado_no_Fedora">Host baseado no Fedora</span></h5>
+<p>Nos hosts baseados no Fedora e USBs ativos, você pode encontrar problemas ao usar <i>genfstab</i> para gerar seu <a href="../pt/Fstab.html" title="Fstab (Português)">fstab</a>. Remova as entradas duplicadas e a opção "seclabel" onde aparecer, pois isso é específico do Fedora e impedirá que o sistema seja inicializado normalmente.
+</p>
+<h2><span class="mw-headline" id="Coisas_para_verificar_antes_de_reiniciar">Coisas para verificar antes de reiniciar</span></h2>
+<p>Antes de reiniciar, verifique novamente alguns detalhes em sua instalação para obter uma instalação bem-sucedida. Para fazer isso, primeiro faça o <i>chroot</i> no sistema recém-instalado e, em seguida:
+</p>
+<ul>
+<li>
+<a href="../pt/Users_and_groups.html#Gerenciamento_de_usu%C3%A1rio" class="mw-redirect" title="Usuários e grupos">crie um usuário com senha</a>, de forma que você possa se autenticar via <i>ssh</i>. Isso é crítico já que autenticação como root é desabilitada por padrão desde OpenSSH-7.1p2.</li>
+<li>
+<a href="../pt/Users_and_groups.html#Gerenciamento_de_usu%C3%A1rio" class="mw-redirect" title="Usuários e grupos">defina uma senha de root</a>, de forma que você pode trocar para o root via <i>su</i> posteriormente</li>
+<li>
+<a href="../pt/Help:Reading.html#Instala%C3%A7%C3%A3o_de_pacotes" class="mw-redirect" title="Instale">instale</a> uma solução <a href="../pt/Secure_Shell.html" class="mw-redirect" title="Ssh (Português)">ssh</a> e <a href="../pt/Systemd.html#Usando_units" class="mw-redirect" title="Habilite">habilite</a> sua instância de servidor para iniciar automaticamente na inicialização.</li>
+<li>defina sua <a href="../pt/Network_configuration.html" class="mw-redirect" title="Configuração de rede">configuração de rede</a> par ter uma conexão iniciada automaticamente na inicialização.</li>
+<li>defina um <a href="../pt/Arch_boot_process.html#Gerenciador_de_boot" class="mw-redirect" title="Gerenciador de boot">gerenciador de boot</a> e configure-o para usar a partição swap que você apropriou anteriormente como a partição raiz. Você pode querer configurar seu gerenciador de boot para poder inicializar em seu sistema antigo; é útil reutilizar a partição <code>/boot</code> existente do servidor no novo sistema para este propósito.</li>
+</ul>
+<h2><span class="mw-headline" id="Substituindo_o_sistema_existente_sem_um_LiveCD">Substituindo o sistema existente sem um LiveCD</span></h2>
+<p>Encontre ~700 MB de espaço livre em algum lugar do disco, p.ex. particionando uma partição swap. Você pode desativar a partição swap e configurar o seu sistema lá.
+</p>
+<h3>
+<span id="Defina_a_parti.C3.A7.C3.A3o_antiga_de_swap_como_nova_parti.C3.A7.C3.A3o_raiz"></span><span class="mw-headline" id="Defina_a_partição_antiga_de_swap_como_nova_partição_raiz">Defina a partição antiga de swap como nova partição raiz</span>
+</h3>
+<p>Verifique <code>cfdisk</code>, <code>/proc/swaps</code> ou <code>/etc/fstab</code> para localizar sua partição swap. Presumindo que seu disco rígido esteja localizado em <code>sda<i>X</i></code> (<code><i>X</i></code> será um número). 
+</p>
+<p>Faça o seguinte:
+</p>
+<p>Desabilite o espaço swap:
+</p>
+<pre># swapoff /dev/sda<i>X</i>
+</pre>
+<p>Crie um sistema de arquivos nele
+</p>
+<pre># fdisk /dev/sda
+(defina o campo de ID do /dev/sda<i>X</i> para "Linux" - Hex 83)
+# mke2fs -j /dev/sda<i>X</i>
+</pre>
+<p>Crie um diretório para montá-lo nele
+</p>
+<pre># mkdir /mnt/novosis
+</pre>
+<p>Finalmente, monte o novo diretório para instalar um sistema intermediário.
+</p>
+<pre># mount -t ext4 /dev/sda<i>X</i> /mnt/novosis
+</pre>
+<h3>
+<span id="Instala.C3.A7.C3.A3o"></span><span class="mw-headline" id="Instalação">Instalação</span>
+</h3>
+<p><a href="../pt/Installation_guide.html#Instalar_os_pacotes_essenciais" class="mw-redirect" title="Guia de instalação">Instale os pacotes essenciais</a> e qualquer outro pacote necessário para instalar um sistema com conexão à Internet na partição temporária, tendo o cuidado com o limite de ~700 MB de espaço. Ao especificar pacotes a serem instalados com <i>pacstrap</i>, considere adicionar a opção <code>-c</code> para evitar o preenchimento de um espaço valioso baixando pacotes para o sistema host.
+</p>
+<p>Uma vez que o novo sistema Arch Linux esteja instalado, corrija a configuração do gerenciador de boot e, então, reinicie no sistema recém-criado e faça um <a href="../en/Rsync.html#Full_system_backup" title="Rsync">rsync de todo o sistema</a> para a partição primária.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../pt/Category:Installation_process.html" title="Category:Installation process (Português)">Installation process (Português)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_from_existing_Linux_(Portugu%C3%AAs)&amp;oldid=646836">https://wiki.archlinux.org/index.php?title=Install_Arch_Linux_from_existing_Linux_(Português)&amp;oldid=646836</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 12:00.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

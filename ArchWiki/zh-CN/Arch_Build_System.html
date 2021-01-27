@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Arch Build System (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Arch_Build_System_简体中文 rootpage-Arch_Build_System_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Arch Build System (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../en/Arch_package_guidelines.html" class="mw-redirect" title="Arch packaging standards">Arch packaging standards</a></li>
+<li><a href="../en/Creating_packages.html" title="Creating packages">Creating packages</a></li>
+<li><a href="../en/Kernel/Arch_Build_System.html" class="mw-redirect" title="Kernel Compilation with ABS">Kernel Compilation with ABS</a></li>
+<li><a href="../zh-CN/PKGBUILD.html" title="PKGBUILD (简体中文)">PKGBUILD</a></li>
+<li><a href="../zh-CN/Makepkg.html" title="Makepkg (简体中文)">makepkg</a></li>
+<li><a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">pacman</a></li>
+<li><a href="../zh-CN/Official_repositories.html" title="Official repositories (简体中文)">官方软件仓库</a></li>
+<li><a href="../zh-CN/Arch_User_Repository.html" title="Arch User Repository (简体中文)">AUR</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Arch_Build_System.html" title="Arch Build System">Arch_Build_System</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2020-1-3。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Arch_Build_System&amp;diff=0&amp;oldid=588948">更改</a>，则您可以帮助同步翻译。</div>
+<p>ABS(Arch Build System)指的是Arch的构建系统。这是一种从源代码编译软件的类 ports 系统。在Arch中，<a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">pacman</a> 专门管理二进制软件包(包括那些由ABS创建的)，而ABS则是一系列工具，负责把源代码编译成可安装的<code>.pkg.tar.xz</code> 软件包。
+</p>
+<p>'Ports'是 *BSD 使用的一种系统，可以自动下载源代码、解压缩、打补丁、编译和安装。一个“port”仅仅是指用户电脑上的一个目录，该目录根据即将安装的软件来命名，这个目录包含一些能指导源码的下载和编译安装的文件。Ports系统让你只需在port目录下运行<code>make</code>或 <code>make install clean</code>就能安装你想要的软件。
+</p>
+<p>ABS 的概念与Ports相似.ABS由一个目录树构成，可以用SVN checkout。这个目录树表示(但不包含)所有官方 Arch 软件。ABS子目录并不包含软件包或源代码，而是包含一个PKGBUILD 文件(有时也会有其它文件)。在有PKGBUILD文件的目录里运行makepkg命令，将在目录中编译软件，并打包。然后就可以通过pacman进行安装或升级了。 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#ABS%E6%A6%82%E8%A7%88"><span class="tocnumber">1</span> <span class="toctext">ABS概览</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#SVN%E7%9B%AE%E5%BD%95%E6%A0%91"><span class="tocnumber">1.1</span> <span class="toctext">SVN目录树</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3"><a href="#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8ABS"><span class="tocnumber">2</span> <span class="toctext">我为什么要用ABS</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8_ABS"><span class="tocnumber">3</span> <span class="toctext">如何使用 ABS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5">
+<a href="#%E4%BD%BF%E7%94%A8_SVN_%E8%8E%B7%E5%8F%96_PKGBUILD"><span class="tocnumber">3.1</span> <span class="toctext">使用 SVN 获取 PKGBUILD</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#%E5%89%8D%E6%8F%90"><span class="tocnumber">3.1.1</span> <span class="toctext">前提</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#%E9%9D%9E%E9%80%92%E5%BD%92checkout"><span class="tocnumber">3.1.2</span> <span class="toctext">非递归checkout</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Checkout%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="tocnumber">3.1.3</span> <span class="toctext">Checkout软件包</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9"><a href="#%E4%BD%BF%E7%94%A8_Git_%E8%8E%B7%E5%8F%96_PKGBUILD"><span class="tocnumber">3.2</span> <span class="toctext">使用 Git 获取 PKGBUILD</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#%E6%9E%84%E5%BB%BA%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="tocnumber">3.3</span> <span class="toctext">构建软件包</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%E6%8A%80%E5%B7%A7"><span class="tocnumber">4</span> <span class="toctext">技巧</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#%E4%BF%9D%E7%95%99%E4%BF%AE%E6%94%B9%E8%BF%87%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="tocnumber">4.1</span> <span class="toctext">保留修改过的软件包</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Checkout%E6%97%A7%E7%89%88%E6%9C%AC%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="tocnumber">4.2</span> <span class="toctext">Checkout旧版本软件包</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#%E5%85%B6%E5%AE%83%E5%B7%A5%E5%85%B7"><span class="tocnumber">5</span> <span class="toctext">其它工具</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="ABS.E6.A6.82.E8.A7.88"></span><span class="mw-headline" id="ABS概览">ABS概览</span>
+</h2>
+<p>'ABS'可以作为一个总括性术语来使用，因为它包含并依赖于若干其他部件。因此，尽管从严格意义上来讲并不精确，ABS可指代包含以下工具的完整工具集：
+</p>
+<dl>
+<dt>SVN目录树</dt>
+<dd>目录树包含所有官方软件包的构建所需文件，不包括软件包本身和源代码。在<a rel="nofollow" class="external text" href="https://archlinux.org/svn/">svn</a>和<a rel="nofollow" class="external text" href="https://github.com/archlinux/svntogit-packages">git</a>仓库中。</dd>
+</dl>
+<dl>
+<dt><a href="../zh-CN/PKGBUILD.html" title="PKGBUILD (简体中文)">PKGBUILD</a></dt>
+<dd>
+<a href="../en/Bash.html" title="Bash">Bash</a>脚本，包含软件的源代码位置和编译打包指令。</dd>
+</dl>
+<dl>
+<dt><a href="../zh-CN/Makepkg.html" title="Makepkg (简体中文)">makepkg</a></dt>
+<dd>ABS的 shell 命令工具，读取 PKGBUILD，下载源码，根据<code>makepkg.conf</code> 中的<code>PKGEXT</code>编译并创建 <code>.pkg.tar.gz</code> 或 <code>.pkg.tar.xz</code>包。也可以用makepkg从<a href="../zh-CN/Arch_User_Repository.html" class="mw-redirect" title="AUR (简体中文)">AUR</a>或第三方代码构建自定义软件包。参考<a href="../zh-CN/Creating_packages.html" title="Creating packages (简体中文)">Creating packages</a>。</dd>
+</dl>
+<dl>
+<dt><a href="../zh-CN/Pacman.html" title="Pacman (简体中文)">Pacman</a></dt>
+<dd>pacman是完全独立的，但是在安装或移除软件包、解决依赖性时都是必需的。它被 makepkg 调用或者被手动执行。</dd>
+</dl>
+<dl>
+<dt><a href="../zh-CN/Arch_User_Repository.html" title="Arch User Repository (简体中文)">AUR</a></dt>
+<dd>ArchLinux社区的用户维护的软件仓库独立于ABS，包含不受支持的PKGBUILD文件。它们同样可以可以通过ABS的makepkg工具来编译并打包成可安装软件。ABS 树位于本地机器，而 AUR 则是网站界面。包含成千上万用户共享的 PKGBUILD。如果需要编译官方 Arch 树之外的软件包，AUR 中已经存在的可能性非常大。</dd>
+</dl>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 官方PKGBUILD假定包是在干净的chroot环境中构建的(<a href="../DeveloperWiki:Building_in_a_clean_chroot.html" title="DeveloperWiki:Building in a clean chroot">built in a clean chroot</a>). 在<i>脏</i>的环境中构建可能会失败或者在运行时有意外行为。 因为如果编译系统动态检查依赖的话，编译结果会受到当前可用包的影响。</div>
+<h3>
+<span id="SVN.E7.9B.AE.E5.BD.95.E6.A0.91"></span><span class="mw-headline" id="SVN目录树">SVN目录树</span>
+</h3>
+<p><i>core</i>, <i>extra</i>和<i>testing</i> <a href="../zh-CN/Official_repositories.html" class="mw-redirect" title="官方软件仓库">官方软件仓库</a> 可从官方SVN的<i>packages</i> 仓库<a href="#%E9%9D%9E%E9%80%92%E5%BD%92checkout">checkout</a>. 而<i>community</i>和<i>multilib</i>在<i>community</i> SVN仓库。 
+</p>
+<p>每个包有各自的子目录，其中又有<code>repos</code>和<code>trunk</code>目录。<code>repos</code>又进一步按仓库名(如<i>core</i>)和架构细分。<code>repos</code>里的PKGBUILD和其它文件用来构建官方包。<code>trunk</code>里的文件是正在开发的，并最终复制到<code>repos</code>中。
+</p>
+<p>例如，<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acl">acl</a></span>的目录结构是这样的：
+</p>
+<pre>acl
+acl/repos
+acl/repos/core-i686
+acl/repos/core-i686/PKGBUILD
+acl/repos/core-x86_64
+acl/repos/core-x86_64/PKGBUILD
+acl/trunk
+acl/trunk/PKGBUILD
+</pre>
+<p>源代码并不直接包含在ABS目录中，而是构建时从<code>PKGBUILD</code>里指定的源代码URL下载。
+</p>
+<h2>
+<span id=".E6.88.91.E4.B8.BA.E4.BB.80.E4.B9.88.E8.A6.81.E7.94.A8ABS"></span><span class="mw-headline" id="我为什么要用ABS">我为什么要用ABS</span>
+</h2>
+<p>ABS 可以用来: 
+</p>
+<ul>
+<li>编译或重新编译软件包</li>
+<li>从源代码编译Arch官方源里没有的软件(详情请参照<a href="../zh-CN/Creating_packages.html" title="Creating packages (简体中文)">创建软件包</a>)</li>
+<li>定制现有的软件包以满足你的特定需求(通过开启或禁用相关选项)</li>
+<li>用你的编译器的flags重新构建整个系统，“就像FreeBSD那样” 。(使用 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/pacman-src-git/">pacman-src-git</a></span><sup><small>AUR</small></sup><sup>[<a href="../en/Help:Procedures.html#Fix_broken_package_links" title="Help:Procedures">断开的链接</a>：package not found]</sup>)</li>
+<li>干净地编译安装你自己定制的内核。(参照<a href="../zh-CN/Kernel.html#%E7%BC%96%E8%AF%91" class="mw-redirect" title="Kernel Compilation (简体中文)">内核编译(简体中文)</a>)</li>
+<li>使内核模块(比如某些显卡驱动)在你定制的内核下正常工作</li>
+<li>修改 PKGBUILD 中的版本就能方便的编译和安装新的、老的、beta 或者开发版本的 Arch 软件包</li>
+</ul>
+<p>使用 Arch Linux 不一定会用到 ABS，但 ABS 确实可以自动化进行许多源码编译工作。
+</p>
+<h2>
+<span id=".E5.A6.82.E4.BD.95.E4.BD.BF.E7.94.A8_ABS"></span><span class="mw-headline" id="如何使用_ABS">如何使用 ABS</span>
+</h2>
+<p>要想获取从源代码构建特定软件包所需的<a href="../en/PKGBUILD.html" title="PKGBUILD">PKGBUILD</a>文件，需要使用 <a href="../en/Subversion.html" class="mw-redirect" title="Svn">Svn</a> 或支持 <a href="../en/Git.html" title="Git">Git</a> 的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asp">asp</a></span>。<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asp">asp</a></span>是一个对svntogit的简单封装。在下文中介绍了基于svn的方法以及<a href="#%E4%BD%BF%E7%94%A8_Git_%E8%8E%B7%E5%8F%96_PKGBUILD">基于git的方法</a>。
+</p>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8_SVN_.E8.8E.B7.E5.8F.96_PKGBUILD"></span><span class="mw-headline" id="使用_SVN_获取_PKGBUILD">使用 SVN 获取 PKGBUILD</span>
+</h3>
+<h4>
+<span id=".E5.89.8D.E6.8F.90"></span><span class="mw-headline" id="前提">前提</span>
+</h4>
+<p><a href="../zh-CN/Help:Reading.html#%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E5%8C%85" class="mw-redirect" title="安装">安装</a><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=subversion">subversion</a></span>包。
+</p>
+<h4>
+<span id=".E9.9D.9E.E9.80.92.E5.BD.92checkout"></span><span class="mw-headline" id="非递归checkout">非递归checkout</span>
+</h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 不要下载整个仓库，请按下面的说明操作。整个SVN非常大，不只会占用大量的空间，archlinux.org服务器也会因为下载产生费用。非正常使用可能会导致你的地址被封禁。不要对公共SVN进行任何脚本操作。</div>
+<p>要checkout <i>core</i>, <i>extra</i>，和<i>testing</i> <a href="../zh-CN/Official_repositories.html" class="mw-redirect" title="官方软件仓库">官方软件仓库</a>:
+</p>
+<pre>$ svn checkout --depth=empty svn://svn.archlinux.org/packages
+</pre>
+<p>要checkout <i>community</i>和<i>multilib</i>仓库:
+</p>
+<pre>$ svn checkout --depth=empty svn://svn.archlinux.org/community
+</pre>
+<p>两条命令都只是创建了空目录，但它知道这是SVN checkout目录。
+</p>
+<h4>
+<span id="Checkout.E8.BD.AF.E4.BB.B6.E5.8C.85"></span><span class="mw-headline" id="Checkout软件包">Checkout软件包</span>
+</h4>
+<p>在刚才checkout的SVN仓库(<i>packages</i>或<i>community</i>)中执行：
+</p>
+<pre>$ svn update <i>package-name</i>
+</pre>
+<p>这条命令把指定的包同步到你的checkout目录。以后在顶层目录执行<i>svn update</i>时，这个包也会更新。
+</p>
+<p>如果指定的包不存在，svn不会产生警告，只是显示类似"At revision 115847"而不创建文件。出现这种情况时：
+</p>
+<ul>
+<li>检查软件包名的拼写</li>
+<li>检查包是不是被移到了另一个仓库 (例如从community到主仓库)</li>
+<li>到 <a rel="nofollow" class="external free" href="https://archlinux.org/packages">https://archlinux.org/packages</a> 检查这个包是不是从另一个基础包构建的 (例如<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=python-tensorflow">python-tensorflow</a></span>是在<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tensorflow">tensorflow</a></span> PKGBUILD里构建的)</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> 要check旧版本，参考<a href="#Checkout%E6%97%A7%E7%89%88%E6%9C%AC%E8%BD%AF%E4%BB%B6%E5%8C%85">#Checkout旧版本软件包</a>.</div>
+<p>如果想在最新的版本进行编译，定期执行:
+</p>
+<pre>$ svn update
+</pre>
+<h3>
+<span id=".E4.BD.BF.E7.94.A8_Git_.E8.8E.B7.E5.8F.96_PKGBUILD"></span><span class="mw-headline" id="使用_Git_获取_PKGBUILD">使用 Git 获取 PKGBUILD</span>
+</h3>
+<p>先安装 <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> 软件包 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=asp">asp</a></span>。
+</p>
+<p>要获取某个软件包的 svntogit 仓库：
+</p>
+<pre>$ asp checkout <i>pkgname</i>
+</pre>
+<p>这个命令会将软件包的 git 仓库克隆到一个目录。
+</p>
+<p>要更新本地仓库，在仓库目录执行 <code>asp update</code>，然后执行 <code>git pull</code>.
+</p>
+<p>可以使用 git 的其它命令获取软件包的老版本，或记录自定也改动，详情请参考 <a href="../en/Git.html" title="Git">git</a> 页面。
+</p>
+<p>仅要获取某个软件包当前版本的快照，执行:
+</p>
+<pre>$ asp export <i>pkgname</i>
+</pre>
+<h3>
+<span id=".E6.9E.84.E5.BB.BA.E8.BD.AF.E4.BB.B6.E5.8C.85"></span><span class="mw-headline" id="构建软件包">构建软件包</span>
+</h3>
+<p>关于如何配置<i>makepkg</i>来从<a href="../zh-CN/PKGBUILD.html" title="PKGBUILD (简体中文)">PKGBUILD</a>构建软件包，请参考<a href="../zh-CN/Makepkg.html#%E9%85%8D%E7%BD%AE" title="Makepkg (简体中文)">makepkg (简体中文)#配置</a>。
+</p>
+<p>把<a href="../zh-CN/PKGBUILD.html" title="PKGBUILD (简体中文)">PKGBUILD</a>所在目录复制到新的位置。在新目录按需要进行修改。 并按照<a href="../zh-CN/Makepkg.html#%E4%BD%BF%E7%94%A8" title="Makepkg (简体中文)">makepkg (简体中文)#使用</a>来构建和安装软件包。
+</p>
+<h2>
+<span id=".E6.8A.80.E5.B7.A7"></span><span class="mw-headline" id="技巧">技巧</span>
+</h2>
+<h3>
+<span id=".E4.BF.9D.E7.95.99.E4.BF.AE.E6.94.B9.E8.BF.87.E7.9A.84.E8.BD.AF.E4.BB.B6.E5.8C.85"></span><span class="mw-headline" id="保留修改过的软件包">保留修改过的软件包</span>
+</h3>
+<p>Pacman 进行升级时会将修改后的软件包升级到仓库中的最新版本，可以通过下面方式避免这个行为：
+</p>
+<p>在 PKGBUILD 中将软件包加入 <code>modified</code> 组.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">PKGBUILD</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">groups=('modified') </pre>
+<p>然后将此组加入<code>/etc/pacman.conf</code> 的 <code>IgnoreGroup</code>：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/pacman.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">IgnoreGroup = modified</pre>
+<p>当系统生升级发现官方仓库中有新版本时，pacman会显示软件包因为在<i>IgnoreGroup</i>中而被忽略的提示，这时需要从 ABS 编译更新的软件包以防止部分升级。
+</p>
+<h3>
+<span id="Checkout.E6.97.A7.E7.89.88.E6.9C.AC.E8.BD.AF.E4.BB.B6.E5.8C.85"></span><span class="mw-headline" id="Checkout旧版本软件包">Checkout旧版本软件包</span>
+</h3>
+<p>在checkout<a href="#%E9%9D%9E%E9%80%92%E5%BD%92checkout">#非递归checkout</a>的SVN仓库目录 (即"packages"或"community") 中查看日志:
+</p>
+<pre>$ svn log <i>package-name</i>
+</pre>
+<p>从历史记录中找出要checkout的版本。例如要checkout版本<code>r1729</code>:
+</p>
+<pre>$ svn update -r1729 <i>package-name</i>
+</pre>
+<p>已存在的<i>package-name</i>目录会更新成指定版本。
+</p>
+<p>也可以指定一个日期，如果当天没有对应版本，svn会找出之前的最近版本。下面的例子checks out了2009-03-03的版本:
+</p>
+<pre>$ svn update -r'{20090303}' <i>package-name</i>
+</pre>
+<p>要checkout被移动到另一个仓库之前的包，只需查看日志，找到移动之前的日期或版本即可。
+</p>
+<h2>
+<span id=".E5.85.B6.E5.AE.83.E5.B7.A5.E5.85.B7"></span><span class="mw-headline" id="其它工具">其它工具</span>
+</h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/projects/pbget/">pbget</a> - 从web接口直接获取某个包的PKGBUILD，支持AUR.</li>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/falconindy/asp">asp</a> - 管理Arch Linux包构建源文件的工具。使用了git接口获取新的源。</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../zh-CN/Category:About_Arch.html" title="Category:About Arch (简体中文)">About Arch (简体中文)</a></li>
+<li><a href="../zh-CN/Category:Package_development.html" title="Category:Package development (简体中文)">Package development (简体中文)</a></li>
+<li><a href="../zh-CN/Category:Package_management.html" title="Category:Package management (简体中文)">Package management (简体中文)</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Arch_Build_System_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=646649">https://wiki.archlinux.org/index.php?title=Arch_Build_System_(简体中文)&amp;oldid=646649</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 26 December 2020, at 11:46.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

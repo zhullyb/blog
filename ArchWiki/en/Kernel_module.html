@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Kernel module - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Kernel_module rootpage-Kernel_module skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Kernel module</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/General_troubleshooting.html#Boot_problems" class="mw-redirect" title="Boot debugging">Boot debugging</a></li>
+<li><a href="../en/Kernel.html" class="mw-redirect" title="Kernels">Kernels</a></li>
+<li><a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel parameters</a></li>
+<li><a href="../en/Compile_kernel_module.html" title="Compile kernel module">Compile kernel module</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Loadable_kernel_module" class="extiw" title="wikipedia:Loadable kernel module">Kernel modules</a> are pieces of code that can be loaded and unloaded into the kernel upon demand. They extend the functionality of the kernel without the need to reboot the system. 
+</p>
+<p>To create a kernel module, you can read <a rel="nofollow" class="external text" href="https://tldp.org/LDP/lkmpg/2.6/html/index.html">The Linux Kernel Module Programming Guide</a>. A module can be configured as built-in or loadable. To dynamically load or remove a module, it has to be configured as a loadable module in the kernel configuration (the line related to the module will therefore display the letter <code>M</code>).
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Obtaining_information"><span class="tocnumber">1</span> <span class="toctext">Obtaining information</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Automatic_module_loading_with_systemd"><span class="tocnumber">2</span> <span class="toctext">Automatic module loading with systemd</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Manual_module_handling"><span class="tocnumber">3</span> <span class="toctext">Manual module handling</span></a></li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Setting_module_options"><span class="tocnumber">4</span> <span class="toctext">Setting module options</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Manually_at_load_time_using_modprobe"><span class="tocnumber">4.1</span> <span class="toctext">Manually at load time using modprobe</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Using_files_in_/etc/modprobe.d/"><span class="tocnumber">4.2</span> <span class="toctext">Using files in /etc/modprobe.d/</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Using_kernel_command_line"><span class="tocnumber">4.3</span> <span class="toctext">Using kernel command line</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Aliasing"><span class="tocnumber">5</span> <span class="toctext">Aliasing</span></a></li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Blacklisting"><span class="tocnumber">6</span> <span class="toctext">Blacklisting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Using_files_in_/etc/modprobe.d/_2"><span class="tocnumber">6.1</span> <span class="toctext">Using files in /etc/modprobe.d/</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Using_kernel_command_line_2"><span class="tocnumber">6.2</span> <span class="toctext">Using kernel command line</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12">
+<a href="#Troubleshooting"><span class="tocnumber">7</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13"><a href="#Modules_do_not_load"><span class="tocnumber">7.1</span> <span class="toctext">Modules do not load</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Obtaining_information">Obtaining information</span></h2>
+<p>Modules are stored in <code>/usr/lib/modules/<i>kernel_release</i></code>. You can use the command <code>uname -r</code> to get your current kernel release version.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Module names often use underscores (<code>_</code>) or dashes (<code>-</code>); however, those symbols are interchangeable when using the <code>modprobe</code> command and in configuration files in <code>/etc/modprobe.d/</code>.</div>
+<p>To show what kernel modules are currently loaded:
+</p>
+<pre>$ lsmod
+</pre>
+<p>To show information about a module:
+</p>
+<pre>$ modinfo <i>module_name</i>
+</pre>
+<p>To list the options that are set for a loaded module:
+</p>
+<pre>$ systool -v -m <i>module_name</i>
+</pre>
+<p>To display the comprehensive configuration of all the modules:
+</p>
+<pre>$ modprobe -c | less
+</pre>
+<p>To display the configuration of a particular module:
+</p>
+<pre>$ modprobe -c | grep <i>module_name</i>
+</pre>
+<p>List the dependencies of a module (or alias), including the module itself:
+</p>
+<pre>$ modprobe --show-depends <i>module_name</i>
+</pre>
+<h2><span class="mw-headline" id="Automatic_module_loading_with_systemd">Automatic module loading with systemd</span></h2>
+<p>Today, all necessary modules loading is handled automatically by <a href="../en/Udev.html" title="Udev">udev</a>, so if you do not need to use any out-of-tree kernel modules, there is no need to put modules that should be loaded at boot in any configuration file. However, there are cases where you might want to load an extra module during the boot process, or blacklist another one for your computer to function properly.
+</p>
+<p>Kernel modules can be explicitly listed in files under <code>/etc/modules-load.d/</code> for systemd to load them during boot. Each configuration file is named in the style of <code>/etc/modules-load.d/&lt;program&gt;.conf</code>. Configuration files simply contain a list of kernel modules names to load, separated by newlines. Empty lines and lines whose first non-whitespace character is <code>#</code> or <code>;</code> are ignored.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modules-load.d/virtio-net.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Load virtio_net.ko at boot
+virtio_net</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 5 modules-load.d"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/modules-load.d.5">modules-load.d(5)</a></span> for more details.
+</p>
+<h2><span class="mw-headline" id="Manual_module_handling">Manual module handling</span></h2>
+<p>Kernel modules are handled by tools provided by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=kmod">kmod</a></span> package. You can use these tools manually.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you have upgraded your kernel but have not yet rebooted, <i>modprobe</i> will fail with no error message and exit with code 1, because the path <code>/usr/lib/modules/$(uname -r)/</code> no longer exists. Check manually if this path exists when <i>modprobe</i> failed to determine if this is the case.</div>
+<p>To load a module:
+</p>
+<pre># modprobe <i>module_name</i>
+</pre>
+<p>To load a module by filename (i.e. one that is not installed in <code>/usr/lib/modules/$(uname -r)/</code>):
+</p>
+<pre># insmod filename [args]
+</pre>
+<p>To unload a module:
+</p>
+<pre># modprobe -r <i>module_name</i>
+</pre>
+<p>Or, alternatively:
+</p>
+<pre># rmmod <i>module_name</i>
+</pre>
+<h2><span class="mw-headline" id="Setting_module_options">Setting module options</span></h2>
+<p>To pass a parameter to a kernel module, you can pass them manually with modprobe or assure certain parameters are always applied using a modprobe configuration file or by using the kernel command line.
+</p>
+<h3><span class="mw-headline" id="Manually_at_load_time_using_modprobe">Manually at load time using modprobe</span></h3>
+<p>The basic way to pass parameters to a module is using the modprobe command. Parameters are specified on command line using simple <code><i>key=value</i></code> assignments:
+</p>
+<pre># modprobe <i>module_name parameter_name=parameter_value</i>
+</pre>
+<h3>
+<span id="Using_files_in_.2Fetc.2Fmodprobe.d.2F"></span><span class="mw-headline" id="Using_files_in_/etc/modprobe.d/">Using files in /etc/modprobe.d/</span>
+</h3>
+<p>Files in <code>/etc/modprobe.d/</code> directory can be used to pass module settings to <a href="../en/Udev.html" title="Udev">udev</a>, which will use <code>modprobe</code> to manage the loading of the modules during system boot. Configuration files in this directory can have any name, given that they end with the <code>.conf</code> extension. The syntax is:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/myfilename.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">options <i>module_name parameter_name=parameter_value</i></pre>
+<p>For example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/thinkfan.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># On ThinkPads, this lets the 'thinkfan' daemon control fan speed
+options thinkpad_acpi fan_control=1</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If any of the affected modules is loaded from the initramfs, then you will need to add the appropriate <code>.conf</code> file to <code>FILES</code> in <a href="../en/Mkinitcpio.html" class="mw-redirect" title="Mkinitcpio.conf">mkinitcpio.conf</a> or use the <code>modconf</code> <a href="../en/Mkinitcpio.html#HOOKS" class="mw-redirect" title="Mkinitcpio.conf">hook</a>, so that it will be included in the initramfs. To see the contents of the default initramfs use <code>lsinitcpio /boot/initramfs-linux.img</code>.</div>
+<h3><span class="mw-headline" id="Using_kernel_command_line">Using kernel command line</span></h3>
+<p>If the module is built into the kernel, you can also pass options to the module using the kernel command line. For all common bootloaders, the following syntax is correct:
+</p>
+<pre><i>module_name.parameter_name=parameter_value</i>
+</pre>
+<p>For example:
+</p>
+<pre>thinkpad_acpi.fan_control=1
+</pre>
+<p>Simply add this to your bootloader's kernel-line, as described in <a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel Parameters</a>.
+</p>
+<h2><span class="mw-headline" id="Aliasing">Aliasing</span></h2>
+<p>Aliases are alternate names for a module. For example: <code>alias my-mod really_long_modulename</code> means you can use <code>modprobe my-mod</code> instead of <code>modprobe really_long_modulename</code>. You can also use shell-style wildcards, so <code>alias my-mod* really_long_modulename</code> means that <code>modprobe my-mod-something</code> has the same effect. Create an alias:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/myalias.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">alias mymod really_long_module_name</pre>
+<p>Some modules have aliases which are used to automatically load them when they are needed by an application. Disabling these aliases can prevent automatic loading but will still allow the modules to be manually loaded.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/modprobe.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Prevent Bluetooth autoload
+alias net-pf-31 off</pre>
+<h2><span class="mw-headline" id="Blacklisting">Blacklisting</span></h2>
+<p>Blacklisting, in the context of kernel modules, is a mechanism to prevent the kernel module from loading. This could be useful if, for example, the associated hardware is not needed, or if loading that module causes problems: for instance there may be two kernel modules that try to control the same piece of hardware, and loading them together would result in a conflict.
+</p>
+<p>Some modules are loaded as part of the <a href="../en/Arch_boot_process.html#initramfs" class="mw-redirect" title="Initramfs">initramfs</a>. <code>mkinitcpio -M</code> will print out all automatically detected modules: to prevent the initramfs from loading some of those modules, blacklist them in a <i>.conf</i> file under <code>/etc/modprobe.d</code> and it shall be added in by the <code>modconf</code> hook during image generation. Running <code>mkinitcpio -v</code> will list all modules pulled in by the various hooks (e.g. <code>filesystems</code> hook, <code>block</code> hook, etc.). Remember to add that <i>.conf</i> file to the <code>FILES</code> array in <code>/etc/mkinitcpio.conf</code> if you do not have the <code>modconf</code> hook in your <code>HOOKS</code> array (e.g. you have deviated from the default configuration), and once you have blacklisted the modules <a href="../en/Mkinitcpio.html#Image_creation_and_activation" class="mw-redirect" title="Regenerate the initramfs">regenerate the initramfs</a>, and reboot afterwards.
+</p>
+<h3>
+<span id="Using_files_in_.2Fetc.2Fmodprobe.d.2F_2"></span><span class="mw-headline" id="Using_files_in_/etc/modprobe.d/_2">Using files in /etc/modprobe.d/</span>
+</h3>
+<p>Create a <code>.conf</code> file inside <code>/etc/modprobe.d/</code> and append a line for each module you want to blacklist, using the <code>blacklist</code> keyword. If for example you want to prevent the <code>pcspkr</code> module from loading:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/nobeep.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Do not load the 'pcspkr' module on boot.
+blacklist pcspkr</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>blacklist</code> command will blacklist a module so that it will not be loaded automatically, but the module may be loaded if another non-blacklisted module depends on it or if it is loaded manually.
+<p>However, there is a workaround for this behaviour; the <code>install</code> command instructs modprobe to run a custom command instead of inserting the module in the kernel as normal, so you can force the module to always fail loading with:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/modprobe.d/blacklist.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+install <i>module_name</i> /bin/true
+...</pre>
+This will effectively blacklist that module and any other that depends on it.</div>
+<h3><span class="mw-headline" id="Using_kernel_command_line_2">Using kernel command line</span></h3>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> This can be very useful if a broken module makes it impossible to boot your system.</div>
+<p>You can also blacklist modules from the bootloader.
+</p>
+<p>Simply add <code>module_blacklist=modname1,modname2,modname3</code> to your bootloader's kernel line, as described in <a href="../en/Kernel_parameters.html" title="Kernel parameters">Kernel parameters</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> When you are blacklisting more than one module, note that they are separated by commas only. Spaces or anything else might presumably break the syntax.</div>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="Modules_do_not_load">Modules do not load</span></h3>
+<p>In case a specific module does not load and the boot log (accessible with <code>journalctl -b</code>) says that the module is blacklisted, but the directory <code>/etc/modprobe.d/</code> does not show a corresponding entry, check another modprobe source folder at <code>/usr/lib/modprobe.d/</code> for blacklisting entries.
+</p>
+<p>A module will not be loaded if the "vermagic" string contained within the kernel module does not match the value of the currently running kernel. If it is known that the module is compatible with the current running kernel the "vermagic" check can be ignored with <code>modprobe --force-vermagic</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Ignoring the version checks for a kernel module can cause a kernel to crash or a system to exhibit undefined behavior due to incompatibility. Use <code>--force-vermagic</code> only with the utmost caution.</div>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a href="../en/PC_speaker.html" class="mw-redirect" title="Disable PC speaker beep">Disable PC speaker beep</a></li>
+<li>
+<a rel="nofollow" class="external text" href="https://lwn.net/Articles/391230/">Writing a WMI driver</a> - an LWM introduction</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+<li><a href="../en/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting">Hardware detection and troubleshooting</a></li>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Kernel_module&amp;oldid=637992">https://wiki.archlinux.org/index.php?title=Kernel_module&amp;oldid=637992</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 14 October 2020, at 00:12.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

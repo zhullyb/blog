@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>NanoPi NEO Plus2 - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-NanoPi_NEO_Plus2 rootpage-NanoPi_NEO_Plus2 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">NanoPi NEO Plus2</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>NanoPi NEO Plus2 is a minimalist computer built for the <a href="https://en.wikipedia.org/wiki/ARMv8-A" class="extiw" title="wikipedia:ARMv8-A">ARMv8-A architecture</a>. <a rel="nofollow" class="external text" href="http://wiki.friendlyarm.com/wiki/index.php/NanoPi_NEO_Plus2">More information about this project</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The device is not officially supported by the ALARM project, i.e. please refrain from submitting patches, feature requests or bug reports for it.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Boot_order"><span class="tocnumber">1.1</span> <span class="toctext">Boot order</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Using_stock_kernel"><span class="tocnumber">1.2</span> <span class="toctext">Using stock kernel</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Compiling_custom_kernel"><span class="tocnumber">1.3</span> <span class="toctext">Compiling custom kernel</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Fixing_WIFI_support"><span class="tocnumber">1.4</span> <span class="toctext">Fixing WIFI support</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<h3><span class="mw-headline" id="Boot_order">Boot order</span></h3>
+<p>The NanoPi will try to boot from SD-card and, if not available, it will boot from eMMC. Booting from SD-card is usefull to recover the device.
+</p>
+<h3><span class="mw-headline" id="Using_stock_kernel">Using stock kernel</span></h3>
+<p>A simple way to boot archlinux in the NanoPi is to first install the official image by following the instruction at <a rel="nofollow" class="external free" href="http://wiki.friendlyarm.com/wiki/index.php/NanoPi_NEO_Plus2#Install_OS">http://wiki.friendlyarm.com/wiki/index.php/NanoPi_NEO_Plus2#Install_OS</a> and then reuse existing kernel image, modules, and uboot to boot archlinux. After installing the stock image, archlinux can be installed as follows.
+</p>
+<p>Insert the SD-card with stock image into a linux pc. The following instructions suppose that it's root fs is located at /dev/sdc2, whereas the uboot partition is localted at /dev/sdc1.
+</p>
+<p>Backup the original modules:
+</p>
+<pre> # mount /dev/sdc2 /mnt
+ # bsdtar -czf orig_modules.tar.gz -C /mnt /lib/modules /lib/modprobe.d
+</pre>
+<p>Also backup some firmware modules, they will be needed to fix WIFI support.
+</p>
+<pre> # bsdtar -czf orig_firmware.tar.gz -C /lib/firmware brcm ap6212
+</pre>
+<p>Download the generic archlinux armv8 image from  <a rel="nofollow" class="external free" href="https://archlinuxarm.org/platforms/armv8/generic">https://archlinuxarm.org/platforms/armv8/generic</a> . Then unpack it:
+</p>
+<pre> # umount /dev/sdc2
+ # mkfs.ext4 /dev/sdc2 # add -f to force overwrite of existing fs
+ # mount /dev/sdc2 /mnt
+ # bsdtar -xpf ArchLinuxARM-aarch64-latest.tar.gz -C /mnt
+</pre>
+<p>Unpack the original modules
+</p>
+<pre> # rm -rf /mnt/lib/modules /mnt/lib/modprobe.d
+ # bsdtar -xpf orig_modules.tar.gz -C /mnt
+</pre>
+<p>Clean the boot partition:  
+</p>
+<pre> # rm -rf /mnt/boot/*
+</pre>
+<p>Populate the fstab:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/mnt/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># &lt;file system&gt; &lt;dir&gt; &lt;type&gt; &lt;options&gt; &lt;dump&gt; &lt;pass&gt;
+/dev/mmcblk0p2       /               ext4            rw,relatime,data=ordered,noatime   0 1
+tmpfs   /tmp         tmpfs   nodev,nosuid            0  0
+/dev/mmcblk0p1       /boot           vfat            rw,defaults 0 1
+</pre>
+<p>Insert the SD-card into the NanoPi and it should now boot the stock linux kernel with archlinux.
+</p>
+<h3><span class="mw-headline" id="Compiling_custom_kernel">Compiling custom kernel</span></h3>
+<p>Full instructions for cross compilation are available at <a rel="nofollow" class="external free" href="http://wiki.friendlyarm.com/wiki/index.php/Building_U-boot_and_Linux_for_H5/H3/H2%2B#How_to_Compile_Mainline_BSP_for_H5">http://wiki.friendlyarm.com/wiki/index.php/Building_U-boot_and_Linux_for_H5/H3/H2%2B#How_to_Compile_Mainline_BSP_for_H5</a> .
+</p>
+<p>Another option is to compile the kernel on the NanoPi itself:
+</p>
+<pre> $ git clone <a rel="nofollow" class="external free" href="https://github.com/friendlyarm/linux.git">https://github.com/friendlyarm/linux.git</a> -b sunxi-4.x.y --depth 1
+ $ cd linux
+ $ touch .scmversion
+ $ make sunxi_arm64_defconfig ARCH=arm64
+ $ make -j4 Image dtbs ARCH=arm64
+</pre>
+<p>Then install the new kernel manually:
+</p>
+<pre> # cp arch/arm64/boot/Image /boot/Image
+ # cp arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi*.dtb /boot/
+ # make modules_install INSTALL_MOD_PATH=/
+</pre>
+<h3><span class="mw-headline" id="Fixing_WIFI_support">Fixing WIFI support</span></h3>
+<p>When the wifi interface disappears, the following messages are printed in dmesg:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">dmesg</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[   12.020670] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac43430a1-sdio.bin for chip 0x00a9a6(43430) rev 0x000001
+[   12.039285] brcmfmac mmc2:0001:1: Direct firmware load for brcm/brcmfmac43430a1-sdio.bin failed with error -2
+[   13.081285] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+[   13.081285] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+</pre>
+<p>In order to fix this, the stock wifi firmware must be used.
+</p>
+<p>Upload the firmware modules to the NanoPi:
+</p>
+<pre> $ scp orig_firmware.tar.gz alarm@nanopi_ip:
+</pre>
+<p>On NanoPi, unpack them:
+</p>
+<pre> # bsdtar -xpf orig_firmware.tar.gz -C /lib/firmware
+</pre>
+<p>After reboot, the wifi interface should appear and work again.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:ARM_architecture.html" title="Category:ARM architecture">ARM architecture</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=NanoPi_NEO_Plus2&amp;oldid=557293">https://wiki.archlinux.org/index.php?title=NanoPi_NEO_Plus2&amp;oldid=557293</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 25 November 2018, at 16:25.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

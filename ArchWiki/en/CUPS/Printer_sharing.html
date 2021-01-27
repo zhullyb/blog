@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>CUPS/Printer sharing - ArchWiki</title>
+<link rel="stylesheet" href="../../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-CUPS_Printer_sharing rootpage-CUPS skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">CUPS/Printer sharing</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../../en/CUPS.html" title="CUPS">CUPS</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../../en/Samba.html" title="Samba">Samba</a></li>
+<li><a href="../../en/CUPS.html" title="CUPS">CUPS</a></li>
+</ul>
+</div>
+<p>This article contains instruction on sharing printers from a GNU/Linux system.
+</p>
+<table class="wikitable sortable">
+<caption>Client support
+</caption>
+<tbody>
+<tr>
+<th>Protocol
+</th>
+<th>Linux
+</th>
+<th>Windows
+</th>
+<th>macOS
+</th>
+</tr>
+<tr>
+<th>
+<a href="https://en.wikipedia.org/wiki/Zero-configuration_networking#DNS-based_service_discovery" class="extiw" title="wikipedia:Zero-configuration networking">Discovery (DNS-SD/mDNS)</a>
+</th>
+<td>
+<a href="../../en/CUPS.html" title="CUPS">CUPS</a> with <a href="../../en/Avahi.html" title="Avahi">Avahi</a>
+</td>
+<td>Native support since <a rel="nofollow" class="external text" href="https://www.ctrl.blog/entry/windows-mdns-dnssd.html">Windows 10</a>
+</td>
+<td>Bonjour
+</td>
+</tr>
+<tr>
+<th>
+<a href="https://en.wikipedia.org/wiki/Internet_Printing_Protocol" class="extiw" title="wikipedia:Internet Printing Protocol">Internet Printing Protocol</a>
+</th>
+<td>
+<a href="../../en/CUPS.html" title="CUPS">CUPS</a>
+</td>
+<td>
+<i>Control Panel &gt; Programs &gt; Turn Windows features on or off &gt; Print and Document Services &gt; Internet Printing Client</i>
+</td>
+<td>Native support
+</td>
+</tr>
+<tr>
+<th>
+<a href="https://en.wikipedia.org/wiki/Server_Message_Block" class="extiw" title="wikipedia:Server Message Block">SMB</a> shared printer
+</th>
+<td>
+<a href="../../en/Samba.html" title="Samba">Samba</a> with <a href="../../en/CUPS.html" title="CUPS">CUPS</a>
+</td>
+<td>Native support
+</td>
+<td>Native support
+</td>
+</tr>
+<tr>
+<th>
+<a href="https://en.wikipedia.org/wiki/Line_Printer_Daemon_protocol" class="extiw" title="wikipedia:Line Printer Daemon protocol">Line Printer Daemon protocol</a>
+</th>
+<td>
+<a href="../../en/CUPS.html" title="CUPS">CUPS</a>
+</td>
+<td>
+<i>Control Panel &gt; Programs &gt; Turn Windows features on or off &gt; Print services &gt;</i><br><i>LPD Print Service</i> and <i>LPR Port Monitor</i>
+</td>
+<td>Native support
+</td>
+</tr>
+</tbody>
+</table>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Creating_class_for_multiple_printers"><span class="tocnumber">1</span> <span class="toctext">Creating class for multiple printers</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Printer_sharing"><span class="tocnumber">2</span> <span class="toctext">Printer sharing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#DNS-SD_advertisement"><span class="tocnumber">2.1</span> <span class="toctext">DNS-SD advertisement</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Sharing_via_Internet_Printing_Protocol"><span class="tocnumber">2.2</span> <span class="toctext">Sharing via Internet Printing Protocol</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Sharing_via_Samba"><span class="tocnumber">2.3</span> <span class="toctext">Sharing via Samba</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Sharing_via_Line_Printer_Daemon_protocol"><span class="tocnumber">2.4</span> <span class="toctext">Sharing via Line Printer Daemon protocol</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Remote_administration"><span class="tocnumber">3</span> <span class="toctext">Remote administration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Kerberos"><span class="tocnumber">3.1</span> <span class="toctext">Kerberos</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Cannot_print_with_GTK_applications"><span class="tocnumber">4.1</span> <span class="toctext">Cannot print with GTK applications</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Permission_errors_on_Windows"><span class="tocnumber">4.2</span> <span class="toctext">Permission errors on Windows</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#Other_operating_systems"><span class="tocnumber">5</span> <span class="toctext">Other operating systems</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Creating_class_for_multiple_printers">Creating class for multiple printers</span></h2>
+<p>In CUPS, a class is a group of printers which appears to clients as a single printer. When a client selects to print to the class, CUPS selects any printer in the group to accept the print job. This may be especially useful when one printer from the class must be removed. If it is excluded from the class, end users will not notice any change because the print job will be queued to another printer in the class. Creating and managing classes can be done from CUPS Web GUI.
+</p>
+<h2><span class="mw-headline" id="Printer_sharing">Printer sharing</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> List ports which need to be opened in the firewall.<a rel="nofollow" class="external autonumber" href="https://www.cups.org/doc/firewalls.html">[1]</a> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:CUPS/Printer_sharing">Talk:CUPS/Printer sharing#</a>)</div>
+</div>
+<h3><span class="mw-headline" id="DNS-SD_advertisement">DNS-SD advertisement</span></h3>
+<p>To announce the printer to the network over DNS-SD/mDNS (Bonjour in Apple world), <a href="../../en/Avahi.html" title="Avahi">Avahi</a> must be installed and running on the server.
+</p>
+<p>To enable it, either select <i>Share printers connected to this system</i> in the web interface, or manually set <code>Browsing On</code> in <code>/etc/cups/cupsd.conf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cups/cupsd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+Browsing On
+...
+</pre>
+<p>Afterwards <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>cups.service</code>.
+</p>
+<p>Note that "browsing" at the print server is a different thing from "browsing" at a remote networked host.  On the print server, <code>cupsd</code> provides the DNS-SD protocol support which the <code>avahi-daemon</code> broadcasts.  The <code>cups-browsed</code> service is unnecessary on the print server, unless also broadcasting the old CUPS protocol, or the print server is also "browsing" for other networked printers.  On the remote networked host, the <code>cups-browsed</code> service is <i>required</i> to "browse" for network broadcasts of print services, and running <code>cups-browsed</code> will also automatically start <code>cupsd</code>.
+</p>
+<p>The <code>cups.service</code> service will be automatically started when a USB printer is plugged in, however this may not be the case for other connection types. If <code>cups.service</code> is not running, <code>avahi-daemon</code> does not broadcast the print services, so in that case the systemd unit service file must be modified to start on boot, and then the service must again be "enabled/installed" with the new dependency. To do this, <a href="../../en/Systemd.html#Editing_provided_units" class="mw-redirect" title="Edit">edit</a> the service file <code>[Install]</code> section to add a <code>WantedBy=default.target</code> dependency, and then <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> the <code>cups.service</code> service.
+</p>
+<h3><span class="mw-headline" id="Sharing_via_Internet_Printing_Protocol">Sharing via Internet Printing Protocol</span></h3>
+<p>The server can be configured using either the web interface or by manually editing <code>/etc/cups/cupsd.conf</code>.
+</p>
+<p>Open up the web interface to the server, select the <i>Administration</i> tab, look under the <i>Server</i> heading, and enable the "Share printers connected to this system" option. Save your change by clicking on the <i>Change Settings</i> button. The server will automatically restart.
+</p>
+<p>On the server computer (the one directly connected to the printer), allow access to the server by modifying the location directive. For instance:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cups/cupsd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">&lt;Location /&gt;
+    Order allow,deny
+    Allow localhost
+    Allow 192.168.0.*
+&lt;/Location&gt;
+...
+</pre>
+<p>Also make sure the server is listening on the IP address the client will use:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/cups/cupsd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">...
+Listen &lt;hostname&gt;:631
+...
+</pre>
+<p>There are more configuration possibilities, including automatic methods, which are described in detail in <a rel="nofollow" class="external text" href="https://www.cups.org/doc/network.html">Using Network Printers</a> and <span class="plainlinks archwiki-template-man" title="$ man 5 cupsd.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/cupsd.conf.5">cupsd.conf(5)</a></span>.
+</p>
+<p>After making any modifications, <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>cups.service</code>.
+</p>
+<p>If CUPS is started using socket activation, create a <a href="../../en/Systemd.html#Editing_provided_units" class="mw-redirect" title="Drop-in snippet">drop-in snippet</a> for <code>cups.socket</code> so that socket activation also works for remote connections:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/org.cups.cupsd.socket.d/override.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Socket]
+ListenStream=631</pre>
+<h3><span class="mw-headline" id="Sharing_via_Samba">Sharing via Samba</span></h3>
+<p><a href="../../en/Samba.html" title="Samba">Samba</a> is an implementation of the Windows file and printer sharing protocols, even the most vintage ones.
+</p>
+<p>To configure Samba on the Linux server, edit <code>/etc/samba/smb.conf</code> file to allow access to printers. File <code>smb.conf</code> can look something like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[global]
+...
+printing = CUPS
+...
+
+[printers]
+    comment = All Printers
+    path = /var/spool/samba
+    browseable = yes
+    # to allow user 'guest account' to print.
+    guest ok = no
+    writable = no
+    printable = yes
+    create mode = 0700
+    write list = root @adm @wheel <i>yourusername</i></pre>
+<p>That should be enough to share the printer, yet adding an individual printer entry may be desirable:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[ML1250]
+    comment = Samsung ML-1250 Laser Printer
+    printer = ml1250
+    path = /var/spool/samba
+    printing = cups
+    printable = yes
+    user client driver = yes
+    # to allow user 'guest account' to print.
+    guest ok = no
+    writable = no
+    write list = root @adm @wheel <i>yourusername</i>
+    valid users = root @adm @wheel <i>yourusername</i></pre>
+<p>Please note that this assumes configuration was made so that users must have a valid account to access the printer. To have a public printer, set <code>guest ok</code> to <code>yes</code>, and remove the <code>valid users</code> line. To add accounts, set up a regular GNU/Linux account and then set up a Samba password on the server. See <a href="../../en/Samba.html#User_Management" title="Samba">Samba#User Management</a>.
+</p>
+<p>After this, <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>smb.service</code> and <code>nmb.service</code>.
+</p>
+<p>See Samba's documentation <a rel="nofollow" class="external text" href="https://wiki.samba.org/index.php/Setting_up_Samba_as_a_Print_Server">Setting up Samba as a Print Server</a> for more details.
+</p>
+<h3><span class="mw-headline" id="Sharing_via_Line_Printer_Daemon_protocol">Sharing via Line Printer Daemon protocol</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> <i>cups-lpd</i> does not perform any access control based on the settings in <code>/etc/cups/cupsd.conf</code>. Therefore, running <i>cups-lpd</i> on your server will allow any computer on your network (and perhaps the entire Internet) to print to your server.</div>
+<p><a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">Enable</a> and <a href="../../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>org.cups.cups-lpd.socket</code>.
+</p>
+<h2><span class="mw-headline" id="Remote_administration">Remote administration</span></h2>
+<p>Once the server is set up as described in <a href="#Printer_sharing">#Printer sharing</a>, it can also be configured so that it can be remotely administered. Add the allowed hosts to the <code>&lt;Location /admin&gt;</code> block in <code>/etc/cups/cupsd.conf</code>, using the same syntax as described in <a href="#Sharing_via_Internet_Printing_Protocol">#Sharing via Internet Printing Protocol</a>. Note that three levels of access can be granted:
+</p>
+<pre>&lt;Location /&gt;           #access to the server
+&lt;Location /admin&gt;	#access to the admin pages
+&lt;Location /admin/conf&gt;	#access to configuration files
+</pre>
+<p>To give remote hosts access to one of these levels, add an <code>Allow</code> statement to that level's section. An <code>Allow</code> statement can take one or more of the forms listed below:
+</p>
+<pre>Allow from all
+Allow from host.domain.com
+Allow from *.domain.com
+Allow from ip-address
+Allow from ip-address/netmask
+Allow from @LOCAL
+</pre>
+<p>Deny statements can also be used. For example, to give full access to all hosts on your local network interfaces, edit <code>/etc/cups/cupsd.conf</code> to include this:
+</p>
+<pre># Restrict access to the server...
+# By default only localhost connections are possible
+&lt;Location /&gt;
+   Order allow,deny
+   <b>Allow from @LOCAL</b>
+&lt;/Location&gt;
+
+# Restrict access to the admin pages...
+&lt;Location /admin&gt;
+   Order allow,deny
+   <b>Allow from @LOCAL</b>
+&lt;/Location&gt;
+
+# Restrict access to configuration files...
+&lt;Location /admin/conf&gt;
+   AuthType Basic
+   Require user @SYSTEM
+   Order allow,deny
+   <b>Allow from @LOCAL</b>
+&lt;/Location&gt;
+</pre>
+<p>You might also need to disable the HTTPS requirement, when using the default self-signed certificate generated by CUPS:
+</p>
+<pre>DefaultEncryption IfRequested
+</pre>
+<p>This should avoid the error: 426 - Upgrade Required when using the CUPS web interface from a remote machine.
+</p>
+<h3><span class="mw-headline" id="Kerberos">Kerberos</span></h3>
+<p><a href="../../en/Kerberos.html" title="Kerberos">Kerberos</a> can be used to authenticate users accessing a remote CUPS server. This assumes that your machine has a keytab and it will need a ticket for "HTTP". Instead of using <code>http://localhost:631</code> you must use <code>https://host.example.co.uk:631</code> - encryption is required for auth (hence https) and the full hostname is needed so that Kerberos/Negotiate can work. In addition, the server must be configured in <code>/etc/cups/cupsd.conf</code> to use a <code>DefaultAuthType</code> of <code>Negotiate</code>.
+</p>
+<p>If you are using <a href="../../en/Samba.html" title="Samba">Samba</a>'s winbind NSS support, you can add an AD group name to <code>/etc/cups/cups-files.conf</code> - in the following example <code>sysadmin</code> might be an AD group: 
+</p>
+<pre>SystemGroup sys root sysadmin
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>See <a href="../../en/CUPS/Troubleshooting.html" title="CUPS/Troubleshooting">CUPS/Troubleshooting</a> for general troubleshooting tips.
+</p>
+<h3><span class="mw-headline" id="Cannot_print_with_GTK_applications">Cannot print with GTK applications</span></h3>
+<p>If you get a <i>getting printer information failed</i> message when you try to print from GTK applications, add this line to your <code>/etc/hosts</code>:
+</p>
+<pre>serverip 	some.name.org 	ServersHostname
+</pre>
+<h3><span class="mw-headline" id="Permission_errors_on_Windows">Permission errors on Windows</span></h3>
+<p>Some users fixed <code>NT_STATUS_ACCESS_DENIED</code> (Windows clients) errors by using a slightly different syntax:
+</p>
+<pre>smb://workgroup/username:password@hostname/printer_name
+</pre>
+<h2><span class="mw-headline" id="Other_operating_systems">Other operating systems</span></h2>
+<p>More information on interfacing CUPS with other printing systems can be found in the CUPS manual, e.g. on <a rel="nofollow" class="external free" href="http://localhost:631/help/network.html">http://localhost:631/help/network.html</a>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../../en/Category:Printers.html" title="Category:Printers">Printers</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=CUPS/Printer_sharing&amp;oldid=642183">https://wiki.archlinux.org/index.php?title=CUPS/Printer_sharing&amp;oldid=642183</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 November 2020, at 08:48.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

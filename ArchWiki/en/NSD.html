@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>NSD - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-NSD rootpage-NSD skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">NSD</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://www.nlnetlabs.nl/projects/nsd/">NSD</a> is "an authoritative only, high performance, simple and open source name server."
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Migration_to_nsd_for_bind_users"><span class="tocnumber">2</span> <span class="toctext">Migration to nsd for bind users</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Initial_setup"><span class="tocnumber">3</span> <span class="toctext">Initial setup</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Starting_and_running_nsd"><span class="tocnumber">4</span> <span class="toctext">Starting and running nsd</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Testing_nsd"><span class="tocnumber">5</span> <span class="toctext">Testing nsd</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Configuring_unbound"><span class="tocnumber">6</span> <span class="toctext">Configuring unbound</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#WAN_facing_dns"><span class="tocnumber">7</span> <span class="toctext">WAN facing dns</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nsd">nsd</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Migration_to_nsd_for_bind_users">Migration to nsd for bind users</span></h2>
+<p>Once the package is installed there are useful migration notes for users who currently run bind as their dns server in the file:
+</p>
+<pre>/usr/share/doc/nsd/NSD-FOR-BIND-USERS
+</pre>
+<p>Many users will wish to run nsd as their authoritative dns server concurrently with unbound as the validating, recursive, caching dns server on a single machine. It may be useful to refer to the wiki page for <a href="../en/Unbound.html" title="Unbound">unbound</a>.
+</p>
+<h2><span class="mw-headline" id="Initial_setup">Initial setup</span></h2>
+<p>Most likely you will run nsd with a DNS caching servers such as <a href="../en/Unbound.html" title="Unbound">Unbound</a>. So, to avoid void conflicts, this configuration use port 53530 for nsd, since port 53 is used by the DNS caching server. nsd will listen for requests on <i>localhost</i>. Additionally, the only firewall port that then needs to be open for dns queries coming from external machines (or other machines on the same local network) is port 53.
+</p>
+<p>When installed, a commented sample configuration file is placed at <code>/etc/nsd/nsd.conf.sample</code>. Below is a minimal working example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nsd/nsd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server:
+    server-count: 1
+    ip-address: 127.0.0.1
+    port: 53530
+    do-ip4: yes
+    hide-version: yes
+    identity: "Home network authoritative DNS"
+    zonesdir: "//etc/nsd"
+key:
+    name: "<i>keyname</i>"
+    algorithm: hmac-md5
+    secret: "<i>secretkey</i>"
+zone:
+    name: "<i>example.com</i>"
+    zonefile: "<i>example.com.zone</i>"
+</pre>
+<p>See <a rel="nofollow" class="external autonumber" href="https://calomel.org/nsd_dns.html">[1]</a> for more examples.
+</p>
+<h2><span class="mw-headline" id="Starting_and_running_nsd">Starting and running nsd</span></h2>
+<p>Before starting up nsd you can check the zone files using the <i>nsd-checkconf</i> command with the zone file name as a parameter.
+</p>
+<p>In order to build the zone database that makes nsd run exceptionally quickly the database file must be rebuilt each time a zone or config file is changed, and the following command is executed:
+</p>
+<pre># nsd-control reload
+</pre>
+<p>In order to start nsd, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> the <code>nsd.service</code> systemd service.
+</p>
+<h2><span class="mw-headline" id="Testing_nsd">Testing nsd</span></h2>
+<p>nsd can be run concurrently with bind during the testing phase. You can check forward and reverse local lookups on the port at 53530 using:
+</p>
+<pre>drill @127.0.0.1 -p 53530 mylocalmachine1.myhomenet.com
+drill @127.0.0.1 -p 53530 -x w.x.y.z
+</pre>
+<p>where w.x.y.z is a local address within the LAN.
+</p>
+<h2><span class="mw-headline" id="Configuring_unbound">Configuring unbound</span></h2>
+<p>Once this is working then if you are running <a href="../en/Unbound.html" title="Unbound">unbound</a> as the caching recursive server then you can switch the unbound configuration to forward queries from local machines on the same network to query nsd by using the following structure in unbound.conf (and see <a href="../en/Unbound.html" title="Unbound">unbound</a>), where it is assumed that nsd is listening to port 53530:
+</p>
+<pre>do-not-query-localhost: no
+local-zone: "<i>example.com</i>" nodefault
+domain-insecure: "<i>example.com</i>"
+</pre>
+<pre>stub-zone:
+       name: "<i>example.com</i>"
+       stub-addr: 127.0.0.1@53530
+</pre>
+<p>Once the unbound.conf contains the above then restart unbound and check that local queries for the nsd zone entries works.  Once it is all tested then you can switch unbound to listen on both 127.0.0.1 as well as on the external interface for the local network by having the lines in unbound.conf including:
+</p>
+<pre>   interface: 127.0.0.1
+   interface: 10.0.0.1
+</pre>
+<p>where 10.0.0.1 is the ip address of the dns server running both nsd and unbound and providing local dns for other machines on the 10.x.x.x network.
+</p>
+<p>The examples here all assume that only ipv4 is being used. Corresponding configurations for ipv6 should be included where necessary, and further details on the parameters for that can be found in the man files for the two packages as well as examples that can be found with web searches.
+</p>
+<h2><span class="mw-headline" id="WAN_facing_dns">WAN facing dns</span></h2>
+<p>It is also possible to change the configuration files and interfaces on which the server is listening so that dns queries from machines outside of the local network can access specific machines within the LAN. This is useful for web and mail servers which are accessible from anywhere, and the same techniques can be employed as has been achieved using bind for many years, in combination with appropriate port forwarding in the network firewall machines, to allow incoming requests to access the correct machine.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Domain_Name_System.html" title="Category:Domain Name System">Domain Name System</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=NSD&amp;oldid=576890">https://wiki.archlinux.org/index.php?title=NSD&amp;oldid=576890</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 July 2019, at 23:36.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

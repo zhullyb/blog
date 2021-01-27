@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>DSDT - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-DSDT rootpage-DSDT skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">DSDT</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/ACPI_modules.html" title="ACPI modules">ACPI modules</a></li>
+<li><a href="../en/Acpid.html" title="Acpid">acpid</a></li>
+</ul>
+</div>
+<p>DSDT (Differentiated System Description Table) is a part of the <a href="https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface" class="extiw" title="wikipedia:Advanced Configuration and Power Interface">ACPI</a> specification. It supplies information about supported power events in a given system. ACPI tables are provided in firmware from the manufacturer. A common Linux problem is missing ACPI functionality, such as: fans not running, screens not turning off when the lid is closed, etc.  This can stem from DSDTs made with Windows specifically in mind, which can be patched after installation. The goal of this article is to analyze and rebuild a faulty DSDT, so that the kernel can override the default one.
+</p>
+<p>Basically a DSDT table is the code run on ACPI (Power Management) events.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The goal of the <a rel="nofollow" class="external text" href="https://01.org/linux-acpi">Linux ACPI</a> project is that Linux should work on unmodified firmware.  If you still find this type of workaround necessary on modern kernels then you should consider <a href="../en/Bug_reporting_guidelines.html" class="mw-redirect" title="Reporting bug guidelines">submitting a bug report</a>. </div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Before_you_start..."><span class="tocnumber">1</span> <span class="toctext">Before you start...</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Tell_the_kernel_to_report_a_version_of_Windows"><span class="tocnumber">1.1</span> <span class="toctext">Tell the kernel to report a version of Windows</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Find_a_fixed_DSDT"><span class="tocnumber">1.2</span> <span class="toctext">Find a fixed DSDT</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Recompiling_it_yourself"><span class="tocnumber">2</span> <span class="toctext">Recompiling it yourself</span></a></li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Using_modified_code"><span class="tocnumber">3</span> <span class="toctext">Using modified code</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Using_a_CPIO_archive"><span class="tocnumber">3.1</span> <span class="toctext">Using a CPIO archive</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Compiling_into_the_kernel"><span class="tocnumber">3.2</span> <span class="toctext">Compiling into the kernel</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Verify_successful_override"><span class="tocnumber">4</span> <span class="toctext">Verify successful override</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Before_you_start...">Before you start...</span></h2>
+<ul>
+<li>It is possible that the hardware manufacturer has released an updated firmware which fixes ACPI related problems.  Installing an updated firmware is often preferred over this method because it would avoid duplication of effort.</li>
+<li>This process does tamper with some fairly fundamental code on your installation. You will want to be absolutely sure of the changes you make. You might also wish to <a href="../en/Disk_cloning.html" title="Disk cloning">clone your disk</a> beforehand.</li>
+<li>Even before attempting to fix your DSDT yourself, you can attempt a couple of different shortcuts:</li>
+</ul>
+<h3><span class="mw-headline" id="Tell_the_kernel_to_report_a_version_of_Windows">Tell the kernel to report a version of Windows</span></h3>
+<p>Use the variable <b>acpi_os_name</b> as a kernel parameter. For example:
+</p>
+<pre> acpi_os_name="Microsoft Windows NT"
+</pre>
+<p>Or
+</p>
+<pre> acpi_osi="!Windows2012"
+</pre>
+<p>appended to the kernel line in grub legacy configuration
+</p>
+<p>other strings to test:
+</p>
+<ul>
+<li>"Microsoft Windows XP"</li>
+<li>"Microsoft Windows 2000"</li>
+<li>"Microsoft Windows 2000.1"</li>
+<li>"Microsoft Windows ME: Millennium Edition"</li>
+<li>"Windows 2001"</li>
+<li>"Windows 2006"</li>
+<li>"Windows 2009"</li>
+<li>"Windows 2012"</li>
+<li>when all that fails, you can even try "Linux"</li>
+</ul>
+<p>Out of curiousity, you can follow the steps below to extract your DSDT and search the .dsl file.  Just grep for "Windows" and see what pops up.
+</p>
+<h3><span class="mw-headline" id="Find_a_fixed_DSDT">Find a fixed DSDT</span></h3>
+<p>A DSDT file is originally written in ACPI Source language (an .asl/.dsl file). Using a compiler this can produce an 'ACPI Machine Language' file (.aml) or a hex table (.hex). To incorporate the file in your Arch install, you will need to get hold of a compiled .aml file. - whether this means compiling it yourself or trusting some stranger on the Internet is at your discretion.  If you do download a file from the world wide web, it will most likely be a compressed .asl file.  So you will need to unzip it and compile it. The upside to this is that you won't have to research specific code fixes yourself.
+</p>
+<p>Arch users with the same laptop as you are: a minority of a minority of a minority. Try browsing other distro/linux forums for talk about the same model. Likelihood is that they have the same problems and either because there is a lot of them, or because they're tech savvy -- someone there has produced a working DSDT and maybe even provides a precompiled version (again, use at your own risk).
+Search engines are your best tools. Try keeping it short: 'model name' + 'dsdt' will probably produce results.
+</p>
+<h2><span class="mw-headline" id="Recompiling_it_yourself">Recompiling it yourself</span></h2>
+<p>Your best resources in this endeavor are going to be <a rel="nofollow" class="external text" href="http://www.acpi.info">ACPI Spec homepage</a>, and <a rel="nofollow" class="external text" href="https://01.org/linux-acpi">Linux ACPI Project</a> which supercedes the activity that occurred at <i>acpi.sourceforge.net</i>.
+In a nutshell, you can use Intel's ASL compiler to turn your systems DSDT table into source code, locate/fix the errors, and recompile.
+</p>
+<p>You'll need to install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=acpica">acpica</a></span> to modify code.
+</p>
+<p><b>What compiled the original code?</b>
+Check if your system's DSDT was compiled using Intel or Microsoft compiler:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"> $ dmesg|grep DSDT </pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ACPI: DSDT 00000000bf7e5000 0A35F (v02 Intel  CALPELLA 06040000 INTL 20060912)
+ACPI: EC: Look up EC in DSDT
+</pre>
+<p>In case Microsoft's compiler had been used, abbreviation INTL would instead be MSFT.
+In the example, there were 5 errors on decompiling/recompiling the DSDT. Two of them were easy to fix after a bit of googling and delving into the ACPI specification. Three of them were due to different versions of compiler used and are, as later discovered, handled by the ACPICA at boot-time. The ACPICA component of the kernel can handle most of the trivial errors you get while compiling the DSDT. So do not fret yourself over compile errors if your system is <i>working the way it should</i>.
+</p>
+<ol>
+<li> Extract ACPI tables (as root): <code>cat /sys/firmware/acpi/tables/DSDT &gt; dsdt.dat</code>
+</li>
+<li> Decompile: <code>iasl -d dsdt.dat</code>
+</li>
+<li> Recompile: <code>iasl -tc dsdt.dsl</code>
+</li>
+<li> Examine errors and fix. e.g.:<pre>dsdt.dsl   6727:                         Name (_PLD, Buffer (0x10)  
+Error    4105 -          Invalid object type for reserved name ^  (found BUFFER, requires Package) </pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"> nano +6727 dsdt.dsl</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">(_PLD, Package(1) {Buffer (0x10)...</pre>
+</li>
+<li> Increase OEM version or otherwise the kernel will not apply the modified ACPI table. For example, before modification:
+
+<pre>DefinitionBlock ("DSDT.aml", "DSDT", 2, "INTEL ", "TEMPLATE", 0x00000000)</pre>
+<p>After modification:
+</p>
+<pre>DefinitionBlock ("DSDT.aml", "DSDT", 2, "INTEL ", "TEMPLATE", 0x00000001)</pre>
+</li>
+<li> Compile fixed code: <code>iasl -tc dsdt.dsl</code> (Might want to try option -ic for C include file to insert into kernel source)
+</li>
+</ol>
+<p>If it says no errors and no warnings you should be good to go.
+</p>
+<h2><span class="mw-headline" id="Using_modified_code">Using modified code</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> After each BIOS update you will need to fix DSDT again and repeat these steps!</div>
+<p>There are at least two ways to use a custom DSDT:
+</p>
+<ul>
+<li>creating a CPIO archive that is loaded by the bootloader</li>
+<li>compiling it into the kernel</li>
+</ul>
+<h3><span class="mw-headline" id="Using_a_CPIO_archive">Using a CPIO archive</span></h3>
+<p>This method has the advantage that you do not need to recompile your kernel, and updating the kernel will not make it necessary to repeat these steps.
+</p>
+<p>This method requires the <code>ACPI_TABLE_UPGRADE=y</code> kernel config to be enabled (true for the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span> package). See <a rel="nofollow" class="external autonumber" href="https://www.kernel.org/doc/html/latest/admin-guide/acpi/initrd_table_override.html">[1]</a> for details.
+</p>
+<p>First, create the following folder structure: 
+</p>
+<pre>$ mkdir -p kernel/firmware/acpi
+</pre>
+<p>Copy the fixed ACPI tables into the just created <code>kernel/firmware/acpi</code> folder, for example:
+</p>
+<pre>$ cp dsdt.aml ssdt1.aml kernel/firmware/acpi
+</pre>
+<p>Within the same folder where the newly created <code>kernel/</code> folder resides, run:
+</p>
+<pre>$ find kernel | cpio -H newc --create &gt; acpi_override
+</pre>
+<p>This creates the CPIO archive containing the fixed ACPI tables. Copy the archive to the <code>boot</code> directory.
+</p>
+<pre># cp acpi_override /boot
+</pre>
+<p>Lastly, configure the <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Bootloader">bootloader</a> to load your CPIO archive. For example, using <a href="../en/Systemd-boot.html" title="Systemd-boot">Systemd-boot</a>, <code>/boot/loader/entries/arch.conf</code> might look like this:
+</p>
+<pre>title	 Arch Linux
+linux	 /vmlinuz-linux
+initrd   /acpi_override
+initrd	 /initramfs-linux.img
+options  root=PARTUUID=ec9d5998-a9db-4bd8-8ea0-35a45df04701 resume=PARTUUID=58d0aa86-d39b-4fe1-81cf-45e7add275a0 ...
+</pre>
+<p>Now all that is left to do is to reboot and to <a href="#Verify_successful_override">verify the result.</a>
+</p>
+<h3><span class="mw-headline" id="Compiling_into_the_kernel">Compiling into the kernel</span></h3>
+<p>You'll want to be familiar with <a href="../en/Kernel.html" class="mw-redirect" title="Kernels">compiling your own kernel</a>.  The most straightforward way is with the "traditional" approach.
+After compiling DSDT, iasl produce two files: <code>dsdt.hex</code> and <code>dsdt.aml</code>.
+</p>
+<p><b>Using <code>menuconfig</code>:</b>
+</p>
+<ul>
+<li>Disable "Select only drivers that don't need compile-time external firmware". Located in "Device Drivers -&gt; Generic Driver Options".</li>
+<li>Enable "Include Custom DSDT" and specify the absolute path of your fixed DSDT file (<code>dsdt.hex</code>, not <code>dsdt.aml</code>). Located in "Power management and ACPI options -&gt; ACPI (Advanced Configuration and Power Interface) Support".</li>
+</ul>
+<h2><span class="mw-headline" id="Verify_successful_override">Verify successful override</span></h2>
+<ol>
+<li>Run <code>dmesg | grep ACPI</code>.</li>
+<li>Look for clues that suggest an override, for example:</li>
+</ol>
+<pre>[    0.000000] ACPI: Override [DSDT-   A M I], this is unsafe: tainting kernel
+[    0.000000] ACPI: DSDT 00000000be9b1190 Logical table override, new table: ffffffff81865af0
+[    0.000000] ACPI: DSDT ffffffff81865af0 0BBA3 (v02 ALASKA    A M I 000000F3 INTL 20130517)
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/acpi/initrd_table_override.html">Upgrading ACPI tables via initrd</a></li>
+<li><a rel="nofollow" class="external text" href="https://docs.microsoft.com/en-us/windows-hardware/drivers/acpi/winacpi-osi">How to Identify the Windows Version in ACPI by Using _OSI</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Boot_process.html" title="Category:Boot process">Boot process</a></li>
+<li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li>
+<li><a href="../en/Category:Power_management.html" title="Category:Power management">Power management</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=DSDT&amp;oldid=607733">https://wiki.archlinux.org/index.php?title=DSDT&amp;oldid=607733</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 25 April 2020, at 01:26.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>tcplay - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Tcplay rootpage-Tcplay skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">tcplay</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Data-at-rest_encryption.html" title="Data-at-rest encryption">Data-at-rest encryption</a></li>
+<li><a href="../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a></li>
+<li><a href="../en/Tomb.html" title="Tomb">Tomb</a></li>
+</ul>
+</div>
+<p><i>tcplay</i> is a free, fully featured and stable <a href="../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a> implementation including multiple keyfiles and cipher cascades.
+</p>
+<p>Source: <a rel="nofollow" class="external text" href="https://github.com/bwalex/tc-play">github project home</a>
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Encrypting_a_file_as_a_virtual_volume"><span class="tocnumber">2</span> <span class="toctext">Encrypting a file as a virtual volume</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Mounting_an_existing_container_for_a_user"><span class="tocnumber">3</span> <span class="toctext">Mounting an existing container for a user</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Using_tcplay-helper"><span class="tocnumber">4</span> <span class="toctext">Using tcplay-helper</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=tcplay">tcplay</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Encrypting_a_file_as_a_virtual_volume">Encrypting a file as a virtual volume</span></h2>
+<p>Invoke 
+</p>
+<pre> $ losetup -f
+</pre>
+<p>to find the first unused loopback device; in this example, <code>/dev/loop0</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> As of udev 181-5, the <code>loop</code> device module is no longer auto-loaded.</div>
+<p>Create a new container <code>foo.tc</code>, 20M in size for instance, in the working
+directory:
+</p>
+<pre> # fallocate -l 20M foo.tc
+ # losetup /dev/loop0 foo.tc
+ # tcplay -c -d /dev/loop0 -a whirlpool -b AES-256-XTS
+</pre>
+<p>Enter a secure password for the volume, and confirm the query to overwrite
+<code>foo.tc</code> with the new volume. tcplay will then write random data into the
+volume. Map the volume and create a filesystem on it in order to mount
+</p>
+<pre> # tcplay -m foo.tc -d /dev/loop0
+ # mkfs.ext4 /dev/mapper/foo.tc
+ # mount /dev/mapper/foo.tc /mnt/truecrypt/
+</pre>
+<p>To unset the container,
+</p>
+<pre> # umount /mnt/truecrypt
+ # dmsetup remove foo.tc
+ # losetup -d /dev/loop0
+</pre>
+<h2><span class="mw-headline" id="Mounting_an_existing_container_for_a_user">Mounting an existing container for a user</span></h2>
+<p>Consider <code>/dev/loop0</code> the first unused loop device, <code>foo.tc</code> the
+TrueCrypt container, <code>/home/you/truecrypt/</code> the desired mount point. The
+user <code>you</code> in this example has <code>uid=1000</code> and <code>gid=100</code>. The
+steps for mounting the container as a virtual volume are:
+</p>
+<ol>
+<li>Associate loop device with the container</li>
+<li>Map the container to the loop device</li>
+<li>Mount the container in the filesystem</li>
+</ol>
+<p>The following commands perform the above actions.
+</p>
+<pre> # losetup /dev/loop0 foo.tc
+ # tcplay -m foo.tc -d /dev/loop0
+ # mount -o nodev,nosuid,uid=1000,gid=100 /dev/mapper/foo.tc /home/you/truecrypt/
+</pre>
+<p>Note, if the container uses ext4 or another filesystem that supports file ownership, the <code>uid</code> and <code>gid</code> parameters aren't needed and will not work. Therefore the third command would be simply:
+</p>
+<pre> # mount -o nodev,nosuid /dev/mapper/foo.tc /home/you/truecrypt/
+</pre>
+<p>To reverse them:
+</p>
+<pre> # umount /home/you/truecrypt/
+ # dmsetup remove foo.tc
+ # losetup -d /dev/loop0
+</pre>
+<h2><span class="mw-headline" id="Using_tcplay-helper">Using tcplay-helper</span></h2>
+<p>The <a rel="nofollow" class="external text" href="https://github.com/robertmuil/tcplay-helper">tcplay-helper</a> script simplifies the process of creating, mounting and unmounting tc-play containers. The script is basic, but should work fine for most users wanting to work with simple secure tc-play containers.
+</p>
+<p>The following command creates a 3Mb container called foo.tc.
+</p>
+<pre> # tcplay-helper create foo.tc 3M
+</pre>
+<p>To mount the container file we can either mount it as root with the following command. The container will be mounted under /mnt/truecrypt/
+</p>
+<pre> # tcplay-helper open foo.tc
+</pre>
+<p>Alternatively, we can supply a username to mount the container as.
+</p>
+<pre> # tcplay-helper open foo.tc archie
+</pre>
+<p>Finally, to close the container this command does the trick.
+</p>
+<pre> # tcplay-helper close foo.tc
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://leaf.dragonflybsd.org/cgi/web-man?command=tcplay&amp;section=8">Manual page for tcplay</a></li>
+<li><a rel="nofollow" class="external text" href="http://jasonwryan.com/blog/2013/01/10/truecrypt/">Jason Ryan: Replacing TrueCrypt</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.truecrypt.org/">TrueCrypt Homepage</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.howtoforge.com/truecrypt_data_encryption">Truecrypt Tutorial on HowToForge</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.privacylover.com/encryption/analysis-is-there-a-backdoor-in-truecrypt-is-truecrypt-a-cia-honeypot/">There is a good chance the CIA has a backdoor?</a><sup title="Last check status: domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-04-03 ⓘ]</sup> (via <a rel="nofollow" class="external text" href="https://secure.wikimedia.org/wikipedia/en/wiki/Truecrypt">wp</a>)</li>
+<li><a rel="nofollow" class="external text" href="https://github.com/robertmuil/tcplay-helper">tcplay-helper documentation</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption">Data-at-rest encryption</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Tcplay&amp;oldid=613549">https://wiki.archlinux.org/index.php?title=Tcplay&amp;oldid=613549</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 16 May 2020, at 16:33.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

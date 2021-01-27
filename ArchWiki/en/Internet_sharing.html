@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Internet sharing - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Internet_sharing rootpage-Internet_sharing skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Internet sharing</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Android_tethering.html" title="Android tethering">Android tethering</a></li>
+<li><a href="../en/Software_access_point.html" title="Software access point">Software access point</a></li>
+<li><a href="../en/Bridge_with_netctl.html" title="Bridge with netctl">Bridge with netctl</a></li>
+<li><a href="../en/Ad-hoc_networking.html" title="Ad-hoc networking">Ad-hoc networking</a></li>
+<li><a href="../en/Sharing_PPP_Connection.html" title="Sharing PPP Connection">Sharing PPP Connection</a></li>
+<li><a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a></li>
+<li><a href="../en/Router.html" title="Router">Router</a></li>
+<li><a href="../en/USB_3G_Modem.html" title="USB 3G Modem">USB 3G Modem</a></li>
+</ul>
+</div>
+<p>This article explains how to share the internet connection from one machine to other(s). 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Requirements"><span class="tocnumber">1</span> <span class="toctext">Requirements</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Static_IP_address"><span class="tocnumber">2.1</span> <span class="toctext">Static IP address</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Enable_packet_forwarding"><span class="tocnumber">2.2</span> <span class="toctext">Enable packet forwarding</span></a></li>
+<li class="toclevel-2 tocsection-5">
+<a href="#Enable_NAT"><span class="tocnumber">2.3</span> <span class="toctext">Enable NAT</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#With_iptables"><span class="tocnumber">2.3.1</span> <span class="toctext">With iptables</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#With_nftables"><span class="tocnumber">2.3.2</span> <span class="toctext">With nftables</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Assigning_IP_addresses_to_the_client_PC(s)"><span class="tocnumber">2.4</span> <span class="toctext">Assigning IP addresses to the client PC(s)</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Manually_adding_an_IP"><span class="tocnumber">2.4.1</span> <span class="toctext">Manually adding an IP</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Troubleshooting"><span class="tocnumber">3</span> <span class="toctext">Troubleshooting</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Requirements">Requirements</span></h2>
+<p>The machine acting as server should have an additional network device. That network device requires a functional <a href="https://en.wikipedia.org/wiki/Data_link_layer" class="extiw" title="wikipedia:Data link layer">data link layer</a> to the machine(s) that are going to receive internet access:
+</p>
+<ul>
+<li>To be able to share internet to several machines a <a href="https://en.wikipedia.org/wiki/Network_switch" class="extiw" title="wikipedia:Network switch">switch</a> can provide the data link layer connection.</li>
+<li>A wireless device can share access to several machines as well, see <a href="../en/Software_access_point.html" title="Software access point">Software access point</a> first for this case.</li>
+<li>If you are sharing to only one machine, a <a href="https://en.wikipedia.org/wiki/Ethernet_crossover_cable" class="extiw" title="wikipedia:Ethernet crossover cable">crossover cable</a> is sufficient. In case one of the two computers' ethernet cards has <a href="https://en.wikipedia.org/wiki/Medium_Dependent_Interface#Auto_MDI-X" class="extiw" title="wikipedia:Medium Dependent Interface">MDI-X</a> capability, a crossover cable is not necessary and a regular ethernet cable can be used. Executing <code>ethtool <i>interface</i> | grep MDI</code> as root helps to figure it.</li>
+</ul>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>This section assumes that the network device connected to the client computer(s) is named <code>net0</code> and the network device connected to the internet as <code>internet0</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You can rename your devices to this scheme using <a href="../en/Udev.html#Setting_static_device_names" title="Udev">udev#Setting static device names</a>.</div>
+<p>All configuration is done on the server computer, except for the final step of <a href="#Assigning_IP_addresses_to_the_client_PC(s)">#Assigning IP addresses to the client PC(s)</a>.
+</p>
+<h3><span class="mw-headline" id="Static_IP_address">Static IP address</span></h3>
+<p>On the server computer, assign a static IPv4 address to the interface connected to the other machines. The first 3 bytes of this address cannot be exactly the same as those of another interface, unless both interfaces have netmasks strictly greater than /24.
+</p>
+<pre># ip link set up dev net0
+# ip addr add 192.168.123.100/24 dev net0 # arbitrary address
+</pre>
+<p>To have your static IP assigned at boot, you can use a <a href="../en/Network_configuration.html#Network_managers" class="mw-redirect" title="Network manager">network manager</a>.
+</p>
+<h3><span class="mw-headline" id="Enable_packet_forwarding">Enable packet forwarding</span></h3>
+<p>Check the current packet forwarding settings:
+</p>
+<pre># sysctl -a | grep forward
+</pre>
+<p>You will note that options exist for controlling forwarding per default, per interface, as well as separate options for IPv4/IPv6 per interface.
+</p>
+<p>Enter this command to temporarily enable packet forwarding at runtime:
+</p>
+<pre># sysctl net.ipv4.ip_forward=1
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> To enable packet forwarding selectively for a specific interface, use <code>sysctl net.ipv4.conf.<i>interface_name</i>.forwarding=1</code> instead.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If the system uses <a href="../en/Systemd-networkd.html" title="Systemd-networkd">systemd-networkd</a> to control the network interfaces, a per-interface setting for IPv4 is not possible, i.e. systemd logic propagates any configured forwarding into a global (for all interfaces) setting for IPv4. The advised work-around is to use a firewall to forbid forwarding again on selective interfaces. See the <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.network"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.network.5">systemd.network(5)</a></span> manual page for more information. The <code>IPForward=kernel</code> semantics introduced in a previous systemd release 220/221 to honor kernel settings does not apply anymore.<a rel="nofollow" class="external autonumber" href="https://github.com/poettering/systemd/commit/765afd5c4dbc71940d6dd6007ecc3eaa5a0b2aa1">[1]</a> <a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/blob/a2088fd025deb90839c909829e27eece40f7fce4/NEWS">[2]</a>
+</div>
+<p>Edit <code>/etc/sysctl.d/30-ipforward.conf</code> to make the previous change persistent after a reboot for all interfaces:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sysctl.d/30-ipforward.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">net.ipv4.ip_forward=1
+net.ipv6.conf.default.forwarding=1
+net.ipv6.conf.all.forwarding=1
+</pre>
+<p>Afterwards it is advisable to double-check forwarding is enabled as required after a reboot.
+</p>
+<h3><span class="mw-headline" id="Enable_NAT">Enable NAT</span></h3>
+<h4><span class="mw-headline" id="With_iptables">With iptables</span></h4>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables">iptables</a></span> package. Use iptables to enable NAT:
+</p>
+<pre># iptables -t nat -A POSTROUTING -o internet0 -j MASQUERADE
+# iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+# iptables -A FORWARD -i net0 -o internet0 -j ACCEPT
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Of course, this also works with a mobile broadband connection (usually called ppp0 on routing PC).</div>
+<p>If connected via PPPoE, clamp mss to pmtu in order the prevent fragmentation:
+</p>
+<pre># iptables -t mangle -A FORWARD -o ppp0 -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+</pre>
+<p>Read the <a href="../en/Iptables.html" title="Iptables">iptables</a> article for more information (especially saving the rule and applying it automatically on boot). There is also an excellent guide on iptables <a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a>.
+</p>
+<h4><span class="mw-headline" id="With_nftables">With nftables</span></h4>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nftables">nftables</a></span> package. To enable NAT with <a href="../en/Nftables.html" title="Nftables">nftables</a>, you will have to create the <code>prerouting</code> and <code>postrouting</code> chains in a new/existing table (you need both chains even if they are empty):
+</p>
+<pre># nft add table inet nat
+# nft add chain inet nat prerouting '{ type nat hook prerouting priority -100 ; }'
+# nft add chain inet nat postrouting '{ type nat hook postrouting priority 100 ; }'
+</pre>
+<p>After that, you have to masquerade the <code>net0</code> addresses for <code>internet0</code>:
+</p>
+<pre># nft add rule inet nat postrouting oifname internet0 masquerade
+</pre>
+<p>You may want to add some more firewall restrictions on the forwarding (assuming the filter table already exists, like configured in <a href="../en/Nftables.html#Server" title="Nftables">nftables#Server</a>:
+</p>
+<pre># nft add chain inet filter forward '{ type filter hook forward priority 0; policy drop; }'
+# nft add rule inet filter forward ct state related,established accept
+# nft add rule inet filter forward iifname net0 oifname internet0 accept
+</pre>
+<p>You can find more information on NAT in nftables in the <a rel="nofollow" class="external text" href="https://wiki.nftables.org/wiki-nftables/index.php/Performing_Network_Address_Translation_(NAT)">nftables Wiki</a>. If you want to make these changes permanent, follow the instructions on <a href="../en/Nftables.html" title="Nftables">nftables</a>
+</p>
+<h3>
+<span id="Assigning_IP_addresses_to_the_client_PC.28s.29"></span><span class="mw-headline" id="Assigning_IP_addresses_to_the_client_PC(s)">Assigning IP addresses to the client PC(s)</span>
+</h3>
+<p>If you are planning to regularly have several machines using the internet shared by this machine, then is a good idea to install a <a href="https://en.wikipedia.org/wiki/DHCP" class="extiw" title="wikipedia:DHCP">DHCP</a> server, such as <a href="../en/Dhcpd.html" title="Dhcpd">dhcpd</a> or <a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a>. Then configure a DHCP client (e.g. <a href="../en/Dhcpcd.html" title="Dhcpcd">dhcpcd</a>) on every client PC.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> This is not an iptables guide. Expanding the chain with <code>iptables -I</code> might skip other important rules; if you need to script an ON/OFF switch for this, use custom chain with a jump placed carefully in the INPUT chain. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Internet_sharing">Talk:Internet sharing#</a>)</div>
+</div>
+<p>Incoming connections to UDP port 67 has to be allowed for DHCP server. It also necessary to allow incoming connections to UDP/TCP port 53 for DNS requests.
+</p>
+<pre># iptables -I INPUT -p udp --dport 67 -i net0 -j ACCEPT
+# iptables -I INPUT -p udp --dport 53 -s 192.168.123.0/24 -j ACCEPT
+# iptables -I INPUT -p tcp --dport 53 -s 192.168.123.0/24 -j ACCEPT
+</pre>
+<p>If you are not planing to use this setup regularly, you can manually add an IP to each client instead.
+</p>
+<h4><span class="mw-headline" id="Manually_adding_an_IP">Manually adding an IP</span></h4>
+<p>Instead of using DHCP, a static IP address and a default route via <code>192.168.123.100</code> can also be configured manually. There are many tools available to configure the network accordingly. One prominent example of such a tool is <span class="plainlinks archwiki-template-man" title="$ man 8 ip"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/ip.8">ip(8)</a></span>, see <a href="../en/Network_configuration.html#Network_management" title="Network configuration">Network configuration#Network management</a>. Alternatively, one can use a <code>.network</code> file, see <a href="../en/Systemd-networkd.html#Wired_adapter_using_a_static_IP" title="Systemd-networkd">Systemd-networkd#Wired adapter using a static IP</a> to setup a static IP.
+</p>
+<p>Configure a DNS server for each client, see <a href="../en/Domain_name_resolution.html" title="Domain name resolution">Domain name resolution</a> for details.
+</p>
+<p>That is it. The client PC should now have Internet.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>If you are able to connect the two PCs but cannot send data (for example, if the client PC makes a DHCP request to the server PC, the server PC receives the request and offers an IP to the client, but the client does not accept it, timing out instead), check that you do not have other <a href="../en/Iptables.html" title="Iptables">iptables</a> rules <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1093208">interfering</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://xyne.archlinux.ca/notes/network/dhcp_with_dns.html">Xyne's guide and scripts for launching a subnet with DHCP and DNS</a></li>
+<li>
+<a href="../en/NetworkManager.html" title="NetworkManager">NetworkManager</a> can be configured for internet sharing if used.</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Network_sharing.html" title="Category:Network sharing">Network sharing</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Internet_sharing&amp;oldid=648891">https://wiki.archlinux.org/index.php?title=Internet_sharing&amp;oldid=648891</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 13 January 2021, at 22:22.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

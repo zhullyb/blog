@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Open-iSCSI - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Open-iSCSI rootpage-Open-iSCSI skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Open-iSCSI</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article describes how to access an <a href="../en/ISCSI.html" title="ISCSI">iSCSI</a> target with the <a rel="nofollow" class="external text" href="https://github.com/open-iscsi/open-iscsi">Open-iSCSI</a> initiator.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> ISCSI is NOT encrypted. Transmitting data over unsecured channel is not recommended.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Overview"><span class="tocnumber">2</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Configuration"><span class="tocnumber">3</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Start_the_Service"><span class="tocnumber">3.1</span> <span class="toctext">Start the Service</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#ISCSI_Qualified_Name_(IQN)"><span class="tocnumber">3.2</span> <span class="toctext">ISCSI Qualified Name (IQN)</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Authentication"><span class="tocnumber">3.3</span> <span class="toctext">Authentication</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Target_discovery"><span class="tocnumber">3.4</span> <span class="toctext">Target discovery</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Add_target_manually"><span class="tocnumber">3.5</span> <span class="toctext">Add target manually</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Delete_obsolete_targets"><span class="tocnumber">3.6</span> <span class="toctext">Delete obsolete targets</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Login_to_available_targets"><span class="tocnumber">3.7</span> <span class="toctext">Login to available targets</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Info"><span class="tocnumber">3.8</span> <span class="toctext">Info</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Online_resize_of_volumes"><span class="tocnumber">3.9</span> <span class="toctext">Online resize of volumes</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13"><a href="#Tips_&amp;_Troubleshooting"><span class="tocnumber">4</span> <span class="toctext">Tips &amp; Troubleshooting</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=open-iscsi">open-iscsi</a></span> package from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> An older initiator, <a rel="nofollow" class="external text" href="https://sourceforge.net/projects/linux-iscsi/">Linux-iSCSI</a>, was merged with Open-iSCSI in April 2005.
+This should not be confused with <a rel="nofollow" class="external text" href="http://linux-iscsi.org/">linux-iscsi.org</a>, the website for the LIO <a href="../en/ISCSI/LIO.html" class="mw-redirect" title="ISCSI Target">target</a>.</div>
+<h2><span class="mw-headline" id="Overview">Overview</span></h2>
+<p>The following diagram shows how the Components work together. A more detailed version can be found here: <a rel="nofollow" class="external text" href="https://archive.is/HHYKR/90a7a1c178a2c069a7cbc0b578b6fb5854f827fa.jpg">Open-iSCSI modules (Outdated)</a>
+</p>
+<pre style="white-space: pre !important; font-variant-ligatures: no-common-ligatures;"> +--------------------------------------------------------+             
+ | Targets &amp; Sessions configuration files and directories |             
+ +--------------------------------------------------------+             
+                                                                       
+ +--------------------------+     +----------------------------------+ 
+ | iscsiadm                 |     | iscsid: iSCSI daemon             | 
+ |                          |     |                                  | 
+ |  * Command line tool     |&lt;---&gt;|  * Implements Session management | 
+ |  * Manages database of   |     |  * Communicates with iscsiadm    | 
+ |    sessions and targets  |     |    and iscsi kernel modules      | 
+ +--------------------------+     +---------------+------------------+ 
+                                                  |                    
+ User space                                       |                    
+- - - - - - - - - - - - - - - - - - - - - - - - - | - - - - - - - - - -
+ Kernel                                           v                    
+         +-----------------------------------------------------------+ 
+         | kernel modules: scsi_transport_iscsi, iscsi_tcp, libiscsi | 
+         +-----------------------------------------------------------+ 
+</pre>
+<p>From the Open-iSCSI <a rel="nofollow" class="external text" href="https://github.com/open-iscsi/open-iscsi">README</a>:
+</p>
+<p>Persistent configuration is implemented as a tree of files and directories, which are contained in two directories:
+</p>
+<ul>
+<li>Discovery directory <code>/etc/iscsi/send_targets</code> which has directories named after target addresses.</li>
+<li>Node directory <code>/etc/iscsi/nodes</code> which has directories named after IQN (ISCSI Unique Name) of particular device.</li>
+</ul>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="Start_the_Service">Start the Service</span></h3>
+<p><code>iscsid</code> is managed by a systemd Unit.
+</p>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> <code>iscsid.service</code> or <code>iscsid.socket</code>.
+</p>
+<h3>
+<span id="ISCSI_Qualified_Name_.28IQN.29"></span><span class="mw-headline" id="ISCSI_Qualified_Name_(IQN)">ISCSI Qualified Name (IQN)</span>
+</h3>
+<p>IQN is used for identifying every device.
+</p>
+<p>Open-ISCSI stores its initiator IQN in the <code>/etc/iscsi/initiatorname.iscsi</code> file with a format <code>InitiatorName=<i>iqn</i></code>
+</p>
+<p>During installation the initial IQN will be generated. If you wish to generate new IQN the <code>iscsi-iname</code> utility can be used which prints out new IQN.
+</p>
+<h3><span class="mw-headline" id="Authentication">Authentication</span></h3>
+<p>If the ISCSI target requires authentication by the initiator, the configuration file <code>/etc/iscsi/iscsid.conf</code> may need
+to be updated.
+</p>
+<p>The following parameters are used for authenticating a login session of an initiator to a target:
+</p>
+<pre>node.session.auth.authmethod = CHAP
+node.session.auth.username = <i>initiators_username</i>
+node.session.auth.password = <i>initiators_password</i>
+</pre>
+<p>If your target has two-way authentication enabled then those lines also need to be edited:
+</p>
+<pre>node.session.auth.username_in = <i>targets_username</i>
+node.session.auth.password_in = <i>targets_password</i>
+</pre>
+<p>If your target requires authentication to get the list of its nodes (most won't) then following lines should be edited:
+</p>
+<pre>discovery.sendtargets.auth.authmethod = CHAP
+discovery.sendtargets.auth.username = <i>initiators_username</i>
+discovery.sendtargets.auth.password = <i>initiators_password</i>
+</pre>
+<p>If your target has two-way authentication enabled then those lines also need to be edited:
+</p>
+<pre>discovery.sendtargets.auth.username_in = <i>targets_username</i>
+discovery.sendtargets.auth.password_in = <i>targets_password</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> No two passwords may be the same. This means that you need four unique passwords in the configuration above. </div>
+<h3><span class="mw-headline" id="Target_discovery">Target discovery</span></h3>
+<p>Request the target its nodes. 
+</p>
+<pre># iscsiadm --mode discovery --portal <i>target_ip</i> --type sendtargets
+</pre>
+<p>On success information about nodes and target will be saved on your initiator.
+</p>
+<h3><span class="mw-headline" id="Add_target_manually">Add target manually</span></h3>
+<pre># iscsiadm -m node --target <i>targetname</i> --portal <i>target_ip</i> -o new
+</pre>
+<p>A possible scenario to use this is when server does not allow discovery.
+</p>
+<h3><span class="mw-headline" id="Delete_obsolete_targets">Delete obsolete targets</span></h3>
+<pre># iscsiadm -m discovery -p <i>target_ip</i> -o delete
+</pre>
+<h3><span class="mw-headline" id="Login_to_available_targets">Login to available targets</span></h3>
+<pre># iscsiadm -m node -L all
+</pre>
+<p>or login to specific target
+</p>
+<pre># iscsiadm -m node --targetname=<i>targetname</i> --login
+</pre>
+<p>logout:
+</p>
+<pre># iscsiadm -m node -U all
+</pre>
+<h3><span class="mw-headline" id="Info">Info</span></h3>
+<p>For running session
+</p>
+<pre># iscsiadm -m session -P 3
+</pre>
+<p>The last line of the above command will show the name of the attached dev e.g
+</p>
+<pre>Attached scsi disk <b>sdd</b> State: running
+</pre>
+<p>For the known nodes
+</p>
+<pre># iscsiadm -m node
+</pre>
+<h3><span class="mw-headline" id="Online_resize_of_volumes">Online resize of volumes</span></h3>
+<p>If the iscsi blockdevice contains a partitiontable, you will not be able to do an online resize. In this case you have to unmount the filesystem and alter the size of the affected partition.
+</p>
+<ol>
+<li>Rescan active nodes in current session <pre># iscsiadm -m node -R</pre>
+</li>
+<li>If you use multipath, you also have to rescan multipath volume information. <pre># multipathd -k"resize map sdx"</pre>
+</li>
+<li>Finally resize the filesystem. <pre># resize2fs /dev/sdx</pre>
+</li>
+</ol>
+<h2>
+<span id="Tips_.26_Troubleshooting"></span><span class="mw-headline" id="Tips_&amp;_Troubleshooting">Tips &amp; Troubleshooting</span>
+</h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Nonstandard section, see <a href="../en/Help:Style.html#Standard_sections" title="Help:Style">Help:Style#Standard sections</a>. Create proper <a href="#Tips_and_tricks">#Tips and tricks</a> and <a href="#Troubleshooting">#Troubleshooting</a> sections and place each issue in a separate subsection. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Open-iSCSI">Talk:Open-iSCSI#</a>)</div>
+</div>
+<p>You can also check where the attached iSCSI devices are located in the /dev tree with <code>ls -lh /dev/disk/by-path/* </code>.
+</p>
+<p>At the server (target) you might need to include the client iqn from <code>/etc/iscsi/initiatorname.iscsi</code> in the acl configuration.
+</p>
+<p>Many of the <code>iscsiadm</code> operations require that the iSCSI daemon <code>iscsid</code> is running. To verify that this is the case, 
+<a href="../en/Systemd.html#Using_units" title="Systemd">check the status</a> of the <code>iscsid.service</code>.
+</p>
+<p>To run the iSCSI daemon in debug mode (make sure you stopped <code>iscsid.service</code> before)
+</p>
+<pre># iscsid -d 8 -c /etc/iscsi/iscsid.conf -i /etc/iscsi/initiatorname.iscsi -f
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Storage.html" title="Category:Storage">Storage</a></li>
+<li><a href="../en/Category:Networking.html" title="Category:Networking">Networking</a></li>
+</ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Open-iSCSI&amp;oldid=632459">https://wiki.archlinux.org/index.php?title=Open-iSCSI&amp;oldid=632459</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 18 August 2020, at 08:44.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

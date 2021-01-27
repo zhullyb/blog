@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Signed kernel modules - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Signed_kernel_modules rootpage-Signed_kernel_modules skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Signed kernel modules</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Kernel.html" class="mw-redirect" title="Kernels">Kernels</a></li>
+<li><a href="../en/Kernel_module.html" title="Kernel module">Kernel module</a></li>
+<li><a href="../en/Kernel/Arch_Build_System.html" title="Kernel/Arch Build System">Kernel/Arch Build System</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/module-signing.html">Signed</a> <a href="../en/Kernel_module.html" class="mw-redirect" title="Kernel modules">kernel modules</a> provide a mechanism for the kernel to verify the integrity of a module.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Overview"><span class="tocnumber">1</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Summary_of_what_needs_to_be_done"><span class="tocnumber">2</span> <span class="toctext">Summary of what needs to be done</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Kernel_configuration"><span class="tocnumber">3</span> <span class="toctext">Kernel configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Kernel_command_line"><span class="tocnumber">3.1</span> <span class="toctext">Kernel command line</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Tools_needed"><span class="tocnumber">4</span> <span class="toctext">Tools needed</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#kernel_build_package"><span class="tocnumber">4.1</span> <span class="toctext">kernel build package</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#DKMS_support"><span class="tocnumber">4.2</span> <span class="toctext">DKMS support</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Modify_PKGBUILD"><span class="tocnumber">5</span> <span class="toctext">Modify PKGBUILD</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#prepare()"><span class="tocnumber">5.1</span> <span class="toctext">prepare()</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#package-headers()"><span class="tocnumber">5.2</span> <span class="toctext">_package-headers()</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#Files_required"><span class="tocnumber">6</span> <span class="toctext">Files required</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#Helper_scripts"><span class="tocnumber">7</span> <span class="toctext">Helper scripts</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Overview">Overview</span></h2>
+<p>The Linux kernel distinguishes and keeps separate the verification of modules from requiring or forcing modules to verify before allowing them to be loaded. Kernel modules fall into 2 classes:
+</p>
+<ul>
+<li>Standard <i>in-tree</i> modules which come with the kernel source code. They are compiled during the normal kernel build.</li>
+<li>
+<i>Out-of-tree</i> modules which are not part of the kernel source distribution. They are built outside of the kernel tree, requiring the kernel headers package for each kernel they are to be built for. They can be built manually for a specific kernel and packaged, or they can be built whenever needed using <a href="../en/Dynamic_Kernel_Module_Support.html" class="mw-redirect" title="DKMS">DKMS</a>.</li>
+</ul>
+<p>During a standard kernel compilation, the kernel build tools create a private/public key pair and sign every in-tree module (using the private key). The public key is saved in the kernel itself. When a module is subsequently loaded, the public key can then be used to verify that the module is unchanged.
+</p>
+<p>The kernel can be enabled to always verify modules and report any failures to standard logs. The choice to permit the loading and use of a module which could not be verified can be either compiled into kernel or turned on at runtime using a <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> as explained below.
+</p>
+<h2><span class="mw-headline" id="Summary_of_what_needs_to_be_done">Summary of what needs to be done</span></h2>
+<p>The starting point is based on a custom kernel package as outlined in <a href="../en/Kernel/Arch_Build_System.html" title="Kernel/Arch Build System">Kernel/Arch Build System</a>. We will modify the build to sign the standard in-tree kernel modules and to provide the prerequisites for signing and verifying out-of-tree modules.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<p>The goal is to have:
+</p>
+<ul>
+<li>In-tree modules signed during the standard kernel build process. The standard kernel build creates a fresh public/private key pair on each build.</li>
+<li>Out-of-tree modules are signed and the associated public key is compiled into the kernel. We will create a separate public/private key pair on each build.</li>
+</ul>
+</div>
+<p>Each kernel build needs to made aware of the key pair to be used for signing out-of-tree modules. A kernel configuration parameter is now used to make the kernel aware of additional signing keys: <code>CONFIG_SYSTEM_TRUSTED_KEYS="/path/to/oot-signing_keys.pem"</code>.
+</p>
+<p>Keys and signing tools will be stored in the current module build directory. Nothing needs to be done to clean this as removal is handled by the standard module cleanup. The private and public keys are both installed in <code>/usr/lib/modules/<i>kernel_version</i>-<i>build</i>/certs-local</code>.
+</p>
+<h2><span class="mw-headline" id="Kernel_configuration">Kernel configuration</span></h2>
+<p><code>CONFIG_SYSTEM_TRUSTED_KEYS</code> will be updated automatically using the script <code>fix_config.sh</code> provided below. In addition, the following configuration options should be set either manually by editing the <code>.config</code> file, or via <code>make menuconfig</code> in the Linux <code>src</code> directory and subsequently copying the updated <code>.config</code> file back to the build file <code>config</code>.
+</p>
+<pre>Enable Loadable module suppot ---&gt;
+Module Signature Verification           -  activate
+        CONFIG_MODULE_SIG=y
+
+Require modules to be validly signed -&gt; leave off
+        CONFIG_MODULE_SIG_FORCE=n
+
+        This allows the decision to enforce verified modules only as boot command line.
+        If you are comfortable all is working then by all means change this to 'y'
+        Command line version of this is : module.sig_enforce=1
+
+Automatically sign all modules  - activate
+Which hash algorithm    -&gt; SHA-512
+
+Compress modules on installation        - activate
+        Compression algorithm (XZ)
+
+Allow loading of modules with missing namespace imports - set to no
+</pre>
+<h3><span class="mw-headline" id="Kernel_command_line">Kernel command line</span></h3>
+<p>When you have confirmed that the modules are being signed and that the kernel works as it should, you can enable the following <a href="../en/Kernel_parameters.html" class="mw-redirect" title="Kernel parameter">kernel parameter</a> to require that the kernel only permits verified modules to be loaded:
+</p>
+<pre>module.sig_enforce=1
+</pre>
+<p>Before forcing verified modules on, please confirm that the system logs do not show any module signature failures being reported.
+</p>
+<h2><span class="mw-headline" id="Tools_needed">Tools needed</span></h2>
+<h3><span class="mw-headline" id="kernel_build_package">kernel build package</span></h3>
+<p>In the directory where the kernel package is built:
+</p>
+<pre>$ mkdir certs-local
+</pre>
+<p>This directory will provide the tools to create the keys, as well as signing kernel modules.
+</p>
+<p>Put the 4 files into <code>certs-local</code>:
+</p>
+<ul>
+<li><code>fix_config.sh</code></li>
+<li><code>x509.oot.genkey</code></li>
+<li><code>genkeys.sh</code></li>
+<li><code>sign_manual.sh</code></li>
+</ul>
+<p>The files <code>genkeys.sh</code> and its configuration file <code>x509.oot.genkey</code> are used to create key pairs.
+</p>
+<p>The file <code>fix_config.sh</code> is run after that to provide the kernel with the key information by updating the configuration file used to build the kernel.
+</p>
+<p>The script <code>sign_manual</code> will be used to sign out-of-tree kernel modules.
+</p>
+<p><code>genkeys.sh</code> will create the key pairs in a directory named by date-time.
+</p>
+<p>It also creates file <code>current_key_dir</code> with that directory name and a soft link <code>current</code> to the same directory holding the current key pairs.
+</p>
+<p>These files are all provided below.
+</p>
+<h3><span class="mw-headline" id="DKMS_support">DKMS support</span></h3>
+<pre>$ mkdir certs-local/dkms
+</pre>
+<p>Add 2 files to the <code>dkms</code> directory:
+</p>
+<ul>
+<li><code>kernel-sign.conf</code></li>
+<li><code>kernel-sign.sh</code></li>
+</ul>
+<p>These will be installed in <code>/etc/dkms</code> and provide the means for DKMS to automatically sign modules using the local key. This is the recommended way to sign out-of-tree kernel modules. As explained below, once this is installed, all that is needed is for DKMS to automatically sign modules is to make a soft link for each package to the configuration file.
+</p>
+<pre>$ cd /etc/dkms
+# ln -s kernel-sign.conf <i>package_name</i>
+</pre>
+<p>For example:
+</p>
+<pre># ln -s kernel-sign.conf virtualbox
+</pre>
+<p>The link creation can easily be added to an arch package to simplify further if desired.
+</p>
+<h2><span class="mw-headline" id="Modify_PKGBUILD">Modify PKGBUILD</span></h2>
+<p>We need to make changes to kernel build as follows:
+</p>
+<h3>
+<span id="prepare.28.29"></span><span class="mw-headline" id="prepare()">prepare()</span>
+</h3>
+<p>Add the following to the top of the <code>prepare()</code> function:
+</p>
+<pre>prepare() {
+
+    msg2 "Rebuilding local signing key..."
+    cd ../certs-local
+    ./genkeys.sh 
+
+    msg2 "Updating kernel config with new key..."
+    ./fix_config.sh ../config
+    cd ../src
+
+    ... 
+}
+</pre>
+<h3>
+<span id="package-headers.28.29"></span><span class="mw-headline" id="package-headers()">_package-headers()</span>
+</h3>
+<p>Add the following to the bottom of the <code>_package-headers()</code> function:
+</p>
+<pre>_package-headers() {
+
+    ...
+
+    #
+    # Out-of-tree module signing
+    # This is run in the kernel source / build directory
+    #
+    msg2 "Local Signing certs for out-of-tree modules..."
+
+    certs_local_src="../../certs-local" 
+    key_dir=$(&lt;${certs_local_src}/current_key_dir)
+
+    certs_local_dst="${builddir}/certs-local"
+    signer="sign_manual.sh"
+    mkdir -p ${certs_local_dst}
+    rsync -a $certs_local_src/{current,$key_dir,$signer} $certs_local_dst/
+
+    # DKMS tools
+    dkms_src="$certs_local_src/dkms"
+    dkms_dst="${pkgdir}/etc/dkms"
+    mkdir -p $dkms_dst
+
+    rsync -a $dkms_src/{kernel-sign.conf,kernel-sign.sh} $dkms_dst/
+}</pre>
+<h2><span class="mw-headline" id="Files_required">Files required</span></h2>
+<p>The 6 supporting files referenced above are available for download from the <a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/tree/master">github.com/gene-git/Arch-SKM</a> repository:
+</p>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/fix_config.sh">certs-local/fix_config.sh</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/x509.oot.genkey">certs-local/x509.oot.genkey</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/genkeys.sh">certs-local/genkeys.sh</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/sign_manual.sh">certs-local/sign_manual.sh</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/dkms/kernel-sign.conf">certs-local/dkms/kernel-sign.conf</a></li>
+<li><a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/blob/master/certs-local/dkms/kernel-sign.sh">certs-local/dkms/kernel-sign.sh</a></li>
+</ul>
+<p>Remember to ensure that the scripts are <a href="../en/Help:Reading.html#Make_executable" class="mw-redirect" title="Executable">executable</a>.
+</p>
+<h2><span class="mw-headline" id="Helper_scripts">Helper scripts</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/arch-sign-modules/">arch-sign-modules</a></span><sup><small>AUR</small></sup> package comes from a fork of the <a rel="nofollow" class="external text" href="https://github.com/gene-git/Arch-SKM/tree/master">Arch-SKM</a> repository which is used in the previous sections. It is not clear what is wrong with the original repository nor why changes resulted in a fork instead of fixing/improving the original repository. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Signed_kernel_modules">Talk:Signed kernel modules#</a>)</div>
+</div>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/arch-sign-modules/">arch-sign-modules</a></span><sup><small>AUR</small></sup> builds:
+</p>
+<ul>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-hardened">linux-hardened</a></span></li>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-lts">linux-lts</a></span></li>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux-zen">linux-zen</a></span></li>
+</ul>
+<p>with signed kernel module support for:
+</p>
+<ul><li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/zfs-dkms/">zfs-dkms</a></span><sup><small>AUR</small></sup> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/nvidia-beta-dkms/">nvidia-beta-dkms</a></span><sup><small>AUR</small></sup> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/lkrg-dkms/">lkrg-dkms</a></span><sup><small>AUR</small></sup>
+</li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Kernel.html" title="Category:Kernel">Kernel</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Signed_kernel_modules&amp;oldid=633888">https://wiki.archlinux.org/index.php?title=Signed_kernel_modules&amp;oldid=633888</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 31 August 2020, at 17:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

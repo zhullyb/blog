@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Calibrating Touchscreen - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Calibrating_Touchscreen rootpage-Calibrating_Touchscreen skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Calibrating Touchscreen</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/Touchscreen.html" title="Touchscreen">Touchscreen</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b> <span style="color:red;">please use the second argument of the template to provide more detailed indications.</span> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Calibrating_Touchscreen">Talk:Calibrating Touchscreen#</a>)</div>
+</div>
+<p>To use multiple displays (some of which are touchscreens), you need to tell Xorg the mapping between the touch surface and the screen. This can be done using <code>xinput</code> to set the touchscreen's coordinate transformation matrix.
+</p>
+<p>This is a guide to do that, the old-fashioned way, in cases when xrandr does not know about your separate screens because they have been merged into one (e.g., when using TwinView).  Everyone else, please go to <a href="../en/Touchscreen.html" title="Touchscreen">Touchscreen</a> to do it the easy way.
+</p>
+<p>You will need to run the <code>xinput</code> command every time you attach the monitor or log in. Or course, you can add the command to your session-autostart.
+You can also use <a href="../en/Udev.html" title="Udev">Udev</a> to automate this.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Using_nVidia's_TwinView"><span class="tocnumber">1</span> <span class="toctext">Using nVidia's TwinView</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#Get_to_know_your_system"><span class="tocnumber">1.1</span> <span class="toctext">Get to know your system</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#Your_screen"><span class="tocnumber">1.1.1</span> <span class="toctext">Your screen</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#Your_touch_device"><span class="tocnumber">1.1.2</span> <span class="toctext">Your touch device</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href="#Touch_area"><span class="tocnumber">1.1.3</span> <span class="toctext">Touch area</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Calculate_the_Coordinate_Transformation_Matrix"><span class="tocnumber">1.2</span> <span class="toctext">Calculate the Coordinate Transformation Matrix</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Apply_the_Matrix"><span class="tocnumber">1.3</span> <span class="toctext">Apply the Matrix</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Do_it_automatically_via_a_udev_rule"><span class="tocnumber">1.4</span> <span class="toctext">Do it automatically via a udev rule</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#Troubleshooting"><span class="tocnumber">2</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Using_nVidia.27s_TwinView"></span><span class="mw-headline" id="Using_nVidia's_TwinView">Using nVidia's TwinView</span>
+</h2>
+<h3><span class="mw-headline" id="Get_to_know_your_system">Get to know your system</span></h3>
+<h4><span class="mw-headline" id="Your_screen">Your screen</span></h4>
+<p>Using TwinView, X will see all your Screens as one big screen. You can get your total height and width by executing
+</p>
+<pre>$ xrandr | grep \* # xrandr uses "*" to identify the screen being used
+</pre>
+<p>You should see a line like this:
+</p>
+<pre>3600x1230      50.0* 
+</pre>
+<p>what means, your total width is 3600 and your total height is 1230.
+</p>
+<h4><span class="mw-headline" id="Your_touch_device">Your touch device</span></h4>
+<p>Your next job is to get your device's name. Execute
+</p>
+<pre>$ xinput list
+</pre>
+<p>and find it by it's name. Find the item containing <code>[slave  pointer  (2)]</code>, which is usually your own device name. E.g. if the line can look like this
+</p>
+<pre>⎜   ↳ Acer T230H                              	id=24	[slave  pointer  (2)]
+</pre>
+<p>your device name is
+</p>
+<pre>Acer T230H
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> If your device contains both a stylus and a touch screen and more touch devices, then please pay attention to the name when determining the device.</div>
+<p>Execute
+</p>
+<pre>$ xinput list-props "<i>Device Name</i>"
+</pre>
+<p>and make sure there is a property called
+</p>
+<pre>Coordinate Transformation Matrix
+</pre>
+<p>(If not, you may probably selected the wrong device, please try another one.)
+</p>
+<h4><span class="mw-headline" id="Touch_area">Touch area</span></h4>
+<p>You need to shrink your touch area into a rectangle which is smaller than the total screen. This means, you have to know four values:
+</p>
+<ul>
+<li>Height of touch area</li>
+<li>Width of touch area</li>
+<li>horizontal offset (x offset) (amount of pixels between the left edge of your total screen and the left edge of your touch area)</li>
+<li>vertical offset (y offset) (amount of pixels between the top edge of your total screen and the top edge of your touch area)</li>
+</ul>
+<h3><span class="mw-headline" id="Calculate_the_Coordinate_Transformation_Matrix">Calculate the Coordinate Transformation Matrix</span></h3>
+<p>Now, calculate these as accurate as possible:
+</p>
+<ul>
+<li>c0 = touch_area_width / total_width</li>
+<li>c2 = touch_area_height / total_height</li>
+<li>c1 = touch_area_x_offset / total_width</li>
+<li>c3 = touch_area_y_offset / total_height</li>
+</ul>
+<p>The matrix is
+</p>
+<pre>[ c0 0  c1 ]
+[ 0  c2 c3 ]
+[ 0  0  1  ]
+</pre>
+<p>which is represented as a row-by-row array:
+</p>
+<pre>c0 0 c1 0 c2 c3 0 0 1
+</pre>
+<h3><span class="mw-headline" id="Apply_the_Matrix">Apply the Matrix</span></h3>
+<p>Execute
+</p>
+<pre>$ xinput set-prop "<i>Device Name</i>" --type=float "Coordinate Transformation Matrix" <i>c0</i> 0 <i>c1</i> 0 <i>c2</i> <i>c3</i> 0 0 1
+</pre>
+<p>e.g.
+</p>
+<pre>$ xinput set-prop "Acer T230H" --type=float "Coordinate Transformation Matrix" 0.533333333 0 0 0 0.87804878 0.12195122 0 0 1
+</pre>
+<p>to calibrate your touchscreen device. Now, it should work properly.
+</p>
+<h3><span class="mw-headline" id="Do_it_automatically_via_a_udev_rule">Do it automatically via a udev rule</span></h3>
+<p>Create a file something like <code>/etc/udev/rules.d/99-acer-touch.rules</code> with contents like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/rules.d/99-acer-touch.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">ENV{ID_VENDOR_ID}=="2149",ENV{ID_MODEL_ID}=="2703",ENV{WL_OUTPUT}="DVI1",ENV{LIBINPUT_CALIBRATION_MATRIX}="1 0 0  0 1 0"</pre>
+<p>Substitute your own touchscreen's vendor ID, model ID, the xrandr output name, and the calibration matrix that you calculated above.  This is based on the assumption that you are using the libinput driver for your touchscreen.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>If, after following these instructions, multiple clicks occur in different places when you touch the screen, you will need to build the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=xorg-server">xorg-server</a></span> package using the <a href="../en/Arch_Build_System.html" class="mw-redirect" title="ABS">ABS</a>, applying <a rel="nofollow" class="external text" href="https://patchwork.freedesktop.org/patch/5024/">this patch</a> before you build the package. (This patch fails on the current xorg source, but the bug is present on at least 1 system.)
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Input_devices.html" title="Category:Input devices">Input devices</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Calibrating_Touchscreen&amp;oldid=628944">https://wiki.archlinux.org/index.php?title=Calibrating_Touchscreen&amp;oldid=628944</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 August 2020, at 21:25.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

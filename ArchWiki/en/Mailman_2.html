@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Mailman 2 - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Mailman_2 rootpage-Mailman_2 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Mailman 2</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This page is about Mailman 2, for information about the current default, see <a href="../en/Mailman.html" class="mw-redirect" title="Mailman 3">Mailman 3</a>.</div>
+<p><a rel="nofollow" class="external text" href="http://www.list.org/">Mailman</a> is an application for managing electronic mailing lists. Normally you will use it along a <i>mail server</i> and also a <i>web server</i> too; for the first you may pick one between <a href="../en/Postfix.html" title="Postfix">Postfix</a>, <a href="../en/Exim.html" title="Exim">Exim</a>, <a href="../en/Sendmail.html" title="Sendmail">Sendmail</a> and Qmail —if you are unsure about which one to use, Postfix is a very good choice—; as for the latter, any web server is useful, common options are <a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a>, <a href="../en/Lighttpd.html" title="Lighttpd">Lighttpd</a> and <a href="../en/Nginx.html" title="Nginx">Nginx</a>. (These three pieces do not necessarily have to run on the same computer.) 
+</p>
+<p>Only the Mailman installation will be covered in this article. You can refer to the correspondent wiki pages to learn how to install the mail and web servers.
+</p>
+<p>For this guide we are going to suppose that you are using a machine called "arch" and you want to setup mailing lists for the organizations "a", "b" and "c", with example domains "a.org", "b.org" and "c.org" that point to "arch". For each domain,
+</p>
+<ul>
+<li>Mailman's <b>web interface</b> will be accessible from <code>lists.<i>example</i>.org</code> and</li>
+<li>the <b>lists' archives</b> under <code>lists.<i>example</i>.org/archives</code>.</li>
+<li>
+<b>Lists addresses</b> will look like <code><i>list</i>@<i>example</i>.org</code>.</li>
+</ul>
+<p><b>A caveat</b>: you can use a Mailman installation to manage lists for several domains, but two lists cannot have the same name even though its domains are different!
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Mailman_installation"><span class="tocnumber">1</span> <span class="toctext">Mailman installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Mailman_configuration"><span class="tocnumber">2</span> <span class="toctext">Mailman configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Web_Server_integration"><span class="tocnumber">2.1</span> <span class="toctext">Web Server integration</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#MTA_integration"><span class="tocnumber">2.2</span> <span class="toctext">MTA integration</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Postfix_integration"><span class="tocnumber">2.3</span> <span class="toctext">Postfix integration</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Exim_integration"><span class="tocnumber">2.4</span> <span class="toctext">Exim integration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Mail_Server_Configuration"><span class="tocnumber">3</span> <span class="toctext">Mail Server Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Postfix"><span class="tocnumber">3.1</span> <span class="toctext">Postfix</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Exim"><span class="tocnumber">3.2</span> <span class="toctext">Exim</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10">
+<a href="#Web_Server_Configuration"><span class="tocnumber">4</span> <span class="toctext">Web Server Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-11"><a href="#Nginx"><span class="tocnumber">4.1</span> <span class="toctext">Nginx</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Lighttpd"><span class="tocnumber">4.2</span> <span class="toctext">Lighttpd</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Apache"><span class="tocnumber">4.3</span> <span class="toctext">Apache</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Post_configuration"><span class="tocnumber">5</span> <span class="toctext">Post configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#Site-wide_mailing_list"><span class="tocnumber">5.1</span> <span class="toctext">Site-wide mailing list</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Set_up_timers"><span class="tocnumber">5.2</span> <span class="toctext">Set up timers</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Start_Mailman"><span class="tocnumber">5.3</span> <span class="toctext">Start Mailman</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Create_a_password"><span class="tocnumber">5.4</span> <span class="toctext">Create a password</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19"><a href="#Using_Mailman"><span class="tocnumber">6</span> <span class="toctext">Using Mailman</span></a></li>
+<li class="toclevel-1 tocsection-20">
+<a href="#Troubleshooting"><span class="tocnumber">7</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-21"><a href="#Postfix_2"><span class="tocnumber">7.1</span> <span class="toctext">Postfix</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#UTF-8"><span class="tocnumber">7.2</span> <span class="toctext">UTF-8</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Mailman_installation">Mailman installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mailman">mailman</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Mailman_configuration">Mailman configuration</span></h2>
+<p>The full set of configuration defaults lives in the <code>/usr/lib/mailman/Mailman/Defaults.py</code> file. However you should never modify this file! Instead, change the <b>mm_cfg.py</b> file, <code>/etc/mailman/mm_cfg.py</code>. You only need to add values to mm_cfg.py that are different than the defaults in Defaults.py. Future Mailman upgrades are guaranteed never to touch your mm_cfg.py file.
+</p>
+<h3><span class="mw-headline" id="Web_Server_integration">Web Server integration</span></h3>
+<pre>DEFAULT_URL_HOST = 'lists.a.org'
+
+VIRTUAL_HOSTS.clear()
+add_virtualhost(DEFAULT_URL_HOST, DEFAULT_EMAIL_HOST)
+add_virtualhost('lists.b.org', 'b.org')
+add_virtualhost('lists.c.org', 'c.org')
+
+POSTFIX_STYLE_VIRTUAL_DOMAINS = ['a.org', 'b.org', 'c.org']
+
+DEFAULT_URL_PATTERN = 'http://%s/'
+PUBLIC_ARCHIVE_URL = 'http://%(hostname)s/archives/%(listname)s'
+</pre>
+<p>For Apache make this change from the above:
+</p>
+<pre>DEFAULT_URL_PATTERN = 'http://%s/lists/'
+</pre>
+<h3><span class="mw-headline" id="MTA_integration">MTA integration</span></h3>
+<p>The content of <code>/etc/mailman/mm_cfg.py</code> varies depending on the chosen mail server.
+</p>
+<h3><span class="mw-headline" id="Postfix_integration">Postfix integration</span></h3>
+<pre>DEFAULT_EMAIL_HOST = 'a.org'
+MTA = 'Postfix'
+</pre>
+<p>Once you have edited mm_cfg.py, run
+</p>
+<pre># /usr/lib/mailman/bin/genaliases
+</pre>
+<p>to generate an aliases file that Postfix needs.
+</p>
+<h3><span class="mw-headline" id="Exim_integration">Exim integration</span></h3>
+<pre>DEFAULT_EMAIL_HOST = 'a.org'
+MTA = None
+</pre>
+<h2><span class="mw-headline" id="Mail_Server_Configuration">Mail Server Configuration</span></h2>
+<p><i>Note</i>: Ensure your domain name server (DNS) setup. For mail delivery on the internet, your DNS must be correct. An MX record should point to the mail host. More info about DNS is beyond the scope of this document.
+</p>
+<h3><span class="mw-headline" id="Postfix">Postfix</span></h3>
+<p>For installing and configuring this mail server, see <a href="../en/Postfix.html" title="Postfix">Postfix</a>. (If you will be using Postfix just for Mailman, its setup is much simpler: ignore all the <i>mailbox</i> and <i>database</i> stuff.)
+</p>
+<p><code>/etc/postfix/main.cf</code> should have the following fields and values:
+</p>
+<pre>myhostname = arch.a.org
+mydomain = a.org
+myorigin = $mydomain
+mydestination = localhost, a.org, b.org, c.org
+mynetworks_style = host
+
+alias_maps = hash:/etc/postfix/aliases, hash:/var/lib/mailman/data/aliases
+alias_database = $alias_maps
+virtual_alias_maps = hash:/etc/postfix/virtual, hash:/var/lib/mailman/data/virtual-mailman
+
+recipient_delimiter = +</pre>
+<h3><span class="mw-headline" id="Exim">Exim</span></h3>
+<p>Edit your <code>/etc/mail/exim.conf</code> to add entries in the following sections:
+</p>
+<p>In <code>routers</code>:
+</p>
+<pre>local_mailman_list:
+    driver = accept
+    require_files = /var/lib/mailman/lists/${lc::$local_part}/config.pck
+    local_part_suffix = -admin : -bounces : -bounces+* : -confirm : -confirm+* : -join : -leave : -owner : -request : -subscribe : -unsubscribe
+    local_part_suffix_optional
+    transport = mailman_transport</pre>
+<p>In <code>transports</code>:
+</p>
+<pre>mailman_transport:
+    driver = pipe
+    user = mailman
+    group = mailman
+    home_directory = /usr/lib/mailman
+    current_directory = /usr/lib/mailman
+    command = /usr/lib/mailman/mail/mailman '${if def:local_part_suffix {${sg{$local_part_suffix}{-(\\w+)(\\+.*)?}{\$1}}}{post}}' $local_part</pre>
+<h2><span class="mw-headline" id="Web_Server_Configuration">Web Server Configuration</span></h2>
+<h3><span class="mw-headline" id="Nginx">Nginx</span></h3>
+<p>For installing and configuring this web server, see <a href="../en/Nginx.html" title="Nginx">Nginx</a>. Mailman web interface relies on CGI processing; this setup uses Nginx along <code>fcgiwrap</code>, see <a href="../en/Nginx.html#fcgiwrap" title="Nginx">Nginx#fcgiwrap</a>. 
+</p>
+<p><code>/etc/nginx/nginx.conf</code> should include the following configuration per domain (example for <i>a.org</i>):
+</p>
+<pre>server {
+  server_name lists.a.org;
+  root /usr/lib/mailman/cgi-bin;
+
+  location = / {
+    rewrite ^ /listinfo permanent;
+  }
+
+  location / {
+    fastcgi_split_path_info ^(/[^/]*)(.*)$;
+    fastcgi_pass unix:/run/fcgiwrap.sock;
+    include fastcgi.conf;
+    fastcgi_param PATH_INFO         $fastcgi_path_info;
+    fastcgi_param PATH_TRANSLATED   $document_root$fastcgi_path_info;
+  }
+
+  location /icons {
+    alias /usr/lib/mailman/icons;
+  }
+
+  location /archives {
+    alias /var/lib/mailman/archives/public;
+    autoindex on;
+  }
+
+}</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Nginx must run with <code>user</code> http and <code>group</code> http or Mailman will complain. Be sure to define the <code>user</code> directive in <code>/etc/nginx/conf/nginx.conf</code> as follows (outside the <code>html</code> block):
+<pre>user http http;
+</pre>
+</div>
+<h3><span class="mw-headline" id="Lighttpd">Lighttpd</span></h3>
+<pre>server.modules = ("mod_rewrite",
+                  "mod_cgi")
+
+url.rewrite = ( "^/$" =&gt; "/listinfo" )
+alias.url = (
+        "/icons" =&gt; "/usr/lib/mailman/icons",
+        "/archives" =&gt; "/var/lib/mailman/archives/public"
+)
+
+cgi.assign = (
+        "/usr/lib/mailman/cgi-bin/admin" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/admin/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/admindb" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/admindb/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/confirm" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/confirm/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/create" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/create/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/edithtml" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/edithtml/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/listinfo" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/listinfo/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/options" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/options/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/private" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/private/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/rmlist" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/rmlist/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/roster" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/roster/" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/subscribe" =&gt; "",
+        "/usr/lib/mailman/cgi-bin/subscribe/" =&gt; ""
+        )
+
+$HTTP["host"] =~ "(^|\.)lists.a.org$" {
+        server.document-root            = "/usr/lib/mailman/cgi-bin/"
+        server.errorlog                 = "/var/log/lighttpd/lists.a.org_error.log"
+        accesslog.filename              = "/var/log/lighttpd/lists.a.org_access.log"
+}
+</pre>
+<h3><span class="mw-headline" id="Apache">Apache</span></h3>
+<p>Add following line to your <code>/etc/mailman/mm_cfg.py</code>:
+</p>
+<p><code>IMAGE_LOGOS = '/mailman-icons/'</code>
+</p>
+<p>The example use of of creating lists.a.org implies creating a vhost.  Consider moving the following config into a vhost definition instead of modifying your global httpd.conf.
+</p>
+<p>Modify your /etc/httpd/conf/httpd.conf with the following snippets added.
+</p>
+<pre>&lt;IfModule alias_module&gt;
+    Alias /mailman-icons/ "/usr/lib/mailman/icons/"
+    Alias /archives/ "/var/lib/mailman/archives/public/"
+    ScriptAlias /lists/ "/usr/lib/mailman/cgi-bin/"
+    ScriptAlias / "/usr/lib/mailman/cgi-bin/listinfo"
+&lt;/IfModule&gt;
+
+&lt;Directory "/usr/lib/mailman/cgi-bin/"&gt;
+    AllowOverride None
+    Options Indexes FollowSymlinks ExecCGI
+    Require all granted
+&lt;/Directory&gt;
+
+&lt;Directory "/usr/lib/mailman/icons/"&gt;
+    Require all granted
+&lt;/Directory&gt;
+
+&lt;Directory "/var/lib/mailman/archives/public/"&gt;
+    Require all granted
+&lt;/Directory&gt;
+</pre>
+<p>Restart httpd <a href="../en/Systemd.html" title="Systemd">systemd</a> service.
+</p>
+<h2><span class="mw-headline" id="Post_configuration">Post configuration</span></h2>
+<h3><span class="mw-headline" id="Site-wide_mailing_list">Site-wide mailing list</span></h3>
+<p>To create this specific list requested by Mailman for its proper operation (between other things, it is used for password reminders), run:
+</p>
+<pre># /usr/lib/mailman/bin/newlist mailman
+</pre>
+<p>This will create a list called "mailman" under the default domain (<i>mailman@a.org</i> in the example). You do not have to do it for the other domains (i.e. <i>b.org</i> and <i>c.org</i>).
+</p>
+<p>Later you should also subscribe yourself to the site list.
+</p>
+<h3><span class="mw-headline" id="Set_up_timers">Set up timers</span></h3>
+<p>Several Mailman features occur on a regular schedule, so you must set up <a href="../en/Systemd/Timers.html" title="Systemd/Timers">timers</a> to run the right programs at the right time. 
+</p>
+<pre># cd /usr/lib/systemd/system
+# for X in mailman-*.timer ; do systemctl enable $X &amp;&amp; systemctl start $X ; done
+</pre>
+<h3><span class="mw-headline" id="Start_Mailman">Start Mailman</span></h3>
+<p>Mailman will not start processing and sending emails until the <code>mailman</code> daemon is started, and optionally enabled, with <a href="../en/Systemd.html#Using_units" title="Systemd">systemctl</a>.
+</p>
+<p>If you run into problems, run it more verbose so it can help you troubleshoot:
+</p>
+<pre># /usr/lib/mailman/bin/mailmanctl start
+</pre>
+<h3><span class="mw-headline" id="Create_a_password">Create a password</span></h3>
+<p>There are two type of passwords that you can create from the command line. The first is the "general password" which can be used anywhere a password is required in the system. The site password will get you into the administration page for any list, and it can be used to log in as any user.
+</p>
+<p>The second password is a site-wide "list creator" password. You can use this to delegate the ability to create new mailing lists without providing all the privileges of the site password. Of course, the owner of the site password can also create new mailing lists, but the list creator password is limited to just that special role. 
+</p>
+<p>To set the general password, use this command:
+</p>
+<pre># /usr/lib/mailman/bin/mmsitepass &lt;general-password&gt;
+</pre>
+<p>To set the list creator password, this:
+</p>
+<pre># /usr/lib/mailman/bin/mmsitepass -c &lt;list-creator-password&gt;
+</pre>
+<p>It is okay not to set a list creator password, but you probably do want a general password.
+</p>
+<h2><span class="mw-headline" id="Using_Mailman">Using Mailman</span></h2>
+<p>To administrate your lists (create and configure lists, manage users, etcetera) use the web interface; remember that each domain has its own. For example, the URL of organization "a" would be <i><a rel="nofollow" class="external free" href="http://lists.a.org">http://lists.a.org</a></i>.
+</p>
+<p>Mailman can be also managed by command-line. Example for list creation:
+</p>
+<pre># newlist --urlhost=lists.b.org --emailhost=b.org list_name
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<p>You should check that your installation has all the correct permissions and group ownerships by running the <b>check_perms</b> script: 
+</p>
+<pre># /usr/lib/mailman/bin/check_perms
+</pre>
+<p>. If it reports problems, then you can either fix them manually or use the same program to fix them (probably the easiest solution):
+</p>
+<pre># /usr/lib/mailman/bin/check_perms -f
+</pre>
+<p>. Repeat previous steps until no more errors are reported!
+</p>
+<h3><span class="mw-headline" id="Postfix_2">Postfix</span></h3>
+<p>Make sure that the files in <code>/var/lib/mailman/data/</code>:
+</p>
+<ul>
+<li>aliases.db,</li>
+<li>aliases,</li>
+<li>virtual-mailman,</li>
+<li>virtual-mailman.db,</li>
+</ul>
+<p>are <b>user</b> and <b>group</b> owned by <i>mailman</i> and that are <b>group writable</b>.
+</p>
+<h3><span class="mw-headline" id="UTF-8">UTF-8</span></h3>
+<p><a rel="nofollow" class="external free" href="http://www.divideandconquer.se/2009/08/17/convert-mailman-translation-to-utf-8">http://www.divideandconquer.se/2009/08/17/convert-mailman-translation-to-utf-8</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul><li><a rel="nofollow" class="external text" href="http://list.org/mailman-install/index.html">GNU Mailman installation manual</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Email.html" title="Category:Email">Email</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Mailman_2&amp;oldid=615016">https://wiki.archlinux.org/index.php?title=Mailman_2&amp;oldid=615016</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 22 May 2020, at 15:00.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

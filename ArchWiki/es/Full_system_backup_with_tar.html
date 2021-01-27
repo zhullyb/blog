@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Full system backup with tar (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Full_system_backup_with_tar_Español rootpage-Full_system_backup_with_tar_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Full system backup with tar (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Full_system_backup_with_tar.html" title="Full system backup with tar">Full system backup with tar</a> revisada por última vez el <b>2019-11-15</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Full_system_backup_with_tar&amp;diff=0&amp;oldid=563848">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../es/Full_system_backup_with_SquashFS.html" title="Full system backup with SquashFS (Español)">Full system backup with SquashFS (Español)</a></li>
+</ul>
+</div>
+<p>Este artículo le enseñará como hacer una copia de seguridad de todo el sistema con <a href="../es/Archiving_and_compression.html" class="mw-redirect" title="Tar (Español)">tar</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Descripci%C3%B3n"><span class="tocnumber">1</span> <span class="toctext">Descripción</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Arrancar_con_LiveCD"><span class="tocnumber">2</span> <span class="toctext">Arrancar con LiveCD</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Cambiar_a_un_entorno_enjaulado"><span class="tocnumber">3</span> <span class="toctext">Cambiar a un entorno enjaulado</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Montar_otras_particiones"><span class="tocnumber">4</span> <span class="toctext">Montar otras particiones</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Excluir_archivos"><span class="tocnumber">5</span> <span class="toctext">Excluir archivos</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Script_para_realizar_la_copia_de_seguridad"><span class="tocnumber">6</span> <span class="toctext">Script para realizar la copia de seguridad</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Restaurar"><span class="tocnumber">7</span> <span class="toctext">Restaurar</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#Realizar_copia_de_seguridad_con_compresi%C3%B3n_parallel"><span class="tocnumber">8</span> <span class="toctext">Realizar copia de seguridad con compresión parallel</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id="Descripci.C3.B3n"></span><span class="mw-headline" id="Descripción">Descripción</span>
+</h2>
+<p>Crear una copia de seguridad con <a href="https://en.wikipedia.org/wiki/es:Tar" class="extiw" title="wikipedia:es:Tar">tar</a> tiene la ventaja de usar compresión que puede ayudar a guardar espacio en disco, y aportar simplicidad. El proceso solo requiere varios pasos, que son:
+</p>
+<ol>
+<li>Arrancar desde un LiveCD.</li>
+<li>Pasar al entorno enjaulado de la instalación Linux.</li>
+<li>Montar (si hubiesen) otras particiones/discos.</li>
+<li>Añadir exclusiones.</li>
+<li>Utilizar el script de respaldo para hacer la copia de seguridad</li>
+</ol>
+<p>Para reducir al mínimo la inactividad la copia de seguridad puede alternativamente realizarse en un sistema en ejecución usando <a href="../es/LVM.html#Instant%C3%A1neas/Snapshots" title="LVM (Español)">instantáneas LVM</a>,
+si todos los sistemas de archivos están montados en volúmenes LVM.
+</p>
+<h2><span class="mw-headline" id="Arrancar_con_LiveCD">Arrancar con LiveCD</span></h2>
+<p>Muchos LiveCD, USB... tienen la capacidad de dejarle cambiar al entorno enjaulado de su instalación. Aunque no es requisito montar una jaula para hacer la copia de seguridad, esto proporciona la capacidad para ejecutar el script sin tener que pasarlo a un dispositivo de almacenamiento temporal o tener que ubicarlo en el sistema de archivos. El medio vivo debe compartir con la instalación linux la misma arquitectura (es decir, i686 o x86_64).
+</p>
+<h2><span class="mw-headline" id="Cambiar_a_un_entorno_enjaulado">Cambiar a un entorno enjaulado</span></h2>
+<p>Lo primero que debería tener es un entorno de para ejecutar scripts («scripting») en su instalación Linux. Si no sabe lo que es, significa que puede ejecutar cualquier script que pueda tener como si fuera un programa normal. Si no pudiese, vea este <a rel="nofollow" class="external text" href="https://linuxtidbits.wordpress.com/2009/12/03/setting-up-a-scripting-environment/">artículo</a> para saber como hacerlo. Lo siguiente que necesita es pasar al entorno enjaulado, para aprender más sobre este proceso, lea <a href="../es/Chroot.html" class="mw-redirect" title="Change root (Español)">esto</a>. Dentro de una jaula, no necesita ningún sistema de archivos temporal (<code>/proc</code>, <code>/sys</code> y <code>/dev</code>). Estos sistemas de archivos se inicializan durante el arranque y en verdad no debe hacer una copia de ellos, ya que pueden interferir con la correcta (y necesaria) inicialización del sistema, que puede cambiar con cualquier actualización. Para cambiar al entorno enjaulado, tiene que montar la partición raíz de su instalación Linux. Por ejemplo:
+</p>
+<pre>mkdir /mnt/arch
+mount /dev/&lt;su partición o disco&gt;
+</pre>
+<p>Use <code>fdisk -l</code> para descubrir sus particiones y discos. Una vez lo sepa, ejecute <code>chroot</code>:
+</p>
+<pre>cd /mnt/arch
+chroot . /bin/bash
+</pre>
+<p>Este ejemplo claramente usa bash pero puede utilizar otros intérpretes de órdenes si están disponibles. Ahora se encontrará en su entorno de scripting (esto es proporcionado si se haya cargado el archivo de configuración <code>~/.bashrc</code> al entrar en la jaula):
+</p>
+<pre>cat ~/.bash_profile
+# Si usa bash, carga la configuración del archivo local .bashrc
+source ~/.bashrc
+</pre>
+<h2><span class="mw-headline" id="Montar_otras_particiones">Montar otras particiones</span></h2>
+<p>Otras particiones que use tendrán que ser montadas en su ubicaciones correspondientes (por ejemplo, si tiene una partición <code>/home</code> separada).
+</p>
+<h2><span class="mw-headline" id="Excluir_archivos">Excluir archivos</span></h2>
+<p><code>tar</code> tiene la capacidad de ignorar ciertos archivos y carpetas. La sintaxis requiere colocar cada archivo o carpeta a ignorar en una línea distinta. <code>tar</code> también tiene la capacidad de entender expresiones regulares (regexps).  Por ejemplo:
+</p>
+<pre># No copias antiguas                                                               
+/opt/backup/arch-full*                                                                   
+                                                                                
+# No archivos temporales                                                           
+/tmp/*
+
+# No a la caché de pacman
+/var/cache/pacman/pkg/
+...
+</pre>
+<h2><span class="mw-headline" id="Script_para_realizar_la_copia_de_seguridad">Script para realizar la copia de seguridad</span></h2>
+<p>Respaldar con tar es un proceso directo. Aquí tiene un script básico que puede hacerlo y que hace además unas cuantas comprobaciones. Tendrá que modificar este script definiendo la ubicación donde poner la copia, los archivos a excluir (si tiene alguno), y ejecutarlo una vez haya pasado al entorno <code>chroot</code> y montado todas las particiones.
+</p>
+<pre>#!/bin/bash
+# Copia completa del sistema
+
+# Destino de la copia
+backdest=/opt/backup
+
+# Etiquetas para la copia
+#PC=${HOSTNAME}
+pc=pavilion
+distro=arch
+type=full
+date=$(date "+%F")
+backupfile="$backdest/$distro-$type-$date.tar.gz"
+
+# Exclusión de ubicación de archivo
+prog=${0##*/} # Nombre de programa según el nombre del archivo
+excdir="/home/&lt;user&gt;/.bin/root/backup"
+exclude_file="$excdir/$prog-exc.txt"
+
+# Comprobación de jaula
+echo -n "Recuerde hacer chroot desde un LiveCD. ¿Ejecutar la copia de seguridad? (s/n): "
+read executeback
+
+# Comprobar si el archivo de exclusión existe
+if [ ! -f $exclude_file ]; then
+  echo -n "No existen ningún archivo excluido, ¿continuar? (s/n): "
+  read continue
+  if [ $continue == "n" ]; then exit; fi
+fi
+
+if [ $executeback = "s" ]; then
+  # -p y --xattrs almacenan todos los permisos y atributos extendidos.
+  # Sin ambos, muchos programas dejarán de funcionar.
+  # Es seguro eliminar el indicador detallado (-v). Si estás usando un
+  # terminal lenta, esto puede acelerar el proceso de copia de seguridad.
+  tar --exclude-from=$exclude_file --xattrs -czpvf $backupfile /
+fi
+</pre>
+<h2><span class="mw-headline" id="Restaurar">Restaurar</span></h2>
+<p>Para restaurar desde una copia de seguridad anterior, monte todas las particiones relevantes, cambie el directorio de trabajo actual al directorio raíz y ejecute:
+</p>
+<pre>bsdtar --xattrs -xpf $backupfile
+</pre>
+<p>reemplazando $backupfile con el archivo de respaldo. La eliminación de todos los archivos que se agregaron desde que se realizó la copia de seguridad debe realizarse manualmente. Recreando los sistemas de archivos es una manera fácil de hacer esto.
+</p>
+<h2>
+<span id="Realizar_copia_de_seguridad_con_compresi.C3.B3n_parallel"></span><span class="mw-headline" id="Realizar_copia_de_seguridad_con_compresión_parallel">Realizar copia de seguridad con compresión parallel</span>
+</h2>
+<p>Para realizar una copia de seguridad con compresión parallel (<a href="https://en.wikipedia.org/wiki/es:Multiprocesamiento_sim%C3%A9trico" class="extiw" title="wikipedia:es:Multiprocesamiento simétrico">SMP</a>), utilice <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pbzip2">pbzip2</a></span> (Parallel bzip2).
+</p>
+<p>Primero haga una copia de seguridad de los archivos en un archivo tarball simple sin compresión:
+</p>
+<pre># tar -cvf /<i>ruta_de_destino</i>/etc-backup.tar /etc
+</pre>
+<p>Luego utilice pbzip2 para comprimirlo con parallel:
+</p>
+<pre>$ pbzip2 /ruta/a/directorio/elegid/etc-backup.tar.bz2
+</pre>
+<p>Almacene <code>etc-backup.tar.bz2</code> en uno o más medios sin conexión, como una memoria USB, disco duro externo o CD-R. Ocasionalmente verifique la integridad del proceso de copia de seguridad comparando los archivos y directorios originales con sus copias de seguridad. Posiblemente mantenga una lista de «hashes» de los archivos respaldados para hacer la comparación más rápida.
+</p>
+<p>Restaure los archivos corruptos de <code>/etc</code> extrayendo el archivo <code>etc-backup.tar.bz2</code> en un directorio de trabajo temporal y copiando archivos y directorios individuales según sea necesario. Para restaurar todo el directorio <code>/etc</code> con todo su contenido, ejecute la siguiente orden como root:
+</p>
+<pre>tar -xvjf etc-backup.tar.bz2 -C /
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Backup.html" title="Category:Backup (Español)">Backup (Español)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Full_system_backup_with_tar_(Espa%C3%B1ol)&amp;oldid=631110">https://wiki.archlinux.org/index.php?title=Full_system_backup_with_tar_(Español)&amp;oldid=631110</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 11 August 2020, at 19:29.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

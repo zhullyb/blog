@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Bcache - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Bcache rootpage-Bcache skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Bcache</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Some first-person comments, see <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Bcache">Talk:Bcache#</a>)</div>
+</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Flashcache.html" title="Flashcache">Flashcache</a></li>
+<li><a href="../en/LVM.html" class="mw-redirect" title="LVM2">LVM2</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://bcache.evilpiepirate.org/">Bcache</a> (block cache) allows one to use an SSD as a read/write cache (in writeback mode) or read cache (writethrough or writearound) for another blockdevice (generally a rotating HDD or array). This article will show how to install arch using Bcache as the root partition. For an intro to bcache itself, see <a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org/">the bcache homepage</a>. Be sure to read and reference <a rel="nofollow" class="external text" href="https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt">the bcache manual</a>. Bcache is in the mainline kernel since 3.10. The kernel on the arch install disk includes the bcache module since 2013.08.01.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> An alternative to Bcache is the <a href="../en/LVM.html#Cache" title="LVM">LVM cache</a>.</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Backwards incompatible changes to on-disk format for linux 3.18 appears to be false. bcache on-disk format changes have not yet landed upstream yet as of 3.19 (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Bcache">Talk:Bcache#</a>)</div>
+</div>
+<p>Bcache needs the backing device to be formatted as a bcache block device.  In most cases, <a rel="nofollow" class="external text" href="https://github.com/g2p/blocks">blocks to-bcache</a> can do an in-place conversion.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Be sure you back up any important data first.</li>
+<li>The bcache-dev branch is under heavy development. The on-disk format has undergone changes in 3.18 which are not backwards compatible with previous formats<a rel="nofollow" class="external autonumber" href="http://www.spinics.net/lists/linux-bcache/msg02721.html">[1]</a>. Note: This only applies to users who compile-in bcache-dev. The version built-in to the upstream Linux kernel is unaffected<a rel="nofollow" class="external autonumber" href="http://www.spinics.net/lists/linux-bcache/msg02724.html">[2]</a>.</li>
+<li>Bcache and <a href="../en/Btrfs.html" title="Btrfs">btrfs</a> could leave you with a corrupted filesystem. Please visit <a rel="nofollow" class="external text" href="https://www.hdevalence.ca/blog/2013-09-21-notes-on-my-archlinux-install">this post</a> for more information. Btrfs wiki reports that it was fixed in kernels 3.19+ <a rel="nofollow" class="external autonumber" href="https://btrfs.wiki.kernel.org/index.php/Gotchas#Historical_references">[3]</a>.</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Setting_up_bcached_btrfs_file_systems_on_an_existing_system"><span class="tocnumber">1</span> <span class="toctext">Setting up bcached btrfs file systems on an existing system</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Preparation"><span class="tocnumber">1.1</span> <span class="toctext">Preparation</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Situation:_1_hard_drive_and_1_read_cache_SSD"><span class="tocnumber">1.2</span> <span class="toctext">Situation: 1 hard drive and 1 read cache SSD</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Situation:_4_hard_drives_and_1_read_cache_SSD"><span class="tocnumber">1.3</span> <span class="toctext">Situation: 4 hard drives and 1 read cache SSD</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Situation:_3_hard_drives_and_3_read/write_cache_SSD's"><span class="tocnumber">1.4</span> <span class="toctext">Situation: 3 hard drives and 3 read/write cache SSD's</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Situation:_5_hard_drives_and_3_cache_SSD's"><span class="tocnumber">1.5</span> <span class="toctext">Situation: 5 hard drives and 3 cache SSD's</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Bcache_management"><span class="tocnumber">1.6</span> <span class="toctext">Bcache management</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Installation_to_a_bcache_device"><span class="tocnumber">2</span> <span class="toctext">Installation to a bcache device</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Accessing_from_the_install_disk"><span class="tocnumber">3</span> <span class="toctext">Accessing from the install disk</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#Configuring"><span class="tocnumber">4</span> <span class="toctext">Configuring</span></a></li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Advanced_operations"><span class="tocnumber">5</span> <span class="toctext">Advanced operations</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12">
+<a href="#Resize_backing_device"><span class="tocnumber">5.1</span> <span class="toctext">Resize backing device</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#Example_of_growing"><span class="tocnumber">5.1.1</span> <span class="toctext">Example of growing</span></a></li>
+<li class="toclevel-3 tocsection-14">
+<a href="#Example_of_shrinking"><span class="tocnumber">5.1.2</span> <span class="toctext">Example of shrinking</span></a>
+<ul>
+<li class="toclevel-4 tocsection-15"><a href="#Force_flush_of_cache_to_backing_device"><span class="tocnumber">5.1.2.1</span> <span class="toctext">Force flush of cache to backing device</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Troubleshooting"><span class="tocnumber">6</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#/dev/bcache_device_does_not_exist_on_bootup"><span class="tocnumber">6.1</span> <span class="toctext">/dev/bcache device does not exist on bootup</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#/sys/fs/bcache/_does_not_exist"><span class="tocnumber">6.2</span> <span class="toctext">/sys/fs/bcache/ does not exist</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19"><a href="#See_also"><span class="tocnumber">7</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Setting_up_bcached_btrfs_file_systems_on_an_existing_system">Setting up bcached btrfs file systems on an existing system</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> make-bcache <b>will not</b> import an existing drive or partition – it will reformat it. If you want to use an existing data partition as backing device, see <a href="#Converting_existing_disks">#Converting existing disks</a><sup>[<a href="../en/Help:Procedures.html#Fix_broken_section_links" title="Help:Procedures">broken link</a>: invalid section]</sup>.</div>
+<h3><span class="mw-headline" id="Preparation">Preparation</span></h3>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>.
+</p>
+<p>Use fdisk to create the appropriate partitions on the SSD's and hard drives to hold the cache and the backing data.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong>  It's possible to create many partitions on a single drive. This allows for testing of elaborate setups before committing. Be aware all data will be lost when the drive fails. This will also kill performance of the drive, due to unfavorable access patterns.</div>
+<h3><span class="mw-headline" id="Situation:_1_hard_drive_and_1_read_cache_SSD">Situation: 1 hard drive and 1 read cache SSD</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  
+<ul>
+<li>When a single hard drive fails, all data is lost.</li>
+<li>Don't enable write caching, as that can cause data loss when the SSD fails</li>
+</ul>
+</div>
+<pre>+--------------+
+| btrfs /mnt   |
++--------------+
+| /dev/Bcache0 |
++--------------+
+| Cache        |
+| /dev/sdk1    |
++--------------+
+| Data         |
+| /dev/sdv1    |
++--------------+
+</pre>
+<p>1. Format the backing device (This will typically be your mechanical drive). The backing device can be a whole device, a partition or any other standard block device. This will create /dev/bcache0
+</p>
+<pre># make-bcache -B /dev/sdv1
+</pre>
+<p>2. Format the cache device (This will typically be your SSD). The cache device can be a whole device, a partition or any other standard block device
+</p>
+<pre># make-bcache -C /dev/sdk1
+</pre>
+<p>In this example the default block and bucket sizes of 512B and 128kB are used. The block size should match the backing devices sector size which will usually be either 512 or 4k. The bucket size should match the erase block size of the caching device with the intent of reducing write amplification. For example, using a HDD with 4k sectors and an SSD with an erase block size of 2MB this command would look like
+</p>
+<pre># make-bcache --block 4k --bucket 2M -C /dev/sdk1
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You may need to omit the <code>--block 4k</code> option, see <a rel="nofollow" class="external text" href="https://unix.stackexchange.com/questions/359508/cannot-attach-cache-device-to-backing-device">Cannot attach cache device to backing device</a>.</div>
+<p>3. Get the uuid of the cache device
+</p>
+<pre># bcache-super-show /dev/sdk1 | grep cset
+cset.uuid		f0e01318-f4fd-4fab-abbb-d76d870503ec
+</pre>
+<p>4. Register the cache device against your backing device. Replace the example uuid with the uuid of your cache. Udev rules will take care of this on reboot and will only need to be done once.
+</p>
+<pre># echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache0/bcache/attach
+</pre>
+<p>5. Create the btrfs filesystem.
+</p>
+<pre># mkfs.btrfs /dev/bcache0
+</pre>
+<p>6. mount the filesystem
+</p>
+<pre># mount /dev/bcache0 /mnt
+</pre>
+<p>7. If you want to have this partition available during the initcpio (i.e. you require it at some point in the boot process) you need to add 'bcache' to your modules array in /etc/mkinitcpio.conf as well as adding the 'bcache' hook in your list between block and filesystems. You must then <a href="../en/Mkinitcpio.html#Image_creation_and_activation" class="mw-redirect" title="Regenerate the initramfs">regenerate the initramfs</a>.
+</p>
+<h3><span class="mw-headline" id="Situation:_4_hard_drives_and_1_read_cache_SSD">Situation: 4 hard drives and 1 read cache SSD</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  
+<ul><li>Don't enable write caching, as that can cause data loss when the SSD fails</li></ul>
+</div>
+<pre>+-----------------------------------------------------------+
+|                         btrfs /mnt                        |
++--------------+--------------+--------------+--------------+
+| /dev/Bcache0 | /dev/Bcache1 | /dev/Bcache2 | /dev/Bcache3 |
++--------------+--------------+--------------+--------------+
+|                           Cache                           |  
+|                         /dev/sdk1                         |
++--------------+--------------+--------------+--------------+
+| Data         | Data         | Data         | Data         |
+| /dev/sdv1    | /dev/sdw1    | /dev/sdx1    | /dev/sdy1    |
++--------------+--------------+--------------+--------------+
+</pre>
+<p>1. Format the backing devices (These will typically be your mechanical drives). The backing devices can be whole devices, partitions or any other standard block devices. This will create /dev/bcache0, /dev/bcache1, /dev/bcache2 and /dev/bcache3 
+</p>
+<pre># make-bcache -B /dev/sdv1
+# make-bcache -B /dev/sdw1
+# make-bcache -B /dev/sdx1
+# make-bcache -B /dev/sdy1
+</pre>
+<p>2. Format the cache device (This will typically be your SSD). The cache device can be a whole device, a partition or any other standard block device. Only one cache device can be added to a group of backing devices.
+</p>
+<pre># make-bcache -C /dev/sdk1
+</pre>
+<p>3. Get the uuid of the cache device
+</p>
+<pre># bcache-super-show /dev/sdk1 | grep cset
+cset.uuid		f0e01318-f4fd-4fab-abbb-d76d870503ec
+</pre>
+<p>4. Register the cache device against your backing devices. Replace the example uuid with the uuid of your cache.
+</p>
+<pre># echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache0/bcache/attach
+# echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache1/bcache/attach
+# echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache2/bcache/attach
+# echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache3/bcache/attach
+</pre>
+<p>5. Create the btrfs filesystem. Both the data and the metadata is stored twice in the array, so there will be no data loss when a single hard drive fails. The -L argument defines the label of the filesystem.
+</p>
+<pre># mkfs.btrfs -L STORAGE -f -d raid1 -m raid1 /dev/bcache0 /dev/bcache1 /dev/bcache2 /dev/bcache3 
+</pre>
+<p>6. mount the filesystem
+</p>
+<pre># mount /dev/bcache0 /mnt
+</pre>
+<h3>
+<span id="Situation:_3_hard_drives_and_3_read.2Fwrite_cache_SSD.27s"></span><span class="mw-headline" id="Situation:_3_hard_drives_and_3_read/write_cache_SSD's">Situation: 3 hard drives and 3 read/write cache SSD's</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  
+<ul><li>Each HDD needs it's own SSD, to avoid data loss if a SSD in writeback mode fails.</li></ul>
+</div>
+<pre>+--------------------------------------------+
+|                  btrfs /mnt                |
++--------------+--------------+--------------+
+| /dev/Bcache0 | /dev/Bcache1 | /dev/Bcache2 |
++--------------+--------------+--------------+
+| Cache        | Cache        | Cache        |  
+| /dev/sdk1    | /dev/sdl1    | /dev/sdm1    |
++--------------+--------------+--------------+
+| Data         | Data         | Data         |
+| /dev/sdv1    | /dev/sdw1    | /dev/sdx1    |
++--------------+--------------+--------------+
+</pre>
+<p>1. Format the backing devices (These will typically be your mechanical drives). The backing devices can be whole devices, partitions or any other standard block devices. This will create /dev/bcache0, /dev/bcache1 and /dev/bcache2.
+</p>
+<pre># make-bcache -B /dev/sdv1
+# make-bcache -B /dev/sdw1
+# make-bcache -B /dev/sdx1
+</pre>
+<p>2. Format the cache devices (This will typically be your SSD's). The cache devices can be whole devices, partitions or any other standard block devices. To avoid data loss in case of a failing SSD, each backing device needs it's own SSD if it's in writeback mode. Cache SSD's in writethrough and in writearound mode can be shared by multiple backing devices, as they don't cause data loss when they fail.
+</p>
+<pre># make-bcache -C /dev/sdk1
+# make-bcache -C /dev/sdl1
+# make-bcache -C /dev/sdm1
+</pre>
+<p>3. Get the uuid of the cache devices
+</p>
+<pre># bcache-super-show /dev/sdk1 | grep cset
+cset.uuid		f0e01318-f4fd-4fab-abbb-d76d870503ec
+# bcache-super-show /dev/sdl1 | grep cset
+cset.uuid		4b05ce02-19f4-4cc6-8ca0-1f765671ceda
+# bcache-super-show /dev/sdm1 | grep cset
+cset.uuid		75ff0598-7624-46f6-bcac-c27a3cf1a09f
+</pre>
+<p>4. Register the cache devices against your backing devices. Replace the example uuid's with the uuid's of your caches.
+</p>
+<pre># echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache0/bcache/attach
+# echo 4b05ce02-19f4-4cc6-8ca0-1f765671ceda &gt; /sys/block/bcache1/bcache/attach
+# echo 75ff0598-7624-46f6-bcac-c27a3cf1a09f &gt; /sys/block/bcache2/bcache/attach
+</pre>
+<p>5. enable writeback mode 
+</p>
+<pre># echo writeback &gt; /sys/block/bcache0/bcache/cache_mode
+# echo writeback &gt; /sys/block/bcache1/bcache/cache_mode
+# echo writeback &gt; /sys/block/bcache2/bcache/cache_mode
+</pre>
+<p>6. Create the btrfs filesystem. Both the data and the metadata is stored twice in the array, so there will be no data loss when a single hard drive fails. The -L argument defines the label of the filesystem.
+</p>
+<pre># mkfs.btrfs -L STORAGE -f -d raid1 -m raid1 /dev/bcache0 /dev/bcache1 /dev/bcache2
+</pre>
+<p>7. mount the filesystem
+</p>
+<pre># mount /dev/bcache0 /mnt
+</pre>
+<h3>
+<span id="Situation:_5_hard_drives_and_3_cache_SSD.27s"></span><span class="mw-headline" id="Situation:_5_hard_drives_and_3_cache_SSD's">Situation: 5 hard drives and 3 cache SSD's</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong>  
+<ul><li>Each cache device in writeback mode must only be used to cache a single backing drive, to avoid data loss if that SSD fails. Writethrough and writearound SSD's can be shared.</li></ul>
+</div>
+<pre>+--------------------------------------------------------------------------+
+|                                btrfs /mnt                                |
++--------------+--------------+--------------+--------------+--------------+
+| /dev/Bcache0 | /dev/Bcache1 | /dev/Bcache2 | /dev/Bcache3 | /dev/Bcache4 |
++--------------+--------------+--------------+--------------+--------------+
+| WriteB Cache |     Writethrough or writearound Cache      | WriteB Cache |  
+| /dev/sdk1    |                 /dev/sdl1                  | /dev/sdm1    |
++--------------+--------------+--------------+--------------+--------------+
+| Data         | Data         | Data         | Data         | Data         |
+| /dev/sdv1    | /dev/sdw1    | /dev/sdx1    | /dev/sdy1    | /dev/sdz1    |
++--------------+--------------+--------------+--------------+--------------+
+</pre>
+<p>1. Format the backing devices (These will typically be your mechanical drives). The backing devices can be whole devices, partitions or any other standard block devices. This will create /dev/bcache0, /dev/bcache1, /dev/bcache2, /dev/bcache3 and /dev/bcache4.
+</p>
+<pre># make-bcache -B /dev/sdv1
+# make-bcache -B /dev/sdw1
+# make-bcache -B /dev/sdx1
+# make-bcache -B /dev/sdy1
+# make-bcache -B /dev/sdz1
+</pre>
+<p>2. Format the cache devices (This will typically be your SSD's). The cache devices can be whole devices, partitions or any other standard block devices. To avoid data loss in case of a failing SSD, each backing device needs it's own SSD if it's in writeback mode. Cache SSD's in writethrough and in writearound mode can be shared by multiple backing devices, as they don't cause data loss when they fail.
+</p>
+<pre># make-bcache -C /dev/sdk1
+# make-bcache -C /dev/sdl1
+# make-bcache -C /dev/sdm1
+</pre>
+<p>3. Get the uuid of the cache devices
+</p>
+<pre># bcache-super-show /dev/sdk1 | grep cset
+cset.uuid		f0e01318-f4fd-4fab-abbb-d76d870503ec
+# bcache-super-show /dev/sdl1 | grep cset
+cset.uuid		4b05ce02-19f4-4cc6-8ca0-1f765671ceda
+# bcache-super-show /dev/sdm1 | grep cset
+cset.uuid		75ff0598-7624-46f6-bcac-c27a3cf1a09f
+</pre>
+<p>4. Register the cache devices against your backing devices. Replace the example uuid's with the uuid's of your caches.
+</p>
+<pre># echo f0e01318-f4fd-4fab-abbb-d76d870503ec &gt; /sys/block/bcache0/bcache/attach
+# echo 4b05ce02-19f4-4cc6-8ca0-1f765671ceda &gt; /sys/block/bcache1/bcache/attach
+# echo 4b05ce02-19f4-4cc6-8ca0-1f765671ceda &gt; /sys/block/bcache2/bcache/attach
+# echo 4b05ce02-19f4-4cc6-8ca0-1f765671ceda &gt; /sys/block/bcache3/bcache/attach
+# echo 75ff0598-7624-46f6-bcac-c27a3cf1a09f &gt; /sys/block/bcache4/bcache/attach
+</pre>
+<p>5. enable writeback mode on non-shared caches
+</p>
+<pre># echo writeback &gt; /sys/block/bcache0/bcache/cache_mode
+# echo writeback &gt; /sys/block/bcache4/bcache/cache_mode
+</pre>
+<p>6. Create the btrfs filesystem. Both the data and the metadata is stored twice in the array, so there will be no data loss when a single hard drive fails. The -L argument defines the label of the filesystem.
+</p>
+<pre># mkfs.btrfs -L STORAGE -f -d raid1 -m raid1 /dev/bcache0 /dev/bcache1 /dev/bcache2 /dev/bcache3 /dev/bcache4
+</pre>
+<p>7. mount the filesystem
+</p>
+<pre># mount /dev/bcache0 /mnt
+</pre>
+<h3><span class="mw-headline" id="Bcache_management">Bcache management</span></h3>
+<p>1. Check that everything has been correctly setup 
+</p>
+<pre># cat /sys/block/bcache0/bcache/state
+</pre>
+<p>The output can be:
+</p>
+<ul>
+<li>
+<code>no cache</code>: this means you have not attached a caching device to your backing bcache device</li>
+<li>
+<b>clean</b>: this means everything is ok. The cache is clean.</li>
+<li>
+<b>dirty</b>: this means everything is setup fine and that you have enabled <i>writeback</i> and that the cache is dirty.</li>
+<li>
+<b>inconsistent</b>: you are in trouble because the backing device is not in sync with the caching device</li>
+</ul>
+<p>You can have a <code>/dev/bcache0</code> device associated with a backing device with no caching device attached. This means that all I/O (read/write) are passed directly to the backing device (pass-through mode)
+</p>
+<p>2. See what caching mode is in use
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /sys/block/bcache0/bcache/cache_mode</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[writethrough] writeback writearound none
+</pre>
+<p>In the above example, the <i>writethrough</i> mode is enabled.
+</p>
+<p>3. Show info about a bcached device:
+</p>
+<pre># bcache-super-show /dev/sdXY
+</pre>
+<p>4. Stop the backing device:
+</p>
+<pre># echo 1 &gt; /sys/block/sdX/sdX[Y]/bcache/stop
+</pre>
+<p>5. Detach a caching device:
+</p>
+<pre># echo 1 &gt; /sys/block/sdX/sdX[Y]/bcache/detach
+</pre>
+<p>6. Safely remove the cache device
+</p>
+<pre># echo <i>cache-set-uuid</i> &gt; /sys/block/bcache0/bcache/detach
+</pre>
+<p>7. Release attached devices
+</p>
+<pre># echo 1 &gt; /sys/fs/bcache/<i>cache-set-uuid</i>/stop
+</pre>
+<h2><span class="mw-headline" id="Installation_to_a_bcache_device">Installation to a bcache device</span></h2>
+<p>1. Boot on the install disk (2013.08.01 minimum).
+</p>
+<p>2. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>.
+</p>
+<p>3. Partition your HDD
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> While it may be true that Grub2 does not offer support for bcache as noted below, it does, however, fully support UEFI. It follows then, that so long as the necessary modules for the linux kernel to properly handle your boot device are either compiled into the kernel or are included in an initramfs, and you can include these files on it, the separate boot partition described below may be omitted in favor of the FAT EFI system partition. See <a href="../en/GRUB.html" title="GRUB">GRUB</a> and/or <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> for more.</div>
+<p>grub cannot handle bcache, so you will need at least 2 partitions (boot and one for the bcache backing device). If you are doing UEFI, you will need an <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a> (ESP) as well. E.g.:
+</p>
+<pre>     1            2048           22527   10.0 MiB    EF00  EFI System
+     2           22528          432127   200.0 MiB   8300  arch_boot
+     3          432128       625142414   297.9 GiB   8300  bcache_backing
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> This example has no swapfile/partition. For a swap partition on the cache, use LVM in step 7. For a swap partition outside the cache, be sure to make a swap partition now.</div>
+<p>4. Configure your HDD as a bcache backing device.
+</p>
+<pre># make-bcache -B /dev/sda3
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>When preparing any boot disk it is important to know the ramifications of any decision you may make. Please review and review again the documentation for your chosen boot-loader/-manager and consider seriously how it might relate to bcache.</li>
+<li>If all associated disks are partitioned at once as below bcache will automatically attach "-B backing stores" to the "-C ssd cache" and step 5 is unnecessary.</li>
+</ul>
+</div>
+<pre># make-bcache -B /dev/sd? /dev/sd? -C /dev/sd?
+</pre>
+<p>You now have a <code>/dev/bcache0</code> device.
+</p>
+<p>5. Configure your SSD
+</p>
+<p>Format the SSD as a caching device and link it to the backing device
+</p>
+<pre># make-bcache -C /dev/sdb
+# echo /dev/sdb &gt; /sys/fs/bcache/register 
+# echo <i>UUID__from_previous_command</i> &gt; /sys/block/bcache0/bcache/attach
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If the UUID is forgotten, it can be found with <code>ls /sys/fs/bcache/</code> after the cache device has been registered.</div>
+<p>6. Format the bcache device. Use LVM or btrfs subvolumes if you want to divide up the <code>/dev/bcache0</code> device how you like (ex for separate <code>/</code>, <code>/home</code>, <code>/var</code>, etc):
+</p>
+<pre># mkfs.btrfs /dev/bcache0
+# mount /dev/bcache0 /mnt/
+# btrfs subvolume create /mnt/root
+# btrfs subvolume create /mnt/home
+# umount /mnt
+</pre>
+<p>You can even setup LUKS on it if you want using e.g. cryptsetup. Referencing the bcache device in the 'cryptdevice' kernel option will work fine, for instance.
+</p>
+<p>7. Prepare the installation mount point:
+</p>
+<pre># mkfs.ext4 /dev/sda2
+# mkfs.msdos /dev/sda1 (if your ESP is at least 500MB, use mkfs.vfat to make a FAT32 partition instead)
+</pre>
+<p>Now install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span> package. Then:
+</p>
+<pre># mount /dev/bcache0 -o subvol=root,compress=lzo /mnt/
+# mkdir /mnt/boot /mnt/home
+# mount /dev/bcache0 -o subvol=home,compress=lzo /mnt/home
+# mount /dev/sda2 /mnt/boot
+# mkdir /boot/efi
+# mount /dev/sda1 /mnt/boot/efi/
+</pre>
+<p>8. Install the system as per the <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a> as normal except this:
+</p>
+<p>Before you edit <code>/etc/mkinitcpio.conf</code> and run <code>mkinitcpio -p linux</code>:
+</p>
+<ul>
+<li>
+<a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup>.</li>
+<li>Edit <code>/etc/mkinitcpio.conf</code>:
+<ul>
+<li>add the "bcache" module</li>
+<li>add the "bcache" hook between block and filesystem hooks</li>
+</ul>
+</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong>  Should you want to open the backing device from the installation media for any reason after a reboot you must register it manually. Make sure the bcache module is loaded and then echo the relevant devices to /sys/bcache/register. You should see whether this worked or not by using dmesg.</div>
+<h2><span class="mw-headline" id="Accessing_from_the_install_disk">Accessing from the install disk</span></h2>
+<p>This is how to access a bcache partition from the install disk that was present before the install disk was booted. Boot the install disk and install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/bcache-tools/">bcache-tools</a></span><sup><small>AUR</small></sup> from the AUR, just as in the previous section. Then, add the module to the kernel:
+</p>
+<pre># modprobe bcache
+</pre>
+<p>Your device will not appear immediately at <code>/dev/bcache*</code>. To force the kernel to find it, tell it to reread the partition table:
+</p>
+<pre># partprobe
+</pre>
+<p>Now, <code>/dev/bcache*</code> should be present, and you can carry on mounting, reformatting, etc. from here.
+</p>
+<h2><span class="mw-headline" id="Configuring">Configuring</span></h2>
+<p>There are many options that can be configured (such as cache mode, cache flush interval, sequential write heuristic, etc.) This is currently done by writing to files in <code>/sys</code>. See the <a rel="nofollow" class="external text" href="https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt">bcache user documentation</a>.
+</p>
+<p>Changing the cache mode is done by echoing one of 'writethrough', 'writeback', 'writearound' or 'none' to /sys/block/bcache[0-9]/bcache/cache_mode.
+</p>
+<p>Note that some changes to /sys are temporary, and will revert back after a reboot (It seems that at least cache_mode does not need this workaround). To set custom configurations at boot create a .conf file in <code>/etc/tmpfiles.d</code>. To set, in a persistent fashion, the sequential cutoff for bcache0 to 1 MB  and write back you could create a file <code>/etc/tmpfiles.d/my-bcache.conf</code> with the contents
+</p>
+<pre>w /sys/block/bcache0/bcache/sequential_cutoff - - - - 1M
+w /sys/block/bcache0/bcache/cache_mode        - - - - writeback
+</pre>
+<h2><span class="mw-headline" id="Advanced_operations">Advanced operations</span></h2>
+<h3><span class="mw-headline" id="Resize_backing_device">Resize backing device</span></h3>
+<p>It is possible to resize the backing device so long as you do not move the partition start. This process is described in <a rel="nofollow" class="external text" href="https://lore.kernel.org/linux-bcache/CAH+dOxJv-ajvLfbUSo8dqG0a8_grNBhfxJ1EbmSrYZz0YXJM2w@mail.gmail.com/T/">the mailing list</a>. Here is an example using btrfs volume directly on bcache0. For LVM containers or for other filesystems, procedure will differ.
+</p>
+<h4><span class="mw-headline" id="Example_of_growing">Example of growing</span></h4>
+<p>In this example, I grow the filesystem by 4GB. 
+</p>
+<p>1. Reboot to a live CD/USB Drive (need not be bcache enabled) and use fdisk, gdisk, parted, or your other favorite tool to delete the backing partition and recreate it with the same start and a total size 4G larger. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use a tool like GParted that might perform filesystem operations! It will not recognize the bcache partition and might overwrite part of it!!</div>
+<p>2. Reboot to your normal install. Your filesystem will be currently mounted. That is fine. Issue the command to resize the partition to its maximum. For btrfs, that is
+</p>
+<pre># btrfs filesystem resize max /
+</pre>
+<p>For ext3/4, that is:
+</p>
+<pre># resize2fs /dev/bcache0
+</pre>
+<h4><span class="mw-headline" id="Example_of_shrinking">Example of shrinking</span></h4>
+<p>In this example, I shrink the filesystem by 4GB.
+</p>
+<p>1. Disable writeback cache (switch to writethrough cache) and wait for the disk to flush.
+</p>
+<pre># echo writethrough &gt; /sys/block/bcache0/bcache/cache_mode
+$ watch cat /sys/block/bcache0/bcache/state
+</pre>
+<p>wait until state reports "clean". This might take a while.
+</p>
+<h5><span class="mw-headline" id="Force_flush_of_cache_to_backing_device">Force flush of cache to backing device</span></h5>
+<p>I suggest to use 
+</p>
+<pre> # echo 0 &gt; /sys/block/bcache0/bcache/writeback_percent
+</pre>
+<p>This will flush the dirty data of the cache to the backing device in less a minute.
+</p>
+<p>Revert back the value after with
+</p>
+<pre># echo 10 &gt; /sys/block/bcache0/bcache/writeback_percent
+</pre>
+<p>2. Shrink the mounted filesystem by something more than the desired amount, to ensure we do not accidentally clip it later. For btrfs, that is:
+</p>
+<pre># btrfs filesystem resize -5G /
+</pre>
+<p>For ext3/4 you can use <i>resize2fs</i>, but only if the partition is unmounted
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ df -h /home</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/bcache0    290G   20G   270G   1% /home
+</pre>
+<pre># umount /home
+# resize2fs /dev/bcache0 283G
+</pre>
+<p>3. Reboot to a LiveCD/USB drive (does not need to support bcache) and use fdisk, gdisk, parted, or your other favorite tool to delete the backing partition and recreate it with the same start and a total size 4G smaller.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Do not use a tool like GParted that might perform filesystem operations! It will not recognize the bcache partition and might overwrite part of it!!</div>
+<p>4. Reboot to your normal install. Your filesystem will be currently mounted. That is fine. Issue the command to resize the partition to its maximum (that is, the size we shrunk the actual partition to in step 3). For btrfs, that is:
+</p>
+<pre># btrfs filesystem resize max /
+</pre>
+<p>For ext3/4, that is:
+</p>
+<pre># resize2fs /dev/bcache0
+</pre>
+<p>5. Re-enable writeback cache if you want that enabled:
+</p>
+<pre># echo writeback &gt; /sys/block/bcache0/bcache/cache_mode
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are very careful you can shrink the filesystem to the exact size in step 2 and avoid step 4. Be careful, though, many partition tools do not do exactly what you want, but instead adjust the requested partition start/end points to end on sector boundaries. This may be difficult to calculate ahead of time</div>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3>
+<span id=".2Fdev.2Fbcache_device_does_not_exist_on_bootup"></span><span class="mw-headline" id="/dev/bcache_device_does_not_exist_on_bootup">/dev/bcache device does not exist on bootup</span>
+</h3>
+<p>If you are sent to a busy box shell with an error:
+</p>
+<pre>ERROR: Unable to find root device 'UUID=b6b2d82b-f87e-44d5-bbc5-c51dd7aace15'.
+You are being dropped to a recovery shell
+    Type 'exit' to try and continue booting</pre>
+<p>This might happen if the backing device is configured for "writeback" mode (default is writearound). When in "writeback" mode, the /dev/bcache0 device is not started until the cache device is both registered and attached. Registering is something that needs to happen every bootup, but attaching should only have to be done once. 
+</p>
+<p>To continue booting, try one of the following:
+</p>
+<ul><li>Register both the backing device and the caching device</li></ul>
+<pre># echo /dev/sda3 &gt; /sys/fs/bcache/register
+# echo /dev/sdb &gt; /sys/fs/bcache/register
+</pre>
+<p>If the /dev/bcache0 device now exists, type exit and continue booting. You will need to fix your initcpio to ensure devices are registered before mounting the root device.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> 
+<ul>
+<li>An error of "sh: echo: write error: Invalid argument" means the device was already registered or is not recognized as either a bcache backing device or cache. If using the udev rule on boot it should only attempt to register a device if it finds a bcache superblock</li>
+<li>This can also happen if using udev's 69-bcache.rules in Installation's step 7 and blkid and bcache-probe "disagree" due to rogue superblocks. See <a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org/#index6h1">bcache's wiki</a> for a possible explanation/resolution.</li>
+</ul>
+</div>
+<ul><li>Re-attach the cache to the backing device:</li></ul>
+<p>If the cache device was registered, a folder with the UUID of the cache should exist in <code>/sys/fs/bcache</code>. Use that UUID when following the example below:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># ls /sys/fs/bcache/</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">b6b2d82b-f87e-44d5-bbc5-c51dd7aace15     register     register_quiet
+</pre>
+<pre># echo b6b2d82b-f87e-44d5-bbc5-c51dd7aace15 &gt; /sys/block/sda/sda3/bcache/attach
+</pre>
+<p>If the <code>/dev/bcache0</code> device now exists, type exit and continue booting. You should not have to do this again. If it persists, ask on the bcache mailing list.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> An error of <code>sh: echo: write error: Invalid argument</code> means the device was already attached. An error of <code>sh: echo: write error: No such file or directory</code> means the UUID is not a valid cache (make sure you typed it correctly).</div>
+<ul><li>Invalidate the cache and force the backing device to run without it. You might want to check some stats, such as "dirty_data" so you have some idea of how much data will be lost.</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /sys/block/sda/sda3/bcache/dirty_data</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">-3.9M
+</pre>
+<p>dirty data is data in the cache that has not been written to the backing device. If you force the backing device to run, this data will be lost, even if you later re-attach the cache.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># cat /sys/block/sda/sda3/bcache/running</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">0
+</pre>
+<pre># echo 1 &gt; /sys/block/sda/sda3/bcache/running
+</pre>
+<p>The <code>/dev/bcache0</code> device will now exist. Type exit and continue booting. You might want to unregister the cache device and run make-bcache again. An fsck on <code>/dev/bcache0</code> would also be wise. See the <a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/bcache.html">bcache documentation</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Only invalidate the cache if one of the two options above did not work.</div>
+<h3>
+<span id=".2Fsys.2Ffs.2Fbcache.2F_does_not_exist"></span><span class="mw-headline" id="/sys/fs/bcache/_does_not_exist">/sys/fs/bcache/ does not exist</span>
+</h3>
+<p>The kernel you booted is not bcache enabled, or you the bcache <a href="../en/Kernel_module.html#Manual_module_handling" title="Kernel module">module is not loaded</a>
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://bcache.evilpiepirate.org">Bcache Homepage</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/bcache.html">Bcache Manual</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+<li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Bcache&amp;oldid=647263">https://wiki.archlinux.org/index.php?title=Bcache&amp;oldid=647263</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 27 December 2020, at 07:49.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

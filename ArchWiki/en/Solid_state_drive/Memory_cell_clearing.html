@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Solid state drive/Memory cell clearing - ArchWiki</title>
+<link rel="stylesheet" href="../../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Solid_state_drive_Memory_cell_clearing rootpage-Solid_state_drive skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Solid state drive/Memory cell clearing</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../../en/Solid_state_drive.html" title="Solid state drive">Solid state drive</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../../en/Solid_state_drive.html" class="mw-redirect" title="Solid State Drive">Solid State Drive</a></li>
+<li><a href="../../en/Securely_wipe_disk.html" title="Securely wipe disk">Securely wipe disk</a></li>
+</ul>
+</div>
+<p>On occasion, users may wish to completely reset an SSD's cells to the same virgin state they were manufactured, thus restoring it to its <a rel="nofollow" class="external text" href="http://www.anandtech.com/storage/showdoc.aspx?i=3531&amp;p=8">factory default write performance</a>. Write performance is known to degrade over time even on SSDs with native TRIM support. TRIM only safeguards against file deletes, not replacements such as an incremental save.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Back up all data of importance prior to continuing! Using this procedure will destroy all data on the SSD and render it unrecoverable by even data recovery services! Users will have to repartition the device and restore the data after completing this procedure!</li>
+<li>Do <b>not</b> proceed with this if the target drive is not connected directly to a SATA/NVMe interface. Issuing the Secure Erase/Format/Sanitize command on a drive connected via USB or a SAS/RAID card could potentially brick the drive!</li>
+</ul>
+</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#SATA_drive"><span class="tocnumber">1</span> <span class="toctext">SATA drive</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#Step_1_-_Make_sure_the_drive_security_is_not_frozen"><span class="tocnumber">1.1</span> <span class="toctext">Step 1 - Make sure the drive security is not frozen</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#Dell_Systems"><span class="tocnumber">1.1.1</span> <span class="toctext">Dell Systems</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-4"><a href="#Step_2_-_Enable_security_by_setting_a_user_password"><span class="tocnumber">1.2</span> <span class="toctext">Step 2 - Enable security by setting a user password</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Step_3_-_Issue_the_ATA_Secure_Erase_command"><span class="tocnumber">1.3</span> <span class="toctext">Step 3 - Issue the ATA Secure Erase command</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#NVMe_drive"><span class="tocnumber">2</span> <span class="toctext">NVMe drive</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Format_command"><span class="tocnumber">2.1</span> <span class="toctext">Format command</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Sanitize_command"><span class="tocnumber">2.2</span> <span class="toctext">Sanitize command</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Troubleshooting"><span class="tocnumber">3</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#UEFI_boot_entries_get_removed_after_wiping_a_drive"><span class="tocnumber">3.1</span> <span class="toctext">UEFI boot entries get removed after wiping a drive</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="SATA_drive">SATA drive</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The following information has been taken from the <a rel="nofollow" class="external text" href="https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase">official ATA wiki page</a>.</div>
+<h3><span class="mw-headline" id="Step_1_-_Make_sure_the_drive_security_is_not_frozen">Step 1 - Make sure the drive security is not frozen</span></h3>
+<p>Issue the following command:
+</p>
+<pre># hdparm -I /dev/sd<i>X</i> | grep frozen
+</pre>
+<p>In the security section of the output it should say "not frozen". If it shows as just "frozen" then you cannot continue to the next step. Some BIOSes block the ATA Secure Erase command by issuing a "SECURITY FREEZE" command to "freeze" the drive before booting an operating system.
+</p>
+<p>A possible solution is to simply <a href="../../en/Power_management/Suspend_and_hibernate.html" class="mw-redirect" title="Suspend">suspend</a> the system.  Upon waking up, it is likely that the freeze will be lifted. If unsuccessful, one can try hot-(re)plug the data cable (which might crash the kernel). If hot-(re)plugging the SATA data cable crashes the kernel try letting the operating system fully boot up, then quickly hot-(re)plug both the SATA power and data cables. If hot-(re)plugging of SATA cables still crashes the kernel, make sure that AHCI is enabled in the BIOS (AHCI allows hot-(re)plugging operations without a crash). Using a USB-to-SATA adapter is an option if it supports hotplugging. One can also use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=hdparm">hdparm</a></span> via USB.
+</p>
+<h4><span class="mw-headline" id="Dell_Systems">Dell Systems</span></h4>
+<p>If the command output shows "frozen", you may be able to work around it by:
+</p>
+<ol>
+<li>Reboot into the Dell BIOS by pressing F2 on startup.</li>
+<li>Set the Internal HDD Password in the BIOS (be careful, the keymap is en_US / qwerty).</li>
+<li>Apply the changes and reboot.</li>
+<li>When prompted for the password by Dell Security Manager, press Escape rather than entering it.  The drive will remain locked but not frozen.</li>
+<li>Skip step 2, and go directly to Step 3 below.</li>
+</ol>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are using a Lenovo system and can not remove the "frozen" state (e.g. Lenovo tablets use SSD on M.2 interface), you can use a <b><a rel="nofollow" class="external text" href="https://pcsupport.lenovo.com/us/en/olddownloads/ds019026">proprietary tool</a></b> to accomplish the memory cell clearing rather than following this article. See also: <a rel="nofollow" class="external free" href="https://superuser.com/questions/763642/secure-erase-ssd-on-lenovo-thinkpad-t520-cant-unfreeze-ssd-machine-reboots-on">https://superuser.com/questions/763642/secure-erase-ssd-on-lenovo-thinkpad-t520-cant-unfreeze-ssd-machine-reboots-on</a>
+</div>
+<h3><span class="mw-headline" id="Step_2_-_Enable_security_by_setting_a_user_password">Step 2 - Enable security by setting a user password</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> When the user password is set the drive will be locked after next power cycle denying normal access until unlocked with the correct password.</div>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you have a Lenovo laptop, do <b>not</b> reboot it after this step. Certain variants of Lenovo's BIOS are susceptible to use a deviating algorithm for calculating the encryption key. After startup the machine will not be able to connect the SSD drive.<a rel="nofollow" class="external autonumber" href="https://jbeekman.nl/blog/2015/03/lenovo-thinkpad-hdd-password/">[1]</a>
+</div>
+<p>Any password will do, as this should only be temporary. After the secure erase the password will be set back to NULL. In this example, the password is <code><i>PasSWorD</i></code> as shown:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># hdparm --user-master u --security-set-pass <i>PasSWorD</i> /dev/sd<i>X</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">security_password="<i>PasSWorD</i>"
+/dev/sd<i>X</i>:
+Issuing SECURITY_SET_PASS command, password="<i>PasSWorD</i>", user=user, mode=high</pre>
+<p>As a sanity check, issue the following command
+</p>
+<pre># hdparm -I /dev/sd<i>X</i>
+</pre>
+<p>The command output should display "enabled":
+</p>
+<pre>Security:
+        Master password revision code = 65534
+                supported
+                <b>enabled</b>
+        not     locked
+        not     frozen
+        not     expired: security count
+                supported: enhanced erase
+        Security level high
+        2min for SECURITY ERASE UNIT. 2min for ENHANCED SECURITY ERASE UNIT.</pre>
+<h3><span class="mw-headline" id="Step_3_-_Issue_the_ATA_Secure_Erase_command">Step 3 - Issue the ATA Secure Erase command</span></h3>
+<p>The final step is to issue the secure erase command, instructing the device's BIOS to erase its contents. Note for the device used in this example, earlier output states: 
+</p>
+<pre>2min for SECURITY ERASE UNIT. 2min for ENHANCED SECURITY ERASE UNIT.
+</pre>
+<p>As per ATA specification the <i>enhanced</i> security erase (<code>--security-erase-enhanced</code>) performs a more elaborate wipe. If the estimated completion time for both commands is equal, it indicates the drive manufacturer shortcut the specification and uses the same erase function for both. A short time (like 2 minutes) in turn indicates the device is self-encrypting and its BIOS function will wipe the internal encryption key instead of overwriting all data cells.<a rel="nofollow" class="external autonumber" href="https://security.stackexchange.com/questions/62253/what-is-the-difference-between-ata-secure-erase-and-security-erase-how-can-i-en">[2]</a> 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> 
+<ul>
+<li>Triple check that the correct drive designation is used. There is <b>no turning back</b> once the command is confirmed. You have been warned.</li>
+<li>Ensure that the drive is not mounted when this is ran. If a secure erase command is issued while the device is mounted, it will not erase properly.</li>
+</ul>
+</div>
+<pre># hdparm --user-master u --security-erase <i>PasSWorD</i> /dev/sd<i>X</i>
+</pre>
+<p>Wait until the command completes. This example output shows it took about 40 seconds for an Intel X25-M 80GB SSD.
+</p>
+<pre>security_password="<i>PasSWorD</i>"
+/dev/sd<i>X</i>:
+Issuing SECURITY_ERASE command, password="<i>PasSWorD</i>", user=user
+0.000u 0.000s 0:39.71 0.0%      0+0k 0+0io 0pf+0w
+</pre>
+<p>The drive is now erased. After a successful erasure the drive security should automatically be set to disabled (thus no longer requiring a password for access). Verify this by running the following command:
+</p>
+<pre># hdparm -I /dev/sd<i>X</i>
+</pre>
+<p>The command output should display "not enabled": 
+</p>
+<pre>Security:
+        Master password revision code = 65534
+                supported
+        <b>not     enabled</b>
+        not     locked
+        not     frozen
+        not     expired: security count
+                supported: enhanced erase
+        2min for SECURITY ERASE UNIT. 2min for ENHANCED SECURITY ERASE UNIT.</pre>
+<h2><span class="mw-headline" id="NVMe_drive">NVMe drive</span></h2>
+<p>The <a rel="nofollow" class="external text" href="https://nvmexpress.org/developers/nvme-specification/">NVMe specification</a> defines a standardized way to format NVMe drives, since those do not use the SATA interface protocol and therefore cannot be cleared in the same way as SATA SSDs. Originally it was the <span class="plainlinks archwiki-template-man" title="$ man 1 nvme-format"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nvme-format.1">nvme-format(1)</a></span> command (part of the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nvme-cli">nvme-cli</a></span>) which provided this feature, but while it still does <a rel="nofollow" class="external text" href="https://nvmexpress.org/changes-in-nvme-revision-1-3/">Specification 1.3</a> added support for a dedicated <span class="plainlinks archwiki-template-man" title="$ man 1 nvme-sanitize"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nvme-sanitize.1">nvme-sanitize(1)</a></span> command.  As described by Jonmichael Hands, NVMe MWG Co-Chair, Sr. Strategic Planner / Product Manager, Intel<a rel="nofollow" class="external autonumber" href="https://nvmexpress.org/open-source-nvme-management-utility-nvme-command-line-interface-nvme-cli/">[3]</a>:
+</p>
+<dl><dd>"<i>These commands are used to securely erase user data from the device. This can be used when deploying a new device, retiring or at device end-of-life, using an SSD for a new application and so on. Sanitize was introduced in NVMe 1.3 specification, so before then NVMe Format was used exclusively to perform secure erase. While both options work, Sanitize is more robust for ensuring the data was properly wiped; format is good for everyday use and testing.</i>"</dd></dl>
+<p>In order to verify what is supported by your drive, use the Identify Controller command:
+</p>
+<pre># nvme id-ctrl /dev/nvme0 -H |grep "Format \|Crypto Erase\|Sanitize"
+</pre>
+<p>Example output:
+</p>
+<pre>  [1:1] : 0x1	Format NVM Supported
+  [29:29] : 0	No-Deallocate After Sanitize bit in Sanitize command Supported
+    [2:2] : 0	Overwrite Sanitize Operation Not Supported
+    [1:1] : 0x1	Block Erase Sanitize Operation Supported
+    [0:0] : 0x1	Crypto Erase Sanitize Operation Supported
+  [2:2] : 0x1	Crypto Erase Supported as part of Secure Erase
+  [1:1] : 0	Crypto Erase Applies to Single Namespace(s)
+  [0:0] : 0	Format Applies to Single Namespace(s)
+</pre>
+<p>Then proceed with either <a href="#Format_command">format</a> or <a href="#Sanitize_command">sanitize</a>.
+</p>
+<h3><span class="mw-headline" id="Format_command">Format command</span></h3>
+<p>The Format command is conceptually closer to a mix of <a href="../../en/Hdparm.html" title="Hdparm">hdparm</a> and <a href="../../en/Fdisk.html" title="Fdisk">fdisk</a>, as it allows to set low-level parameters for the drive <i>and</i> additionally to send a secure erase command.
+</p>
+<p><span class="plainlinks archwiki-template-man" title="$ man 1 nvme-format"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nvme-format.1">nvme-format(1)</a></span> gives the following details about the Secure Erase Settings (<code>-s &lt;ses&gt;, --ses=&lt;ses&gt;</code>) option:
+</p>
+<dl><dd><i>Secure Erase Settings: This field specifies whether a secure erase should be performed as part of the format and the type of the secure erase operation. The erase applies to all user data, regardless of location (e.g., within an exposed LBA, within a cache, within deallocated LBAs, etc). Defaults to 0.</i></dd></dl>
+<p>Possible values :
+</p>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<th>Value
+</th>
+<th>Definitions
+</th>
+</tr>
+<tr>
+<td>0
+</td>
+<td>No secure erase operation requested
+</td>
+</tr>
+<tr>
+<td>1
+</td>
+<td>User Data Erase: All user data shall be erased, contents of the user data after the erase is indeterminate (e.g., the user data may be zero filled, one filled, etc). The controller may perform a cryptographic erase when a User Data Erase is requested if all user data is encrypted.
+</td>
+</tr>
+<tr>
+<td>2
+</td>
+<td>Cryptographic Erase: All user data shall be erased cryptographically. This is accomplished by deleting the encryption key.
+</td>
+</tr>
+</tbody>
+</table>
+<p>While the Format command accepts either the whole NVMe character device (e.g. <code>/dev/nvme0</code>) or a specific namespace block device (e.g. <code>/dev/nvme0n1</code>), make sure this feature is supported by your drive before triggering it. E.g. in the output of the Identify Controller command above, we see that the <code>Crypto Erase Applies to Single Namespace(s)</code> and <code>Format Applies to Single Namespace(s)</code> bits are set to zero, which according to the spec means that "<i>the controller supports format on a per namespace basis</i>" (see figure 249 byte row 524 "Format  NVM  Attributes (FNA)").
+</p>
+<p>For example, to format <code>/dev/nvme0</code> with a crypto erase to namespace 1:
+</p>
+<pre># nvme format /dev/nvme0 -ses 2 -n 1
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 1 nvme-format"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nvme-format.1">nvme-format(1)</a></span> for more information and important warnings regarding device/namespace selection.
+</p>
+<h3><span class="mw-headline" id="Sanitize_command">Sanitize command</span></h3>
+<p>The Sanitize command was created to be "functionally equivalent to the command of the same name in SATA and SAS implementations"<a rel="nofollow" class="external autonumber" href="https://nvmexpress.org/changes-in-nvme-revision-1-3/">[4]</a>. From the aforementionned article<a rel="nofollow" class="external autonumber" href="https://nvmexpress.org/open-source-nvme-management-utility-nvme-command-line-interface-nvme-cli/">[5]</a>:
+</p>
+<dl>
+<dd>"According to the <a rel="nofollow" class="external text" href="https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf">NVMe 1.4 specification</a>, “<i>a sanitize operation alters all user data in the NVM subsystem such that recovery of any previous user data from any cache, the non-volatile media, or any Controller Memory Buffer is not possible</i>.”</dd>
+<dd>The big difference between Sanitize and Format is that sanitize ensures caches are deleted, and the process starts again after an unexpected power loss. Sanitize also supports a pattern overwrite for a secure erase operation, which is terrible for NAND endurance but can be used with other types of storage and memory classes, or for more certainty that user data cannot be recovered."</dd>
+</dl>
+<p>Usage and possible values for the <code>-a/--sanact</code> options are<a rel="nofollow" class="external autonumber" href="https://github.com/linux-nvme/nvme-cli/blob/master/Documentation/nvme-sanitize.txt#L64-L71">[6]</a>:
+</p>
+<pre>-a &lt;action&gt;
+--sanact=&lt;action&gt;
+    Sanitize Action
+    000b - Reserved
+    001b - Exit Failure Mode
+    010b - Start a Block Erase sanitize operation
+    011b - Start an Overwrite sanitize operation
+    100b - Start a Crypto Erase sanitize operation</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The binary values need to be replaced by their decimal counterparts in the commands, e.g. <code>000b = 0</code>, <code>001b = 1</code>, <code>010b = 2</code>... <code>111b = 7</code>.</div>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 1 nvme-sanitize"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nvme-sanitize.1">nvme-sanitize(1)</a></span> for more informations. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> <a rel="nofollow" class="external text" href="https://nvmexpress.org/wp-content/uploads/Image-8.png">This figure</a> from the aforementioned article (and taken from the spec) contains a more legible presentation of the various Sanitize Actions (SANACT, last row) than the man page.</div>
+<p>You can get an estimation of the time the various methods would take on your drive (if supported):
+</p>
+<pre># nvme sanitize-log /dev/nvme0
+...
+Estimated Time For Overwrite                   :  4294967295 (No time period reported)
+Estimated Time For Block Erase                 :  174
+Estimated Time For Crypto Erase                :  34
+</pre>
+<p>If instead you get a result such as:
+</p>
+<pre># nvme sanitize-log /dev/nvme0
+...
+Estimated Time For Overwrite                   :  4294967295 (No time period reported)
+Estimated Time For Block Erase                 :  4294967295 (No time period reported)
+Estimated Time For Crypto Erase                :  4294967295 (No time period reported)
+</pre>
+<p>Then be sure that the operation <b>will</b> take a long time to complete. For reference, a Block Erase took around 2-3 hours to complete on the Intel 660p 512GB reporting those results.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Once started, this operation is uninterruptible—even with a power cycle—and will render the drive unusable until the process completes, which can take <a rel="nofollow" class="external text" href="https://github.com/linux-nvme/nvme-cli/issues/752#issuecomment-647821283">a long time</a>.</div>
+<p>To start a Crypto Erase sanitize operation:
+</p>
+<pre># nvme sanitize <i>device</i> --sanact=4
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The <code>&lt;device&gt;</code> parameter is mandatory NVMe character device (e.g. <code>/dev/nvme0</code> and <b>not</b> <code>/dev/nvme0n1</code>), as the operation applies necessarily to <b>whole devices</b>.</div>
+<p>For a Block Erase:
+</p>
+<pre># nvme sanitize <i>device</i> -a 2
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Avoid using the <i>Overwrite</i> action even if it is supported by your drive, as it is "<a rel="nofollow" class="external text" href="https://nvmedeveloperdays.com/English/Collaterals/Proceedings/2018/20181204_PRECON2_Hands.pdf">not good or recommended for NAND based SSDs due to endurance</a>".</div>
+<p>You can follow the progress with the Sanitize Log:
+</p>
+<pre># nvme sanitize-log /dev/nvme0
+</pre>
+<p>Example output for a drive with a Crypto Erase in progress:
+</p>
+<pre>Sanitize Progress                      (SPROG) :  655
+Sanitize Status                        (SSTAT) :  0x4
+Sanitize Command Dword 10 Information (SCDW10) :  0x4
+Estimated Time For Overwrite                   :  4294967295 (No time period reported)
+Estimated Time For Block Erase                 :  174
+Estimated Time For Crypto Erase                :  34
+Estimated Time For Overwrite (No-Deallocate)   :  0
+Estimated Time For Block Erase (No-Deallocate) :  0
+Estimated Time For Crypto Erase (No-Deallocate):  0
+</pre>
+<p>When the command has completed successfully:
+</p>
+<pre>Sanitize Progress                      (SPROG) :  65535
+Sanitize Status                        (SSTAT) :  0x101
+Sanitize Command Dword 10 Information (SCDW10) :  0x4
+Estimated Time For Overwrite                   :  4294967295 (No time period reported)
+Estimated Time For Block Erase                 :  174
+Estimated Time For Crypto Erase                :  34
+Estimated Time For Overwrite (No-Deallocate)   :  0
+Estimated Time For Block Erase (No-Deallocate) :  0
+Estimated Time For Crypto Erase (No-Deallocate):  0
+</pre>
+<h2><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h2>
+<h3><span class="mw-headline" id="UEFI_boot_entries_get_removed_after_wiping_a_drive">UEFI boot entries get removed after wiping a drive</span></h3>
+<p>Some <a href="../../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> implementations remove boot entries referencing nonexistent files upon system startup. If you plan to restore the system from a backup after memory cell clearing, make sure to also restore the boot entry using <a href="../../en/Unified_Extensible_Firmware_Interface.html#efibootmgr" class="mw-redirect" title="Efibootmgr">efibootmgr</a> or by reinstalling the <a href="../../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://forum.notebookreview.com/threads/secure-erase-hdds-ssds-sata-nvme-using-hdparm-nvme-cli-on-linux.827525/">Secure Erase HDDs/SSDs (SATA/NVMe) using hdparm &amp; nvme-cli on Linux</a> (2019): good tutorial with images</li>
+<li><a rel="nofollow" class="external text" href="https://nvmexpress.org/wp-content/uploads/Session-3-Verifying-SSD-Sanitization_Micron_Toshiba_Final-as-of-4.26.pdf">Verifying SSD Sanitization</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../../en/Category:Storage.html" title="Category:Storage">Storage</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Solid_state_drive/Memory_cell_clearing&amp;oldid=648057">https://wiki.archlinux.org/index.php?title=Solid_state_drive/Memory_cell_clearing&amp;oldid=648057</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 January 2021, at 00:12.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

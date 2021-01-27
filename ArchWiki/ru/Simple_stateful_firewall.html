@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Simple stateful firewall (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Simple_stateful_firewall_Русский rootpage-Simple_stateful_firewall_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Simple stateful firewall (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Ссылки по теме</p>
+<ul>
+<li><a href="../ru/Category:Firewalls.html" class="mw-redirect" title="Межсетевой экран">Межсетевой экран</a></li>
+<li><a href="../ru/Internet_sharing.html" class="mw-redirect" title="Раздача интернета">Раздача интернета</a></li>
+<li><a href="../ru/Nftables.html#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_%D0%BF%D1%80%D0%BE%D1%81%D1%82%D0%BE%D0%B3%D0%BE_%D1%81%D0%B5%D1%82%D0%B5%D0%B2%D0%BE%D0%B3%D0%BE_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0" title="Nftables (Русский)">Nftables (Русский)#Настройка простого сетевого экрана</a></li>
+<li><a href="../en/Router.html" title="Router">Router</a></li>
+<li><a href="../en/Uncomplicated_Firewall.html" title="Uncomplicated Firewall">Uncomplicated Firewall</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Simple_stateful_firewall.html" title="Simple stateful firewall">Simple stateful firewall</a>. Дата последней синхронизации: 1 ноября 2020. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall&amp;diff=0&amp;oldid=637865">изменения</a>.</div>
+<p>В этой статье рассмотрена настройка простого межсетевого экрана с контекстной фильтрацией (<a href="https://en.wikipedia.org/wiki/Stateful_firewall" class="extiw" title="wikipedia:Stateful firewall">stateful firewall</a>) посредством <a href="../ru/Iptables.html" title="Iptables (Русский)">iptables</a>, с описанием основных правил и их назначения. Статья разбита на две части. В первой объяснена настройка межсетевого экрана <a href="#%D0%9C%D0%B5%D0%B6%D1%81%D0%B5%D1%82%D0%B5%D0%B2%D0%BE%D0%B9_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD_%D0%B4%D0%BB%D1%8F_%D0%BE%D0%B4%D0%B8%D0%BD%D0%BE%D1%87%D0%BD%D0%BE%D0%B9_%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D1%8B">на одиночной машине</a>, во второй — <a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_NAT-%D1%88%D0%BB%D1%8E%D0%B7%D0%B0">настройка NAT-шлюза</a> в дополнение к файрволу.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Описанные ниже правила даны в порядке их выполнения, такая настройка возможна только при локальном входе в систему. Если вы вошли в систему удалённо, то в процессе установки правил соединение с ней будет потеряно. Чтобы обойти эту проблему, воспользуйтесь <a href="#%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%B0%D0%B9%D0%BB_iptables.rules">готовым файлом настроек</a>.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%D0%A2%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F"><span class="tocnumber">1</span> <span class="toctext">Требования</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%D0%9C%D0%B5%D0%B6%D1%81%D0%B5%D1%82%D0%B5%D0%B2%D0%BE%D0%B9_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD_%D0%B4%D0%BB%D1%8F_%D0%BE%D0%B4%D0%B8%D0%BD%D0%BE%D1%87%D0%BD%D0%BE%D0%B9_%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D1%8B"><span class="tocnumber">2</span> <span class="toctext">Межсетевой экран для одиночной машины</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%BD%D0%B5%D0%BE%D1%85%D0%BE%D0%B4%D0%B8%D0%BC%D1%8B%D1%85_%D1%86%D0%B5%D0%BF%D0%BE%D1%87%D0%B5%D0%BA"><span class="tocnumber">2.1</span> <span class="toctext">Создание неоходимых цепочек</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_FORWARD"><span class="tocnumber">2.2</span> <span class="toctext">Цепочка FORWARD</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_OUTPUT"><span class="tocnumber">2.3</span> <span class="toctext">Цепочка OUTPUT</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_INPUT"><span class="tocnumber">2.4</span> <span class="toctext">Цепочка INPUT</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%B0%D0%B9%D0%BB_iptables.rules"><span class="tocnumber">2.5</span> <span class="toctext">Итоговый файл iptables.rules</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B8_TCP_%D0%B8_UDP"><span class="tocnumber">2.6</span> <span class="toctext">Цепочки TCP и UDP</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#%D0%9E%D1%82%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5_%D0%BF%D0%BE%D1%80%D1%82%D0%BE%D0%B2_%D0%B4%D0%BB%D1%8F_%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D1%85_%D1%81%D0%BE%D0%B5%D0%B4%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D0%B9"><span class="tocnumber">2.6.1</span> <span class="toctext">Открытие портов для входящих соединений</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Port_knocking"><span class="tocnumber">2.6.2</span> <span class="toctext">Port knocking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#%D0%97%D0%B0%D1%89%D0%B8%D1%82%D0%B0_%D0%BE%D1%82_%D1%81%D0%BF%D1%83%D1%84%D0%B8%D0%BD%D0%B3%D0%B0"><span class="tocnumber">2.7</span> <span class="toctext">Защита от спуфинга</span></a></li>
+<li class="toclevel-2 tocsection-12">
+<a href="#%D0%97%D0%B0%D1%89%D0%B8%D1%82%D0%B0_%D0%BE%D1%82_%D0%BE%D0%B1%D0%BD%D0%B0%D1%80%D1%83%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F"><span class="tocnumber">2.8</span> <span class="toctext">Защита от обнаружения</span></a>
+<ul>
+<li class="toclevel-3 tocsection-13"><a href="#%D0%91%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_ping-%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%BE%D0%B2"><span class="tocnumber">2.8.1</span> <span class="toctext">Блокирование ping-запросов</span></a></li>
+<li class="toclevel-3 tocsection-14">
+<a href="#%D0%9E%D0%B1%D0%BC%D0%B0%D0%BD_%D1%81%D0%BA%D0%B0%D0%BD%D0%B5%D1%80%D0%BE%D0%B2_%D0%BF%D0%BE%D1%80%D1%82%D0%BE%D0%B2"><span class="tocnumber">2.8.2</span> <span class="toctext">Обман сканеров портов</span></a>
+<ul>
+<li class="toclevel-4 tocsection-15"><a href="#SYN-%D1%81%D0%BA%D0%B0%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"><span class="tocnumber">2.8.2.1</span> <span class="toctext">SYN-сканирование</span></a></li>
+<li class="toclevel-4 tocsection-16"><a href="#UDP-%D1%81%D0%BA%D0%B0%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"><span class="tocnumber">2.8.2.2</span> <span class="toctext">UDP-сканирование</span></a></li>
+<li class="toclevel-4 tocsection-17"><a href="#%D0%92%D0%BE%D1%81%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B5%D0%B3%D0%BE_%D0%BF%D1%80%D0%B0%D0%B2%D0%B8%D0%BB%D0%B0"><span class="tocnumber">2.8.2.3</span> <span class="toctext">Восстановление последнего правила</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-18">
+<a href="#%D0%97%D0%B0%D1%89%D0%B8%D1%82%D0%B0_%D0%BE%D1%82_%D0%B4%D1%80%D1%83%D0%B3%D0%B8%D1%85_%D1%82%D0%B8%D0%BF%D0%BE%D0%B2_%D0%B0%D1%82%D0%B0%D0%BA"><span class="tocnumber">2.9</span> <span class="toctext">Защита от других типов атак</span></a>
+<ul>
+<li class="toclevel-3 tocsection-19"><a href="#%D0%90%D1%82%D0%B0%D0%BA%D0%B0_%D0%BF%D0%BE%D0%BB%D0%BD%D1%8B%D0%BC_%D0%BF%D0%B5%D1%80%D0%B5%D0%B1%D0%BE%D1%80%D0%BE%D0%BC"><span class="tocnumber">2.9.1</span> <span class="toctext">Атака полным перебором</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-20"><a href="#IPv6"><span class="tocnumber">2.10</span> <span class="toctext">IPv6</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#%D0%A1%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BF%D1%80%D0%B0%D0%B2%D0%B8%D0%BB"><span class="tocnumber">2.11</span> <span class="toctext">Сохранение правил</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%B0%D0%B9%D0%BB_ip6tables.rules"><span class="tocnumber">2.12</span> <span class="toctext">Итоговый файл ip6tables.rules</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-23">
+<a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_NAT-%D1%88%D0%BB%D1%8E%D0%B7%D0%B0"><span class="tocnumber">3</span> <span class="toctext">Настройка NAT-шлюза</span></a>
+<ul>
+<li class="toclevel-2 tocsection-24">
+<a href="#%D0%A2%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0_filter"><span class="tocnumber">3.1</span> <span class="toctext">Таблица filter</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25"><a href="#%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%BD%D0%B5%D0%BE%D0%B1%D1%85%D0%BE%D0%B4%D0%B8%D0%BC%D1%8B%D1%85_%D1%86%D0%B5%D0%BF%D0%BE%D1%87%D0%B5%D0%BA"><span class="tocnumber">3.1.1</span> <span class="toctext">Создание необходимых цепочек</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_FORWARD_2"><span class="tocnumber">3.1.2</span> <span class="toctext">Цепочка FORWARD</span></a></li>
+<li class="toclevel-3 tocsection-27"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B8_fw-interfaces_%D0%B8_fw-open"><span class="tocnumber">3.1.3</span> <span class="toctext">Цепочки fw-interfaces и fw-open</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-28">
+<a href="#%D0%A2%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0_nat"><span class="tocnumber">3.2</span> <span class="toctext">Таблица nat</span></a>
+<ul>
+<li class="toclevel-3 tocsection-29"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_POSTROUTING"><span class="tocnumber">3.2.1</span> <span class="toctext">Цепочка POSTROUTING</span></a></li>
+<li class="toclevel-3 tocsection-30"><a href="#%D0%A6%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0_PREROUTING"><span class="tocnumber">3.2.2</span> <span class="toctext">Цепочка PREROUTING</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-31"><a href="#%D0%A1%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BF%D1%80%D0%B0%D0%B2%D0%B8%D0%BB_2"><span class="tocnumber">3.3</span> <span class="toctext">Сохранение правил</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-32"><a href="#%D0%A1%D0%BC%D0%BE%D1%82%D1%80%D0%B8%D1%82%D0%B5_%D1%82%D0%B0%D0%BA%D0%B6%D0%B5"><span class="tocnumber">4</span> <span class="toctext">Смотрите также</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".D0.A2.D1.80.D0.B5.D0.B1.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D1.8F"></span><span class="mw-headline" id="Требования">Требования</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Ядро Linux на вашей машине должно быть скомпилировано с поддержкой iptables. Во всех <a href="../ru/Kernel.html#%D0%9E%D1%84%D0%B8%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D1%8B" class="mw-redirect" title="Ядро">стандартных ядрах</a> Arch Linux поддержка iptables включена.</div>
+<p>В первую очередь <a href="../ru/Pacman.html#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Установить">установите</a> набор утилит <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iptables">iptables</a></span> или убедитесь, что он уже установлен.
+</p>
+<p>В этой статье предполагается, что у вас нет действующего набора правил iptables. Чтобы проверить это, выполните:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># iptables-save</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Generated by iptables-save v1.4.19.1 on Thu Aug  1 19:28:53 2013
+*filter
+:INPUT ACCEPT [50:3763]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [30:3472]
+COMMIT
+# Completed on Thu Aug  1 19:28:53 2013
+</pre>
+<p>или
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># iptables -nvL --line-numbers</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Chain INPUT (policy ACCEPT 156 packets, 12541 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 82 packets, 8672 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+</pre>
+<p>Если всё же найдены какие-то правила, вы можете сбросить их и загрузить базовый набор правил:
+</p>
+<pre># iptables-restore &lt; /etc/iptables/empty.rules
+</pre>
+<p>Информацию о других способах сброса правил можно найти в статье <a href="../ru/Iptables.html#%D0%A1%D0%B1%D1%80%D0%BE%D1%81_%D0%BF%D1%80%D0%B0%D0%B2%D0%B8%D0%BB" title="Iptables (Русский)">Iptables (Русский)#Сброс правил</a>.
+</p>
+<h2>
+<span id=".D0.9C.D0.B5.D0.B6.D1.81.D0.B5.D1.82.D0.B5.D0.B2.D0.BE.D0.B9_.D1.8D.D0.BA.D1.80.D0.B0.D0.BD_.D0.B4.D0.BB.D1.8F_.D0.BE.D0.B4.D0.B8.D0.BD.D0.BE.D1.87.D0.BD.D0.BE.D0.B9_.D0.BC.D0.B0.D1.88.D0.B8.D0.BD.D1.8B"></span><span class="mw-headline" id="Межсетевой_экран_для_одиночной_машины">Межсетевой экран для одиночной машины</span>
+</h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Поскольку iptables проверяет правила в цепочке последовательно, сверху вниз, то имеет смысл переместить часто срабатывающие правила ближе к её началу. Разумеется, этот подход имеет свои ограничения, в зависимости от реализуемой логики. Кроме того, поскольку правила имеют определённую стоимость выполнения, не стоит изменять их порядок исключительно на основе эмпирических наблюдений за счётчиком байт/пакетов.</div>
+<h3>
+<span id=".D0.A1.D0.BE.D0.B7.D0.B4.D0.B0.D0.BD.D0.B8.D0.B5_.D0.BD.D0.B5.D0.BE.D1.85.D0.BE.D0.B4.D0.B8.D0.BC.D1.8B.D1.85_.D1.86.D0.B5.D0.BF.D0.BE.D1.87.D0.B5.D0.BA"></span><span class="mw-headline" id="Создание_неоходимых_цепочек">Создание неоходимых цепочек</span>
+</h3>
+<p>Создадим две пользовательские цепочки, которые будут использоваться для открытия портов.
+</p>
+<pre># iptables -N TCP
+# iptables -N UDP
+</pre>
+<p>В дальнейшем при назначений правил для этих цепочек мы будем всякий раз указывать тип протокола (например, добавив флаг <code>-p tcp</code>). Этим обусловлен выбор названий цепочек, но вообще говоря, названия могут быть любыми.
+</p>
+<h3>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_FORWARD"></span><span class="mw-headline" id="Цепочка_FORWARD">Цепочка FORWARD</span>
+</h3>
+<p>Если вы хотите настроить свою систему в качестве NAT-шлюза, изучите раздел <a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_NAT-%D1%88%D0%BB%D1%8E%D0%B7%D0%B0">#Настройка NAT-шлюза</a>. Для одиночной же системы можно для цепочки <b>FORWARD</b> ограничиться назначением политики <b>DROP</b>:
+</p>
+<pre># iptables -P FORWARD DROP
+</pre>
+<h3>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_OUTPUT"></span><span class="mw-headline" id="Цепочка_OUTPUT">Цепочка OUTPUT</span>
+</h3>
+<p>Цепочка OUTPUT может быть крайне полезной в деле фильтрации исходящего трафика, особено для серверов и других устройств, не использующих веб-браузеры и peer-to-peer программы для соединения с произвольными узлами сети Интернет. Тем не менее, правильная настройка цепочки OUTPUT требует понимания назначения конкретной системы. Наборы правил безопасности для настольной системы, ноутбука, облачного или домашнего сервера будут сильно отличаться.
+</p>
+<p>В простом примере ниже разрешается весь исходящий трафик, поскольку для цепочки <b>OUTPUT</b> назначается политика по умолчанию <b>ACCEPT</b>. Этого недостаточно для полной безопасности, но будет работать на большинстве систем.
+</p>
+<pre># iptables -P OUTPUT ACCEPT
+</pre>
+<h3>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_INPUT"></span><span class="mw-headline" id="Цепочка_INPUT">Цепочка INPUT</span>
+</h3>
+<p>Назначаем политику <b>DROP</b> для цепочки <b>INPUT</b> на случай, если что-то каким-то образом проскочит мимо наших правил. Лучший способ создать надёжный файрвол — запретить весь трафик, отдельно указав то, что разрешено.
+</p>
+<pre># iptables -P INPUT DROP
+</pre>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Если вы вошли в систему через SSH, этот шаг немедленно разорвёт SSH-сессию. Чтобы этого избежать: (1) сперва добавьте цепочку правил INPUT из следующего примера (это позволит сохранить существующее соединение), (2) добавьте обычное правило, разрешающее входящее SSH-подключение (чтобы иметь возможность восстановить соединение в случае потери связи) и (3) настройте политику, как предложено выше.</div>
+<p>Все входящие пакеты, пришедшие на любой сетевой интерфейс данной машины, будут проходить через цепочку INPUT. Следует назначить правила таким образом, чтобы межсетевой экран пропускал только те пакеты, которые нам нужны.
+</p>
+<p>Первое правило цепочки INPUT будет разрешать трафик установленных соединений и любой новый трафик, относящийся к ним, например, сообщения ICMP об ошибке или эхо-ответы (пакеты, которые хост возвращает, когда его пингуют). ICMP — протокол управляющих сообщений (Internet Control Message Protocol). Некоторые сообщения ICMP имеют важное значение для управления перегрузками и определения <a href="https://en.wikipedia.org/wiki/ru:Maximum_transmission_unit" class="extiw" title="wikipedia:ru:Maximum transmission unit">MTU</a>, и мы разрешаем их этим правилом:
+</p>
+<pre># iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</pre>
+<p>Состояние соединения <code>ESTABLISHED</code> подразумевает одну из двух ситаций: либо первичная (<code>--ctstate NEW</code>) попытка соединения была одобрена ранее другим правилом, либо соединение уже было активно (например, удалённое SSH-подключение) на момент задания правила.
+</p>
+<p>Второе правило разрешит весь трафик от петлевого (loopback) интерфейса, который необходим многим приложениям и службам:
+</p>
+<pre># iptables -A INPUT -i lo -j ACCEPT
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Вы можете добавить другие интерфейсы (например, "enp2s0") в список доверенных, если не желаете, чтобы какая-то часть трафика фильтровалась файрволом; но имейте в виду, что если NAT настроен перенаправлять весь трафик из любого места сети (скажем, от маршрутизатора) к этому интерфейсу, то он пройдет мимо всех настроек, которые вы сделали.</div>
+<p>Третье правило будет отбрасывать все пакеты с состоянием INVALID. Существует четыре категории состояния (state): NEW, ESTABLISHED, RELATED и INVALID. Именно наличие категорий отличает межсетевой экран с контекстной фильтрацией от менее безопасного экрана без неё. Состояния отслеживаются посредством модулей ядра <code>nf_conntrack_*</code>, которые загружаются автоматически после добавления правил.
+</p>
+<pre># iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> 
+<ul>
+<li>Это правило будет отбрасывать все пакеты с неверными заголовками или контрольными суммами, неверными флагами TCP, неправильными ICMP-сообщениями (например, входящее сообщение "порт недостижим", если мы не посылали ничего другому хосту), а также пакеты без очереди, которые могут быть результатом попыток угадывания последовательности или схожих атак. Политика DROP означает отбрасывание пакетов безо всякого ответа, в то время как REJECT отклоняет их вежливо, с уведомлением отправителя. Мы используем DROP, поскольку нет подходящего ответа REJECT для INVALID-пакетов и мы не хотим подтверждать их получение.</li>
+<li>Пакеты протокола обнаружения соседей ICMPv6 остаются неотслеживаемыми и всегда классифицируются как INVALID, хотя они по всем параметрам являются годными. Следует иметь это в виду и разрешить их перед предыдущим правилом командой <code>iptables -A INPUT -p 41 -j ACCEPT</code>.</li>
+</ul>
+</div>
+<p>Следующее правило разрешает все новые входящие ICMP эхо запросы (ECHO_REQUEST), также известные как ping. Только первый пакет будет считаться относящимся к категории NEW, остальные будут обрабатываться правилом "RELATED, ESTABLISHED". Если компьютер не является маршрутизатором, нет необходимости разрешать какой-либо другой ICMP-трафик с состоянием NEW.
+</p>
+<pre># iptables -A INPUT -p icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+</pre>
+<p>Теперь мы прикрепим TCP- и UDP-цепочки к цепочке INPUT для обработки всех новых входящих соединений. Если соединение разрешено цепочкой TCP или UDP, оно обрабатывается правилом "RELATED, ESTABLISHED". TCP или UDP цепочки будут либо разрешать новые входящие соединения, либо вежливо отклонять их. Новые TCP соединения должны начинаться с SYN-сегмента.
+</p>
+<pre># iptables -A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+# iptables -A INPUT -p tcp --syn -m conntrack --ctstate NEW -j TCP
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> NEW-соединение, начинающееся не с SYN-сегмента — единственный неверный флаг для протокола TCP, который не описывается состоянием INVALID. Это связано с тем, что данные пакеты редко бывают вредоносными и нет смысла просто их отбрасывать (drop). Вместо этого они отклоняются (reject) с сообщением TCP RESET в соответствии со следующим правилом.</div>
+<p>Мы отклоняем TCP-соединения пакетами TCP RESET, а UDP-потоки — сообщениями ICMP "port unreachable", если запрашиваемый порт закрыт. Это имитирует поведение Linux по умолчанию (в соответствии с RFC), и позволяет отправителю быстро закрыть соединение.
+</p>
+<pre># iptables -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+# iptables -A INPUT -p tcp -j REJECT --reject-with tcp-reset
+</pre>
+<p>Для других протоколов мы добавляем последнее правило в цепочку INPUT, чтобы отклонить остальной входящий трафик с ICMP-сообщением "protocol unreachable". Это также соответствует поведению Linux по умолчанию.
+</p>
+<pre># iptables -A INPUT -j REJECT --reject-with icmp-proto-unreachable
+</pre>
+<h3>
+<span id=".D0.98.D1.82.D0.BE.D0.B3.D0.BE.D0.B2.D1.8B.D0.B9_.D1.84.D0.B0.D0.B9.D0.BB_iptables.rules"></span><span class="mw-headline" id="Итоговый_файл_iptables.rules">Итоговый файл iptables.rules</span>
+</h3>
+<p>Пример файла <code>iptables.rules</code> после выполнения всех команд, описанных выше:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/iptables/iptables.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Generated by iptables-save v1.4.18 on Sun Mar 17 14:21:12 2013
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:TCP - [0:0]
+:UDP - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -j REJECT --reject-with icmp-proto-unreachable
+COMMIT
+# Completed on Sun Mar 17 14:21:12 2013
+</pre>
+<p>Файл генерируется и сохраняется командой
+</p>
+<pre># iptables-save -f /etc/iptables/iptables.rules
+</pre>
+<p>Данный файл конфигурации можно использовать как исходный для дальнейших настроек в следующих разделах. Если вы настраиваете межсетевой экран удалённо через SSH, перед продолжением добавьте правило, разрешающее новые SSH-подключения (вместо порта 22 можно выбрать нужный):
+</p>
+<pre>-A TCP -p tcp --dport 22 -j ACCEPT
+</pre>
+<h3>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B8_TCP_.D0.B8_UDP"></span><span class="mw-headline" id="Цепочки_TCP_и_UDP">Цепочки TCP и UDP</span>
+</h3>
+<p>Цепочки TCP и UDP содержат правила для разрешения новых TCP-соединений и UDP-потоков к определённым портам.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Также в эти цепочки можно добавлять правила для разрешения удалённых соединений, таких как SSH, HTTP и других служб, к которым вы желаете получить удалённый доступ.</div>
+<h4>
+<span id=".D0.9E.D1.82.D0.BA.D1.80.D1.8B.D1.82.D0.B8.D0.B5_.D0.BF.D0.BE.D1.80.D1.82.D0.BE.D0.B2_.D0.B4.D0.BB.D1.8F_.D0.B2.D1.85.D0.BE.D0.B4.D1.8F.D1.89.D0.B8.D1.85_.D1.81.D0.BE.D0.B5.D0.B4.D0.B8.D0.BD.D0.B5.D0.BD.D0.B8.D0.B9"></span><span class="mw-headline" id="Открытие_портов_для_входящих_соединений">Открытие портов для входящих соединений</span>
+</h4>
+<p>Разрешить входящие TCP-соединения на порт 80 для веб-сервера (HTTP):
+</p>
+<pre># iptables -A TCP -p tcp --dport 80 -j ACCEPT
+</pre>
+<p>Разрешить входящие TCP-соединения на порт 443 для веб-сервера (HTTPS):
+</p>
+<pre># iptables -A TCP -p tcp --dport 443 -j ACCEPT
+</pre>
+<p>Разрешить удаленные SSH-соединения (на порт 22):
+</p>
+<pre># iptables -A TCP -p tcp --dport 22 -j ACCEPT
+</pre>
+<p>Разрешить входящие TCP/UDP запросы для <a href="../en/Category:Domain_Name_System.html" class="mw-redirect" title="DNS server">DNS-сервера</a> (порт 53):
+</p>
+<pre># iptables -A TCP -p tcp --dport 53 -j ACCEPT
+# iptables -A UDP -p udp --dport 53 -j ACCEPT
+</pre>
+<p>Более сложные правила, вроде проверки по нескольким портам, можно найти в <span class="plainlinks archwiki-template-man" title="$ man 8 iptables"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/iptables.8">iptables(8)</a></span>.
+</p>
+<h4><span class="mw-headline" id="Port_knocking">Port knocking</span></h4>
+<p>Port knocking — способ открыть извне порты, которые файрвол по умолчанию держит закрытыми. Принцип работы port knocking заключается в создании последовательности попыток соединений с заранее выбранными закрытыми портами. При получении корректной последовательности "простукиваний" межсетевой экран открывает определенный порт и разрешает соединение. Подробная информация дана в статье <a href="../en/Port_knocking.html" title="Port knocking">Port knocking</a>.
+</p>
+<h3>
+<span id=".D0.97.D0.B0.D1.89.D0.B8.D1.82.D0.B0_.D0.BE.D1.82_.D1.81.D0.BF.D1.83.D1.84.D0.B8.D0.BD.D0.B3.D0.B0"></span><span class="mw-headline" id="Защита_от_спуфинга">Защита от спуфинга</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> В настоящее время параметру <code>rp_filter</code> в файле <code>/usr/lib/sysctl.d/50-default.conf</code> по умолчанию присвоено значение <code>2</code>, поэтому в описанных ниже действиях нет необходимости.</div>
+<p>Блокировка пришедших из внешней сети пакетов с локальным адресом отправителя (что говорит о подмене адреса, address spoofing), производится посредством встроенной в ядро Linux проверки. Добавьте следующую строку в файл <code>/etc/sysctl.d/90-firewall.conf</code> (подробную информацию можно найти в статье <a href="../en/Sysctl.html" title="Sysctl">sysctl</a>):
+</p>
+<pre>net.ipv4.conf.all.rp_filter=1
+</pre>
+<p>То же самое можно сделать посредством netfilter, если необходимо ведение статистики и лог-файлов:
+</p>
+<pre># iptables -t raw -I PREROUTING -m rpfilter --invert -j DROP
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Включать эту функцию одновременно в двух местах не нужно. Реализованная в netfilter проверка вполне удовлетворительна и, кроме того, работает с адресами IPv6.</div>
+<p>Для случая асинхронной маршрутизации нужно использовать опцию sysctl <code>rp_filter=2</code>. Добавление флага <code>--loose</code> к модулю <code>rpfilter</code> сделает то же самое посредством netfilter.
+</p>
+<h3>
+<span id=".D0.97.D0.B0.D1.89.D0.B8.D1.82.D0.B0_.D0.BE.D1.82_.D0.BE.D0.B1.D0.BD.D0.B0.D1.80.D1.83.D0.B6.D0.B5.D0.BD.D0.B8.D1.8F"></span><span class="mw-headline" id="Защита_от_обнаружения">Защита от обнаружения</span>
+</h3>
+<p>Если вы хотите сделать вашу машину менее заметной в сети, хорошей идеей будет блокировать некоторые входящие запросы.
+</p>
+<h4>
+<span id=".D0.91.D0.BB.D0.BE.D0.BA.D0.B8.D1.80.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5_ping-.D0.B7.D0.B0.D0.BF.D1.80.D0.BE.D1.81.D0.BE.D0.B2"></span><span class="mw-headline" id="Блокирование_ping-запросов">Блокирование ping-запросов</span>
+</h4>
+<p>Запрос "ping" представляет собой ICMP-пакет, посланный с целью убедиться, что между двумя хостами есть связь. Если сеть в порядке, вы можете безопасно блокировать все ping-запросы. Нужно отметить, что это не сделает ваш компьютер необнаружимым — каждый входящий пакет будет отклоняться, поэтому вы всё ещё будете видны при простом "ping-сканировании" по диапазону IP-адресов посредством <a href="../en/Nmap.html" title="Nmap">nmap</a>. Кроме того, нужно иметь в виду, что эта элементарная "защита" усложнит вам жизнь случае возникновения необходимости отладки сети.
+</p>
+<p>Чтобы заблокировать эхо-запросы (echo requests), добавьте следующую строку в файл <code>/etc/sysctl.d/90-firewall.conf</code> (подробную информацию можно найти в статье <a href="../en/Sysctl.html" title="Sysctl">sysctl</a>):
+</p>
+<pre>net.ipv4.icmp_echo_ignore_all = 1
+</pre>
+<p>Больше сведений об этой защите вы найдёте в руководстве <span class="plainlinks archwiki-template-man" title="$ man 8 iptables"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/iptables.8">iptables(8)</a></span>, а также в документации и примерах на странице <a rel="nofollow" class="external free" href="http://www.snowman.net/projects/ipt_recent/">http://www.snowman.net/projects/ipt_recent/</a>
+</p>
+<h4>
+<span id=".D0.9E.D0.B1.D0.BC.D0.B0.D0.BD_.D1.81.D0.BA.D0.B0.D0.BD.D0.B5.D1.80.D0.BE.D0.B2_.D0.BF.D0.BE.D1.80.D1.82.D0.BE.D0.B2"></span><span class="mw-headline" id="Обман_сканеров_портов">Обман сканеров портов</span>
+</h4>
+<p>Сканирование портов производится с целью обнаружения тех из них, которые открыты в настоящий момент. Это позволит атакующему определить запущенные на машине службы и подобрать к ним эксплойты.
+</p>
+<p>Состояние INVALID в правилах iptables "позаботится" обо всех типах сканирования, за исключением сканирований UDP, ACK и SYN (флаги nmap <code>-sU</code>, <code>-sA</code> и <code>-sS</code> соответственно).
+</p>
+<p><i>ACK-сканирование</i> не используется для определения открытых портов, но зато покажет порты, защищённые межсетевым экраном. Подобно SYN-пакету в TCP-соединениях с состоянием NEW, каждый пакет ACK-сканирования будет отклонен с отправкой ответа TCP RESET по обратному адресу. Некоторые межсетевые экраны вместо этого просто отбрасывают такие пакеты, что позволяет атакующему определить действующие правила.
+</p>
+<p>Модуль <b>recent</b> поможет обмануть остальные типы сканирования портов. Он добавляет хосты к списку недавних соединений, который используется для обнаружения и блокирования попыток атак. Просмотреть списки недавних соединений можно в каталоге <code>/proc/net/xt_recent/</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Использование модуля resent для защиты от сканирований может привести к тому, что:
+<ul>
+<li>Система станет уязвимой к разновидности <a href="https://en.wikipedia.org/wiki/ru:DoS-%D0%B0%D1%82%D0%B0%D0%BA%D0%B0" class="extiw" title="wikipedia:ru:DoS-атака">DoS-атаки</a>. Атакующий посылает пакеты с подменёными IP-адресами, чтобы добиться их блокировки вашими службами.</li>
+<li>Может оказаться заблокированным обычный IP-адрес, если несколько пакетов с этого адреса на порт получателя будут признаны INVALID модулем conntrack. Чтобы избежать занесения в чёрный список, следует разрешить все пакеты, поступающие на этот порт.</li>
+</ul>
+</div>
+<h5>
+<span id="SYN-.D1.81.D0.BA.D0.B0.D0.BD.D0.B8.D1.80.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="SYN-сканирование">SYN-сканирование</span>
+</h5>
+<p>При SYN-сканировании сканер портов посылает синхронизационные пакеты на каждый порт с целью создать TCP-соединение. Если порт закрыт, то возвращается ответ TCP RESET, межсетевой экран просто отбрасывает входящий пакет, а открытый порт возвращает ответ SYN ACK.
+</p>
+<p>Модуль <code>recent</code> может использоваться для отслеживания хостов с отклонёнными попытками соединения и возвращения ответа TCP RESET для каждого SYN-пакета, поступившего на открытый порт, как если бы порт был закрыт. Если открытый порт оказался первым в порядке сканирования, то будет возвращён ответ SYN ACK, поэтому приложения вроде ssh следует размещать на нестандартных портах.
+</p>
+<p>Сначала добавьте правило в начало цепочки TCP. Это правило будет отвечать пакетом TCP RESET любому хосту, входившему в список <code>TCP-PORTSCAN</code> в течение последних 60 секунд. Флаг <code>--update</code> управляет периодическим обновлением списка.
+</p>
+<pre># iptables -I TCP -p tcp -m recent --update --rsource --seconds 60 --name TCP-PORTSCAN -j REJECT --reject-with tcp-reset
+</pre>
+<p>Затем необходимо модифицировать правило отклонения TCP-пакетов, чтобы добавлять все хосты с отклонёнными пакетами к списку <code>TCP-PORTSCAN</code>:
+</p>
+<pre># iptables -D INPUT -p tcp -j REJECT --reject-with tcp-reset
+# iptables -A INPUT -p tcp -m recent --set --rsource --name TCP-PORTSCAN -j REJECT --reject-with tcp-reset
+</pre>
+<h5>
+<span id="UDP-.D1.81.D0.BA.D0.B0.D0.BD.D0.B8.D1.80.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="UDP-сканирование">UDP-сканирование</span>
+</h5>
+<p>Сканирование UDP схоже со сканированием TCP SYN за исключением того факта, что UDP является протоколом без установления соединения. В нём нет "рукопожатий" и подтверждений. Вместо этого сканер посылает UDP-пакеты на каждый UDP-порт. Закрытые порты должны возвращать сообщение ICMP port unreachable, а открытые не возвращают ничего. Поскольку UDP — "ненадежный" протокол, у сканера нет возможности узнать о потере пакетов, поэтому он посылает серию запросов на каждый порт, с которого не вернулся ответ.
+</p>
+<p>Ядро Linux посылает сообщения ICMP port unreachable довольно медленно, поэтому продолжительность полного UDP-сканирования может превысить 10 часов. Однако часто используемые порты проверяются гораздо быстрее, поэтому хорошей идеей будет применить контрмеры, аналогичные защите от SYN-сканирований.
+</p>
+<p>Сначала добавляем правило отклонения пакетов от хостов из списка <code>UDP-PORTSCAN</code> в начало цепочки UDP:
+</p>
+<pre># iptables -I UDP -p udp -m recent --update --rsource --seconds 60 --name UDP-PORTSCAN -j REJECT --reject-with icmp-port-unreachable
+</pre>
+<p>Затем модифицируем правило отклонения пакетов для UDP:
+</p>
+<pre># iptables -D INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+# iptables -A INPUT -p udp -m recent --set --rsource --name UDP-PORTSCAN -j REJECT --reject-with icmp-port-unreachable
+</pre>
+<h5>
+<span id=".D0.92.D0.BE.D1.81.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BB.D0.B5.D0.BD.D0.B8.D0.B5_.D0.BF.D0.BE.D1.81.D0.BB.D0.B5.D0.B4.D0.BD.D0.B5.D0.B3.D0.BE_.D0.BF.D1.80.D0.B0.D0.B2.D0.B8.D0.BB.D0.B0"></span><span class="mw-headline" id="Восстановление_последнего_правила">Восстановление последнего правила</span>
+</h5>
+<p>Если вы применили хотя бы один из способов защиты выше, бывшее последним правило цепочки INPUT более таковым не является. Теперь оно находится перед правилами защиты от сканирования и те по сути бесполезны. Просто удалите (<code>-D</code>) это правило, а затем добавьте его снова (<code>-A</code>), это переместит его в конец цепочки.
+</p>
+<pre># iptables -D INPUT -j REJECT --reject-with icmp-proto-unreachable
+# iptables -A INPUT -j REJECT --reject-with icmp-proto-unreachable
+</pre>
+<h3>
+<span id=".D0.97.D0.B0.D1.89.D0.B8.D1.82.D0.B0_.D0.BE.D1.82_.D0.B4.D1.80.D1.83.D0.B3.D0.B8.D1.85_.D1.82.D0.B8.D0.BF.D0.BE.D0.B2_.D0.B0.D1.82.D0.B0.D0.BA"></span><span class="mw-headline" id="Защита_от_других_типов_атак">Защита от других типов атак</span>
+</h3>
+<p>В статье <a href="../en/Sysctl.html#TCP/IP_stack_hardening" title="Sysctl">sysctl#TCP/IP stack hardening</a> можно найти описание важных с точки зрения безопасности параметров ядра.
+</p>
+<h4>
+<span id=".D0.90.D1.82.D0.B0.D0.BA.D0.B0_.D0.BF.D0.BE.D0.BB.D0.BD.D1.8B.D0.BC_.D0.BF.D0.B5.D1.80.D0.B5.D0.B1.D0.BE.D1.80.D0.BE.D0.BC"></span><span class="mw-headline" id="Атака_полным_перебором">Атака полным перебором</span>
+</h4>
+<p>Доступные по внешнему IP-адресу сервисы подвергаются атакам полным перебором довольно часто. Реализовать атаку этого типа несложно, а инструментарий — обширен и доступен. К счастью, существует несколько способов защиты от атак полным перебором. Первый способ заключается в создании правил <code>iptables</code>, которые заносят IP-адрес в чёрный список после нескольких попыток установить соединение. При втором способе защиты запускается специализированный демон, который отслеживает лог-файл на предмет неудачных попыток соединения.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Важно:</strong> Защита посредством занесения адресов в чёрный список остановит простые атаки, но она полагается на дополнительный демон и успешное логирование (в случае мощной атаки может закончиться свободное место разделе, содержащем каталог <code>/var</code> с лог-файлами). Кроме того, узнав ваш IP-адрес, атакующий может посылать пакеты с подменённым адресом отправителя, чтобы добиться вашей блокировки. Элегантное решение этой проблемы заключается в использовании <a href="../en/SSH_keys.html" title="SSH keys">ключей SSH</a>.</div>
+<p>Приложения <a href="../ru/Fail2ban.html" title="Fail2ban (Русский)">Fail2ban</a> и (в случае <code>sshd</code>) <a href="../en/Sshguard.html" title="Sshguard">Sshguard</a> используются для блокировки IP-адресов при превышении допустимого количества попыток аутентификации. Суть их работы состоит в обновлении правил iptables с целью временно или навсегда воспрепятствовать будущим соединениям атакующих.
+</p>
+<p>Ниже представлен пример правил iptables для предотвращения атак полным перебором на сервис SSH.
+</p>
+<pre># iptables -N IN_SSH
+# iptables -N LOG_AND_DROP
+# iptables -A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -j IN_SSH
+# iptables -A IN_SSH -m recent --name sshbf --rttl --rcheck --hitcount 3 --seconds 10 -j LOG_AND_DROP
+# iptables -A IN_SSH -m recent --name sshbf --rttl --rcheck --hitcount 4 --seconds 1800 -j LOG_AND_DROP 
+# iptables -A IN_SSH -m recent --name sshbf --set -j ACCEPT
+# iptables -A LOG_AND_DROP -j LOG --log-prefix "iptables deny: " --log-level 7
+# iptables -A LOG_AND_DROP -j DROP
+</pre>
+<p>Большая часть правил очевидна: первое разрешает три попытки соединения в течение 10 секунд, после чего дальнейшие попытки будут отклоняться. Второе — добавляет ограничение на четыре попытки в течение получаса. Дело в том, что атаки полным перебором обычно выполняются медленно и за несколько серий попыток. Дополнительную информацию об этих правилах и их опциях можно найти в оригинальной статье на сайте <a rel="nofollow" class="external text" href="https://compilefailure.blogspot.com/2011/04/better-ssh-brute-force-prevention-with.html">compilefailure.blogspot.com</a>.
+</p>
+<p>Предложенные выше правила могут использоваться для защиты любой службы, но демон SSH нуждается в ней наиболее часто.
+</p>
+<p>Необходимо также убедиться, что правило <code>-A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -j IN_SSH</code> находится в верной позиции в последовательности iptables, перед точкой прикрепления цепочки TCP к цепочке INPUT. Это позволит успешно перехватывать новые попытки установления SSH-соединений. Если вы выполнили все предыдущие шаги в этой статье, порядок правил должен быть следующим:
+</p>
+<pre>...
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+<b>-A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j IN_SSH</b>
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
+...
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Совет:</strong> При проверке правил после настройки реальное занесение в чёрный список может замедлить тесты, что усложнит тонкую настройку. Входящие попытки соединений можно отслеживать посредством команды <code>cat /proc/net/xt_recent/sshbf</code>. Чтобы разблокировать собственный IP-адрес во время тестирования, вам понадобятся права root: <code>echo / &gt; /proc/net/xt_recent/sshbf</code>.</div>
+<h3><span class="mw-headline" id="IPv6">IPv6</span></h3>
+<p>Если вы не используете протокол IPv6, то лучше будет его <a href="../ru/IPv6.html#%D0%9E%D1%82%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_IPv6" class="mw-redirect" title="Отключение IPv6">отключить</a>. В противном случае стоит создать соответствующий набор правил межсетевого экрана.
+</p>
+<p>Скопируйте созданные ранее правила для протокола IPv4 и замените все IPv4-адреса на адреса формата IPv6:
+</p>
+<pre># cp /etc/iptables/iptables.rules /etc/iptables/ip6tables.rules
+</pre>
+<p>Некоторые правила нужно адаптировать под IPv6. Так, для IPv6 используется обновлённая версия протокола ICMP, и коды ответов при отклонении соединений <code>--reject-with icmp-port-unreachable</code> и <code>--reject-with icmp-proto-unreachable</code> необходимо преобразовать в коды ICMPv6.
+</p>
+<p>Коды ошибок ICMPv6 перечислены в <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc4443#section-3.1">RFC 4443</a>, согласно которому при блокировке межсетевым экраном попыток установления соединения необходимо использовать код <code>--reject-with icmp6-adm-prohibited</code>. Это проинформирует удалённую систему о том, что соединение было отклонено брандмауэром, а не прослушивающей порт службой.
+</p>
+<p>Если уведомлять удалённую систему о наличии файрвола нежелательно, то можно отклонить пакет без сообщения:
+</p>
+<pre> -A INPUT -j REJECT
+</pre>
+<p>Отклонение пакетов по этому правилу будет производиться с сообщением об ошибке <code>--reject-with icmp6-port-unreachable</code>. Следует однако отметить, что одной из основных функций приложений-сканеров является как раз обнаружение межсетевых экранов и обмануть их этим правилом не получится.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Какие особенности ICMPv6 нужно добавить, чтобы привести правила в полное соответствие с правилами IPv4? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Simple_stateful_firewall#ICMP_blocking">Talk:Simple_stateful_firewall#ICMP blocking</a>)</div>
+</div>
+<p>Следующее правило для протокола IPv6 настроит поведение межсетевого экрана по отношению к новым входящим пингам (ICMP echo requests):
+</p>
+<pre># ip6tables -A INPUT -p ipv6-icmp --icmpv6-type 128 -m conntrack --ctstate NEW -j ACCEPT
+</pre>
+<p>Модуль conntrack не отслеживает действия ICMPv6 Neighbor Discovery Protocol (аналог протокола ARP), поэтому необходимо разрешить трафик ICMPv6 вне зависимости от его состояния для всех прилежащих подсетей. Следующее правило нужно вставить после правила отбрасывания некорректных пакетов <code>--ctstate INVALID</code>, но перед любыми другими правилами DROP или REJECT. Создаётся по одному правилу на каждую подсеть:
+</p>
+<pre># ip6tables -A INPUT -s fe80::/10 -p ipv6-icmp -j ACCEPT
+</pre>
+<p>Если вы желаете включить <a href="https://en.wikipedia.org/wiki/ru:DHCPv6" class="extiw" title="wikipedia:ru:DHCPv6">DHCPv6</a>, разрешите входящие соединения на <a rel="nofollow" class="external text" href="https://unix.stackexchange.com/a/452905">UDP-порт 546</a>:
+</p>
+<pre># ip6tables -A INPUT -p udp --sport 547 --dport 546 -j ACCEPT
+</pre>
+<p>Поскольку в ядре Linux нет встроенной фильтрации по обратному маршруту (reverse path filter) для протокола IPv6, то стоит включить её посредством ip6tables:
+</p>
+<pre># ip6tables -t raw -A PREROUTING -m rpfilter -j ACCEPT
+# ip6tables -t raw -A PREROUTING -j DROP
+</pre>
+<h3>
+<span id=".D0.A1.D0.BE.D1.85.D1.80.D0.B0.D0.BD.D0.B5.D0.BD.D0.B8.D0.B5_.D0.BF.D1.80.D0.B0.D0.B2.D0.B8.D0.BB"></span><span class="mw-headline" id="Сохранение_правил">Сохранение правил</span>
+</h3>
+<p>Набор правил межсетевого экрана завершён и осталось только сохранить его в файл, который будет загружаться при каждом запуске системы.
+</p>
+<p>Сохраняем правила IPv4 и IPv6 командами:
+</p>
+<pre># iptables-save -f /etc/iptables/iptables.rules
+# ip6tables-save -f /etc/iptables/ip6tables.rules
+</pre>
+<h3>
+<span id=".D0.98.D1.82.D0.BE.D0.B3.D0.BE.D0.B2.D1.8B.D0.B9_.D1.84.D0.B0.D0.B9.D0.BB_ip6tables.rules"></span><span class="mw-headline" id="Итоговый_файл_ip6tables.rules">Итоговый файл ip6tables.rules</span>
+</h3>
+<p>Пример файла правил <code>ip6tables.rules</code> после выполнения представленных выше команд:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/iptables/ip6tables.rules</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"># Generated by ip6tables-save v1.8.2 on Sat Apr 20 10:53:41 2019
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:TCP - [0:0]
+:UDP - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -s fe80::/10 -p ipv6-icmp -j ACCEPT
+-A INPUT -p udp --sport 547 --dport 546 -j ACCEPT
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p udp -j REJECT --reject-with icmp6-adm-prohibited
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -j REJECT --reject-with icmp6-adm-prohibited
+-A INPUT -p ipv6-icmp -m icmp6 --icmpv6-type 128 -m conntrack --ctstate NEW -j ACCEPT
+COMMIT
+# Completed on Sat Apr 20 10:53:41 2019
+</pre>
+<p>В завершение <a href="../ru/Systemd.html#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D1%8E%D0%BD%D0%B8%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Включите">включите</a> и <a href="../ru/Systemd.html#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D1%8E%D0%BD%D0%B8%D1%82%D0%BE%D0%B2" class="mw-redirect" title="Запустите">запустите</a> службы <code>iptables.service</code> и <code>ip6tables.service</code>. Проверьте статус служб, чтобы убедиться, что правила загрузились корректно.
+</p>
+<h2>
+<span id=".D0.9D.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0_NAT-.D1.88.D0.BB.D1.8E.D0.B7.D0.B0"></span><span class="mw-headline" id="Настройка_NAT-шлюза">Настройка NAT-шлюза</span>
+</h2>
+<p>В этом разделе рассмотрена настройка межсетевого экрана для NAT-шлюза. Предполагается, что вы уже прочитали <a href="#%D0%9C%D0%B5%D0%B6%D1%81%D0%B5%D1%82%D0%B5%D0%B2%D0%BE%D0%B9_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD_%D0%B4%D0%BB%D1%8F_%D0%BE%D0%B4%D0%B8%D0%BD%D0%BE%D1%87%D0%BD%D0%BE%D0%B9_%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D1%8B">первую часть</a> данного руководства и настроили цепочки <b>INPUT</b>, <b>OUTPUT</b>, <b>TCP</b> и <b>UDP</b> как было предложено. До этого момента созданные правила относились к таблице <b>filter</b>, при настройке NAT-шлюза нам также понадобится таблица <b>nat</b>.
+</p>
+<h3>
+<span id=".D0.A2.D0.B0.D0.B1.D0.BB.D0.B8.D1.86.D0.B0_filter"></span><span class="mw-headline" id="Таблица_filter">Таблица filter</span>
+</h3>
+<h4>
+<span id=".D0.A1.D0.BE.D0.B7.D0.B4.D0.B0.D0.BD.D0.B8.D0.B5_.D0.BD.D0.B5.D0.BE.D0.B1.D1.85.D0.BE.D0.B4.D0.B8.D0.BC.D1.8B.D1.85_.D1.86.D0.B5.D0.BF.D0.BE.D1.87.D0.B5.D0.BA"></span><span class="mw-headline" id="Создание_необходимых_цепочек">Создание необходимых цепочек</span>
+</h4>
+<p>Создадим две новые цепочки — <b>fw-interfaces</b> и <b>fw-open</b>:
+</p>
+<pre># iptables -N fw-interfaces
+# iptables -N fw-open
+</pre>
+<h4>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_FORWARD_2"></span><span class="mw-headline" id="Цепочка_FORWARD_2">Цепочка FORWARD</span>
+</h4>
+<p>Настройка цепочки <b>FORWARD</b> схожа с настройкой цепочки <b>INPUT</b> в первой части.
+</p>
+<p>Сначала добавляем правило с модулем <b>conntrack</b>, идентичное правилу из цепочки <b>INPUT</b>:
+</p>
+<pre># iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</pre>
+<p>Затем включаем пересылку для доверенных интерфейсов и пропускаем все пакеты через цепочку <b>fw-open</b>:
+</p>
+<pre># iptables -A FORWARD -j fw-interfaces 
+# iptables -A FORWARD -j fw-open 
+</pre>
+<p>Остальные пакеты блокируются с отправкой ICMP-сообщения:
+</p>
+<pre># iptables -A FORWARD -j REJECT --reject-with icmp-host-unreachable
+# iptables -P FORWARD DROP
+</pre>
+<h4>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B8_fw-interfaces_.D0.B8_fw-open"></span><span class="mw-headline" id="Цепочки_fw-interfaces_и_fw-open">Цепочки fw-interfaces и fw-open</span>
+</h4>
+<p>Назначение цепочек <b>fw-interfaces</b> и <b>fw-open</b> будет объяснено позже, когда мы будем работать с цепочками <b>POSTROUTING</b> и <b>PREROUTING</b> соответственно в таблице <b>nat</b>.
+</p>
+<h3>
+<span id=".D0.A2.D0.B0.D0.B1.D0.BB.D0.B8.D1.86.D0.B0_nat"></span><span class="mw-headline" id="Таблица_nat">Таблица nat</span>
+</h3>
+<p>В этом разделе предполагается, что исходящий интерфейс (с публичным IP-адресом) носит имя <b>ppp0</b>. Если ваш интерфейс называется иначе, то во всех приведённых ниже правилах следует заменить название на настоящее.
+</p>
+<h4>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_POSTROUTING"></span><span class="mw-headline" id="Цепочка_POSTROUTING">Цепочка POSTROUTING</span>
+</h4>
+<p>Сначала мы должны определить, кому разрешено подключаться к сети Интернет. Предположим, имеется подсеть <b>192.168.0.0/24</b> (т.е. в неё входят все адреса в диапазоне 192.168.0.0-255), подключённая к интерфейсу <b>eth0</b>. Чтобы разрешить исходящие соединения хостам в этой подсети, настраиваем цепочку <i>fw-interfaces</i> в таблице FORWARD:
+</p>
+<pre># iptables -A fw-interfaces -i eth0 -j ACCEPT
+</pre>
+<p>Затем необходимо отредактировать все исходящие пакеты, чтобы в поле "адрес отправителя" значился публичный адрес шлюза вместо локального LAN-адреса. Для этого используем таргет <b>MASQUERADE</b>:
+</p>
+<pre># iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -o ppp0 -j MASQUERADE
+</pre>
+<p>Не забудьте указать параметр <code>-o ppp0</code>, потому что в противном случае сеть не будет функционировать.
+</p>
+<p>Предположим, что есть другая подсеть, <b>10.3.0.0/16</b> (с адресами 10.3.*.*), подключённая к интерфейсу <b>eth1</b>. Добавляем аналогичные правила:
+</p>
+<pre># iptables -A fw-interfaces -i eth1 -j ACCEPT
+# iptables -t nat -A POSTROUTING -s 10.3.0.0/16 -o ppp0 -j MASQUERADE
+</pre>
+<p>Наконец, нужно <a href="../ru/Internet_sharing.html#%D0%A0%D0%B0%D0%B7%D1%80%D0%B5%D1%88%D0%B8%D1%82%D0%B5_%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D1%8B%D0%BB%D0%BA%D1%83_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2" title="Internet sharing (Русский)">разрешить пересылку пакетов</a> (если она ещё не включена).
+</p>
+<p>Хосты данных подсетей теперь могут использовать вашу NAT-систему в качестве шлюза. Возможно, вы также захотите настроить DNS- и <a href="../ru/Network_configuration.html#DHCP" class="mw-redirect" title="DHCP (Русский)">DHCP</a>-сервер, например, <a href="../en/Dnsmasq.html" title="Dnsmasq">dnsmasq</a> или комбинацию <a href="../en/BIND.html" title="BIND">BIND</a> и <a href="../en/Dhcpd.html" title="Dhcpd">dhcpd</a>, с целью упрощения настройки разрешения имён (DNS resolving) на клиентских машинах, но эта тема выходит за рамки данного руководства.
+</p>
+<h4>
+<span id=".D0.A6.D0.B5.D0.BF.D0.BE.D1.87.D0.BA.D0.B0_PREROUTING"></span><span class="mw-headline" id="Цепочка_PREROUTING">Цепочка PREROUTING</span>
+</h4>
+<p>В некоторых случаях может понадобиться изменить адрес получателя в заголовке входящего пакета с адреса шлюза на адрес хоста в локальной сети. Для этого нужно настроить созданную ранее цепочку <b>fw-open</b>, а также цепочку <b>PREROUTING</b> таблицы nat.
+</p>
+<p>Например, чтобы изменить адрес получателя входящих SSH-пакетов (порт 22) на адрес ssh-сервера <b>192.168.0.5</b> выполните команды:
+</p>
+<pre># iptables -t nat -A PREROUTING -i ppp0 -p tcp --dport 22 -j DNAT --to 192.168.0.5
+# iptables -A fw-open -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
+</pre>
+<p>Во втором примере меняется не только адрес получателя, но и порт. Порт входящего соединения <b>8000</b> заменяется на порт <b>80</b> веб-сервера по адресу <b>192.168.0.6</b>:
+</p>
+<pre># iptables -t nat -A PREROUTING -i ppp0 -p tcp --dport 8000 -j DNAT --to 192.168.0.6:80
+# iptables -A fw-open -d 192.168.0.6 -p tcp --dport 80 -j ACCEPT
+</pre>
+<p>Настройка для UDP-пакетов производится аналогично.
+</p>
+<h3>
+<span id=".D0.A1.D0.BE.D1.85.D1.80.D0.B0.D0.BD.D0.B5.D0.BD.D0.B8.D0.B5_.D0.BF.D1.80.D0.B0.D0.B2.D0.B8.D0.BB_2"></span><span class="mw-headline" id="Сохранение_правил_2">Сохранение правил</span>
+</h3>
+<p>Чтобы сохранить новые правила межсетевого экрана для NAT-шлюза, выполните:
+</p>
+<pre># iptables-save -f /etc/iptables/iptables.rules
+</pre>
+<p>При этом поздразумевается, что служба systemd <code>iptables.service</code> уже работает, потому что была включена <a href="#%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%B0%D0%B9%D0%BB_ip6tables.rules">ранее</a>.
+</p>
+<h2>
+<span id=".D0.A1.D0.BC.D0.BE.D1.82.D1.80.D0.B8.D1.82.D0.B5_.D1.82.D0.B0.D0.BA.D0.B6.D0.B5"></span><span class="mw-headline" id="Смотрите_также">Смотрите также</span>
+</h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://www.webhostingtalk.com/showthread.php?t=456571">Methods to block SSH attacks</a> — защита от SSH-атак</li>
+<li>
+<a rel="nofollow" class="external text" href="http://www.ducea.com/2006/06/28/using-iptables-to-block-brute-force-attacks/">Using iptables to block brute force attacks</a> — защита от атак полным перебором</li>
+<li>
+<a rel="nofollow" class="external text" href="https://linuxconfig.org/collection-of-basic-linux-firewall-iptables-rules">Collection of basic Linux Firewall iptables rules</a> — примеры базовой настройки iptables</li>
+<li>
+<a rel="nofollow" class="external text" href="https://www.thegeekstuff.com/2011/06/iptables-rules-examples/">25 Most Frequently Used Linux IPTables Rules Examples</a> — ещё примеры</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Firewalls.html" title="Category:Firewalls (Русский)">Firewalls (Русский)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=640269">https://wiki.archlinux.org/index.php?title=Simple_stateful_firewall_(Русский)&amp;oldid=640269</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 1 November 2020, at 13:31.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

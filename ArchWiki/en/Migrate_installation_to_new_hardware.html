@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Migrate installation to new hardware - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Migrate_installation_to_new_hardware rootpage-Migrate_installation_to_new_hardware skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Migrate installation to new hardware</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Migrating_between_architectures.html" title="Migrating between architectures">Migrating between architectures</a></li>
+<li><a href="../en/Moving_an_existing_install_into_(or_out_of)_a_virtual_machine.html" title="Moving an existing install into (or out of) a virtual machine">Moving an existing install into (or out of) a virtual machine</a></li>
+</ul>
+</div>
+<p>This article discusses the steps required for moving an Arch Linux system to new hardware. The goal is to achieve the same ArchLinux installation, in terms of the installed software and configuration that is independent of the hardware.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Some of the following instructions can be dangerous: you are advised to backup all of your important data on the old system before continuing.</div>
+<p>There are two different approaches to migrating an installation:
+</p>
+<ol>
+<li>
+<i>Bottom to top</i>: Install a fresh Arch Linux system on the new hardware, afterwards restore the installed packages and configuration files, e.g. as described in <a href="../en/Dotfiles.html" title="Dotfiles">dotfiles</a>.</li>
+<li>
+<i>Top to bottom</i>: Clone the old harddrive to the new harddrive, or place the old harddrive into the new system; modify configuration files where necessary.</li>
+</ol>
+<p>The <i>top to bottom</i> approach gives a more exact reproduction of the original system than the <i>bottom to top</i> approach.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Adapt_to_new_hardware"><span class="tocnumber">1</span> <span class="toctext">Adapt to new hardware</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Hard_drive_vs._SSD"><span class="tocnumber">1.1</span> <span class="toctext">Hard drive vs. SSD</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#CPU_vendor"><span class="tocnumber">1.2</span> <span class="toctext">CPU vendor</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#GPU_vendor"><span class="tocnumber">1.3</span> <span class="toctext">GPU vendor</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#UEFI_vs._MBR_boot_code_booting"><span class="tocnumber">1.4</span> <span class="toctext">UEFI vs. MBR boot code booting</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Bottom_to_top"><span class="tocnumber">2</span> <span class="toctext">Bottom to top</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7">
+<a href="#On_the_old_system"><span class="tocnumber">2.1</span> <span class="toctext">On the old system</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#List_of_installed_packages"><span class="tocnumber">2.1.1</span> <span class="toctext">List of installed packages</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#pacman_cache"><span class="tocnumber">2.1.2</span> <span class="toctext">pacman cache</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-10">
+<a href="#On_the_new_system"><span class="tocnumber">2.2</span> <span class="toctext">On the new system</span></a>
+<ul>
+<li class="toclevel-3 tocsection-11"><a href="#Installation_guide_first_half"><span class="tocnumber">2.2.1</span> <span class="toctext">Installation guide first half</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#Copy_pacman_cache"><span class="tocnumber">2.2.2</span> <span class="toctext">Copy pacman cache</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Installation_guide_second_half"><span class="tocnumber">2.2.3</span> <span class="toctext">Installation guide second half</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Install_previously_installed_software"><span class="tocnumber">2.2.4</span> <span class="toctext">Install previously installed software</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#Top_to_bottom"><span class="tocnumber">3</span> <span class="toctext">Top to bottom</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#Clean_up_the_old_system"><span class="tocnumber">3.1</span> <span class="toctext">Clean up the old system</span></a></li>
+<li class="toclevel-2 tocsection-17">
+<a href="#Copy_the_system_to_a_new_drive"><span class="tocnumber">3.2</span> <span class="toctext">Copy the system to a new drive</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#Disk_cloning"><span class="tocnumber">3.2.1</span> <span class="toctext">Disk cloning</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#File_copying"><span class="tocnumber">3.2.2</span> <span class="toctext">File copying</span></a></li>
+<li class="toclevel-3 tocsection-20"><a href="#Transport_options"><span class="tocnumber">3.2.3</span> <span class="toctext">Transport options</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-21"><a href="#Update_fstab"><span class="tocnumber">3.3</span> <span class="toctext">Update fstab</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#Reinstall_the_boot_loader"><span class="tocnumber">3.4</span> <span class="toctext">Reinstall the boot loader</span></a></li>
+<li class="toclevel-2 tocsection-23"><a href="#Regenerate_kernel_image"><span class="tocnumber">3.5</span> <span class="toctext">Regenerate kernel image</span></a></li>
+<li class="toclevel-2 tocsection-24"><a href="#Reconfigure_audio"><span class="tocnumber">3.6</span> <span class="toctext">Reconfigure audio</span></a></li>
+<li class="toclevel-2 tocsection-25"><a href="#Reconfigure_network"><span class="tocnumber">3.7</span> <span class="toctext">Reconfigure network</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-26"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Adapt_to_new_hardware">Adapt to new hardware</span></h2>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> For both approaches we have to account for differences between the old and hardware and change the installed drivers and configuration accordingly.</div>
+<p>Before you begin, research aspects of the new hardware and make a list of differences. Common differences are
+</p>
+<h3><span class="mw-headline" id="Hard_drive_vs._SSD">Hard drive vs. SSD</span></h3>
+<p>See the article <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a>.
+</p>
+<h3><span class="mw-headline" id="CPU_vendor">CPU vendor</span></h3>
+<p>If you switch the CPU, to a CPU from another vendor (e.g. Intel to AMD), change the <a href="../en/Microcode.html" title="Microcode">Microcode</a> configuration.
+</p>
+<h3><span class="mw-headline" id="GPU_vendor">GPU vendor</span></h3>
+<p>If you changed the GPU to a GPU from another vendor (e.g. from <a href="../en/ATI.html" class="mw-redirect" title="Amd">Amd</a> to <a href="../en/NVIDIA.html" title="NVIDIA">NVIDIA</a>) change the graphics driver.
+</p>
+<h3><span class="mw-headline" id="UEFI_vs._MBR_boot_code_booting">UEFI vs. MBR boot code booting</span></h3>
+<p>If you switch to a more recent mainboard with UEFI, it might be preferable or required to switch from "MBR boot code" booting to <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> booting. In this case a new <a href="../en/EFI_system_partition.html" title="EFI system partition">EFI system partition</a> is needed.
+</p>
+<h2><span class="mw-headline" id="Bottom_to_top">Bottom to top</span></h2>
+<h3><span class="mw-headline" id="On_the_old_system">On the old system</span></h3>
+<p>We define here a minimal configuration that carries over from the old to the new system which differentiates this approach from the Installation guide. Think about the configuration files from <code>/etc</code> and dotfiles in <code>/home</code> that you want to copy to the new system, as well as user data files. If you will not have access to the old system from the new system then backup up all the files that you want to copy over.
+</p>
+<h4><span class="mw-headline" id="List_of_installed_packages">List of installed packages</span></h4>
+<pre>$ pacman -Qqen &gt; pkglist.txt
+$ pacman -Qqem &gt; pkglist_aur.txt
+</pre>
+<p>gives you a nice list of explicitly installed packages from the repositories and from the <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a>. Include it in your backup if you make one.
+</p>
+<p>You may also use the following script to give you a better overview of the binaries and libraries installed unbeknownst to pacman (e. g. installed via Steam, Desura or using their own install methods):
+</p>
+<pre>find / -regextype posix-extended -regex "/(sys|srv|proc)|.*/\.ccache/.*" -prune -o -type f \
+-exec bash -c 'file "{}" | grep -E "(32|64)-bit"' \; | \
+awk -F: '{print $1}' | \
+while read -r bin; \
+do pacman -Qo "$bin" &amp;&gt;/dev/null || echo "$bin"; \
+done
+</pre>
+<h4><span class="mw-headline" id="pacman_cache">pacman cache</span></h4>
+<p>Consider backing up <code>/var/cache/pacman/pkg/</code> if you do not change architectures (for example from x86 to x86_64).
+</p>
+<h3><span class="mw-headline" id="On_the_new_system">On the new system</span></h3>
+<h4><span class="mw-headline" id="Installation_guide_first_half">Installation guide first half</span></h4>
+<p>For basics about installing a new system, refer to the <a href="../en/Installation_guide.html" title="Installation guide">Installation guide</a>. Follow the first half of the installation guide up to but excluding the pacstrap command.
+</p>
+<h4><span class="mw-headline" id="Copy_pacman_cache">Copy pacman cache</span></h4>
+<p>Copy the pacman cache found at <code>/var/cache/pacman/pkg/</code> from the old to the new system, or from the backup to the new system.
+</p>
+<h4><span class="mw-headline" id="Installation_guide_second_half">Installation guide second half</span></h4>
+<p>Continue with the installation guide from, and including the pacstrap command, up to the end, but do not reboot. Do not skip the pacstrap command as it does additional work besides the installation of packages.
+</p>
+<h4><span class="mw-headline" id="Install_previously_installed_software">Install previously installed software</span></h4>
+<p>Edit pkglist.txt (and pkglist_aur.txt) and remove drivers that are not needed on the new system. Then install any other previously installed software with
+</p>
+<pre># pacman -S --needed - &lt; pkglist.txt
+</pre>
+<h2><span class="mw-headline" id="Top_to_bottom">Top to bottom</span></h2>
+<p>There are two options for the Top to Bottom approach, you can either keep the drive where the system is already installed, and modify its contents, or you can copy the system to a new drive. If you keep the drive, and modify it, then place it back into the old system, the modifications will likely prevent the old system from booting.
+</p>
+<h3><span class="mw-headline" id="Clean_up_the_old_system">Clean up the old system</span></h3>
+<p>It is also worth to clean up your system before cloning it, as described in <a href="../en/System_maintenance.html#Clean_the_filesystem" title="System maintenance">System maintenance#Clean the filesystem</a>. Make sure that the old system is still working as expected after the cleanup before moving on.
+</p>
+<h3><span class="mw-headline" id="Copy_the_system_to_a_new_drive">Copy the system to a new drive</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you are planning to keep the hard drive where the system is already installed, you can skip this section.</div>
+<p>There are two fundamental methods for copying the system to a new drive, <a href="../en/Disk_cloning.html" title="Disk cloning">disk cloning</a> and file copying.
+</p>
+<h4><span class="mw-headline" id="Disk_cloning">Disk cloning</span></h4>
+<p>It is required to use a live linux system rather than the old Arch Linux system; for example you could use the Arch Linux <a href="../en/USB_flash_installation_medium.html" class="mw-redirect" title="USB flash installation media">USB flash installation media</a>. The partition layout and filesystems of the old system will be reproduced.
+</p>
+<h4><span class="mw-headline" id="File_copying">File copying</span></h4>
+<ul>
+<li>Create new <a href="../en/Partitioning.html" class="mw-redirect" title="Partitions">partitions</a> and <a href="../en/File_systems.html" class="mw-redirect" title="Filesystems">filesystems</a> on the new drive. You can use the opportunity to chose a different partition layout and/or filesystems than before.</li>
+<li>For each filesystem, copy the files from the old to the new drive, using <a href="../en/Rsync.html" title="Rsync">rsync</a> or other tools that preserve permissions, attributes, etc., see <a href="../en/Rsync.html#Full_system_backup" title="Rsync">rsync#Full system backup</a>, <a href="../en/Rsync.html#File_system_cloning" title="Rsync">rsync#File system cloning</a> for further details.</li>
+</ul>
+<h4><span class="mw-headline" id="Transport_options">Transport options</span></h4>
+<p>There are many different methods for how to transport the data between the two drives:
+</p>
+<ul>
+<li>Connect origin and destination HDDs to the same computer, either the old or the new one. Data link: old HDD -&gt; computer -&gt; new HDD.</li>
+<li>Make use of temporary storage devices like external HDDs, or cloud backups. Data link: old HDD -&gt; old computer -&gt; storage -&gt; new computer -&gt; new HDD. For an overview see the article <a href="../en/System_backup.html" title="System backup">System backup</a>.</li>
+<li>Transfer data over network, for example with <a href="../en/Rsync.html" title="Rsync">rsync</a>. Data link: old HDD -&gt; old computer -&gt; network -&gt; new computer -&gt; new HDD.</li>
+</ul>
+<p>For the first two options, consider that you might need adapters to connect the HDDs (PATA-&gt;SATA, USB-HDD-Cases, etc.), and choose a connection that is sufficiently fast.
+</p>
+<p>The last two options require you to use a live linux system on the new computer, as it is not possible to boot from the new hard drive at this point.
+</p>
+<h3><span class="mw-headline" id="Update_fstab">Update fstab</span></h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Before doing this step please make sure that you do not wish to use this drive in the old system, as changing the <a href="../en/Fstab.html" title="Fstab">fstab</a> file will likely prevent the system from booting in the old configuration.</div>
+<p>If you are using an Arch Linux Installation Image, mount the new root partition to <code>/mnt</code>, and any other partitions required like you would in a normal install (see <a href="../en/Installation_guide.html#Mount_the_file_systems" title="Installation guide">Installation guide#Mount the file systems</a>).
+</p>
+<p>Insert an arbitrary comment such as <code>#end of old fstab</code> at the end of your <code>/mnt/etc/fstab</code>. Generate a new fstab file as indicated on <a href="../en/Installation_guide.html#Fstab" title="Installation guide">Installation guide#Fstab</a>, appending it to the current fstab file. In general, always review the fstab file created by genfstab. In this case, check the older fstab entries before the comment, if they are outdated or duplicates then delete them, and if the old entries remain useful then keep them. For example, mount entries for network drives can be kept. In general it is recommended to use <a href="../en/Persistent_block_device_naming.html" title="Persistent block device naming">Persistent block device naming</a>.
+</p>
+<h3><span class="mw-headline" id="Reinstall_the_boot_loader">Reinstall the boot loader</span></h3>
+<p>You might need to reinstall and/or reconfigure the <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a> for the following reasons:
+</p>
+<ul>
+<li>Different disks, partition layout, or filesystem</li>
+<li>Adding <a href="../en/Unified_Extensible_Firmware_Interface.html" class="mw-redirect" title="UEFI">UEFI</a> boot entries into the new mainboard NVRAM</li>
+<li>Migration from "MBR boot code" booting to UEFI booting</li>
+<li>Migration from USB to SATA/NVMe</li>
+<li>Updating the kernel commandline
+<ul>
+<li>In case of a different GPU, update the framebuffer mode</li>
+<li>Update the <a href="../en/Microcode.html" title="Microcode">Microcode</a> initramfs image</li>
+</ul>
+</li>
+</ul>
+<p>If you are using a Arch Linux live environment, then before reinstalling the boot loader, <a href="../en/Chroot.html" class="mw-redirect" title="Change root">change root</a> into the new system:
+</p>
+<pre># arch-chroot /mnt
+</pre>
+<p>Refer to the article on your <a href="../en/Arch_boot_process.html#Boot_loader" class="mw-redirect" title="Boot loader">boot loader</a> for instructions on how to (re)install it.
+</p>
+<h3><span class="mw-headline" id="Regenerate_kernel_image">Regenerate kernel image</span></h3>
+<p>It is recommended to regenerate the initramfs image with <a href="../en/Mkinitcpio.html" title="Mkinitcpio">mkinitcpio</a>, although initially the fallback initramfs image may work.
+</p>
+<h3><span class="mw-headline" id="Reconfigure_audio">Reconfigure audio</span></h3>
+<ul><li>alsamixer volume
+<ul><li>save settings</li></ul>
+</li></ul>
+<h3><span class="mw-headline" id="Reconfigure_network">Reconfigure network</span></h3>
+<p>If the old installation and the migrated installation shall coexist in the same network, set a new hostname with <a href="../en/Network_configuration.html#Set_the_hostname" title="Network configuration">hostnamectl</a>.
+</p>
+<p>Also consider configuration changes that are required after a change in hostname:
+</p>
+<ul>
+<li>/etc/hosts</li>
+<li>other apps using hostname: synergy, nut (network ups tools)</li>
+<li>
+<code>grep -Ri 'hostname' /etc</code> (as the root user)should give some hints on the files to be updated</li>
+</ul>
+<p>The network interface names may change when using <a href="../en/Dhcpcd.html" title="Dhcpcd">dhcpcd</a> with named network interfaces.
+</p>
+<ul>
+<li>
+<code>$ dmesg | grep 'renamed from eth'</code> might help to find the new interface name</li>
+<li>remove old:  <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Disable">disable</a> <code>dhcpcd@enp<i>X</i>s0.service</code>
+</li>
+<li>activate new: <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>dhcpcd@enp<i>X</i>s0.service</code>
+</li>
+</ul>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://positon.org/clone-a-linux-system-install-to-another-computer">Howto clone a linux system</a></li>
+<li><a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=71038">[1]</a></li>
+<li><a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?pid=543214">[2]</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:System_recovery.html" title="Category:System recovery">System recovery</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Migrate_installation_to_new_hardware&amp;oldid=643197">https://wiki.archlinux.org/index.php?title=Migrate_installation_to_new_hardware&amp;oldid=643197</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 December 2020, at 00:35.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

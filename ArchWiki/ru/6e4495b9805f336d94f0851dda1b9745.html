@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Firefox (Русский)/Profile on RAM (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Firefox_Русский_Profile_on_RAM_Русский rootpage-Firefox_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Firefox (Русский)/Profile on RAM (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../ru/Firefox.html" title="Firefox (Русский)">Firefox (Русский)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Firefox/Profile_on_RAM.html" class="mw-redirect" title="Firefox on RAM">Firefox on RAM</a>. Дата последней синхронизации: 25 марта 2016. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Firefox_on_RAM&amp;diff=0&amp;oldid=427726">изменения</a>.</div>
+<p>Предположим, что есть свободная память, тогда поместив кэш или полный профиль <a href="../ru/Firefox.html" title="Firefox (Русский)">Firefox</a> в оперативную память, мы получим значительные приемущества. Несмотря на то что выберите, частичный перенос является улучшением сам по себе, а последний может сделать Firefox ещё более отзывчивым, по сравнению со стандартной конфигурацией. Полученные приемущества:
+</p>
+<ul>
+<li>уменьшение дисковых операций чтения/записи;</li>
+<li>повышенная отзывчивость;</li>
+<li>многие операции в Firefox, такие как быстрый поиск и история запросов, происходят почти мгновенно.</li>
+</ul>
+<p>Для этого мы можем использовать свойства <a href="../ru/Tmpfs.html" title="Tmpfs (Русский)">tmpfs</a>.
+</p>
+<p>Поскольку данные, помещённые в оперативную память, не сохраняются после выключения компьютера, нам понадобится сценарий, отвечающий за синхронизацию с диском перед завершением работы системы, если желательно сохранить данные (что, скорее всего, актуально в случае перемещения профиля). С другой стороны, перемещение только кэша является быстрым, менее полным решением, которое немного ускорит работу, но кэш Firefox при каждой перезагрузке будет очищен.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Кэш хранится <b>отдельно</b> от профиля Firefox, в каталоге по умолчанию (<code>/home/$USER/.mozilla/firefox/</code>): 
+профиль находится по умолчанию в <code>/home/$USER/.cache/mozilla/firefox/&lt;profile&gt;</code>. Это также относится и к Chromium и к другим браузерам. Поэтому разделы <a href="#%D0%A3%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D1%8B_%D0%B4%D0%BB%D1%8F_%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F_%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8F_%D0%B2_RAM">#Утилиты для размещения профиля в RAM</a> и <a href="#%D0%9F%D0%BE%D0%BC%D0%B5%D1%81%D1%82%D0%B8%D1%82%D0%B5_%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8C_%D0%B2_RAM_%D0%B2%D1%80%D1%83%D1%87%D0%BD%D1%83%D1%8E">#Поместите профиль в RAM вручную</a> <b>не имеют дело</b> с перемещением кэша и синхронизацией, только с настройками профиля. Для большей информации смотрите <a href="../ru/Profile-sync-daemon.html#%D0%9F%D1%80%D0%B5%D0%B8%D0%BC%D1%83%D1%89%D0%B5%D1%81%D1%82%D0%B2%D0%B0_psd" title="Profile-sync-daemon (Русский)">Преимущества psd</a>. <a href="../en/Anything-sync-daemon.html" title="Anything-sync-daemon">Anything-sync-daemon</a> может быть использован также как 2 Вариант для каталогов кэша.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%D0%9F%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D1%81%D1%82%D0%B8%D1%82%D1%8C_%D1%82%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE_%D0%BA%D1%8D%D1%88_%D0%B2_%D0%9E%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D1%83%D1%8E_%D0%BF%D0%B0%D0%BC%D1%8F%D1%82%D1%8C"><span class="tocnumber">1</span> <span class="toctext">Переместить только кэш в Оперативную память</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#%D0%A3%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D1%8B_%D0%B4%D0%BB%D1%8F_%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F_%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8F_%D0%B2_RAM"><span class="tocnumber">2</span> <span class="toctext">Утилиты для размещения профиля в RAM</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#%D0%9F%D0%BE%D0%BC%D0%B5%D1%81%D1%82%D0%B8%D1%82%D0%B5_%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8C_%D0%B2_RAM_%D0%B2%D1%80%D1%83%D1%87%D0%BD%D1%83%D1%8E"><span class="tocnumber">3</span> <span class="toctext">Поместите профиль в RAM вручную</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#%D0%9F%D1%80%D0%B5%D0%B6%D0%B4%D0%B5_%D1%87%D0%B5%D0%BC_%D0%BD%D0%B0%D1%87%D0%B0%D1%82%D1%8C"><span class="tocnumber">3.1</span> <span class="toctext">Прежде чем начать</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82"><span class="tocnumber">3.2</span> <span class="toctext">Скрипт</span></a></li>
+<li class="toclevel-2 tocsection-6">
+<a href="#%D0%90%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F"><span class="tocnumber">3.3</span> <span class="toctext">Автоматизация</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7"><a href="#%D0%97%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_cron"><span class="tocnumber">3.3.1</span> <span class="toctext">Задание cron</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#%D0%A1%D0%B8%D0%BD%D1%85%D1%80%D0%BE%D0%BD%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F_%D0%BF%D1%80%D0%B8_%D0%B2%D1%85%D0%BE%D0%B4%D0%B5/%D0%B2%D1%8B%D1%85%D0%BE%D0%B4%D0%B5"><span class="tocnumber">3.3.2</span> <span class="toctext">Синхронизация при входе/выходе</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#%D0%A1%D0%BC%D0%BE%D1%82%D1%80%D0%B8%D1%82%D0%B5_%D1%82%D0%B0%D0%BA%D0%B6%D0%B5"><span class="tocnumber">4</span> <span class="toctext">Смотрите также</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".D0.9F.D0.B5.D1.80.D0.B5.D0.BC.D0.B5.D1.81.D1.82.D0.B8.D1.82.D1.8C_.D1.82.D0.BE.D0.BB.D1.8C.D0.BA.D0.BE_.D0.BA.D1.8D.D1.88_.D0.B2_.D0.9E.D0.BF.D0.B5.D1.80.D0.B0.D1.82.D0.B8.D0.B2.D0.BD.D1.83.D1.8E_.D0.BF.D0.B0.D0.BC.D1.8F.D1.82.D1.8C"></span><span class="mw-headline" id="Переместить_только_кэш_в_Оперативную_память">Переместить только кэш в Оперативную память</span>
+</h2>
+<p>Когда загружаются страницы, они могут быть помещены в кэше, так что их не нужно загружать для повторного отображения. Также кэшируется электронная почта и новости, сообщения и вложения. Firefox может быть настроен на использование в качестве кэш-памяти только оперативной памяти. Файлы настроек, закладки, расширения и т.д. будут записаны на диск, как обычно. Для этого:
+</p>
+<ul>
+<li>откройте в адреснойстроке <code>about:config</code>
+</li>
+<li>установите <code>browser.cache.disk.enable</code> на "false" (двойным щелчком по строке)</li>
+<li>проверьте что значение <code>browser.cache.memory.enable</code> установлено в "true" (<a rel="nofollow" class="external text" href="http://kb.mozillazine.org/Browser.cache.memory.enable">значение по умолчанию</a>)</li>
+<li>добавьте запись (щелчёк правой кнопкой мышки-&gt;Создать-&gt;Целое) <code>browser.cache.memory.capacity</code> и установите размер в KB который вы хотите запасти, или в -1 для <a rel="nofollow" class="external text" href="http://kb.mozillazine.org/Browser.cache.memory.capacity#-1">автоматического</a> определения размера кэша. (Пропуск этого шага имеет тот же эффект, что и установка в значение -1.)</li>
+</ul>
+<p>Основными недостатками этого метода является то, что содержание недавно просмотренных веб-страниц потеряется, если работа браузера завершена аварийно, либо после перезагрузки, и что параметры должны быть настроены для каждого пользователя индивидуально.
+</p>
+<p>Избежание первого недостатка заключается в том, чтобы использовать <a href="../en/Anything-sync-daemon.html" title="Anything-sync-daemon">демон всеобщей синхронизации</a> или аналогичный периодический скрипт синхронизации, так что кэш будет копироваться на диск регулярно.
+</p>
+<h2>
+<span id=".D0.A3.D1.82.D0.B8.D0.BB.D0.B8.D1.82.D1.8B_.D0.B4.D0.BB.D1.8F_.D1.80.D0.B0.D0.B7.D0.BC.D0.B5.D1.89.D0.B5.D0.BD.D0.B8.D1.8F_.D0.BF.D1.80.D0.BE.D1.84.D0.B8.D0.BB.D1.8F_.D0.B2_RAM"></span><span class="mw-headline" id="Утилиты_для_размещения_профиля_в_RAM">Утилиты для размещения профиля в RAM</span>
+</h2>
+<p>Перенесите профиль браузера в <a href="../ru/Tmpfs.html" title="Tmpfs (Русский)">tmpfs</a> для глобального улучшения отклика браузера. Ещё одним приемуществом является снижение операций ввода/вывода, из которых <a href="../ru/Solid_state_drive.html#%D0%A0%D0%B0%D1%81%D0%BF%D0%BE%D0%BB%D0%BE%D0%B6%D0%B8%D1%82%D0%B5_%D1%87%D0%B0%D1%81%D1%82%D0%BE_%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D0%B5_%D1%84%D0%B0%D0%B9%D0%BB%D1%8B_%D0%B2_%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B9_%D0%BF%D0%B0%D0%BC%D1%8F%D1%82%D0%B8" class="mw-redirect" title="Solid State Drives (Русский)">накопители SSD извлекут максимум выгоды</a>.
+</p>
+<p>Используйте активные скрипты управления для максимальной надёжности и простоты использования. Некоторые доступны в AUR.
+</p>
+<ul>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=profile-sync-daemon">profile-sync-daemon</a></span> - для получения дополнительной информации обратитесь к статье wiki <a href="../ru/Profile-sync-daemon.html" title="Profile-sync-daemon (Русский)">Profile-sync-daemon</a>;</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/firefox-sync/">firefox-sync</a></span><sup><small>AUR</small></sup>
+</li>
+</ul>
+<h2>
+<span id=".D0.9F.D0.BE.D0.BC.D0.B5.D1.81.D1.82.D0.B8.D1.82.D0.B5_.D0.BF.D1.80.D0.BE.D1.84.D0.B8.D0.BB.D1.8C_.D0.B2_RAM_.D0.B2.D1.80.D1.83.D1.87.D0.BD.D1.83.D1.8E"></span><span class="mw-headline" id="Поместите_профиль_в_RAM_вручную">Поместите профиль в RAM вручную</span>
+</h2>
+<h3>
+<span id=".D0.9F.D1.80.D0.B5.D0.B6.D0.B4.D0.B5_.D1.87.D0.B5.D0.BC_.D0.BD.D0.B0.D1.87.D0.B0.D1.82.D1.8C"></span><span class="mw-headline" id="Прежде_чем_начать">Прежде чем начать</span>
+</h3>
+<p>Перед потенциальным риском профиля Firefox, сделайте резервную копию для быстрого восстановления. Замените <code>xyz.default</code> на название вашего профиля и используйте <code>tar</code> для создания резервной копии:
+</p>
+<pre>$ tar zcvfp ~/firefox_profile_backup.tar.gz ~/.mozilla/firefox/<i>xyz.default</i>
+</pre>
+<h3>
+<span id=".D0.A1.D0.BA.D1.80.D0.B8.D0.BF.D1.82"></span><span class="mw-headline" id="Скрипт">Скрипт</span>
+</h3>
+<p><small><i>Адаптирован из <a rel="nofollow" class="external text" href="http://www.verot.net/firefox_tmpfs.htm">verot.net Ускорение Firefox с помощью tmpfs</a></i></small>
+</p>
+<p>Скрипт сначала переместит профиль Firefox на новое статическое место, создаст подкаталог в <code>/dev/shm</code>, и мягкую ссылку, а затем заполнит его содержимым профиля. Замените выделенную секцию. Единственное значение которое необходимо изменить, опять же <code>xyz.default</code>.
+</p>
+<p>Убедитесь, что установлен <a href="../en/Rsync.html" title="Rsync">rsync</a> и сохраните скрипт в <code>~/bin/firefox-sync</code>, например:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">firefox-sync</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/bin/sh
+
+static=<i>main</i>
+link=<i>xyz.default</i>
+volatile=<i>/dev/shm/firefox-$USER</i>
+
+IFS=
+set -efu
+
+cd ~/.mozilla/firefox
+
+if [ ! -r $volatile ]; then
+	mkdir -m0700 $volatile
+fi
+
+if [ "$(readlink $link)" != "$volatile" ]; then
+	mv $link $static
+	ln -s $volatile $link
+fi
+
+if [ -e $link/.unpacked ]; then
+	rsync -av --delete --exclude .unpacked ./$link/ ./$static/
+else
+	rsync -av ./$static/ ./$link/
+	touch $link/.unpacked
+fi
+</pre>
+<p>Закройте Firefox, сделайте скрипт выполняемым и протестируйте его:
+</p>
+<pre>$ killall firefox firefox-bin
+$ chmod +x ~/bin/firefox-sync
+$ ~/bin/firefox-sync
+</pre>
+<p>Запустите Firefox еще раз, чтобы оценить результаты. Во второй раз запустится скрипт, он сохранит профиль из RAM путем копирования его обратно на диск.
+</p>
+<h3>
+<span id=".D0.90.D0.B2.D1.82.D0.BE.D0.BC.D0.B0.D1.82.D0.B8.D0.B7.D0.B0.D1.86.D0.B8.D1.8F"></span><span class="mw-headline" id="Автоматизация">Автоматизация</span>
+</h3>
+<p>Заметив, что если вы забудите синхронизировать профиль, то это может привести к плохим последствиям. Так что будет логично автоматизировать действия.
+</p>
+<h4>
+<span id=".D0.97.D0.B0.D0.B4.D0.B0.D0.BD.D0.B8.D0.B5_cron"></span><span class="mw-headline" id="Задание_cron">Задание cron</span>
+</h4>
+<p>Действуйте пользовательским <a href="../en/Cron.html" class="mw-redirect" title="Cron (Русский)">cron</a> используя таблицу <code>crontab</code>:
+</p>
+<pre>$ crontab -e
+</pre>
+<p>Добавьте строку, чтобы запускать сценарий каждые 30 минут,
+</p>
+<pre>*/30 * * * * <i>~/bin/firefox-sync</i>
+</pre>
+<p>или добавьте следующую, чтоб выполнять каждые 2 часа:
+</p>
+<pre>0 */2 * * * <i>~/bin/firefox-sync</i>
+</pre>
+<h4>
+<span id=".D0.A1.D0.B8.D0.BD.D1.85.D1.80.D0.BE.D0.BD.D0.B8.D0.B7.D0.B0.D1.86.D0.B8.D1.8F_.D0.BF.D1.80.D0.B8_.D0.B2.D1.85.D0.BE.D0.B4.D0.B5.2F.D0.B2.D1.8B.D1.85.D0.BE.D0.B4.D0.B5"></span><span class="mw-headline" id="Синхронизация_при_входе/выходе">Синхронизация при входе/выходе</span>
+</h4>
+<p>Используя <a href="../ru/Bash.html" title="Bash (Русский)">bash</a>, добавьте скрипты в файлы входа/выхода:
+</p>
+<pre>$ echo '<i>~/bin/firefox-sync</i>' | tee -a ~/.bash_logout ~/.bash_login &gt;/dev/null
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Примечание:</strong> Вы можете использовать <code>~/.bash_profile</code> вместо <code>~/.bash_login</code> т.к. bash будет читать только первый из них, если они оба существуют и могут быть прочитаны.</div>
+<h2>
+<span id=".D0.A1.D0.BC.D0.BE.D1.82.D1.80.D0.B8.D1.82.D0.B5_.D1.82.D0.B0.D0.BA.D0.B6.D0.B5"></span><span class="mw-headline" id="Смотрите_также">Смотрите также</span>
+</h2>
+<ul><li><a href="../ru/Tmpfs.html" title="Tmpfs (Русский)">tmpfs (Русский)</a></li></ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Web_browser.html" title="Category:Web browser (Русский)">Web browser (Русский)</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Firefox_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Profile_on_RAM_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=613455">https://wiki.archlinux.org/index.php?title=Firefox_(Русский)/Profile_on_RAM_(Русский)&amp;oldid=613455</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 16 May 2020, at 14:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

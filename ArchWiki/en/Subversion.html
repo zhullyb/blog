@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Subversion - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Subversion rootpage-Subversion skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Subversion</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="http://subversion.apache.org/features.html">Apache Subversion</a> is "a full-featured version control system originally designed to be a better <a href="../en/Concurrent_Versions_System.html" class="mw-redirect" title="CVS">CVS</a>. Subversion has since expanded beyond its original goal of replacing CVS, but its basic model, design, and interface remain heavily influenced by that goal."
+</p>
+<p>This article deals with setting up an svn-server on your machine. There are two popular svn-servers, the built in <i>svnserve</i> and the more advanced option, <a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a> with svn plugins.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Apache_Subversion_setup"><span class="tocnumber">1</span> <span class="toctext">Apache Subversion setup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Goals"><span class="tocnumber">1.1</span> <span class="toctext">Goals</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Installation"><span class="tocnumber">1.2</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#Subversion_configuration"><span class="tocnumber">1.3</span> <span class="toctext">Subversion configuration</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Edit_/etc/httpd/conf/httpd.conf"><span class="tocnumber">1.3.1</span> <span class="toctext">Edit /etc/httpd/conf/httpd.conf</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#To_SSL_or_not_to_SSL?"><span class="tocnumber">1.3.2</span> <span class="toctext">To SSL or not to SSL?</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Create_/home/svn/.svn-policy-file"><span class="tocnumber">1.3.3</span> <span class="toctext">Create /home/svn/.svn-policy-file</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Create_/home/svn/.svn-auth-file"><span class="tocnumber">1.3.4</span> <span class="toctext">Create /home/svn/.svn-auth-file</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#Create_a_repository"><span class="tocnumber">1.3.5</span> <span class="toctext">Create a repository</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Set_permissions"><span class="tocnumber">1.3.6</span> <span class="toctext">Set permissions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11">
+<a href="#Create_a_project"><span class="tocnumber">1.4</span> <span class="toctext">Create a project</span></a>
+<ul>
+<li class="toclevel-3 tocsection-12"><a href="#Directory_structure_for_project"><span class="tocnumber">1.4.1</span> <span class="toctext">Directory structure for project</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Populate_directory"><span class="tocnumber">1.4.2</span> <span class="toctext">Populate directory</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Import_the_project"><span class="tocnumber">1.4.3</span> <span class="toctext">Import the project</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Test_SVN_checkout"><span class="tocnumber">1.4.4</span> <span class="toctext">Test SVN checkout</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-16">
+<a href="#Svnserve_setup"><span class="tocnumber">2</span> <span class="toctext">Svnserve setup</span></a>
+<ul>
+<li class="toclevel-2 tocsection-17"><a href="#Install_the_package"><span class="tocnumber">2.1</span> <span class="toctext">Install the package</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Create_a_repository_2"><span class="tocnumber">2.2</span> <span class="toctext">Create a repository</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Set_access_policies"><span class="tocnumber">2.3</span> <span class="toctext">Set access policies</span></a></li>
+<li class="toclevel-2 tocsection-20"><a href="#Start_the_server_daemon"><span class="tocnumber">2.4</span> <span class="toctext">Start the server daemon</span></a></li>
+<li class="toclevel-2 tocsection-21"><a href="#svn+ssh"><span class="tocnumber">2.5</span> <span class="toctext">svn+ssh</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-22"><a href="#Subversion_backup_and_restore"><span class="tocnumber">3</span> <span class="toctext">Subversion backup and restore</span></a></li>
+<li class="toclevel-1 tocsection-23"><a href="#Subversion_clients"><span class="tocnumber">4</span> <span class="toctext">Subversion clients</span></a></li>
+<li class="toclevel-1 tocsection-24"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Apache_Subversion_setup">Apache Subversion setup</span></h2>
+<h3><span class="mw-headline" id="Goals">Goals</span></h3>
+<p>The goal of this how to is to setup Subversion, with Apache. Why use Apache for Subversion? Well, quite simply, it provides features that the standalone <code>svnserve</code> does not have...
+</p>
+<ul>
+<li>HTTPS support. This is more secure than the MD5 authentication used by svnserve.</li>
+<li>fine-grained access controls. You can use Apache auth to limit permissions by directory. This means you can grant read access to everything, but commit access only to trunk for instance, while have another group with commit access to tags or branches.</li>
+<li>a free repository viewer</li>
+<li>The Subversion team is working on seamless WebDAV integration. At some point you should be able to use any WebDAV interface to update files in the repository.</li>
+</ul>
+<h3><span class="mw-headline" id="Installation">Installation</span></h3>
+<p>Install <a href="../en/Apache_HTTP_Server.html" title="Apache HTTP Server">Apache HTTP Server</a> as described in its article. 
+</p>
+<p>Besides Apache, you will only need to <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=subversion">subversion</a></span> package.
+</p>
+<h3><span class="mw-headline" id="Subversion_configuration">Subversion configuration</span></h3>
+<p>Create a directory for your repositories:
+</p>
+<pre># mkdir -p /home/svn/repositories
+</pre>
+<h4>
+<span id="Edit_.2Fetc.2Fhttpd.2Fconf.2Fhttpd.conf"></span><span class="mw-headline" id="Edit_/etc/httpd/conf/httpd.conf">Edit /etc/httpd/conf/httpd.conf</span>
+</h4>
+<p>Ensure the following are listed...if not, add them (you will typically have to add just the last two), they must be in this order:
+</p>
+<pre>LoadModule dav_module           modules/mod_dav.so
+LoadModule dav_fs_module        modules/mod_dav_fs.so
+LoadModule dav_svn_module       modules/mod_dav_svn.so
+LoadModule authz_svn_module     modules/mod_authz_svn.so
+</pre>
+<h4>
+<span id="To_SSL_or_not_to_SSL.3F"></span><span class="mw-headline" id="To_SSL_or_not_to_SSL?">To SSL or not to SSL?</span>
+</h4>
+<p>SSL for SVN access has a few benefits, for instance it allows you to use Apache's AuthType Basic, with little fear of someone sniffing passwords.
+</p>
+<p>Generate the certificate by:
+</p>
+<pre># cd /etc/httpd/conf/
+# openssl req -new -x509 -keyout server.key -out server.crt -days 365 -nodes
+</pre>
+<p>Add the following to <code>/etc/httpd/conf/extra/httpd-ssl.conf</code> (or to <code>/etc/httpd/conf/extra/httpd-vhosts.conf</code> if you are not using ssl). Include the following inside of a virtual host directive:
+</p>
+<pre>&lt;Location /svn&gt;
+   DAV svn
+   SVNParentPath /home/svn/repositories
+   AuthzSVNAccessFile /home/svn/.svn-policy-file
+   AuthName "SVN Repositories"
+   AuthType Basic
+   AuthUserFile /home/svn/.svn-auth-file
+   Require valid-user
+&lt;/Location&gt;
+</pre>
+<p>To make sure the SSL settings get loaded, uncomment the SSL configuration line in <code>/etc/httpd/conf/httpd.conf</code> so it looks like this:
+</p>
+<pre>LoadModule ssl_module modules/mod_ssl.so
+LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+Include /etc/httpd/conf/extra/httpd-ssl.conf
+</pre>
+<h4>
+<span id="Create_.2Fhome.2Fsvn.2F.svn-policy-file"></span><span class="mw-headline" id="Create_/home/svn/.svn-policy-file">Create /home/svn/.svn-policy-file</span>
+</h4>
+<pre>[/]
+* = r
+
+[REPO_NAME:/]
+USER_NAME = rw
+</pre>
+<p>The * in the / section is matched to anonymous users. Any access above and beyond read only will be prompted for a user/pass by apache AuthType Basic. The REPO_NAME:/ section inherits permissions from those above, so anon users have read only permission to it. The last bit grants read/write permission of the REPO_NAME repository to the user USER_NAME.
+</p>
+<h4>
+<span id="Create_.2Fhome.2Fsvn.2F.svn-auth-file"></span><span class="mw-headline" id="Create_/home/svn/.svn-auth-file">Create /home/svn/.svn-auth-file</span>
+</h4>
+<p>This is either an htpasswd, or htdigest file. I used htpasswd. Again, because of SSL, I do not worry as much about password sniffing. htdigest would provide even more security vs. sniffing, but at this point, I do not have a need for it. Run the following command
+</p>
+<pre># htpasswd -cs /home/svn/.svn-auth-file USER_NAME
+</pre>
+<p>The above creates the file (<code>-c</code>) and uses SHA-1 for storing the password (<code>-s</code>). The user <code>USER_NAME</code> is created.
+</p>
+<p>To add additional users, leave off the (<code>-c</code>) flag.
+</p>
+<pre># htpasswd -s /home/svn/.svn-auth-file OTHER_USER_NAME
+</pre>
+<h4><span class="mw-headline" id="Create_a_repository">Create a repository</span></h4>
+<pre># svnadmin create /home/svn/repositories/REPO_NAME
+</pre>
+<h4><span class="mw-headline" id="Set_permissions">Set permissions</span></h4>
+<p>The Apache user needs permissions over the new repository.
+</p>
+<pre># chown -R http:http /home/svn/repositories/REPO_NAME
+</pre>
+<h3><span class="mw-headline" id="Create_a_project">Create a project</span></h3>
+<h4><span class="mw-headline" id="Directory_structure_for_project">Directory structure for project</span></h4>
+<p>Create a temporary directory with the <code>branches</code> <code>tags</code> <code>trunk</code> directory structure on your development machine.
+</p>
+<pre>$ mkdir -p ~/svn-import/{branches,tags,trunk}
+</pre>
+<h4><span class="mw-headline" id="Populate_directory">Populate directory</span></h4>
+<p>Copy or move your project source files into the created trunk directory.
+</p>
+<pre>$ cp -R /my/existing/project/* ~/svn-import/trunk
+</pre>
+<h4><span class="mw-headline" id="Import_the_project">Import the project</span></h4>
+<pre>$ svn import -m "Initial import" ~/svn-import <a rel="nofollow" class="external free" href="https://yourdomain.net/svn/REPO_NAME/">https://yourdomain.net/svn/REPO_NAME/</a>
+</pre>
+<h4><span class="mw-headline" id="Test_SVN_checkout">Test SVN checkout</span></h4>
+<pre>$ svn checkout <a rel="nofollow" class="external free" href="https://yourdomain.net/svn/REPO_NAME/">https://yourdomain.net/svn/REPO_NAME/</a> /my/svn/working/copy
+</pre>
+<p>If everything worked out, you should now have a working, checked out copy of your freshly created SVN repo.
+</p>
+<h2><span class="mw-headline" id="Svnserve_setup">Svnserve setup</span></h2>
+<h3><span class="mw-headline" id="Install_the_package">Install the package</span></h3>
+<p>Install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=subversion">subversion</a></span> package.
+</p>
+<h3><span class="mw-headline" id="Create_a_repository_2">Create a repository</span></h3>
+<p>Create your repository
+</p>
+<pre>mkdir /path/to/repos/
+svnadmin create /path/to/repos/repo1
+</pre>
+<p>Your initial repository is empty, if you want to import files into it, use the following command.
+</p>
+<pre>svn import ~/code/project1 file:///path/to/repos/repo1 --message 'Initial repository layout'
+</pre>
+<h3><span class="mw-headline" id="Set_access_policies">Set access policies</span></h3>
+<p>Edit the file /path/to/repos/repo1/conf/svnserve.conf and uncomment or add the line under [general]
+</p>
+<pre>password-db = passwd
+</pre>
+<p>You might also want to change the default option for anonymous users.
+</p>
+<pre>anon-access = read
+</pre>
+<p>Replace "read" with "write" for a repository that anyone can commit to, or set it to "none" to disable all anonymous access.
+</p>
+<p>Now edit the file /path/to/repos/repo1/conf/passwd
+</p>
+<pre>[users]
+harry = foopassword
+sally = barpassword
+</pre>
+<p>The above defines users harry and sally, with passwords foopassword and barpassword, change it as you like
+</p>
+<h3><span class="mw-headline" id="Start_the_server_daemon">Start the server daemon</span></h3>
+<p>Before you start the server, edit the configuration file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/conf.d/svnserve</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SVNSERVE_ARGS="--root=/path/to/repos"</pre>
+<p>The <code>--root=/path/to/repos</code> option set the root of repository tree. If you have multiple repositories use <code>--root=/path-to/reposparent</code>. Then access independent repositories by passing in repository name in the URL: <code><a rel="nofollow" class="external free" href="svn://host/repo1">svn://host/repo1</a></code>. make sure that the user has read/write access to the repository files)
+</p>
+<p>Optionally add a <code>--listen-port</code> if you want a different port, or other options.
+</p>
+<p>By default, the service runs as root. If you want to change that, add a drop-in:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/system/svnserve.service.d/50-custom.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Service]
+User=svn</pre>
+<p>Now start the <i>svnserve.service</i> <a href="../en/Daemons.html" class="mw-redirect" title="Daemon">daemon</a>.
+</p>
+<h3>
+<span id="svn.2Bssh"></span><span class="mw-headline" id="svn+ssh">svn+ssh</span>
+</h3>
+<p>To use svn+ssh://, we have to have a wrapper written for svnserve.
+</p>
+<p>check where the svnserve binary is located:
+</p>
+<pre> # which svnserve
+/usr/local/bin/svnserve
+</pre>
+<p>Our wrapper is going to have to fall in PATH prior to this location...
+</p>
+<p>create wrapper:
+</p>
+<pre># touch /usr/bin/svnserve
+# chmod 755 /usr/bin/svnserve 
+</pre>
+<p>now edit it to look like so:
+</p>
+<pre>/usr/bin/svnserve 
+#!/bin/sh
+# wrapper script for svnserve
+umask 007
+/usr/local/bin/svnserve -r /path/to "$@"
+</pre>
+<p><code>-r /path/to</code> is what makes use of the svn co svn+<a rel="nofollow" class="external free" href="ssh://server.domain.com:/reponame">ssh://server.domain.com:/reponame</a> instead of <code>:/path/to/reponame</code>.
+</p>
+<p>Start svnserve with new wrapper script like so:
+</p>
+<pre># /usr/bin/svnserve -d  ( start daemon mode )
+</pre>
+<p>we can also check the perms for remote users like this:
+</p>
+<pre>$ svn ls svn+ssh://server.domain.com:/reponame
+++server.domain.com++
+dev/
+qa/
+release/
+</pre>
+<h2><span class="mw-headline" id="Subversion_backup_and_restore">Subversion backup and restore</span></h2>
+<p>To back up your subversion repositories,do this for each repository you have.
+</p>
+<pre>$ svnadmin dump /path/to/reponame &gt; /tmp/reponame.dump
+$ scp -rp /tmp/reponame.dump user@server.domain.com:/tmp/
+</pre>
+<p>To restore the backup, create the corresponding repositories first:
+</p>
+<pre>svnadmin create /path/to/reponame
+</pre>
+<p>Then load svn dump into new repo:
+</p>
+<pre>svnadmin load /path/to/reponame &lt; /tmp/repo1.dump
+</pre>
+<p>Setting Permissions:
+</p>
+<pre>chown -R svn:svnusers /path/to/reponame ; 
+chmod -R g+w /path/to/reponame/db/
+
+</pre>
+<p>These repositories should now be all setup.
+</p>
+<h2><span class="mw-headline" id="Subversion_clients">Subversion clients</span></h2>
+<p>See also <a href="https://en.wikipedia.org/wiki/Comparison_of_Subversion_clients" class="extiw" title="wikipedia:Comparison of Subversion clients">Wikipedia:Comparison of Subversion clients</a>.
+</p>
+<ul><li>
+<b>kdesvn</b> — Subversion client for KDE.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="https://cgit.kde.org/kdesvn.git/">https://cgit.kde.org/kdesvn.git/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=kdesvn">kdesvn</a></span>
+</dd></dl>
+<ul><li>
+<b><a href="https://en.wikipedia.org/wiki/RabbitVCS" class="extiw" title="wikipedia:RabbitVCS">RabbitVCS</a></b> — Set of graphical tools written to provide simple and straightforward access to the version control systems you use.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://rabbitvcs.org/">http://rabbitvcs.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rabbitvcs/">rabbitvcs</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<ul><li>
+<b><a href="https://en.wikipedia.org/wiki/RapidSVN" class="extiw" title="wikipedia:RapidSVN">RapidSVN</a></b> — GUI front-end for the Subversion revision system written in C++ using the wxWidgets framework.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://rapidsvn.tigris.org/">http://rapidsvn.tigris.org/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rapidsvn/">rapidsvn</a></span><sup><small>AUR</small></sup>
+</dd></dl>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://svnbook.red-bean.com/en/1.1/svn-book.html#svn-ch-9-sect-2.2-re-load">http://svnbook.red-bean.com/en/1.1/svn-book.html#svn-ch-9-sect-2.2-re-load</a></li>
+<li><a rel="nofollow" class="external free" href="https://subversion.apache.org/">https://subversion.apache.org/</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Version_Control_System.html" title="Category:Version Control System">Version Control System</a></li>
+<li><a href="../en/Category:Apache.html" title="Category:Apache">Apache</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Subversion&amp;oldid=550398">https://wiki.archlinux.org/index.php?title=Subversion&amp;oldid=550398</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 October 2018, at 19:12.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

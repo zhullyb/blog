@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Core dump - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Core_dump rootpage-Core_dump skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Core dump</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>A <a href="https://en.wikipedia.org/wiki/Core_dump" class="extiw" title="wikipedia:Core dump">core dump</a> is a file containing a process's address space (memory) when the process terminates unexpectedly. Core dumps may be produced on-demand (such as by a <a href="#Making_a_core_dump">debugger</a>), or automatically upon termination. Core dumps are triggered by the kernel in response to program crashes, and may be passed to a helper program (such as <a rel="nofollow" class="external text" href="https://www.freedesktop.org/software/systemd/man/systemd-coredump.html">systemd-coredump</a>) for further processing. A core dump is not typically used by an average user, but may be passed on to developers upon request where it can be invaluable as a post-mortem snapshot of the program's state at the time of the crash, especially if the fault is hard to reliably reproduce.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Disabling_automatic_core_dumps"><span class="tocnumber">1</span> <span class="toctext">Disabling automatic core dumps</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Using_sysctl"><span class="tocnumber">1.1</span> <span class="toctext">Using sysctl</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Using_systemd"><span class="tocnumber">1.2</span> <span class="toctext">Using systemd</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Using_PAM_limits"><span class="tocnumber">1.3</span> <span class="toctext">Using PAM limits</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Using_ulimit"><span class="tocnumber">1.4</span> <span class="toctext">Using ulimit</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6">
+<a href="#Making_a_core_dump"><span class="tocnumber">2</span> <span class="toctext">Making a core dump</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Where_do_they_go?"><span class="tocnumber">2.1</span> <span class="toctext">Where do they go?</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Examining_a_core_dump"><span class="tocnumber">3</span> <span class="toctext">Examining a core dump</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Cleanup_of_core_dump_files"><span class="tocnumber">4</span> <span class="toctext">Cleanup of core dump files</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#See_also"><span class="tocnumber">5</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Disabling_automatic_core_dumps">Disabling automatic core dumps</span></h2>
+<p>Users may wish to disable automatic core dumps for a number of reasons:
+</p>
+<ul>
+<li>Performance: generating core dumps for memory-heavy processes can waste system resources and delay the cleanup of memory.</li>
+<li>Disk space: core dumps of memory-heavy processes may consume disk space equal to, if not greater, than the process's memory footprint if not compressed.</li>
+<li>Security: core dumps, although typically readable only by root, may contain sensitive data (such as passwords or cryptographic keys), which are written to disk following a crash.</li>
+</ul>
+<h3><span class="mw-headline" id="Using_sysctl">Using sysctl</span></h3>
+<p><a href="../en/Sysctl.html" title="Sysctl">sysctl</a> can be used to set the <code>kernel.core_pattern</code> to nothing to disable core dump handling. Create this file<a rel="nofollow" class="external autonumber" href="https://github.com/systemd/systemd/issues/659#issuecomment-328372788">[1]</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/sysctl.d/50-coredump.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">kernel.core_pattern=|/bin/false</pre>
+<p>To apply the setting immediately, use <code>sysctl</code>:
+</p>
+<pre># sysctl -p /etc/sysctl.d/50-coredump.conf
+</pre>
+<h3><span class="mw-headline" id="Using_systemd">Using systemd</span></h3>
+<p><a href="../en/Systemd.html" title="Systemd">systemd</a>'s default behavior is to generate core dumps for all processes in <code>/var/lib/systemd/coredump</code>. This behavior can be overridden by creating a configuration snippet in the <code>/etc/systemd/coredump.conf.d/</code> directory with the following content<a rel="nofollow" class="external autonumber" href="https://www.freedesktop.org/software/systemd/man/coredump.conf.html#Description">[2]</a><a rel="nofollow" class="external autonumber" href="https://bbs.archlinux.org/viewtopic.php?id=214207">[3]</a>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/coredump.conf.d/custom.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Coredump]
+Storage=none</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Do not forget to include the <code>[Coredump]</code> section name, otherwise this option will be ignored: <code>systemd-coredump[1728]: [/etc/systemd/coredump.conf.d/custom.conf:1] Assignment outside of section. Ignoring.</code>
+</div>
+<p>Then reload systemd's configuration.
+</p>
+<pre># systemctl daemon-reload
+</pre>
+<p>This method alone is usually sufficient to disable userspace core dumps, so long as no other programs enable automatic core dumps on the system, but the coredump is still generated in memory and systemd-coredump run.
+</p>
+<h3><span class="mw-headline" id="Using_PAM_limits">Using PAM limits</span></h3>
+<p>The maximum core dump size for users logged in via <a href="../en/PAM.html" title="PAM">PAM</a> is enforced by <a href="../en/Limits.conf.html" title="Limits.conf">limits.conf</a>. Setting it to zero disables core dumps entirely. <a rel="nofollow" class="external autonumber" href="http://www.cyberciti.biz/faq/linux-disable-core-dumps/">[4]</a>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/security/limits.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">* hard core 0</pre>
+<h3><span class="mw-headline" id="Using_ulimit">Using ulimit</span></h3>
+<p><a href="../en/Command-line_shell.html" title="Command-line shell">Command-line shells</a> such as <i>bash</i> or <i>zsh</i> provide a builtin <i>ulimit</i> command which can be used to report or set resource limits of the shell and the processes started by the shell. See <span class="plainlinks archwiki-template-man" title="$ man 1 bash"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/bash.1#SHELL_BUILTIN_COMMANDS">bash(1) § SHELL BUILTIN COMMANDS</a></span> or <span class="plainlinks archwiki-template-man" title="$ man 1 zshbuiltins"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/zshbuiltins.1">zshbuiltins(1)</a></span> for details.
+</p>
+<p>To disable core dumps in the current shell:
+</p>
+<pre>$ ulimit -c 0
+</pre>
+<h2><span class="mw-headline" id="Making_a_core_dump">Making a core dump</span></h2>
+<p>To generate a core dump of an arbitrary process, first <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=gdb">gdb</a></span> package. Then find the PID of the running process, for example with <i>pgrep</i>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ pgrep -f <i>firefox</i></pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">2071 firefox
+</pre>
+<p>Attach to the process:
+</p>
+<pre>$ gdb -p 2071
+</pre>
+<p>Then at the <code>(gdb)</code> prompt:
+</p>
+<pre>(gdb) generate-core-file
+Saved corefile core.2071
+(gdb) quit
+</pre>
+<p>Now you have a coredump file called <code>core.2071</code>.
+</p>
+<h3>
+<span id="Where_do_they_go.3F"></span><span class="mw-headline" id="Where_do_they_go?">Where do they go?</span>
+</h3>
+<p>The <code>kernel.core_pattern</code> <a href="../en/Sysctl.html" title="Sysctl">sysctl</a> decides where automatic core dumps go. By default, core dumps are sent to <i>systemd-coredump</i> which can be configured in <code>/etc/systemd/coredump.conf</code>. By default, all core dumps are stored in <code>/var/lib/systemd/coredump</code> (due to <code>Storage=external</code>) and they are compressed with <code>zstd</code> (due to <code>Compress=yes</code>). Additionally, various size limits for the storage can be configured.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The default value for <code>kernel.core_pattern</code> is set in <code>/usr/lib/sysctl.d/50-coredump.conf</code>. This file may be masked or overridden to use a different setting following normal <span class="plainlinks archwiki-template-man" title="$ man 5 sysctl.d"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/sysctl.d.5">sysctl.d(5)</a></span> rules.</div>
+<p>To retrieve a core dump from the journal, see <span class="plainlinks archwiki-template-man" title="$ man 1 coredumpctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/coredumpctl.1">coredumpctl(1)</a></span>.
+</p>
+<h2><span class="mw-headline" id="Examining_a_core_dump">Examining a core dump</span></h2>
+<p>Use <i>coredumpctl</i> to find the corresponding dump:
+</p>
+<pre># coredumpctl list
+</pre>
+<p>You need to uniquely identify the relevant dump. This is possible by specifying a <code>PID</code>, name of the executable, path to the executable or a journalctl predicate (see <span class="plainlinks archwiki-template-man" title="$ man 1 coredumpctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/coredumpctl.1">coredumpctl(1)</a></span> and <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span> for details). To see details of the core dumps:
+</p>
+<pre># coredumpctl info <i>match</i>
+</pre>
+<p>Pay attention to "Signal" row, that helps to identify crash cause. For deeper analysis you can examine the backtrace using <i>gdb</i>:
+</p>
+<pre># coredumpctl gdb <i>match</i>
+</pre>
+<p>When <i>gdb</i> is started, use the <code>bt</code> command to print the backtrace:
+</p>
+<pre>(gdb) bt
+</pre>
+<p>See <a href="../en/Debug_-_Getting_Traces.html" title="Debug - Getting Traces">Debug - Getting Traces</a> if debugging symbols are requested, but not found.
+</p>
+<h2><span class="mw-headline" id="Cleanup_of_core_dump_files">Cleanup of core dump files</span></h2>
+<p>The core dump files stored in <code>/var/lib/systemd/coredump/</code> will be automatically cleaned by <code>systemd-tmpfiles --clean</code>, which is triggered daily with <code>systemd-tmpfiles-clean.timer</code>. Core dumps are configured to persist for at least 3 days, see <code>systemd-tmpfiles --cat-config</code>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="http://lcamtuf.coredump.cx/afl/">american fuzzy lop</a> - A tool for automated tests of the kernel and programs</li>
+<li>
+<a rel="nofollow" class="external text" href="https://lwn.net/Articles/637151/">Filesystem fuzzing</a> - LWN article about testing filesystems for bugs</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Development.html" title="Category:Development">Development</a></li>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Core_dump&amp;oldid=642205">https://wiki.archlinux.org/index.php?title=Core_dump&amp;oldid=642205</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 23 November 2020, at 20:46.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Diskless system (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Diskless_system_简体中文 rootpage-Diskless_system_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Diskless system (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>相关文章</p>
+<ul>
+<li><a href="../en/NFS.html" title="NFS">NFS</a></li>
+<li><a href="../en/NFS/Troubleshooting.html" class="mw-redirect" title="NFS Troubleshooting">NFS Troubleshooting</a></li>
+<li><a href="../en/Preboot_Execution_Environment.html" class="mw-redirect" title="PXE">PXE</a></li>
+<li><a href="../en/Mkinitcpio.html#Using_net" title="Mkinitcpio">Mkinitcpio#Using_net</a></li>
+<li><a href="../en/ISCSI/Boot.html" class="mw-redirect" title="ISCSI Boot">iSCSI Boot</a></li>
+</ul>
+</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Diskless_system.html" title="Diskless system">Diskless system</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2020-05-13。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Diskless_system&amp;diff=0&amp;oldid=607493">更改</a>，则您可以帮助同步翻译。</div>
+<p>引用自 <a rel="nofollow" class="external text" href="https://wiki.gentoo.org/wiki/Diskless_nodes/zh-cn">Gentoo Wiki:无盘节点</a>
+</p>
+<dl><dd><i>一台无盘机器是一台没有任何诸如硬盘、软盘驱动器或CD-ROM等常见引导设备的PC。无盘节点引导自网络，并需要一台服务器来提供当作本地硬盘来使用的存储空间。</i></dd></dl>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E9%85%8D%E7%BD%AE"><span class="tocnumber">1</span> <span class="toctext">服务端配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#DHCP"><span class="tocnumber">1.1</span> <span class="toctext">DHCP</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#TFTP"><span class="tocnumber">1.2</span> <span class="toctext">TFTP</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#%E7%BD%91%E7%BB%9C%E5%AD%98%E5%82%A8"><span class="tocnumber">1.3</span> <span class="toctext">网络存储</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#NFS"><span class="tocnumber">1.3.1</span> <span class="toctext">NFS</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#NBD"><span class="tocnumber">1.3.2</span> <span class="toctext">NBD</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#%E6%97%A0%E7%9B%98%E7%B3%BB%E7%BB%9F%E9%85%8D%E7%BD%AE"><span class="tocnumber">2</span> <span class="toctext">无盘系统配置</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#%E5%AE%89%E8%A3%85%E7%9B%AE%E5%BD%95%E5%88%9B%E5%BB%BA"><span class="tocnumber">2.1</span> <span class="toctext">安装目录创建</span></a></li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Bootstrap_%E5%AE%89%E8%A3%85"><span class="tocnumber">2.2</span> <span class="toctext">Bootstrap 安装</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#NFS_2"><span class="tocnumber">2.2.1</span> <span class="toctext">NFS</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#NBD_2"><span class="tocnumber">2.2.2</span> <span class="toctext">NBD</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12">
+<a href="#%E9%85%8D%E7%BD%AE%E6%97%A0%E7%9B%98%E7%B3%BB%E7%BB%9F"><span class="tocnumber">3</span> <span class="toctext">配置无盘系统</span></a>
+<ul>
+<li class="toclevel-2 tocsection-13">
+<a href="#%E5%90%AF%E5%8A%A8%E5%99%A8"><span class="tocnumber">3.1</span> <span class="toctext">启动器</span></a>
+<ul>
+<li class="toclevel-3 tocsection-14"><a href="#GRUB"><span class="tocnumber">3.1.1</span> <span class="toctext">GRUB</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#PXELINUX"><span class="tocnumber">3.1.2</span> <span class="toctext">PXELINUX</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16">
+<a href="#%E9%A2%9D%E5%A4%96%E7%9A%84%E6%8C%82%E8%BD%BD%E7%82%B9"><span class="tocnumber">3.2</span> <span class="toctext">额外的挂载点</span></a>
+<ul>
+<li class="toclevel-3 tocsection-17"><a href="#NBD_%E6%A0%B9"><span class="tocnumber">3.2.1</span> <span class="toctext">NBD 根</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81%E7%9B%AE%E5%BD%95"><span class="tocnumber">3.2.2</span> <span class="toctext">程序状态目录</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#%E6%97%A0%E7%9B%98%E6%9C%BA%E5%90%AF%E5%8A%A8"><span class="tocnumber">4</span> <span class="toctext">无盘机启动</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20"><a href="#NBD_3"><span class="tocnumber">4.1</span> <span class="toctext">NBD</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-21"><a href="#%E5%8F%82%E9%98%85"><span class="tocnumber">5</span> <span class="toctext">参阅</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E6.9C.8D.E5.8A.A1.E7.AB.AF.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="服务端配置">服务端配置</span>
+</h2>
+<p>首先我们应当安装如下组件:
+</p>
+<ul>
+<li>用于向无盘节点分配IP地址的 <a href="../en/Dhcpd.html" title="Dhcpd">DHCP</a> 服务端。</li>
+<li>用于分发启动镜像的 <a href="../en/TFTP.html" title="TFTP">TFTP</a> 服务端 （所有PXE镜像必需）。</li>
+<li>选择 (<a href="../en/NFS.html" title="NFS">NFS</a> 或 NBD) 中的一种作为存放和传输无盘节点的 Arch 安装副本的网络存储服务。</li>
+</ul>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong>  <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dnsmasq">dnsmasq</a></span> 能够同时兼任 DHCP 和 TFTP 服务器。更多信息请见 <a href="../zh-CN/Dnsmasq.html" title="Dnsmasq (简体中文)">Dnsmasq (简体中文)</a>。</div>
+<h3><span class="mw-headline" id="DHCP">DHCP</span></h3>
+<p>安装并配置 ISC <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dhcp">dhcp</a></span>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/dhcpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">allow booting;
+allow bootp;
+
+authoritative;
+
+option domain-name-servers 10.0.0.1;
+
+option architecture code 93 = unsigned integer 16;
+
+group {
+    next-server 10.0.0.1;
+
+    if option architecture = 00:07 {
+        filename "/grub/x86_64-efi/core.efi";
+    } else {
+        filename "/grub/i386-pc/core.0";
+    }
+
+    subnet 10.0.0.0 netmask 255.255.255.0 {
+        option routers 10.0.0.1;
+        range 10.0.0.128 10.0.0.254;
+    }
+}</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> <code>next-server</code> 应为 TFTP 服务端监听的IP地址; 你需要酌情更改配置中的地址以匹配你已有的网络环境。</div>
+<p>RFC 4578 定义了"客户机架构类型（Client System Architecture Type）" 的 dhcp 参数。在如上配置中，如果 PXE 客户机（暨无盘系统）请求了 x86_64-efi 镜像 (类型 0x7) 服务端将返回对应的文件, 否则自动回落到 legacy 镜像。这样，同一网络中的 UEFI 和 legacy BIOS 均能正常启动。
+</p>
+<p>然后启动 ISC DHCP <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd (简体中文)</a> 服务。
+</p>
+<h3><span class="mw-headline" id="TFTP">TFTP</span></h3>
+<p>TFTP 用于向无盘系统传输 启动器、内核以及 initramfs。
+</p>
+<p>将 TFTP 根目录设置为 <code>/srv/arch/boot</code>。参阅 <a href="../en/TFTP.html" class="mw-redirect" title="Tftpd server">Tftpd server</a> 配置安装并配置。
+</p>
+<h3>
+<span id=".E7.BD.91.E7.BB.9C.E5.AD.98.E5.82.A8"></span><span class="mw-headline" id="网络存储">网络存储</span>
+</h3>
+<p>NFS 与 NBD 的主要区别是，尽管两者均允许你为多个无盘系统使用同一份安装完毕的 Arch Linux，在使用 NBD 时 (由于其直接与文件系统交互的本质) 你将必需使用 <code>CopyOnWrite</code> 的模式, 并将导致在无盘系统断开连接时丢弃所有改动。然而在一些场景中，这是一项不可多得的优势。
+</p>
+<h4><span class="mw-headline" id="NFS">NFS</span></h4>
+<p>在服务端安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nfs-utils">nfs-utils</a></span>。
+</p>
+<p>你需要将 Arch 安装副本的根目录加入 <a href="../zh-CN/NFS.html" title="NFS (简体中文)">NFS (简体中文)</a> 的共享（“导出”）列表:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/exports</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/srv       *(rw,fsid=0,no_root_squash,no_subtree_check)
+/srv/arch  *(rw,no_root_squash,no_subtree_check)</pre>
+<p>然后启动 NFS 服务: <code>rpc-idmapd</code> <code>rpc-mountd</code>.
+</p>
+<h4><span class="mw-headline" id="NBD">NBD</span></h4>
+<p>安装并配置 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=nbd">nbd</a></span>。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nbd-server/config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[generic]
+    user = nbd
+    group = nbd
+[arch]
+    exportname = /srv/arch.img
+    copyonwrite = false</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 
+<ul>
+<li>如果你需要多台无盘系统同时启动改镜像，请将 <code>copyonwrite</code> 设为 <code>true</code>；详情请参阅 <span class="plainlinks archwiki-template-man" title="$ man 5 nbd-server"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/nbd-server.5">nbd-server(5)</a></span>。</li>
+<li>可能需要使用 <a href="../en/File_permissions_and_attributes.html#Changing_ownership" class="mw-redirect" title="Chown">chown</a> 将 exportname 目录的所有权赋予 <code>nbd</code> 用户。</li>
+</ul>
+</div>
+<p>启动 <code>nbd</code> systemd 服务。
+</p>
+<h2>
+<span id=".E6.97.A0.E7.9B.98.E7.B3.BB.E7.BB.9F.E9.85.8D.E7.BD.AE"></span><span class="mw-headline" id="无盘系统配置">无盘系统配置</span>
+</h2>
+<p>接下来我们将在服务器端的子目录中创建一个完整的 Arch Linux 安装副本。启动无盘机时，其将从 DHCP 服务器获取一个 IP 地址，而后通过 PXE 启动并挂载这份安装副本作为根目录。
+</p>
+<h3>
+<span id=".E5.AE.89.E8.A3.85.E7.9B.AE.E5.BD.95.E5.88.9B.E5.BB.BA"></span><span class="mw-headline" id="安装目录创建">安装目录创建</span>
+</h3>
+<p>创建一个至少 1GB 的 <a href="https://en.wikipedia.org/wiki/Sparse_file" class="extiw" title="wikipedia:Sparse file">sparse file</a> 并格式化为 btrfs。 (你当然也可以使用其他块设备如实体硬盘或 <a href="../en/LVM.html" title="LVM">LVM</a>)。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong>  对于 NBD，创建一个单独的文件系统是必须的；但对于 NFS 这是可选的，故可酌情忽略或跳过。</div>
+<pre># truncate -s 1G /srv/arch.img
+# mkfs.btrfs /srv/arch.img
+# export root=/srv/arch
+# mkdir -p "$root"
+# mount -o loop,compress=lzo /srv/arch.img "$root"
+</pre>
+<h3>
+<span id="Bootstrap_.E5.AE.89.E8.A3.85"></span><span class="mw-headline" id="Bootstrap_安装">Bootstrap 安装</span>
+</h3>
+<p>安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=devtools">devtools</a></span> 和 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=arch-install-scripts">arch-install-scripts</a></span>, 然后运行 <code>pacstrap</code> 以为无盘系统 <a href="../zh-CN/Installation_guide.html#%E5%AE%89%E8%A3%85%E5%BF%85%E9%A1%BB%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%8C%85" title="Installation guide (简体中文)">安装必须的软件包</a>:
+</p>
+<pre># pacstrap -d "$root" base linux linux-firmware mkinitcpio-nfs-utils nfs-utils
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 在任何配置中 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio-nfs-utils">mkinitcpio-nfs-utils</a></span> 都必须安装：它将提供早期启动过程中所需的 <code>ipconfig</code>。</div>
+<p>现在应当生成好 initramfs。
+</p>
+<h4><span class="mw-headline" id="NFS_2">NFS</span></h4>
+<p>要使 NFSv4 挂载正常工作，需要轻微改动 <code>net</code> hook (这不被默认的<code>net</code> hook：<code>nfsmount</code> 所支持)。
+</p>
+<pre># sed s/nfsmount/mount.nfs4/ "$root/usr/lib/initcpio/hooks/net" &gt; "$root/usr/lib/initcpio/hooks/netnfs4"
+# cp $root/usr/lib/initcpio/install/net{,nfs4}
+</pre>
+<p>此时需要备份 <code>net</code> 以防止其在 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mkinitcpio-nfs-utils">mkinitcpio-nfs-utils</a></span> 升级时被覆盖.
+</p>
+<p>Edit <code>$root/etc/mkinitcpio.conf</code> and add <code>nfsv4</code> to <code>MODULES</code>, <code>netnfs4</code> to <code>HOOKS</code>, and <code>/usr/bin/mount.nfs4</code> to <code>BINARIES</code>.
+</p>
+<p>然后 <a href="../en/Chroot.html" title="Chroot">chroot</a> 到安装副本的根目录并执行 <i>mkinitcpio</i>:
+</p>
+<pre># arch-chroot "$root" mkinitcpio -p linux
+</pre>
+<h4><span class="mw-headline" id="NBD_2">NBD</span></h4>
+<p>在无盘系统的 Arch 安装副本中安装 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/mkinitcpio-nbd/">mkinitcpio-nbd</a></span><sup><small>AUR</small></sup>。使用 <a href="../zh-CN/Makepkg.html" title="Makepkg (简体中文)">makepkg (简体中文)</a> 构建并安装它：
+</p>
+<pre># pacman --root "$root" --dbpath "$root/var/lib/pacman" -U mkinitcpio-nbd-0.4-1-any.pkg.tar.xz
+</pre>
+<p>然后你需要将 <code>HOOKS</code> array 中 <code>net</code> 之后加入 <code>nbd</code>； <code>net</code> 将负责配置网络, 但只要不在 kernel 行中指定，它不会尝试 NFS 挂载。
+</p>
+<h2>
+<span id=".E9.85.8D.E7.BD.AE.E6.97.A0.E7.9B.98.E7.B3.BB.E7.BB.9F"></span><span class="mw-headline" id="配置无盘系统">配置无盘系统</span>
+</h2>
+<p>在上述步骤完成后，你仍需要时情况完成主机名，时区，区域设置，键盘布局等其他 <a href="../zh-CN/Installation_guide.html" title="Installation guide (简体中文)">Installation guide (简体中文)</a> 提及的配置步骤。
+</p>
+<h3>
+<span id=".E5.90.AF.E5.8A.A8.E5.99.A8"></span><span class="mw-headline" id="启动器">启动器</span>
+</h3>
+<h4><span class="mw-headline" id="GRUB">GRUB</span></h4>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a><b>This article or section is a candidate for merging with <a href="../en/GRUB.html" title="GRUB">GRUB</a>.</b><a href="../File:Merge-arrows-2.png" class="image"><img alt="Merge-arrows-2.png" src="../File:Merge-arrows-2.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Notes:</b>  (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Diskless_system_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Diskless system (简体中文)#</a>)</div>
+</div>
+<p>尽管没有详细文档, GRUB 支持从 PXE 加载：
+</p>
+<pre># pacman --root "$root" --dbpath "$root/var/lib/pacman" -S grub
+</pre>
+<p>使用 <code>grub-mknetdir</code> 在目标系统（无盘系统的 Arch 安装副本）中创建一个 grub prefix：
+</p>
+<pre># arch-chroot "$root" grub-mknetdir --net-directory=/boot --subdir=grub
+</pre>
+<p>幸运的是，<code>grub-mknetdir</code> 为所有已编译/安装的目标创建 prefix, 且 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=grub">grub</a></span> 的维护者在同一包中提供了两种架构, 所以 <code>grub-mknetdir</code> 仅需执行一次。
+</p>
+<p>现在我们创建一个 GRUB 配置:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># vim "$root/boot/grub/grub.cfg"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">menuentry "Arch Linux" {
+    linux /vmlinuz-linux quiet add_efi_memmap ip=:::::eth0:dhcp nfsroot=10.0.0.1:/arch
+    initrd /initramfs-linux.img
+}</pre>
+<p><a href="../en/GRUB.html" title="GRUB">GRUB</a> 黑魔法将会自动设置 <code>set root=(tftp,10.0.0.1)</code>，这样内核和 initramfs 将自动通过 TFTP 传输过来，不过当你有其他非 TFTP 的启动项时，你仍希望显式声明这些配置。
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 根据需要依照<a href="../en/Syslinux.html#PXELINUX" class="mw-redirect" title="PXELINUX">PXELINUX</a>修改你的于NBD相关的内核行配置。</div>
+<h4><span class="mw-headline" id="PXELINUX">PXELINUX</span></h4>
+<p>PXELINUX 由 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslinux">syslinux</a></span> 提供，详见 <a href="../en/Syslinux.html#PXELINUX" class="mw-redirect" title="PXELINUX">PXELINUX</a>。
+</p>
+<h3>
+<span id=".E9.A2.9D.E5.A4.96.E7.9A.84.E6.8C.82.E8.BD.BD.E7.82.B9"></span><span class="mw-headline" id="额外的挂载点">额外的挂载点</span>
+</h3>
+<h4>
+<span id="NBD_.E6.A0.B9"></span><span class="mw-headline" id="NBD_根">NBD 根</span>
+</h4>
+<p>late boot 时你需要将根分区的文件系统切换为可读写（<code>rw</code>）并且启动 <code>compress=lzo</code> 以获得相较于 NFS 可观的性能提升。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># vim "$root/etc/fstab"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/nbd0  /  btrfs  rw,noatime,compress=lzo  0 0</pre>
+<h4>
+<span id=".E7.A8.8B.E5.BA.8F.E7.8A.B6.E6.80.81.E7.9B.AE.E5.BD.95"></span><span class="mw-headline" id="程序状态目录">程序状态目录</span>
+</h4>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 当 /var/log/journal 为 tmpfs 或不存在时，systemd 默认不会进行持久日志记录。 (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Diskless_system_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Diskless system (简体中文)#</a>)</div>
+</div>
+<p>你可以将 <code>/var/log</code> 挂载为例如 tmpfs 的文件系统，这样多台主机的日志将不会意外混杂在一起。对于 <code>/var/spool/cups</code> 亦可实行此操作，这样 20 个使用相同 spool 的 CUPS 不会互相打架然后执行进行 1498 份打印工作并在一夜之间吃掉整摞纸（或更糟：墨盒）。
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># vim "$root/etc/fstab"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">tmpfs   /var/log        tmpfs     nodev,nosuid    0 0
+tmpfs   /var/spool/cups tmpfs     nodev,nosuid    0 0</pre>
+<p>对于有某种唯一状态或数据库的软件，最好的配置是为每台无盘主机配置唯一的储存目录。例，如果你想要运行 <a rel="nofollow" class="external text" href="http://puppetlabs.com/">puppet</a> 你可以简单地在 puppet 的 systemd unit file 中使用 <code>%H</code> 标识符:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># vim "$root/etc/systemd/system/puppetagent.service"</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Puppet agent
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+Type=forking
+PIDFile=/run/puppet/agent.pid
+ExecStartPre=/usr/bin/install -d -o puppet -m 755 /run/puppet
+ExecStart=/usr/bin/puppet agent --vardir=/var/lib/puppet-%H --ssldir=/etc/puppet/ssl-%H
+
+[Install]
+WantedBy=multi-user.target</pre>
+<p>Puppet-agent 将会在 vardir 或 ssldir 不存在时自动创建之。
+</p>
+<p>如果上述方法都不适用，你还可以选择使用  <a rel="nofollow" class="external text" href="https://www.freedesktop.org/wiki/Software/systemd/Generators">systemd generator</a> 来针对当前主机创建一个 mount unit，不幸的是 <i>%H</i> 标识符无法使用。
+</p>
+<h2>
+<span id=".E6.97.A0.E7.9B.98.E6.9C.BA.E5.90.AF.E5.8A.A8"></span><span class="mw-headline" id="无盘机启动">无盘机启动</span>
+</h2>
+<h3><span class="mw-headline" id="NBD_3">NBD</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> 在服务端启动了CopyOnWrite特性时，所有无盘系统应当均有效地只读挂载了根分区所在的文件系统，所以理论上在NBD服务器上读写挂载是安全的。 (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Diskless_system_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">Talk:Diskless system (简体中文)#</a>)</div>
+</div>
+<p>当使用 NBD 作为网络存储服务时，你需要无盘系统启动前确保卸载（<code>umount</code>）安装副本所在的块设备。
+</p>
+<p>这一特性使得内核更新的过程十分有趣：当客户机开机时你不能挂载它所使用的文件系统, 这意味着你需要用一个单独的内核来执行内核更新。
+</p>
+<p>首先从客户端安装副本复制 <code>$root/boot</code> 到你的 tftp 根目录 (通常即 <code>/srv/boot</code>).
+</p>
+<pre># cp -r "$root/boot" /srv/boot
+</pre>
+<p>然后在客户机启动前卸载 <code>$root</code>。
+</p>
+<pre># umount "$root"
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>注意：</strong> 如上配置中如需升级内核,你需要在开始内核更新前于无盘机中使用 <a href="../zh-CN/NFS.html" title="NFS (简体中文)">NFS (简体中文)</a> 在 <a href="../en/Fstab.html" title="Fstab">fstab</a> 中挂载 <code>/srv/boot</code>，或是在客户机于NBD断开后手动挂载客户机文件系统。</div>
+<h2>
+<span id=".E5.8F.82.E9.98.85"></span><span class="mw-headline" id="参阅">参阅</span>
+</h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/admin-guide/nfs/nfsroot.html">kernel.org: Mounting the root filesystem via NFS (nfsroot)</a></li>
+<li><a rel="nofollow" class="external text" href="https://wiki.syslinux.org/wiki/index.php/PXELINUX">syslinux.org: pxelinux FAQ</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Installation_process.html" title="Category:Installation process (简体中文)">Installation process (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Merge.html" title="Category:Pages or sections flagged with Template:Merge">Pages or sections flagged with Template:Merge</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Diskless_system_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=641380">https://wiki.archlinux.org/index.php?title=Diskless_system_(简体中文)&amp;oldid=641380</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 November 2020, at 11:03.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

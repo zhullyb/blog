@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>USBGuard - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-USBGuard rootpage-USBGuard skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">USBGuard</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://github.com/dkopecek/usbguard">USBGuard</a> offers a white/black-listing mechanism for USB-devices. Inspiration for this is drawn from exploits like BadUSB.
+It makes use of a device blocking infrastructure included in the Linux kernel and consists of a daemon and some front-ends.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Usage"><span class="tocnumber">3</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Rules"><span class="tocnumber">3.1</span> <span class="toctext">Rules</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=usbguard">usbguard</a></span> package, or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/usbguard-git/">usbguard-git</a></span><sup><small>AUR</small></sup> for the development version.
+Qt applet was removed in USBGuard 0.7.5 and it is going to be maintained in a simplified form as a separate project later. <a rel="nofollow" class="external autonumber" href="https://github.com/USBGuard/usbguard/releases/tag/usbguard-0.7.5">[1]</a>
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>The main configuration file is found in <code>/etc/usbguard/usbguard-daemon.conf</code>. To edit it, you need root privileges.
+</p>
+<p>If you want to control the daemon via IPC, be sure to add your username to <code>IPCAllowedUsers</code> or your group to <code>IPCAllowedGroups</code> to make rules persistent. In most cases, you want this.
+</p>
+<p>By default, USBGuard blocks all newly connected devices, and devices connected before daemon startup are left as is. This can be changed with the <code>PresentDevicePolicy</code> option. Setting this key to <code>apply-policy</code> is the most secure setting, which ensures security even when the daemon hits a restart.
+</p>
+<p>With the key <code>ImplicitPolicyTarget</code> you can configure the default treatment of devices, if no rules match. The most secure option here is <code>block</code>.
+</p>
+<p>For an in-depth documentation of configuration see the very well commented configuration file.
+</p>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>USBGuard has a core daemon, a CLI, a DBUS interface and an API via libusbguard.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make sure to actually configure the daemon before starting/enabling it or all USB devices will immediately be blocked!</div>
+<p>If you want to use the Qt GUI or another program communicating via DBUS, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>usbguard-dbus.service</code>.
+</p>
+<p>If you only want to communicate via API (with the CLI tool or another software using libusbguard) <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> <code>usbguard.service</code>.
+</p>
+<p>The CLI is available via <code>usbguard</code>.
+</p>
+<p>See the according man pages for more info.
+</p>
+<h3><span class="mw-headline" id="Rules">Rules</span></h3>
+<p>To configure USBGuard to your needs, you can edit <code>/etc/usbguard/rules.conf</code>. However manual editing of the rules is normally not necessary. You can generate a ruleset based on your currently attached USB devices by executing <code>usbguard generate-policy &gt; /etc/usbguard/rules.conf</code> as root.
+</p>
+<p>The rules syntax is formally explained <a rel="nofollow" class="external text" href="https://github.com/USBGuard/usbguard/blob/master/doc/man/usbguard-rules.conf.5.adoc">here</a>.
+An example for a hp printer connected via USB can look like this:
+</p>
+<pre>allow id 03f0:0c17 serial "00CNFD234631" name "hp LaserJet 2020" hash "a0ef07fceb6fb77698f79a44a450121m" parent-hash "69d19c1a5733a31e7e6d9530e6k434a6" with-interface { 07:01:03 07:01:02 07:01:01 }
+</pre>
+<p>A rule begins with a policy. <code>allow</code> whitelists a device, <code>block</code> stops the device from being processed now and <code>reject</code> removes the device from the system.
+Then follows a set of attributes with their options, as detailed below.
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Attribute</th>
+<th>Description
+</th>
+</tr>
+<tr>
+<td>id usb-device-id</td>
+<td>Match a USB device ID.
+</td>
+</tr>
+<tr>
+<td>id [operator] { usb-device-id ... }</td>
+<td>Match a set of USB device IDs.
+</td>
+</tr>
+<tr>
+<td>hash "value"</td>
+<td>Match a hash computed from the device attribute values and the USB descriptor data. The hash is computed for every device by USBGuard.
+</td>
+</tr>
+<tr>
+<td>hash [operator] { "value" ... }</td>
+<td>Match a set of device hashes.
+</td>
+</tr>
+<tr>
+<td>parent-hash "value"</td>
+<td>Match a hash of the parent device.
+</td>
+</tr>
+<tr>
+<td>parent-hash [operator] { "value" ... }</td>
+<td>Match a set of parent device hashes.
+</td>
+</tr>
+<tr>
+<td>name "device-name"</td>
+<td>Match the USB device name attribute.
+</td>
+</tr>
+<tr>
+<td>name [operator] { "device-name" ... }</td>
+<td>Match a set of USB device names.
+</td>
+</tr>
+<tr>
+<td>serial "serial-number"</td>
+<td>Match the USB iSerial device attribute.
+</td>
+</tr>
+<tr>
+<td>serial [operator] { "serial-number" ... }</td>
+<td>Match a set of USB iSerial device attributes.
+</td>
+</tr>
+<tr>
+<td>via-port "port-id"</td>
+<td>Match the USB port through which the device is connected. Note that some systems have unstable port numbering which change after the system reboots or certain kernel modules are reloaded (and maybe in other cases). Use the parent-hash attribute if you want to ensure that a device is connected via a specific parent device.
+</td>
+</tr>
+<tr>
+<td>via-port [operator] { "port-id" ... }</td>
+<td>Match a set of USB ports.
+</td>
+</tr>
+<tr>
+<td>with-interface interface-type</td>
+<td>Match an interface type that the USB device provides.
+</td>
+</tr>
+<tr>
+<td>with-interface [operator] { interface-type interface-type ... }</td>
+<td>Match a set of interface types against the set of interfaces that the USB device provides.
+</td>
+</tr>
+</tbody>
+</table>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://github.com/dkopecek/usbguard/">USBGuard Website</a></li>
+<li><a rel="nofollow" class="external text" href="https://raw.githubusercontent.com/USBGuard/usbguard/8b76c935f019facd362e2f12a4db5e24f6e58e62/doc/usbguard-component-diagram.png">USBGuard component diagram</a></li>
+<li><a rel="nofollow" class="external text" href="https://srlabs.de/bites/usb-peripherals-turn/">BadUSB background info</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/usb/authorization.html">Kernel interface for USB device control</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Hardware_detection_and_troubleshooting.html" title="Category:Hardware detection and troubleshooting">Hardware detection and troubleshooting</a></li>
+<li><a href="../en/Category:Security.html" title="Category:Security">Security</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=USBGuard&amp;oldid=644350">https://wiki.archlinux.org/index.php?title=USBGuard&amp;oldid=644350</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 9 December 2020, at 17:23.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Map scancodes to keycodes - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Map_scancodes_to_keycodes rootpage-Map_scancodes_to_keycodes skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Map scancodes to keycodes</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This page assumes that you have read <a href="../en/Keyboard_input.html" title="Keyboard input">Keyboard input</a>, which provides wider context.
+</p>
+<p>Mapping <i>scancodes</i> to <i>keycodes</i> is achieved in a layer lower than Xorg and Linux console, which means that changes to this mapping will be effective in both. <a rel="nofollow" class="external autonumber" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/input-event-codes.h#n64">[1]</a><a rel="nofollow" class="external autonumber" href="https://elixir.bootlin.com/linux/latest/A/ident/hid_keyboard">[2]</a><a rel="nofollow" class="external autonumber" href="https://elixir.bootlin.com/linux/latest/A/ident/atkbd_set2_keycode">[3]</a>
+</p>
+<p>There are two ways of mapping <i>scancodes</i> to <i>keycodes</i>:
+</p>
+<ul>
+<li>Using <a href="../en/Udev.html" title="Udev">udev</a>
+</li>
+<li>Using <span class="plainlinks archwiki-template-man" title="$ man 8 setkeycodes"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/setkeycodes.8">setkeycodes(8)</a></span>
+</li>
+</ul>
+<p>The preferred method is to use <i>udev</i> because it uses hardware information (which is a quite reliable source) to choose the keyboard model in a database. It means that if your keyboard model has been found in the database, your keys are recognized <i>out of the box</i>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Identifying_scancodes"><span class="tocnumber">1</span> <span class="toctext">Identifying scancodes</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Using_udev"><span class="tocnumber">2</span> <span class="toctext">Using udev</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Example_for_custom_hwdb"><span class="tocnumber">2.1</span> <span class="toctext">Example for custom hwdb</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Updating_the_Hardware_Database_Index"><span class="tocnumber">2.2</span> <span class="toctext">Updating the Hardware Database Index</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Reloading_the_Hardware_Database_Index"><span class="tocnumber">2.3</span> <span class="toctext">Reloading the Hardware Database Index</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Querying_the_database"><span class="tocnumber">2.4</span> <span class="toctext">Querying the database</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Using_setkeycodes"><span class="tocnumber">3</span> <span class="toctext">Using setkeycodes</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Identifying_scancodes">Identifying scancodes</span></h2>
+<p>You need to know the <i>scancodes</i> of keys you wish to remap. See <a href="../en/Keyboard_input.html#Identifying_scancodes" title="Keyboard input">Keyboard input#Identifying scancodes</a> for details.
+</p>
+<h2><span class="mw-headline" id="Using_udev">Using udev</span></h2>
+<p><a href="../en/Udev.html" title="Udev">udev</a> provides a builtin function called <i>hwdb</i> to maintain the hardware database index in <code>/etc/udev/hwdb.bin</code>. The database is compiled from files with <i>.hwdb</i> extension located in directories <code>/usr/lib/udev/hwdb.d/</code>, <code>/run/udev/hwdb.d/</code> and <code>/etc/udev/hwdb.d/</code>. The default <i>scancodes-to-keycodes</i> mapping file is <code>/usr/lib/udev/hwdb.d/60-keyboard.hwdb</code>. See <span class="plainlinks archwiki-template-man" title="$ man 7 udev"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/udev.7">udev(7)</a></span> for details.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> From systemd 220 the udev ABI changed. Users using custom udev hwdb rules should update them according to the new ABI</div>
+<p>The <i>.hwdb</i> file can contain multiple blocks of mappings for different keyboards, or one block can be applied to multiple keyboards. The <code>evdev:</code> prefix is used to match a block against a hardware, the following hardware matches are supported:
+</p>
+<ul>
+<li>Generic input devices (also USB keyboards) identified by the usb kernel modalias: <pre>evdev:input:b<i>&lt;bus_id&gt;</i>v<i>&lt;vendor_id&gt;</i>p<i>&lt;product_id&gt;</i>e<i>&lt;version_id&gt;</i>-<i>&lt;modalias&gt;</i></pre> where <code><i>&lt;vendor_id&gt;</i></code>, <code><i>&lt;product_id&gt;</i></code> and <code><i>&lt;version_id&gt;</i></code> are the 4-digit hex uppercase vendor, product and version IDs (you can find those by running the <code>lsusb</code> command) and <code><i>&lt;modalias&gt;</i></code>  is an arbitrary length input-modalias describing the device capabilities. <code><i>&lt;bus_id&gt;</i></code> is the 4-digit hex bus id and should be 0003 for usb devices. The possible <code><i>&lt;bus_id&gt;</i></code> values are defined in <code>/usr/include/linux/input.h</code> (you can run <code>awk '/BUS_/ {print $2, $3}' /usr/include/linux/input.h</code> to get a list).</li>
+<li>AT keyboard DMI data matches: <pre>evdev:atkbd:dmi:bvn*:bvr*:bd*:svn<i>&lt;vendor&gt;</i>:pn<i>&lt;product&gt;</i>:pvr*</pre> where <code><i>&lt;vendor&gt;</i></code> and <code><i>&lt;product&gt;</i></code> are the firmware-provided strings exported by the kernel DMI modalias.</li>
+<li>Input driver device name and DMI data match: <pre>evdev:name:<i>&lt;input device name&gt;</i>:dmi:bvn*:bvr*:bd*:svn<i>&lt;vendor&gt;</i>:pn*</pre> where <code><i>&lt;input_device_name&gt;</i></code> is the name device specified by the driver and <code><i>&lt;vendor&gt;</i></code> is the firmware-provided string exported by the kernel DMI modalias.</li>
+</ul>
+<p>The format of each line in the block body is <code>KEYBOARD_KEY_<i>&lt;scancode&gt;</i>=<i>&lt;keycode&gt;</i></code>. The value of <code><i>&lt;scancode&gt;</i></code> is hexadecimal, but without the leading <code>0x</code> (i.e. specify <code>a0</code> instead of <code>0xa0</code>), whereas the value of <code><i>&lt;keycode&gt;</i></code> is the lower-case keycode name string as listed in <code>/usr/include/linux/input-event-codes.h</code> (see the <code>KEY_<i>&lt;KEYCODE&gt;</i></code> variables), a sorted list is available at <a rel="nofollow" class="external autonumber" href="https://hal.freedesktop.org/quirk/quirk-keymap-list.txt">[4]</a>. It is not possible to specify decimal value in <code><i>&lt;keycode&gt;</i></code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> You can obtain the identificator for the device you want to set up a custom <i>hwdb</i> rule for by using <code>evemu-describe</code> as the root user. This utility is provided by the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=evemu">evemu</a></span> package. You can obtain the identificator for the device you want to set up a custom <i>hwdb</i> rule and the key scancode for by running <i>evtest</i> as the root user. This utility is provided by the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=evtest">evtest</a></span> package.</div>
+<h3><span class="mw-headline" id="Example_for_custom_hwdb">Example for custom hwdb</span></h3>
+<p>The example hwdb file will match all AT keyboards:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/hwdb.d/90-custom-keyboard.hwdb</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*:pn*:pvr*
+ KEYBOARD_KEY_10=suspend
+ KEYBOARD_KEY_a0=search
+</pre>
+<p>Here is an example of rebinding modifiers on a laptop and USB keyboard:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/hwdb.d/10-my-modifiers.hwdb</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">evdev:input:b0003v05AFp8277* # was tested on Kensington Slim Type USB (with old ABI)
+ KEYBOARD_KEY_70039=leftalt  # bind capslock to leftalt
+ KEYBOARD_KEY_700e2=leftctrl # bind leftalt to leftctrl
+
+evdev:atkbd:dmi:*            # built-in keyboard: match all AT keyboards for now
+ KEYBOARD_KEY_3a=leftalt     # bind capslock to leftalt
+ KEYBOARD_KEY_38=leftctrl    # bind leftalt to leftctrl
+</pre>
+<p>To block the <code>Sleep</code> key, bind it to the "reserved" keyword. Alternatively, you can use "unknown" to map it to the <code>NoSymbol</code> key. For example:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/udev/hdb.d/90-block-sleep.hwdb</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">evdev:input:b0003v03F0p020C* # hp 5308 keyboard controller
+ KEYBOARD_KEY_10082=reserved</pre>
+<h3><span class="mw-headline" id="Updating_the_Hardware_Database_Index">Updating the Hardware Database Index</span></h3>
+<p>After changing the configuration files, the hardware database index, <code>hwdb.bin</code>, needs to be rebuilt. 
+</p>
+<ul><li>Update <code>hwdb.bin</code> manually by running</li></ul>
+<pre># systemd-hwdb update
+</pre>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a><b>This article or section is out of date.</b><a href="../File:Tango-view-refresh-red.png" class="image"><img alt="Tango-view-refresh-red.png" src="../File:Tango-view-refresh-red.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> <code>ConditionNeedsUpdate=/etc</code> seems to be commented out by default in <code>systemd-hwdb-update.service</code> (checked in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> 232). (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Map_scancodes_to_keycodes">Talk:Map scancodes to keycodes#</a>)</div>
+</div>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a><b>The factual accuracy of this article or section is disputed.</b><a href="../File:Tango-inaccurate.png" class="image"><img alt="Tango-inaccurate.png" src="../File:Tango-inaccurate.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Don't edit in <code>/usr/lib/</code>, use <a href="../en/Systemd.html#Editing_provided_units" title="Systemd">systemctl edit</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Map_scancodes_to_keycodes">Talk:Map scancodes to keycodes#</a>)</div>
+</div>
+<ul><li>Update automatically on each reboot by commenting out <code>ConditionNeedsUpdate</code> in <code>systemd-hwdb-update.service</code>.</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/lib/systemd/system/systemd-hwdb-update.service</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#  This file is part of systemd.
+.
+.
+#ConditionNeedsUpdate=/etc
+.
+.
+</pre>
+<p>After <code>systemd-hwdb-update.service</code> finished loading <code>systemd-trigger.service</code> will reload the changes from 
+<code>hwdb.bin</code>.
+</p>
+<ul><li>Automatically after <a href="../en/Systemd.html" title="Systemd">Systemd</a> upgrade.</li></ul>
+<p>On each upgrade of <a href="../en/Systemd.html" title="Systemd">Systemd</a>, the installation script rebuilds <code>hwdb.bin</code> by running <code>udevadm hwdb --update</code> as the root user, so we do not need to care about it.
+</p>
+<h3><span class="mw-headline" id="Reloading_the_Hardware_Database_Index">Reloading the Hardware Database Index</span></h3>
+<p>The kernel loads <code>hwdb.bin</code> as part of the boot process, rebooting the system will promise the loading of the updated <code>hwdb.bin</code>.
+</p>
+<p>With <code>udevadm</code> it is possible to load new key mapping from the updated <code>hwdb.bin</code> by running
+</p>
+<pre># udevadm trigger
+</pre>
+<p>Be aware that with <code>udevadm</code> only added or changed key mapping are loaded so if we delete a mapping from the config file, rebuild <code>hwdb.bin</code> and run <code>udevadm trigger</code> as the root user, then the deleted mapping still kept by the kernel, at least until a reboot.
+</p>
+<h3><span class="mw-headline" id="Querying_the_database">Querying the database</span></h3>
+<p>You can check that your configuration was loaded either by pressing keys, or by running <code>udevadm info</code>. For the USB keyboard in the above example, this outputs the mapping we configured as follows:
+</p>
+<pre># udevadm info /dev/input/by-path/*-usb-*-kbd | grep KEYBOARD_KEY
+E: KEYBOARD_KEY_70039=leftalt
+E: KEYBOARD_KEY_700e2=leftctrl
+</pre>
+<h2><span class="mw-headline" id="Using_setkeycodes">Using setkeycodes</span></h2>
+<p><i>setkeycodes</i> is a tool to load <i>scancodes</i>-to-<i>keycodes</i> mapping table into Linux kernel. Its usage is:
+</p>
+<pre># setkeycodes <i>scancode</i> <i>keycode</i> ...
+</pre>
+<p>It is possible to specify multiple pairs at once. <i>Scancodes</i> are given in hexadecimal, <i>keycodes</i> in decimal.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Apparently <i>setkeycodes</i> does not work with USB keyboards (Linux 3.14.44-1-lts):
+<pre># setkeycodes 45 30     # bind NumLock (0x45) to KEY_A (30) on AT keyboard
+(successful)
+# setkeycodes 70053 30  # bind NumLock (0x70053) to KEY_A (30) on USB keyboard
+KDSETKEYCODE: Invalid argument
+failed to set scancode 620d3 to keycode 31
+</pre>
+</div>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Keyboard_configuration.html" title="Category:Keyboard configuration">Keyboard configuration</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Out_of_date.html" title="Category:Pages or sections flagged with Template:Out of date">Pages or sections flagged with Template:Out of date</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Accuracy.html" title="Category:Pages or sections flagged with Template:Accuracy">Pages or sections flagged with Template:Accuracy</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Map_scancodes_to_keycodes&amp;oldid=647611">https://wiki.archlinux.org/index.php?title=Map_scancodes_to_keycodes&amp;oldid=647611</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 29 December 2020, at 21:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

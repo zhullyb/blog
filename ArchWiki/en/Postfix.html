@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Postfix - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Postfix rootpage-Postfix skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Postfix</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Postfix_with_SASL.html" title="Postfix with SASL">Postfix with SASL</a></li>
+<li><a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" class="mw-redirect" title="Virtual user mail system">Virtual user mail system</a></li>
+<li><a href="../en/OpenDMARC.html" title="OpenDMARC">OpenDMARC</a></li>
+<li><a href="../en/OpenDKIM.html" title="OpenDKIM">OpenDKIM</a></li>
+</ul>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Postfix_(software)" class="extiw" title="wikipedia:Postfix (software)">Postfix</a> is a <a href="../en/Mail_server.html" class="mw-redirect" title="Mail transfer agent">mail transfer agent</a> that according to <a rel="nofollow" class="external text" href="http://www.postfix.org/">its website</a>:
+</p>
+<dl><dd>attempts to be fast, easy to administer, and secure, while at the same time being sendmail compatible enough to not upset existing users. Thus, the outside has a sendmail-ish flavor, but the inside is completely different.</dd></dl>
+<p>This article builds upon <a href="../en/Mail_server.html" title="Mail server">Mail server</a>. The goal of this article is to setup Postfix and explain what the basic configuration files do. There are instructions for setting up local system user-only delivery and a link to a guide for virtual user delivery. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Aliases"><span class="tocnumber">2.1</span> <span class="toctext">Aliases</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Local_mail"><span class="tocnumber">2.2</span> <span class="toctext">Local mail</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Virtual_mail"><span class="tocnumber">2.3</span> <span class="toctext">Virtual mail</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Check_configuration"><span class="tocnumber">2.4</span> <span class="toctext">Check configuration</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#Start_Postfix"><span class="tocnumber">3</span> <span class="toctext">Start Postfix</span></a></li>
+<li class="toclevel-1 tocsection-8">
+<a href="#TLS"><span class="tocnumber">4</span> <span class="toctext">TLS</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Secure_SMTP_(sending)"><span class="tocnumber">4.1</span> <span class="toctext">Secure SMTP (sending)</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Secure_SMTP_(receiving)"><span class="tocnumber">4.2</span> <span class="toctext">Secure SMTP (receiving)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#Tips_and_tricks"><span class="tocnumber">5</span> <span class="toctext">Tips and tricks</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Blacklist_incoming_emails"><span class="tocnumber">5.1</span> <span class="toctext">Blacklist incoming emails</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Hide_the_sender's_IP_and_user_agent_in_the_Received_header"><span class="tocnumber">5.2</span> <span class="toctext">Hide the sender's IP and user agent in the Received header</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Postfix_in_a_chroot_jail"><span class="tocnumber">5.3</span> <span class="toctext">Postfix in a chroot jail</span></a></li>
+<li class="toclevel-2 tocsection-15">
+<a href="#DANE_(DNSSEC)"><span class="tocnumber">5.4</span> <span class="toctext">DANE (DNSSEC)</span></a>
+<ul>
+<li class="toclevel-3 tocsection-16"><a href="#Resource_Record"><span class="tocnumber">5.4.1</span> <span class="toctext">Resource Record</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#Configuration_2"><span class="tocnumber">5.4.2</span> <span class="toctext">Configuration</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-18">
+<a href="#Extras"><span class="tocnumber">6</span> <span class="toctext">Extras</span></a>
+<ul>
+<li class="toclevel-2 tocsection-19">
+<a href="#Postgrey"><span class="tocnumber">6.1</span> <span class="toctext">Postgrey</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#Installation_2"><span class="tocnumber">6.1.1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-3 tocsection-21"><a href="#Configuration_3"><span class="tocnumber">6.1.2</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#Whitelisting"><span class="tocnumber">6.1.3</span> <span class="toctext">Whitelisting</span></a></li>
+<li class="toclevel-3 tocsection-23"><a href="#Troubleshooting"><span class="tocnumber">6.1.4</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-24">
+<a href="#SpamAssassin"><span class="tocnumber">6.2</span> <span class="toctext">SpamAssassin</span></a>
+<ul>
+<li class="toclevel-3 tocsection-25"><a href="#SpamAssassin_stand-alone_generic_setup"><span class="tocnumber">6.2.1</span> <span class="toctext">SpamAssassin stand-alone generic setup</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#SpamAssassin_combined_with_Dovecot_LDA_/_Sieve_(Mailfiltering)"><span class="tocnumber">6.2.2</span> <span class="toctext">SpamAssassin combined with Dovecot LDA / Sieve (Mailfiltering)</span></a></li>
+<li class="toclevel-3 tocsection-27"><a href="#SpamAssassin_combined_with_Dovecot_LMTP_/_Sieve"><span class="tocnumber">6.2.3</span> <span class="toctext">SpamAssassin combined with Dovecot LMTP / Sieve</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-28"><a href="#Rule-based_mail_processing"><span class="tocnumber">6.3</span> <span class="toctext">Rule-based mail processing</span></a></li>
+<li class="toclevel-2 tocsection-29">
+<a href="#Sender_Policy_Framework"><span class="tocnumber">6.4</span> <span class="toctext">Sender Policy Framework</span></a>
+<ul>
+<li class="toclevel-3 tocsection-30"><a href="#With_spf-engine_or_python-postfix-policyd-spf"><span class="tocnumber">6.4.1</span> <span class="toctext">With spf-engine or python-postfix-policyd-spf</span></a></li>
+<li class="toclevel-3 tocsection-31"><a href="#With_postfix-policyd-spf-perl"><span class="tocnumber">6.4.2</span> <span class="toctext">With postfix-policyd-spf-perl</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-32"><a href="#Sender_Rewriting_Scheme"><span class="tocnumber">6.5</span> <span class="toctext">Sender Rewriting Scheme</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-33">
+<a href="#Troubleshooting_2"><span class="tocnumber">7</span> <span class="toctext">Troubleshooting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-34"><a href="#Warning:_%22database_/etc/postfix/*.db_is_older_than_source_file_..%22"><span class="tocnumber">7.1</span> <span class="toctext">Warning: "database /etc/postfix/*.db is older than source file .."</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-35"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=postfix">postfix</a></span> package.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>See <a rel="nofollow" class="external text" href="http://www.postfix.org/BASIC_CONFIGURATION_README.html">Postfix Basic Configuration</a>. Configuration files are in <code>/etc/postfix</code> by default. The two most important files are:
+</p>
+<ul>
+<li>
+<code>master.cf</code>, defines what Postfix services are enabled and how clients connect to them, see <span class="plainlinks archwiki-template-man" title="$ man 5 master"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/master.5">master(5)</a></span>
+</li>
+<li>
+<code>main.cf</code>, the main configuration file, see <span class="plainlinks archwiki-template-man" title="$ man 5 postconf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/postconf.5">postconf(5)</a></span>
+</li>
+</ul>
+<p>Configuration changes need a <code>postfix.service</code> <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Reload">reload</a> in order to take effect.
+</p>
+<h3><span class="mw-headline" id="Aliases">Aliases</span></h3>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 5 aliases"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/postfix/aliases.5">aliases(5)</a></span>.
+</p>
+<p>You can specify aliases (also known as forwarders) in <code>/etc/postfix/aliases</code>.
+</p>
+<p>You should map all mail addressed to <i>root</i> to another account since it is not a good idea to read mail as root. 
+</p>
+<p>Uncomment the following line, and change <code>you</code> to a real account.
+</p>
+<pre>root: you
+</pre>
+<p>Once you have finished editing <code>/etc/postfix/aliases</code> you must run the postalias command:
+</p>
+<pre>postalias /etc/postfix/aliases
+</pre>
+<p>For later changes you can use:
+</p>
+<pre>newaliases
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Alternatively you can create the file <code>~/.forward</code>, e.g. <code>/root/.forward</code> for root. Specify the user to whom root mail should be forwarded, e.g. <i>user@localhost</i>.
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/root/.forward</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">user@localhost
+</pre>
+</div>
+<h3><span class="mw-headline" id="Local_mail">Local mail</span></h3>
+<p>To only deliver mail to local system users (that are in <code>/etc/passwd</code>) update <code>/etc/postfix/main.cf</code> to reflect the following configuration. Uncomment, change, or add the following lines:
+</p>
+<pre>myhostname = localhost
+mydomain = localdomain
+mydestination = $myhostname, localhost.$mydomain, localhost
+inet_interfaces = $myhostname, localhost
+mynetworks_style = host
+default_transport = error: outside mail is not deliverable
+</pre>
+<p>All other settings may remain unchanged. After setting up the above configuration file, you may wish to set up some <a href="#Aliases">#Aliases</a> and then <a href="#Start_Postfix">#Start Postfix</a>.
+</p>
+<h3><span class="mw-headline" id="Virtual_mail">Virtual mail</span></h3>
+<p>Virtual mail is mail that does not map to a user account (<code>/etc/passwd</code>).
+</p>
+<p>See <a href="../en/Virtual_user_mail_system_with_Postfix,_Dovecot_and_Roundcube.html" title="Virtual user mail system with Postfix, Dovecot and Roundcube">Virtual user mail system with Postfix, Dovecot and Roundcube</a> for a comprehensive guide how to set it up.
+</p>
+<h3><span class="mw-headline" id="Check_configuration">Check configuration</span></h3>
+<p>Run the <code>postfix check</code> command. It should output anything that you might have done wrong in a config file. 
+</p>
+<p>To see all of your configs, type <code>postconf</code>. To see how you differ from the defaults, try <code>postconf -n</code>.
+</p>
+<h2><span class="mw-headline" id="Start_Postfix">Start Postfix</span></h2>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> You must run <code>newaliases</code> at least once for Postfix to run, even if you did not set up any <a href="#Aliases">#Aliases</a>.</div>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">Start/enable</a> the <code>postfix.service</code>.
+</p>
+<h2><span class="mw-headline" id="TLS">TLS</span></h2>
+<p>For more information, see <a rel="nofollow" class="external text" href="http://www.postfix.org/TLS_README.html">Postfix TLS Support</a>.
+</p>
+<h3>
+<span id="Secure_SMTP_.28sending.29"></span><span class="mw-headline" id="Secure_SMTP_(sending)">Secure SMTP (sending)</span>
+</h3>
+<p>By default, Postfix/sendmail will not send email encrypted to other SMTP servers. To use TLS when available, add the following line to <code>main.cf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtp_tls_security_level = may</pre>
+<p>To <i>enforce</i> TLS (and fail when the remote server does not support it), change <code>may</code> to <code>encrypt</code>.  Note, however, that this violates <a href="https://tools.ietf.org/html/rfc2487" class="extiw" title="rfc:2487">RFC:2487</a> if the SMTP server is publicly referenced.
+</p>
+<h3>
+<span id="Secure_SMTP_.28receiving.29"></span><span class="mw-headline" id="Secure_SMTP_(receiving)">Secure SMTP (receiving)</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> If you deploy <a href="https://en.wikipedia.org/wiki/TLS" class="extiw" title="wikipedia:TLS">TLS</a>, be sure to follow <a rel="nofollow" class="external text" href="https://weakdh.org/sysadmin.html">weakdh.org's guide</a> to prevent FREAK/Logjam. Since mid-2015, the default settings have been safe against <a href="https://en.wikipedia.org/wiki/POODLE" class="extiw" title="wikipedia:POODLE">POODLE</a>. For more information see <a href="../en/Transport_Layer_Security.html#Server-side_recommendations" class="mw-redirect" title="Server-side TLS">Server-side TLS</a>.</div>
+<p>By default, Postfix will not accept secure mail.
+</p>
+<p>You need to <a href="../en/Transport_Layer_Security.html#Obtaining_a_certificate" class="mw-redirect" title="Obtain a certificate">obtain a certificate</a>. Point Postfix to your TLS certificates by adding the following lines to <code>main.cf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_tls_security_level = may
+smtpd_use_tls = yes
+smtpd_tls_cert_file = <b>/path/to/cert.pem</b>
+smtpd_tls_key_file = <b>/path/to/key.pem</b></pre>
+<p>There are two ways to accept secure mail. STARTTLS over SMTP (port 587) and SMTPS (port 465). The latter was previously deprecated but was reinstated by <a href="https://tools.ietf.org/html/rfc8314" class="extiw" title="rfc:8314">RFC:8314</a>.
+</p>
+<p>To enable STARTTLS over SMTP (port 587), uncomment the following lines in <code>master.cf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/master.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">submission inet n       -       n       -       -       smtpd
+  -o syslog_name=postfix/submission
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_tls_auth_only=yes
+  -o smtpd_reject_unlisted_recipient=no
+#  -o smtpd_client_restrictions=$mua_client_restrictions
+#  -o smtpd_helo_restrictions=$mua_helo_restrictions
+#  -o smtpd_sender_restrictions=$mua_sender_restrictions
+  -o smtpd_recipient_restrictions=
+  -o smtpd_relay_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING</pre>
+<p>The <code>smtpd_*_restrictions</code> options remain commented because <code>$mua_*_restrictions</code> are not defined in main.cf by default. If you do decide to set any of <code>$mua_*_restrictions</code>, uncomment those lines too.
+</p>
+<p><br>
+To enable SMTPS (port 465), uncomment the following lines in <code>master.cf</code>:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/master.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"><b>smtps</b>     inet  n       -       n       -       -       smtpd
+  -o syslog_name=postfix/smtps
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_reject_unlisted_recipient=no
+#  -o smtpd_client_restrictions=$mua_client_restrictions
+#  -o smtpd_helo_restrictions=$mua_helo_restrictions
+#  -o smtpd_sender_restrictions=$mua_sender_restrictions
+  -o smtpd_recipient_restrictions=
+  -o smtpd_relay_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+</pre>
+<p>And in the first line, replace <code><b>smtps</b></code> with <code>submissions</code>. (this is the official service name according to <a rel="nofollow" class="external text" href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.txt">IANA</a>; Postfix still references the old name)
+</p>
+<p>The rationale surrounding the <code>$smtpd_*_restrictions</code> lines is the same as above.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you get an error message like <code>postfix/master[5309]: fatal: 0.0.0.0:smtps: Servname not supported for ai_socktype</code>, make sure that you have the following line in <code>postfix/master.cf</code>:
+<pre>submissions inet n       -       n       -       -       smtpd
+</pre>
+<p>Also make sure that <code>/etc/services</code> is up to date and includes the following line:
+</p>
+<pre>submissions 465/tcp
+</pre>
+</div>
+<h2><span class="mw-headline" id="Tips_and_tricks">Tips and tricks</span></h2>
+<h3><span class="mw-headline" id="Blacklist_incoming_emails">Blacklist incoming emails</span></h3>
+<p>Manually blacklisting incoming emails by sender address can easily be done with Postfix. 
+</p>
+<p>Create and open <code>/etc/postfix/blacklist_incoming</code> file and append sender email address:
+</p>
+<pre>user@example.com REJECT
+</pre>
+<p>Then use the <code>postmap</code> command to create a database:
+</p>
+<pre># postmap hash:blacklist_incoming
+</pre>
+<p>Add the following code before the first permit rule in <code>main.cf</code>:
+</p>
+<pre>smtpd_recipient_restrictions = check_sender_access hash:/etc/postfix/blacklist_incoming
+</pre>
+<p>Finally <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>postfix.service</code>.
+</p>
+<h3>
+<span id="Hide_the_sender.27s_IP_and_user_agent_in_the_Received_header"></span><span class="mw-headline" id="Hide_the_sender's_IP_and_user_agent_in_the_Received_header">Hide the sender's IP and user agent in the Received header</span>
+</h3>
+<p>This is a privacy concern mostly, if you use Thunderbird and send an email. The received header will contain your LAN and WAN IP and info about the email client you used.
+(Original source: <a rel="nofollow" class="external text" href="https://askubuntu.com/questions/78163/when-sending-email-with-postfix-how-can-i-hide-the-senders-ip-and-username-in">AskUbuntu</a>)
+What we want to do is remove the Received header from outgoing emails. This can be done by the following steps:
+</p>
+<p>Add the following line to <code>main.cf</code>:
+</p>
+<pre>smtp_header_checks = regexp:/etc/postfix/smtp_header_checks
+</pre>
+<p>Create <code>/etc/postfix/smtp_header_checks</code> with this content:
+</p>
+<pre>/^Received: .*/     IGNORE
+/^User-Agent: .*/   IGNORE
+</pre>
+<p>Finally, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>postfix.service</code>.
+</p>
+<h3><span class="mw-headline" id="Postfix_in_a_chroot_jail">Postfix in a chroot jail</span></h3>
+<p>Postfix is not put in a chroot jail by default. The Postfix documentation <a rel="nofollow" class="external autonumber" href="http://www.postfix.org/BASIC_CONFIGURATION_README.html#chroot_setup">[1]</a> provides details about how to accomplish such a jail. The steps are outlined below and are based on the chroot-setup script provided in the Postfix source code.
+</p>
+<p>First, go into the <code>master.cf</code> file in the directory <code>/etc/postfix</code> and change all the chroot entries to 'yes' (y) except for the services <code>qmgr</code>, <code>proxymap</code>, <code>proxywrite</code>, <code>local</code>, and <code>virtual</code>
+</p>
+<p>Second, create two functions that will help us later with copying files over into the chroot jail (see last step)
+</p>
+<pre>CP="cp -p"
+</pre>
+<pre>cond_copy() {
+  # find files as per pattern in $1
+  # if any, copy to directory $2
+  dir=`dirname "$1"`
+  pat=`basename "$1"`
+  lr=`find "$dir" -maxdepth 1 -name "$pat"`
+  if test ! -d "$2" ; then exit 1 ; fi
+  if test "x$lr" != "x" ; then $CP $1 "$2" ; fi
+}
+</pre>
+<p>Next, make the new directories for the jail:
+</p>
+<pre>set -e
+umask 022
+</pre>
+<pre>POSTFIX_DIR=${POSTFIX_DIR-/var/spool/postfix}
+cd ${POSTFIX_DIR}
+</pre>
+<pre>mkdir -p etc lib usr/lib/zoneinfo
+test -d /lib64 &amp;&amp; mkdir -p lib64
+</pre>
+<p>Find the localtime file
+</p>
+<pre>lt=/etc/localtime
+if test ! -f $lt ; then lt=/usr/lib/zoneinfo/localtime ; fi
+if test ! -f $lt ; then lt=/usr/share/zoneinfo/localtime ; fi
+if test ! -f $lt ; then echo "cannot find localtime" ; exit 1 ; fi
+rm -f etc/localtime
+</pre>
+<p>Copy localtime and some other system files into the chroot's etc
+</p>
+<pre>$CP -f $lt /etc/services /etc/resolv.conf /etc/nsswitch.conf etc
+$CP -f /etc/host.conf /etc/hosts /etc/passwd etc
+ln -s -f /etc/localtime usr/lib/zoneinfo
+</pre>
+<p>Copy required libraries into the chroot using the previously created function <code>cond_copy</code>
+</p>
+<pre>cond_copy '/usr/lib/libnss_*.so*' lib
+cond_copy '/usr/lib/libresolv.so*' lib
+cond_copy '/usr/lib/libdb.so*' lib
+</pre>
+<p>And don't forget to <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Reload">reload</a> Postfix.
+</p>
+<h3>
+<span id="DANE_.28DNSSEC.29"></span><span class="mw-headline" id="DANE_(DNSSEC)">DANE (DNSSEC)</span>
+</h3>
+<h4><span class="mw-headline" id="Resource_Record">Resource Record</span></h4>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> This is not a trivial section. Be aware that you make sure you know what you are doing. You better read <a rel="nofollow" class="external text" href="https://dane.sys4.de/common_mistakes">Common Mistakes</a> before.</div>
+<p><a href="../en/DANE.html" title="DANE">DANE</a> supports several types of records, however not all of them are suitable in Postfix.
+</p>
+<p>Certificate usage 0 is unsupported, 1 is mapped to 3 and 2 is optional, thus it is recommendet to publish a "3" record.
+More on <a href="../en/DANE.html#Resource_Record" title="DANE">Resource Records</a>.
+</p>
+<h4><span class="mw-headline" id="Configuration_2">Configuration</span></h4>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a><b>This article or section needs expansion.</b><a href="../File:Tango-view-fullscreen.png" class="image"><img alt="Tango-view-fullscreen.png" src="../File:Tango-view-fullscreen.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> What does <i>tempfail</i> mean? (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Postfix">Talk:Postfix#</a>)</div>
+</div>
+<p>Opportunistic DANE is configured this way:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_use_tls = yes
+smtp_dns_support_level = dnssec
+smtp_tls_security_level = dane
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/master.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">dane       unix  -       -       n       -       -       smtp
+  -o smtp_dns_support_level=dnssec
+  -o smtp_tls_security_level=dane
+</pre>
+<p>To use per-domain policies, e.g. opportunistic DANE for example.org and mandatory DANE for example.com,
+use something like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">indexed = ${default_database_type}:${config_directory}/
+
+# Per-destination TLS policy
+#
+smtp_tls_policy_maps = ${indexed}tls_policy
+
+# default_transport = smtp, but some destinations are special:
+#
+transport_maps = ${indexed}transport
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">transport</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">example.com dane
+example.org dane
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">tls_policy</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">example.com dane-only
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> For global mandatory DANE, change <code>smtp_tls_security_level</code> to <code>dane-only</code>. Be aware that this makes Postfix tempfail (respond with a <code>4.X.X</code> error code) on all deliveries that do not use DANE at all!</div>
+<p>Full documentation is found <a rel="nofollow" class="external text" href="http://www.postfix.org/TLS_README.html#client_tls_dane">here</a>.
+</p>
+<h2><span class="mw-headline" id="Extras">Extras</span></h2>
+<ul><li>
+<b><a href="../en/PostfixAdmin.html" title="PostfixAdmin">PostfixAdmin</a></b> — A web-based administrative interface for Postfix.</li></ul>
+<dl><dd>
+<a rel="nofollow" class="external free" href="http://postfixadmin.sourceforge.net/">http://postfixadmin.sourceforge.net/</a> || <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=postfixadmin">postfixadmin</a></span>
+</dd></dl>
+<h3><span class="mw-headline" id="Postgrey">Postgrey</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Postfix">Talk:Postfix#</a>)</div>
+</div>
+<p><a rel="nofollow" class="external text" href="http://postgrey.schweikert.ch/">Postgrey</a> can be used to enable <a href="https://en.wikipedia.org/wiki/Greylisting" class="extiw" title="wikipedia:Greylisting">greylisting</a> for a Postfix mail server.
+</p>
+<h4><span class="mw-headline" id="Installation_2">Installation</span></h4>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=postgrey">postgrey</a></span> package. To get it running quickly edit the Postfix configuration file and add these lines:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_recipient_restrictions =
+  check_policy_service inet:127.0.0.1:10030
+</pre>
+<p>Then <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">start/enable</a> the <code>postgrey</code> service. Afterwards, reload the <code>postfix</code> service. Now greylisting should be enabled.
+</p>
+<h4><span class="mw-headline" id="Configuration_3">Configuration</span></h4>
+<p>Configuration is done via editing the <code>postgrey.service</code> file. First copy it over to edit it.
+</p>
+<pre># cp /usr/lib/systemd/system/postgrey.service /etc/systemd/system/
+</pre>
+<h4><span class="mw-headline" id="Whitelisting">Whitelisting</span></h4>
+<p>To add automatic whitelisting (successful deliveries are whitelisted and don't have to wait any more), you could add the <code>--auto-whitelist-clients=N</code> option and replace <code>N</code> by a suitably small number (or leave it at its default of 5).
+</p>
+<p>...actually, the preferred method should be the override:
+</p>
+<pre>cat /etc/systemd/system/postgrey.service.d/override.conf
+</pre>
+<pre>[Service]
+ExecStart=
+ExecStart=/usr/bin/postgrey --inet=127.0.0.1:10030 \
+       --pidfile=/run/postgrey/postgrey.pid \
+       --group=postgrey --user=postgrey \
+       --daemonize \
+       --greylist-text="Greylisted for %%s seconds" \
+       --auto-whitelist-clients
+</pre>
+<p>To add your own list of whitelisted clients in addition to the default ones, create the file <code>/etc/postfix/whitelist_clients.local</code> and enter one host or domain per line, then restart <code>postgrey.service</code> so the changes take effect.
+</p>
+<h4><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h4>
+<p>If you specify <code>--unix=/path/to/socket</code> and the socket file is not created ensure you have removed the default <code>--inet=127.0.0.1:10030</code> from the service file. 
+</p>
+<p>For a full documentation of possible options see <code>perldoc postgrey</code>.
+</p>
+<h3><span class="mw-headline" id="SpamAssassin">SpamAssassin</span></h3>
+<p>This section describes how to integrate <a href="../en/SpamAssassin.html" title="SpamAssassin">SpamAssassin</a>.
+</p>
+<h4><span class="mw-headline" id="SpamAssassin_stand-alone_generic_setup">SpamAssassin stand-alone generic setup</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If you want to combine SpamAssassin and Dovecot Mail Filtering, ignore the next two lines and continue further down instead.</div>
+<p>Edit <code>/etc/postfix/master.cf</code> and add the content filter under smtp.
+</p>
+<pre>smtp      inet  n       -       n       -       -       smtpd
+  -o content_filter=spamassassin</pre>
+<p>Also add the following service entry for SpamAssassin
+</p>
+<pre>spamassassin unix -     n       n       -       -       pipe
+  flags=R user=spamd argv=/usr/bin/vendor_perl/spamc -e /usr/bin/sendmail -oi -f ${sender} ${recipient}</pre>
+<p>Now you can <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">start</a> and <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Enable">enable</a> <code>spamassassin.service</code>.
+</p>
+<h4>
+<span id="SpamAssassin_combined_with_Dovecot_LDA_.2F_Sieve_.28Mailfiltering.29"></span><span class="mw-headline" id="SpamAssassin_combined_with_Dovecot_LDA_/_Sieve_(Mailfiltering)">SpamAssassin combined with Dovecot LDA / Sieve (Mailfiltering)</span>
+</h4>
+<p>Set up LDA and the Sieve-Plugin as described in <a href="../en/Dovecot.html#Sieve" title="Dovecot">Dovecot#Sieve</a>. But ignore the last line <code>mailbox_command... </code>.
+</p>
+<p>Instead add a pipe in <code>/etc/postfix/master.cf</code>:
+</p>
+<pre> dovecot   unix  -       n       n       -       -       pipe
+       flags=DRhu user=vmail:vmail argv=/usr/bin/vendor_perl/spamc -u spamd -e /usr/lib/dovecot/dovecot-lda -f ${sender} -d ${recipient}
+</pre>
+<p>And activate it in <code>/etc/postfix/main.cf</code>:
+</p>
+<pre> virtual_transport = dovecot
+</pre>
+<p>Alternately, if you don't want to use virtual transports you can use.<code>mailbox_command</code>. This runs 
+with the local user and group, whereas the pipe runs with with the specified user using the <code>user</code> setting.
+</p>
+<pre> mailbox_command = /usr/bin/vendor_perl/spamc -u spamd -e /usr/lib/dovecot/dovecot-lda -f "$SENDER" -a "$RECIPIENT"
+</pre>
+<h4>
+<span id="SpamAssassin_combined_with_Dovecot_LMTP_.2F_Sieve"></span><span class="mw-headline" id="SpamAssassin_combined_with_Dovecot_LMTP_/_Sieve">SpamAssassin combined with Dovecot LMTP / Sieve</span>
+</h4>
+<p>Set up the LMTP and Sieve as described in <a href="../en/Dovecot.html#Sieve" title="Dovecot">Dovecot#Sieve</a>.
+</p>
+<p>Edit <code>/etc/dovecot/conf.d/90-plugins.conf</code> and add:
+</p>
+<pre> sieve_before = /etc/dovecot/sieve.before.d/
+ sieve_extensions = +vnd.dovecot.filter
+ sieve_plugins = sieve_extprograms
+ sieve_filter_bin_dir = /etc/dovecot/sieve-filter
+ sieve_filter_exec_timeout = 120s #this is often needed for the long running spamassassin scans, default is otherwise 10s
+</pre>
+<p>Create the directory and put spamassassin in as a binary that can be ran by dovecot:
+</p>
+<pre> # mkdir /etc/dovecot/sieve-filter
+ # ln -s /usr/bin/vendor_perl/spamc /etc/dovecot/sieve-filter/spamc
+</pre>
+<p>Create a new file, <code>/etc/dovecot/sieve.before.d/spamassassin.sieve</code> which contains:
+</p>
+<pre> require [ "vnd.dovecot.filter" ];
+ filter "spamc" [ "-d", "127.0.0.1", "--no-safe-fallback" ];
+</pre>
+<p>Compile the sieve rules <code>spamassassin.svbin</code>:
+</p>
+<pre> # cd /etc/dovecot/sieve.before.d
+ # sievec spamassassin.sieve
+</pre>
+<p>Finally, <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>dovecot.service</code>.
+</p>
+<h3><span class="mw-headline" id="Rule-based_mail_processing">Rule-based mail processing</span></h3>
+<p>With policy services one can easily finetune Postfix' behaviour of mail delivery.
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=postfwd">postfwd</a></span> and policyd (<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/policyd-mysql/">policyd-mysql</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/policyd-pgsql/">policyd-pgsql</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/policyd-sqlite/">policyd-sqlite</a></span><sup><small>AUR</small></sup>) provide services to do so.
+This allows you to e.g. implement time-aware grey- and blacklisting of senders and receivers as well as <a href="../en/Mail_server.html#Sender_Policy_Framework" class="mw-redirect" title="SPF">SPF</a> policy checking.
+</p>
+<p>Policy services are standalone services and connected to Postfix like this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_recipient_restrictions =
+  ...
+  check_policy_service unix:/run/policyd.sock
+  check_policy_service inet:127.0.0.1:10040
+</pre>
+<p>Placing policy services at the end of the queue reduces load, as only legitimate mails are processed. Be sure to place it before the first permit statement to catch all incoming messages.
+</p>
+<h3><span class="mw-headline" id="Sender_Policy_Framework">Sender Policy Framework</span></h3>
+<p>To use the <a href="../en/Mail_server.html#Sender_Policy_Framework" class="mw-redirect" title="Sender Policy Framework">Sender Policy Framework</a> with Postfix, you can <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/spf-engine/">spf-engine</a></span><sup><small>AUR</small></sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/python-postfix-policyd-spf/">python-postfix-policyd-spf</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/postfix-policyd-spf-perl/">postfix-policyd-spf-perl</a></span><sup><small>AUR</small></sup>.
+</p>
+<h4><span class="mw-headline" id="With_spf-engine_or_python-postfix-policyd-spf">With spf-engine or python-postfix-policyd-spf</span></h4>
+<p>Edit <code>/etc/python-policyd-spf/policyd-spf.conf</code> to your needs. An extensively commented version can be found at <code>/etc/python-policyd-spf/policyd-spf.conf.commented</code>.
+Pay some extra attention to the HELO check policy, as standard settings strictly reject HELO failures.
+</p>
+<p>In <code>main.cf</code> file, add a timeout for the policyd:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">policy-spf_time_limit = 3600s</pre>
+<p>Then add a transport
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/master.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">policy-spf  unix  -       n       n       -       0       spawn
+     user=nobody argv=/usr/bin/policyd-spf</pre>
+<p>Lastly you need to add the policyd to the <code>smtpd_recipient_restrictions</code>. To minimize load put it to the end of the restrictions but above any <code>reject_rbl_client</code> DNSBL line:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_recipient_restrictions=
+     ...
+     permit_sasl_authenticated
+     permit_mynetworks
+     reject_unauth_destination
+     check_policy_service unix:private/policy-spf</pre>
+<p>Now reload the <code>postfix</code> service.
+</p>
+<p>You can test your setup with the following:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/python-policyd-spf/policyd-spf.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">defaultSeedOnly = 0</pre>
+<h4><span class="mw-headline" id="With_postfix-policyd-spf-perl">With postfix-policyd-spf-perl</span></h4>
+<p>Do the same process with postfix as <a href="#With_spf-engine_or_python-postfix-policyd-spf">with python-postfix-policyd-spf</a>, but with the following differences:
+</p>
+<p>Timeout for the policyd in <code>main.cf</code> file:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">policy_time_limit = 3600</pre>
+<p>Transport:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/master.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">policy  unix  -       n       n       -       0       spawn
+     user=nobody argv=/usr/lib/postfix/postfix-policyd-spf-perl</pre>
+<p>Add the policyd to the <code>smtpd_recipient_restrictions</code>:
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Specify <code>check_policy_service</code> after <code>reject_unauth_destination</code> or else your system can become an open relay.</div>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smtpd_recipient_restrictions=
+     ...
+     reject_unauth_destination
+     check_policy_service unix:private/policy
+     ...</pre>
+<h3><span class="mw-headline" id="Sender_Rewriting_Scheme">Sender Rewriting Scheme</span></h3>
+<p>To use the <a href="../en/Mail_server.html#Sender_Rewriting_Scheme" class="mw-redirect" title="Sender Rewriting Scheme">Sender Rewriting Scheme</a> with Postfix, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">install</a> <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/postsrsd/">postsrsd</a></span><sup><small>AUR</small></sup> and adjust the settings:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postsrsd/postsrsd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SRS_DOMAIN=yourdomain.tld
+SRS_EXCLUDE_DOMAINS=yourotherdomain.tld,yet.anotherdomain.tld
+SRS_SEPARATOR==
+SRS_SECRET=/etc/postsrsd/postsrsd.secret
+SRS_FORWARD_PORT=10001
+SRS_REVERSE_PORT=10002
+RUN_AS=postsrsd
+CHROOT=/usr/lib/postsrsd</pre>
+<p>Enable and start the daemon, making sure it runs after reboot as well.
+Then configure Postfix accordingly by tweaking the following lines:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/postfix/main.cf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">sender_canonical_maps = tcp:localhost:10001
+sender_canonical_classes = envelope_sender
+recipient_canonical_maps = tcp:localhost:10002
+recipient_canonical_classes= envelope_recipient,header_recipient</pre>
+<p>Restart Postfix and start forwarding mail.
+</p>
+<h2><span class="mw-headline" id="Troubleshooting_2">Troubleshooting</span></h2>
+<h3>
+<span id="Warning:_.22database_.2Fetc.2Fpostfix.2F.2A.db_is_older_than_source_file_...22"></span><span class="mw-headline" id='Warning:_"database_/etc/postfix/*.db_is_older_than_source_file_.."'>Warning: "database /etc/postfix/*.db is older than source file .."</span>
+</h3>
+<p>If you get one or both warnings with <code>journalctl</code>:
+</p>
+<pre>warning: database /etc/postfix/virtual.db is older than source file /etc/postfix/virtual
+warning: database /etc/postfix/transport.db is older than source file /etc/postfix/transport
+</pre>
+<p>Then you can fix it by using these commands, depending on the messages you get:
+</p>
+<pre>postmap /etc/postfix/transport
+postmap /etc/postfix/virtual
+</pre>
+<p>And <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> <code>postfix.service</code>.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.postfix.org/documentation.html">Official documentation</a></li>
+<li><a rel="nofollow" class="external text" href="https://help.ubuntu.com/community/Postfix">Postfix Ubuntu documentation</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Mail_server.html" title="Category:Mail server">Mail server</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Expansion.html" title="Category:Pages or sections flagged with Template:Expansion">Pages or sections flagged with Template:Expansion</a></li>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Postfix&amp;oldid=649104">https://wiki.archlinux.org/index.php?title=Postfix&amp;oldid=649104</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 17 January 2021, at 05:46.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

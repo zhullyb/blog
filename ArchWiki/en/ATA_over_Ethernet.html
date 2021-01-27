@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>ATA over Ethernet - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-ATA_over_Ethernet rootpage-ATA_over_Ethernet skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">ATA over Ethernet</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>From <a href="https://en.wikipedia.org/wiki/ATA_over_Ethernet" class="extiw" title="wikipedia:ATA over Ethernet">Wikipedia:ATA over Ethernet</a>:
+</p>
+<dl><dd>ATA over Ethernet (AoE) is a network protocol developed by the Brantley Coile Company, designed for simple, high-performance access of SATA storage devices over Ethernet networks. It is used to build storage area networks (SANs) with low-cost, standard technologies.</dd></dl>
+<h2><span class="mw-headline" id="Prequisites_to_AE">Prequisites to AE</span></h2>
+<p>To use AOE you need the <a href="../en/Arch_User_Repository.html" class="mw-redirect" title="AUR">AUR</a> packages <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/vblade/">vblade</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/aoetools/">aoetools</a></span><sup><small>AUR</small></sup>.
+</p>
+<p>AoE does not use IPv4/IPv6; it works directly on top of Ethernet and is limited to the local subnet. It is enough to make sure that the interface is up. (For best performance, the subnet should use jumbo frames.)
+</p>
+<pre># ip link set eth0 up
+</pre>
+<h2><span class="mw-headline" id="Target:_Export_a_disk">Target: Export a disk</span></h2>
+<p>You can export block devices or image files using <code>vblade</code> or the <code>vbladed</code> daemon.
+</p>
+<p>Create an empty disk image:
+</p>
+<pre># dd if=/dev/zero of=vblade0 bs=1M count=256
+</pre>
+<p>Start <code>vblade</code> to export the disk over eth0:
+</p>
+<pre># vblade 1 1 eth0 vblade0
+</pre>
+<p>Exported disks are identified by their "shelf ID" and "slot ID" (within that shelf), in this case <code>1.1</code>; the combination must be unique across the SAN.
+</p>
+<h2><span class="mw-headline" id="Initiator:_Attach_to_a_disk">Initiator: Attach to a disk</span></h2>
+<p>Ensure the kernel module is loaded:
+</p>
+<pre># modprobe aoe
+</pre>
+<p>By default all interfaces are used, but you can specify a whitelist either as <code>aoe</code> module parameter, or using the <code>aoe-interfaces</code> command:
+</p>
+<pre># aoe-interfaces eth0
+</pre>
+<p>The kernel module performs periodic discovery; to do it immediately (e.g. after changing interfaces) use <code>aoe-discover</code>. Afterwards use <code>aoe-stat</code> to list "visible" disks.
+</p>
+<pre># aoe-discover
+# aoe-stat
+     e1.1         0.001GB   eth0 up
+</pre>
+<p>The first column shows a device name which also can be found under <code>/dev/etherd</code> as a regular block device. You can partition it with fdisk, or just create a file system:
+</p>
+<pre># mkfs.ext4 /dev/etherd/e1.1
+# mkdir /mnt/e1.1
+# mount /dev/etherd/e1.1 /mnt/e1.1
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Storage.html" title="Category:Storage">Storage</a></li>
+<li><a href="../en/Category:Networking.html" title="Category:Networking">Networking</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=ATA_over_Ethernet&amp;oldid=516129">https://wiki.archlinux.org/index.php?title=ATA_over_Ethernet&amp;oldid=516129</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 5 April 2018, at 17:07.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>dm-crypt (简体中文)/Encrypting a non-root file system (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Dm-crypt_简体中文_Encrypting_a_non-root_file_system_简体中文 rootpage-Dm-crypt_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">dm-crypt (简体中文)/Encrypting a non-root file system (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Dm-crypt.html" title="Dm-crypt (简体中文)">Dm-crypt (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+The following are examples of encrypting a secondary, i.e. non-root, filesystem with dm-crypt.   
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Overview"><span class="tocnumber">1</span> <span class="toctext">Overview</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%E5%88%86%E5%8C%BA"><span class="tocnumber">2</span> <span class="toctext">分区</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%E6%89%8B%E5%8A%A8%E6%8C%82%E8%BD%BD%E5%92%8C%E5%8D%B8%E8%BD%BD"><span class="tocnumber">2.1</span> <span class="toctext">手动挂载和卸载</span></a></li>
+<li class="toclevel-2 tocsection-4">
+<a href="#%E8%87%AA%E5%8A%A8%E8%A7%A3%E9%94%81%E5%B9%B6%E6%8C%82%E8%BD%BD"><span class="tocnumber">2.2</span> <span class="toctext">自动解锁并挂载</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#%E5%90%AF%E5%8A%A8%E6%97%B6%E8%A7%A3%E9%94%81"><span class="tocnumber">2.2.1</span> <span class="toctext">启动时解锁</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%97%B6%E8%A7%A3%E9%94%81"><span class="tocnumber">2.2.2</span> <span class="toctext">用户登录时解锁</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Loop_device"><span class="tocnumber">3</span> <span class="toctext">Loop device</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Without_losetup"><span class="tocnumber">3.1</span> <span class="toctext">Without losetup</span></a></li>
+<li class="toclevel-2 tocsection-9">
+<a href="#Using_losetup"><span class="tocnumber">3.2</span> <span class="toctext">Using losetup</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#Manual_mounting_and_unmounting"><span class="tocnumber">3.2.1</span> <span class="toctext">Manual mounting and unmounting</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Overview">Overview</span></h2>
+<p>Encrypting a secondary filesystem usually protects only sensitive data, while leaving the operating system and program files unencrypted. This is useful for encrypting an external medium, such as a USB drive, so that it can be moved to different computers securely. One might also choose to encrypt sets of data separately according to who has access to it. 
+</p>
+<p>Because dm-crypt is a <a href="../en/Data-at-rest_encryption.html#Block_device_encryption" class="mw-redirect" title="Disk encryption">block-level</a> encryption layer, it only encrypts full devices, <a href="#Partition">full partitions</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> and <a href="#Loop_device">loop devices</a>. To encrypt individual files requires a filesystem-level encryption layer, such as <a href="../en/ECryptfs.html" title="ECryptfs">eCryptfs</a> or <a href="../en/EncFS.html" title="EncFS">EncFS</a>. See <a href="../en/Data-at-rest_encryption.html" class="mw-redirect" title="Disk encryption">Disk encryption</a> for general information about securing private data.
+</p>
+<h2>
+<span id=".E5.88.86.E5.8C.BA"></span><span class="mw-headline" id="分区">分区</span>
+</h2>
+<p>这个例子说的是对 <code>/home</code> 分区的加密，但是也可以应用到其他非根分区的、包含用户数据的分区。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 你可能在一个分区上有某个用户专用的 <code>/home</code> 目录，或者是所有用户共用这个分区作为 <code>/home</code> 目录。</div>
+<p>首先要保证分区是空的（上面没有建立文件系统）。如果有文件系统，删除这个分区并重新建立一个空的分区。然后对其安全擦除，参见 <a href="../en/Dm-crypt/Drive_preparation.html#Secure_erasure_of_the_hard_disk_drive" title="Dm-crypt/Drive preparation">Dm-crypt/Drive preparation#Secure erasure of the hard disk drive</a>. 
+</p>
+<p>接下来建立包含加密容器的分区。
+</p>
+<p>建立 LUKS 头：
+</p>
+<pre># cryptsetup <i>options</i> luksFormat <i>device</i>
+</pre>
+<p>把 <code><i>device</i></code> 替换成之前建立的分区。参见 <a href="../en/Dm-crypt/Device_encryption.html#Encryption_options_for_LUKS_mode" title="Dm-crypt/Device encryption">Dm-crypt/Device encryption#Encryption options for LUKS mode</a> 来知道 <code><i>options</i></code> 可以写什么。
+</p>
+<p>为了对加密分区进行操作，用设备映射器来解锁它：
+</p>
+<pre># cryptsetup open <i>device</i> <i>name</i>
+</pre>
+<p>解锁分区之后，它会被映射成块设备 <code>/dev/mapper/<i>name</i></code>，现在要建立 <a href="../zh-CN/File_systems.html" class="mw-redirect" title="文件系统">文件系统</a>：
+</p>
+<pre># mkfs.<i>fstype</i> /dev/mapper/<i>name</i>
+</pre>
+<p>把文件系统挂载到 <code>/home</code>；或者如果它是某个用户专用的的话，挂载到 <code>/home/<i>username</i></code>，参见 <a href="#%E6%89%8B%E5%8A%A8%E6%8C%82%E8%BD%BD%E5%92%8C%E5%8D%B8%E8%BD%BD">#手动挂载和卸载</a>。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 卸载并挂载一次来确定映射没有问题。</div>
+<h3>
+<span id=".E6.89.8B.E5.8A.A8.E6.8C.82.E8.BD.BD.E5.92.8C.E5.8D.B8.E8.BD.BD"></span><span class="mw-headline" id="手动挂载和卸载">手动挂载和卸载</span>
+</h3>
+<p>挂载分区：
+</p>
+<pre># cryptsetup open <i>device</i> <i>name</i>
+# mount -t <i>fstype</i> /dev/mapper/<i>name</i> /mnt/home
+</pre>
+<p>卸载：
+</p>
+<pre># umount /mnt/home
+# cryptsetup close <i>name</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> <a href="../en/File_manager_functionality.html#Mounting" class="mw-redirect" title="GVFS">GVFS</a> 也可以挂载加密分区。用支持 gvfs 的文件管理器（比如 <a href="../en/Thunar.html" title="Thunar">Thunar</a>）挂载该分区的时候，密码对话框就会弹出来。对于其他桌面环境，<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/zulucrypt/">zulucrypt</a></span><sup><small>AUR</small></sup> 也提供了图形界面。</div>
+<h3>
+<span id=".E8.87.AA.E5.8A.A8.E8.A7.A3.E9.94.81.E5.B9.B6.E6.8C.82.E8.BD.BD"></span><span class="mw-headline" id="自动解锁并挂载">自动解锁并挂载</span>
+</h3>
+<p>有三种不同方法来进行自动化解锁分区并挂载文件系统。
+</p>
+<h4>
+<span id=".E5.90.AF.E5.8A.A8.E6.97.B6.E8.A7.A3.E9.94.81"></span><span class="mw-headline" id="启动时解锁">启动时解锁</span>
+</h4>
+<p>配置 <code>/etc/crypttab</code> 文件，systemd 的自动解析会在启动过程中自动解锁。如果home分区是所有用户一起用的（或者要自动挂载其他加密块设备），这种方法是最推荐使用的。
+</p>
+<p>更多细节参见 <a href="../en/Dm-crypt/System_configuration.html#crypttab" title="Dm-crypt/System configuration">Dm-crypt/System configuration#crypttab</a> 和 <a href="../en/Dm-crypt/System_configuration.html#Mounting_at_boot_time" title="Dm-crypt/System configuration">Dm-crypt/System configuration#Mounting at boot time</a>。
+</p>
+<h4>
+<span id=".E7.94.A8.E6.88.B7.E7.99.BB.E5.BD.95.E6.97.B6.E8.A7.A3.E9.94.81"></span><span class="mw-headline" id="用户登录时解锁">用户登录时解锁</span>
+</h4>
+<p>借助 <i>pam_exec</i> 调用<i>cryptsetup open</i> 来实现用户登录时解锁分区。如果整个分区都是某个用户专用的 home 目录，这个方法就比较推荐。参见 <a href="../en/Dm-crypt/Mounting_at_login.html" title="Dm-crypt/Mounting at login">dm-crypt/Mounting at login</a>。
+</p>
+<p>此外也可以用 <a href="../en/Pam_mount.html" title="Pam mount">pam_mount</a>。
+</p>
+<h2><span class="mw-headline" id="Loop_device">Loop device</span></h2>
+<p>There are two methods for using a loop device as an encrypted container, one using <code>losetup</code> directly and one without.
+</p>
+<h3><span class="mw-headline" id="Without_losetup">Without losetup</span></h3>
+<p>Using losetup directly can be avoided completely by doing the following <a rel="nofollow" class="external autonumber" href="https://wiki.gentoo.org/wiki/Custom_Initramfs#Encrypted_keyfile">[1]</a>:
+</p>
+<pre>$ dd if=/dev/urandom of=bigsecret.img bs=100M count=1 iflag=fullblock
+$ cryptsetup luksFormat bigsecret.img
+</pre>
+<p>Make sure to not omit the <code>iflag=fullblock</code> option, otherwise <i>dd</i> might return a partial read. See <a href="../en/Dd.html#Partial_read" title="Dd">dd#Partial read</a> for details.
+</p>
+<p>Before running <code>cryptsetup</code>, look at the <a href="../en/Dm-crypt/Device_encryption.html#Encryption_options_for_LUKS_mode" title="Dm-crypt/Device encryption">encryption options for LUKS mode</a> and <a href="../en/Data-at-rest_encryption.html#Ciphers_and_modes_of_operation" class="mw-redirect" title="Disk encryption">ciphers and modes of operation</a> first to select your additional desired settings.
+</p>
+<p>The instructions for opening the device and making the <a href="../en/File_systems.html" class="mw-redirect" title="File system">file system</a> are the same as <a href="#Partition">#Partition</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>.
+</p>
+<p>Creating a file smaller than the LUKS2 header (16 MiB) will give a <code>Requested offset is beyond real size of device bigsecret.img</code> error when trying to open the device.
+</p>
+<p>Manual mounting and unmounting procedure is equivalent to <a href="#Manual_mounting_and_unmounting">#Manual mounting and unmounting</a>.
+</p>
+<h3><span class="mw-headline" id="Using_losetup">Using losetup</span></h3>
+<p>A loop device enables to map a blockdevice to a file with the standard util-linux tool <code>losetup</code>. The file can then contain a filesystem, which can be used quite like any other filesystem. A lot of users know <a href="../en/TrueCrypt.html" title="TrueCrypt">TrueCrypt</a> as a tool to create encrypted containers. Just about the same functionality can be achieved with a loopback filesystem encrypted with LUKS and is shown in the following example. 
+</p>
+<p>First, start by creating an encrypted container with <a href="../en/Dd.html" title="Dd">dd</a>, using an appropriate <a href="../en/Random_number_generation.html" class="mw-redirect" title="Random number generator">random number generator</a>: 
+</p>
+<pre>$ dd if=/dev/urandom of=bigsecret.img bs=100M count=1 iflag=fullblock
+</pre>
+<p>This will create the file <code>bigsecret.img</code> with a size of 100 mebibytes. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> To avoid having to <a href="../en/Dm-crypt/Device_encryption.html#Loopback_filesystem" title="Dm-crypt/Device encryption">resize</a> the container later on, make sure to make it larger than the total size of the files to be encrypted, in order to at least also host the associated metadata needed by the internal file system. If you are going to use LUKS mode, its metadata header alone requires up to 16 mebibytes.</div>
+<p>Next create the device node <code>/dev/loop0</code>, so that we can mount/use our container:
+</p>
+<pre># losetup /dev/loop0 bigsecret.img
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> If it gives you the error <code>/dev/loop0: No such file or directory</code>, you need to first load the kernel module with <code>modprobe loop</code> as root. These days (Kernel 3.2) loop devices are created on demand. Ask for a new loop device with <code>losetup -f</code> as root.</div>
+<p>From now on the procedure is the same as for <a href="#Partition">#Partition</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup>, except for the fact that the container is already randomised and will not need another secure erasure.
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Tip:</strong> Containers with <i>dm-crypt</i> can be very flexible. Have a look at the features and documentation of <a href="../en/Tomb.html" title="Tomb">Tomb</a>. It provides a <i>dm-crypt</i> script wrapper for fast and flexible handling.</div>
+<h4><span class="mw-headline" id="Manual_mounting_and_unmounting">Manual mounting and unmounting</span></h4>
+<p>To unmount the container:
+</p>
+<pre># umount /mnt/secret
+# cryptsetup close secret
+# losetup -d /dev/loop0
+</pre>
+<p>To mount the container again:
+</p>
+<pre># losetup /dev/loop0 bigsecret.img
+# cryptsetup open /dev/loop0 secret
+# mount -t ext4 /dev/mapper/secret /mnt/secret
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Data-at-rest_encryption.html" title="Category:Data-at-rest encryption (简体中文)">Data-at-rest encryption (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Dm-crypt_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Encrypting_a_non-root_file_system_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=627721">https://wiki.archlinux.org/index.php?title=Dm-crypt_(简体中文)/Encrypting_a_non-root_file_system_(简体中文)&amp;oldid=627721</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 1 August 2020, at 10:12.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>systemd (简体中文)/Journal (简体中文) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Systemd_简体中文_Journal_简体中文 rootpage-Systemd_简体中文 skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">systemd (简体中文)/Journal (简体中文)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">Systemd (简体中文)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><span></span>
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>翻译状态：</strong>本文是 <a href="../en/Systemd/Journal.html" title="Systemd/Journal">Systemd/Journal</a> 的<a href="../zh-CN/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (简体中文)">翻译</a>。上次翻译日期：2019-01-31。如果英文版本有所<a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Systemd/Journal&amp;diff=0&amp;oldid=565200">更改</a>，则您可以帮助同步翻译。</div>
+<p>主文档请参考 <a href="../zh-CN/Systemd.html" title="Systemd (简体中文)">systemd (简体中文)</a>。
+</p>
+<p>systemd 提供了自己的日志系统（logging system），称为 journal。使用 systemd 日志，无需额外安装日志服务（syslog）。读取日志的命令：
+</p>
+<pre># journalctl
+</pre>
+<p>默认情况下（当 <code>Storage=</code> 在文件 <code>/etc/systemd/journald.conf</code> 中被设置为 <code>auto</code>），日志记录将被写入 <code>/var/log/journal/</code>。该目录是 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=systemd">systemd</a></span> 软件包的一部分。若被删除，systemd <b>不会</b>自动创建它，直到下次升级软件包时重建该目录。如果该目录缺失，systemd 会将日志记录写入 <code>/run/systemd/journal</code>。这意味着，系统重启后日志将丢失。
+</p>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>提示：</strong> 如果 <code>/var/log/journal/</code> 位于 <a href="../en/Btrfs.html" title="Btrfs">btrfs</a> 文件系统，应该考虑对这个目录禁用写入时复制，方法参阅<a href="../en/Btrfs.html#Copy-on-Write_(CoW)" title="Btrfs">Btrfs#Copy-on-Write (CoW)</a>。</div>
+<p>Systemd 日志事件提示信息的记录安装优先级和更能进行分离，符合经典的 BSD syslog 协议风格（<a href="https://en.wikipedia.org/wiki/Syslog" class="extiw" title="wikipedia:Syslog">维基百科</a>，<a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424">RFC 5424</a>）。
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%E4%BC%98%E5%85%88%E7%BA%A7"><span class="tocnumber">1</span> <span class="toctext">优先级</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#%E5%8A%9F%E8%83%BD"><span class="tocnumber">2</span> <span class="toctext">功能</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#%E8%BF%87%E6%BB%A4%E8%BE%93%E5%87%BA"><span class="tocnumber">3</span> <span class="toctext">过滤输出</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#%E6%97%A5%E5%BF%97%E5%A4%A7%E5%B0%8F%E9%99%90%E5%88%B6"><span class="tocnumber">4</span> <span class="toctext">日志大小限制</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#%E9%85%8D%E5%90%88_syslog_%E4%BD%BF%E7%94%A8"><span class="tocnumber">5</span> <span class="toctext">配合 syslog 使用</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#%E6%89%8B%E5%8A%A8%E6%B8%85%E7%90%86%E6%97%A5%E5%BF%97"><span class="tocnumber">6</span> <span class="toctext">手动清理日志</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Journald_in_conjunction_with_syslog"><span class="tocnumber">7</span> <span class="toctext">Journald in conjunction with syslog</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#%E8%BD%AC%E5%8F%91_journald_%E5%88%B0_/dev/tty12"><span class="tocnumber">8</span> <span class="toctext">转发 journald 到 /dev/tty12</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#%E6%9F%A5%E7%9C%8B%E7%89%B9%E5%AE%9A%E4%BD%8D%E7%BD%AE%E7%9A%84%E6%97%A5%E5%BF%97"><span class="tocnumber">9</span> <span class="toctext">查看特定位置的日志</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".E4.BC.98.E5.85.88.E7.BA.A7"></span><span class="mw-headline" id="优先级">优先级</span>
+</h2>
+<p>A syslog severity code (in systemd called priority) is used to mark the importance of a message <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424#section-6.2.1">RFC 5424 Section 6.2.1</a>.
+</p>
+<table class="wikitable">
+
+<tbody>
+<tr>
+<th>Value</th>
+<th>Severity</th>
+<th>Keyword</th>
+<th>Description</th>
+<th>Examples
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>Emergency</td>
+<td>emerg</td>
+<td>System is unusable</td>
+<td>Severe Kernel BUG, systemd dumped core.<br>This level should not be used by applications.
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Alert</td>
+<td>alert</td>
+<td>Should be corrected immediately</td>
+<td>Vital subsystem goes out of work. Data loss. <br><code>kernel: BUG: unable to handle kernel paging request at ffffc90403238ffc</code>.
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Critical</td>
+<td>crit</td>
+<td>Critical conditions</td>
+<td>Crashes, coredumps. Like familiar flash:<br><code>systemd-coredump[25319]: Process 25310 (plugin-containe) of user 1000 dumped core</code><br>Failure in the system primary application, like X11.
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Error</td>
+<td>err</td>
+<td>Error conditions</td>
+<td>Not severe error reported:<br><code>kernel: usb 1-3: 3:1: cannot get freq at ep 0x84</code>,<br><code>systemd[1]: Failed unmounting /var.</code>,<br><code>libvirtd[1720]: internal error: Failed to initialize a valid firewall backend</code>).
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Warning</td>
+<td>warning</td>
+<td>May indicate that an error will occur if action is not taken.</td>
+<td>A non-root file system has only 1GB free.<br><code>org.freedesktop. Notifications[1860]: (process:5999): Gtk-WARNING **: Locale not supported by C library. Using the fallback 'C' locale</code>.
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Notice</td>
+<td>notice</td>
+<td>Events that are unusual, but not error conditions.</td>
+<td>
+<code>systemd[1]: var.mount: Directory /var to mount over is not empty, mounting anyway</code>. <code>gcr-prompter[4997]: Gtk: GtkDialog mapped without a transient parent. This is discouraged</code>.
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Informational</td>
+<td>info</td>
+<td>Normal operational messages that require no action.</td>
+<td>
+<code>lvm[585]:   7 logical volume(s) in volume group "archvg" now active</code>.
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Debug</td>
+<td>debug</td>
+<td>Information useful to developers for debugging the application.</td>
+<td>
+<code>kdeinit5[1900]: powerdevil: Scheduling inhibition from ":1.14" "firefox" with cookie 13 and reason "screen"</code>.
+</td>
+</tr>
+</tbody>
+</table>
+<p>If issue you are looking for, was not found on according level, search it on couple of priority levels above and below. This rules are recommendations. Some errors considered a normal occasion for program so they marked low in priority by developer, and on the contrary, sometimes too many messages plaques too high priorities for them, but often it's an arguable situation. And often you really should solve an issue, also to understand architecture and adopt best practices.
+</p>
+<p>Examples:
+</p>
+<ul>
+<li>Info message:  <pre>pulseaudio[2047]: W: [pulseaudio] alsa-mixer.c: Volume element Master has 8 channels. That's too much! I can't handle that!</pre> It is an warning or error by definition.</li>
+<li>Plaguing alert message: <pre>sudo[21711]:     user : a password is required ; TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=list /usr/bin/pacman --color auto -Sy</pre> The <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=184455">reason</a> - user was manually added to sudoers file, not to wheel group, which is arguably normal action, but sudo produced an alert on every occasion.</li>
+</ul>
+<h2>
+<span id=".E5.8A.9F.E8.83.BD"></span><span class="mw-headline" id="功能">功能</span>
+</h2>
+<p>A syslog facility code is used to specify the type of program that is logging the message <a rel="nofollow" class="external text" href="https://tools.ietf.org/html/rfc5424#section-6.2.1">RFC 5424 Section 6.2.1</a>.
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Facility code</th>
+<th>Keyword</th>
+<th>Description</th>
+<th>Info
+</th>
+</tr>
+<tr>
+<td>0</td>
+<td>kern</td>
+<td>kernel messages
+</td>
+</tr>
+<tr>
+<td>1</td>
+<td>user</td>
+<td>user-level messages
+</td>
+</tr>
+<tr>
+<td>2</td>
+<td>mail</td>
+<td>mail system</td>
+<td>Archaic POSIX still supported and sometimes used system, for more <span class="plainlinks archwiki-template-man" title="$ man 1 mail"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/mail.1">mail(1)</a></span>)
+</td>
+</tr>
+<tr>
+<td>3</td>
+<td>daemon</td>
+<td>system daemons</td>
+<td>All deamons, including systemd and its subsystems
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>auth</td>
+<td>security/authorization messages</td>
+<td>Also watch for different facility 10
+</td>
+</tr>
+<tr>
+<td>5</td>
+<td>syslog</td>
+<td>messages generated internally by syslogd</td>
+<td>As it standartized for syslogd, not used by systemd (see facility 3)
+</td>
+</tr>
+<tr>
+<td>6</td>
+<td>lpr</td>
+<td>line printer subsystem (archaic subsystem)
+</td>
+</tr>
+<tr>
+<td>7</td>
+<td>news</td>
+<td>network news subsystem (archaic subsystem)
+</td>
+</tr>
+<tr>
+<td>8</td>
+<td>uucp</td>
+<td>UUCP subsystem (archaic subsystem)
+</td>
+</tr>
+<tr>
+<td>9</td>
+<td></td>
+<td>clock daemon</td>
+<td>systemd-timesyncd
+</td>
+</tr>
+<tr>
+<td>10</td>
+<td>authpriv</td>
+<td>security/authorization messages</td>
+<td>Also watch for different facility 4
+</td>
+</tr>
+<tr>
+<td>11</td>
+<td>ftp</td>
+<td>FTP daemon
+</td>
+</tr>
+<tr>
+<td>12</td>
+<td>-</td>
+<td>NTP subsystem
+</td>
+</tr>
+<tr>
+<td>13</td>
+<td>-</td>
+<td>log audit
+</td>
+</tr>
+<tr>
+<td>14</td>
+<td>-</td>
+<td>log alert
+</td>
+</tr>
+<tr>
+<td>15</td>
+<td>cron</td>
+<td>scheduling daemon
+</td>
+</tr>
+<tr>
+<td>16</td>
+<td>local0</td>
+<td>local use 0  (local0)
+</td>
+</tr>
+<tr>
+<td>17</td>
+<td>local1</td>
+<td>local use 1  (local1)
+</td>
+</tr>
+<tr>
+<td>18</td>
+<td>local2</td>
+<td>local use 2  (local2)
+</td>
+</tr>
+<tr>
+<td>19</td>
+<td>local3</td>
+<td>local use 3  (local3)
+</td>
+</tr>
+<tr>
+<td>20</td>
+<td>local4</td>
+<td>local use 4  (local4)
+</td>
+</tr>
+<tr>
+<td>21</td>
+<td>local5</td>
+<td>local use 5  (local5)
+</td>
+</tr>
+<tr>
+<td>22</td>
+<td>local6</td>
+<td>local use 6  (local6)
+</td>
+</tr>
+<tr>
+<td>23</td>
+<td>local7</td>
+<td>local use 7  (local7)
+</td>
+</tr>
+</tbody>
+</table>
+<p>So, useful facilities to watch: 0,1,3,4,9,10,15.
+</p>
+<h2>
+<span id=".E8.BF.87.E6.BB.A4.E8.BE.93.E5.87.BA"></span><span class="mw-headline" id="过滤输出">过滤输出</span>
+</h2>
+<p><code>journalctl</code>可以根据特定字段过滤输出。如果过滤的字段比较多，需要较长时间才能显示出来。
+</p>
+<p>示例：
+</p>
+<p>显示本次启动后的所有日志：
+</p>
+<pre># journalctl -b
+</pre>
+<p>不过，一般大家更关心的不是本次启动后的日志，而是上次启动时的（例如，刚刚系统崩溃了）。可以使用 <code>-b</code> 参数：
+</p>
+<ul>
+<li>
+<code>journalctl -b -0</code> 显示本次启动的信息</li>
+<li>
+<code>journalctl -b -1</code> 显示上次启动的信息</li>
+<li>
+<code>journalctl -b -2</code> 显示上上次启动的信息 <code>journalctl -b -2</code>
+</li>
+<li>只显示错误、冲突和重要告警信息 <pre># journalctl -p err..alert</pre> 也可以使用数字， <code>journalctl -p 3..1</code>。If single number/keyword used, <code>journalctl -p 3</code> - all higher priority levels also included.</li>
+</ul>
+<ul>
+<li>显示从某个日期 ( 或时间 ) 开始的消息: <pre># journalctl --since="2012-10-30 18:17:16"</pre>
+</li>
+<li>显示从某个时间 ( 例如 20分钟前 ) 的消息: <pre># journalctl --since "20 min ago"</pre>
+</li>
+<li>显示最新信息<pre># journalctl -f</pre>
+</li>
+<li>显示特定程序的所有消息: <pre># journalctl /usr/lib/systemd/systemd</pre>
+</li>
+<li>显示特定进程的所有消息: <pre># journalctl _PID=1</pre>
+</li>
+<li>显示指定单元的所有消息：<pre># journalctl -u man-db.service</pre>
+</li>
+<li>显示内核环缓存消息r: <pre># journalctl -k</pre>
+</li>
+<li>Show auth.log equivalent by filtering on syslog facility: <pre># journalctl -f -l SYSLOG_FACILITY=10</pre>
+</li>
+<li>If your journal directory (by default located under <code>/var/log/journal</code>) contains huge amount of log data then <code>journalctl</code> can take several minutes in filtering output. You can speed it up significantly by using <code>--file</code> option to force <code>journalctl</code> to look only into most recent journal: <pre># journalctl --file /var/log/journal/*/system.journal -f</pre>
+</li>
+</ul>
+<p>详情参阅<span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span>、<span class="plainlinks archwiki-template-man" title="$ man 7 systemd.journal-fields"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.journal-fields.7">systemd.journal-fields(7)</a></span>，以及 Lennert 的这篇<a rel="nofollow" class="external text" href="http://0pointer.de/blog/projects/journalctl.html">博文</a>。
+</p>
+<h2>
+<span id=".E6.97.A5.E5.BF.97.E5.A4.A7.E5.B0.8F.E9.99.90.E5.88.B6"></span><span class="mw-headline" id="日志大小限制">日志大小限制</span>
+</h2>
+<p>如果按上面的操作保留日志的话，默认日志最大限制为所在文件系统容量的 10%，即：如果 <code>/var/log/journal</code> 储存在 50GiB 的根分区中，那么日志最多存储 5GiB 数据。可以修改配置文件指定最大限制。如限制日志最大 50MiB：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">SystemMaxUse=50M</pre>
+<p>还可以通过配置片段而不是全局配置文件进行设置：
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf.d/00-journal-size.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Journal]
+SystemMaxUse=50M</pre>
+<p>修改配置后要立即生效，请<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">重启</a> <code>systemd-journald.service</code> 服务。
+</p>
+<p>详情参见 <span class="plainlinks archwiki-template-man" title="$ man 5 journald.conf"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journald.conf.5">journald.conf(5)</a></span>.
+</p>
+<h2>
+<span id=".E9.85.8D.E5.90.88_syslog_.E4.BD.BF.E7.94.A8"></span><span class="mw-headline" id="配合_syslog_使用">配合 syslog 使用</span>
+</h2>
+<p>systemd 提供了 socket <code>/run/systemd/journal/syslog</code>，以兼容传统日志服务。所有系统信息都会被传入。要使传统日志服务工作，需要让服务链接该 socket，而非 <code>/dev/log</code>（<a rel="nofollow" class="external text" href="http://lwn.net/Articles/474968/">官方说明</a>）。Arch 软件仓库中的 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=syslog-ng">syslog-ng</a></span> 已经包含了需要的配置。
+</p>
+<p><code>journald.conf</code> 使用 <code>no</code> 转发socket . 为了使 <i>syslog-ng</i> 配合 <i>journald</i> , 你需要在 <code>/etc/systemd/journald.conf</code>  中设置  <code>ForwardToSyslog=yes</code> . 参阅 <a href="../en/Syslog-ng.html#Overview" title="Syslog-ng">Syslog-ng#Overview</a> 了解更多细节.
+</p>
+<p>如果你选择使用 <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/rsyslog/">rsyslog</a></span><sup><small>AUR</small></sup> , 因为 <a href="../en/Rsyslog.html" title="Rsyslog">rsyslog</a> 从日志中 <a rel="nofollow" class="external text" href="https://lists.freedesktop.org/archives/systemd-devel/2014-August/022295.html#journald">直接</a> 传出消息,所以不再必要改变那个选项..
+</p>
+<p>设置开机启动 syslog-ng：
+</p>
+<pre> # systemctl enable syslog-ng
+</pre>
+<p><a rel="nofollow" class="external text" href="http://0pointer.de/blog/projects/">这里</a>有一份很不错的 <code>journalctl</code> 指南。
+</p>
+<h2>
+<span id=".E6.89.8B.E5.8A.A8.E6.B8.85.E7.90.86.E6.97.A5.E5.BF.97"></span><span class="mw-headline" id="手动清理日志">手动清理日志</span>
+</h2>
+<p><code>/var/log/journal</code> 存放着日志, <code>rm</code> 应该能工作. 或者使用<code>journalctl</code>,
+</p>
+<p>例如:
+</p>
+<ul>
+<li>清理日志使总大小小于 100M: <pre># journalctl --vacuum-size=100M</pre>
+</li>
+<li>清理最早两周前的日志. <pre># journalctl --vacuum-time=2weeks</pre>
+</li>
+</ul>
+<p>参阅 <span class="plainlinks archwiki-template-man" title="$ man 1 journalctl"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/journalctl.1">journalctl(1)</a></span> 获得更多信息.
+</p>
+<h2><span class="mw-headline" id="Journald_in_conjunction_with_syslog">Journald in conjunction with syslog</span></h2>
+<p>Compatibility with a classic, non-journald aware <a href="../en/Syslog-ng.html" title="Syslog-ng">syslog</a> implementation can be provided by letting <i>systemd</i> forward all messages via the socket <code>/run/systemd/journal/syslog</code>. To make the syslog daemon work with the journal, it has to bind to this socket instead of <code>/dev/log</code> (<a rel="nofollow" class="external text" href="http://lwn.net/Articles/474968/">official announcement</a>). 
+</p>
+<p>As of <i>systemd</i> 216 the default <code>journald.conf</code> for forwarding to the socket was changed to <code>ForwardToSyslog=no</code> to avoid system overhead, because <a href="../en/Rsyslog.html" title="Rsyslog">rsyslog</a> or <a href="../en/Syslog-ng.html" title="Syslog-ng">syslog-ng</a> (since 3.6) pull the messages from the journal by <a rel="nofollow" class="external text" href="https://lists.freedesktop.org/archives/systemd-devel/2014-August/022295.html#journald">itself</a>. 
+</p>
+<p>See <a href="../en/Syslog-ng.html#Overview" title="Syslog-ng">Syslog-ng#Overview</a> and <a href="../en/Syslog-ng.html#syslog-ng_and_systemd_journal" title="Syslog-ng">Syslog-ng#syslog-ng and systemd journal</a>, or <a href="../en/Rsyslog.html" title="Rsyslog">rsyslog</a> respectively, for details on configuration.
+</p>
+<h2>
+<span id=".E8.BD.AC.E5.8F.91_journald_.E5.88.B0_.2Fdev.2Ftty12"></span><span class="mw-headline" id="转发_journald_到_/dev/tty12">转发 journald 到 /dev/tty12</span>
+</h2>
+<p>建立一个 <a href="#Editing_provided_units">drop-in directory</a><sup>[<a href="../en/ArchWiki:Requests.html#Broken_section_links" class="mw-redirect" title="ArchWiki:Requests">断开的链接</a>：无效的部分]</sup> <code>/etc/systemd/journald.conf.d</code> 然后在其中建立 <code>fw-tty12.conf</code> :
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/systemd/journald.conf.d/fw-tty12.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Journal]
+ForwardToConsole=yes
+TTYPath=/dev/tty12
+MaxLevelConsole=info</pre>
+<p>然后重新启动  systemd-journald.
+</p>
+<h2>
+<span id=".E6.9F.A5.E7.9C.8B.E7.89.B9.E5.AE.9A.E4.BD.8D.E7.BD.AE.E7.9A.84.E6.97.A5.E5.BF.97"></span><span class="mw-headline" id="查看特定位置的日志">查看特定位置的日志</span>
+</h2>
+<p>有时你希望查看另一个系统上的日志.例如从 Live 环境修复现存的系统.
+</p>
+<p>这种情况下你可以挂载目标系统 ( 例如挂载到 <code>/mnt</code> ),然后用 <code>-D</code>/<code>--directory</code> 参数指定目录,像这样:
+</p>
+<pre>$ journalctl -D <i>/mnt</i>/var/log/journal -xe
+</pre>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../zh-CN/Category:Logging.html" title="Category:Logging (简体中文)">Logging (简体中文)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_section_links.html" title="Category:Pages with broken section links">Pages with broken section links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Journal_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&amp;oldid=629513">https://wiki.archlinux.org/index.php?title=Systemd_(简体中文)/Journal_(简体中文)&amp;oldid=629513</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 4 August 2020, at 16:21.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

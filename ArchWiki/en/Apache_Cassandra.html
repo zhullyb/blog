@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Apache Cassandra - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Apache_Cassandra rootpage-Apache_Cassandra skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Apache Cassandra</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Apache_Spark.html" title="Apache Spark">Apache Spark</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://cassandra.apache.org/">Apache Cassandra</a> is a NoSQL multi-master database with linear scalability and no single point of failure.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3">
+<a href="#Systemd_unit"><span class="tocnumber">2.1</span> <span class="toctext">Systemd unit</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href="#Logging_to_journald"><span class="tocnumber">2.1.1</span> <span class="toctext">Logging to journald</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-5">
+<a href="#cassandra.yaml"><span class="tocnumber">2.2</span> <span class="toctext">cassandra.yaml</span></a>
+<ul>
+<li class="toclevel-3 tocsection-6"><a href="#Basic_config_items_to_change"><span class="tocnumber">2.2.1</span> <span class="toctext">Basic config items to change</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#Recommended_settings_for_linux_specifically"><span class="tocnumber">2.2.2</span> <span class="toctext">Recommended settings for linux specifically</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Troubleshooting"><span class="tocnumber">2.2.3</span> <span class="toctext">Troubleshooting</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cassandra/">cassandra</a></span><sup><small>AUR</small></sup> package.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<h3><span class="mw-headline" id="Systemd_unit">Systemd unit</span></h3>
+<h5><span class="mw-headline" id="Logging_to_journald">Logging to journald</span></h5>
+<p>The package logs to <code>/var/log/cassandra/system.log</code> by default. To instead log to journald you will need to copy the systemd unit to <code>/etc/systemd/system/</code> so the change persists.
+</p>
+<pre>$ cp /usr/lib/systemd/system/cassandra.service /etc/systemd/system/
+</pre>
+<p>Edit the unit
+</p>
+<pre>$ vim /etc/systemd/system/cassandra.service
+</pre>
+<p>And set the service to run in the foreground by adding <code>-f</code> to the <code>ExecStart</code> line, and set Type to <code>simple</code> as the process will no longer fork
+</p>
+<pre>[Service]
+Type=simple
+ExecStart=/usr/bin/cassandra -p /run/cassandra/cassandra.pid -f
+</pre>
+<p>If Cassandra was running you will need to drain, and restart Cassandra
+</p>
+<pre>$ nodetool drain; systemctl restart cassandra
+</pre>
+<p><br>
+</p>
+<h3><span class="mw-headline" id="cassandra.yaml">cassandra.yaml</span></h3>
+<p>There is copious amounts of documentation in the default <code>cassandra.yaml</code>. When installed via the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/cassandra/">cassandra</a></span><sup><small>AUR</small></sup> package, it is located in <code>/etc/cassandra/cassandra.yaml</code>
+</p>
+<h5><span class="mw-headline" id="Basic_config_items_to_change">Basic config items to change</span></h5>
+<p>Setting the name of the cluster. This needs to be consistent for all nodes that you intend to have in this cluster.
+</p>
+<pre>cluster_name: 'Test Cluster'
+</pre>
+<p>Set the directory where cassandra will write too, below is the default that will be used if unset. If possible set this to a disk used only for storing cassandra data
+</p>
+<pre>data_file_directories:
+    - /var/lib/cassandra/data
+</pre>
+<p>For the first node (the seed node) make sure to include its IP address in the seeds, and atleast 1 other node. for all other nodes, try and set a broad range of nodes in the cluster. If a node cannot connect to one of the seeds listed in this configuration at startup - it will fail to start.
+</p>
+<pre>seed_provider:
+    - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+      parameters:
+          - seeds: "192.168.1.53, 192.168.1.52"
+</pre>
+<p>set this based on what type of disk cassandra is using to store data on <code>ssd</code> or <code>spinning</code>
+</p>
+<pre>disk_optimization_strategy: ssd|spinning
+</pre>
+<p>This is the address Cassandra will listen for client connections on
+</p>
+<pre>listen_address: 192.168.1.51
+</pre>
+<p>This is the address this node will advertise itself as, ensure both your clients and nodes can reach this node on this address
+</p>
+<pre>broadcast_address: 192.168.1.51
+</pre>
+<p>This is the address used for thrift connections, set to <code>0.0.0.0</code> it will listen on all interfaces, which is fine as long as its firewalled for security
+</p>
+<pre>rpc_address: 0.0.0.0
+</pre>
+<p><br>
+</p>
+<h5><span class="mw-headline" id="Recommended_settings_for_linux_specifically">Recommended settings for linux specifically</span></h5>
+<p>hsha stands for "half synchronous, half asynchronous." All thrift clients are handled asynchronously using a small number of threads that does not vary with the amount of thrift clients (and thus scales well to many clients). This is not recommended on windows machines hsha is about 30% slower
+</p>
+<pre>rpc_server_type: hsha
+</pre>
+<p>Because we're using hsha, <code>rpc_max_threads</code> must be set, or cassandra will refuse to start. <code>rpc_max_threads</code> represents the maximum number of client requests this server may execute concurrently.
+</p>
+<pre>rpc_max_threads: 100
+</pre>
+<p><br>
+</p>
+<h5><span class="mw-headline" id="Troubleshooting">Troubleshooting</span></h5>
+<p>If Cassandra fails to run as a service, try running Cassandra
+</p>
+<pre>$ cassandra
+</pre>
+<p>If you receive the following error:
+</p>
+<pre>Improperly specified VM option 'ThreadPriorityPolicy=42'
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+</pre>
+<p>Cassandra only runs on Java 8.  You will need to install Java per directions here <a href="../en/Java.html" title="Java">Java</a> to install Java 8 and switch your jvm using `archlinux-java`
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Database_management_systems.html" title="Category:Database management systems">Database management systems</a></li>
+<li><a href="../en/Category:Apache.html" title="Category:Apache">Apache</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Apache_Cassandra&amp;oldid=580468">https://wiki.archlinux.org/index.php?title=Apache_Cassandra&amp;oldid=580468</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 August 2019, at 17:54.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

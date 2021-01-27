@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Glusterfs - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Glusterfs rootpage-Glusterfs skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Glusterfs</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Ceph.html" title="Ceph">Ceph</a></li>
+</ul>
+</div>
+<p><a rel="nofollow" class="external text" href="https://www.gluster.org/">Glusterfs</a> is a scalable network <a href="../en/File_systems.html" class="mw-redirect" title="Filesystem">filesystem</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Automount_gluster_volume_on_boot"><span class="tocnumber">3</span> <span class="toctext">Automount gluster volume on boot</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the package <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=glusterfs">glusterfs</a></span>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Glusterfs can be setup to run in many different configurations depending operating needs, including distributed and replicated.  For the example below, a two node replicated server is being created, with nodes gluster1 and gluster2 each have two disks, one containing the OS (<code>sda</code>), the other to be shared by glusterfs (<code>sdb</code>).  Unless stated, all setup is carried on gluster1:
+</p>
+<ul><li>
+<a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start/enable">Start/enable</a> <code>glusterd.service</code> on both servers.</li></ul>
+<ul><li>Connect the servers</li></ul>
+<pre> # gluster peer probe gluster2
+</pre>
+<ul><li>Partition and format the glusterfs drive on both servers
+<ul><li>The upstream advises creating a single partition and formatting this as xfs</li></ul>
+</li></ul>
+<ul><li>On both servers automount the drives by <a href="../en/Help:Reading.html#Append,_add,_create,_edit" class="mw-redirect" title="Append">appending</a> <code>/etc/fstab</code> to include the following line, where <code>/dev/sd<i>XY</i></code> is the appropriate device (e.g., <code>/dev/sdb1</code>).</li></ul>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">/dev/sd<i>XY</i> /export/sd<i>XY</i> xfs defaults 0 0</pre>
+<ul><li>On both servers <a href="../en/File_systems.html#Mount_a_file_system" class="mw-redirect" title="Mount">mount</a> the drives. Then create a <i>brick</i>:</li></ul>
+<pre> # mkdir -p /export/sd<i>XY</i>/brick
+</pre>
+<ul><li>Enable replication on primary server</li></ul>
+<pre> # gluster volume create gv0 replica 2 gluster1.mydomain.net:/export/sdb1/brick gluster2.mydomain.net:/export/sdb1/brick
+</pre>
+<ul><li>Ensure volume is created correctly</li></ul>
+<pre> # gluster volume info
+</pre>
+<ul><li>Start volume</li></ul>
+<pre> # gluster volume start gv0
+</pre>
+<ul><li>Mount the volume</li></ul>
+<pre> # mkdir -p /mnt/glusterClientMount
+ # mount -t glusterfs gluster1:/gv0 /mnt/glusterClientMount
+</pre>
+<h2><span class="mw-headline" id="Automount_gluster_volume_on_boot">Automount gluster volume on boot</span></h2>
+<p>To mount a gluster volume on boot, systemd needs to wait for both the network, and the <code>glusterd</code> service to be started. You can specify the following fstab options to do this:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">localhost:/gv0 /mnt/glusterClientMount glusterfs defaults,_netdev,x-systemd.requires=glusterd.service,x-systemd.automount 0 0</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://docs.gluster.org/en/latest/Install-Guide/Overview/">Official glusterfs installation guide</a></li>
+<li><a rel="nofollow" class="external text" href="https://blog.bastelfreak.de/2016/05/short-tip-setup-glusterfs-share-on-arch-linux/">Blog covering the setup of Glusterfs on Arch Linux</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../en/Category:Clustered_file_systems.html" title="Category:Clustered file systems">Clustered file systems</a></li>
+<li><a href="../en/Category:Distributed_computing.html" title="Category:Distributed computing">Distributed computing</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Glusterfs&amp;oldid=632562">https://wiki.archlinux.org/index.php?title=Glusterfs&amp;oldid=632562</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 August 2020, at 10:37.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

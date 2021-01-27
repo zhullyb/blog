@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Profile-sync-daemon - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Profile-sync-daemon rootpage-Profile-sync-daemon skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Profile-sync-daemon</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-meta-related-articles-start">
+<p>Related articles</p>
+<ul>
+<li><a href="../en/Anything-sync-daemon.html" title="Anything-sync-daemon">Anything-sync-daemon</a></li>
+<li><a href="../en/Firefox.html" title="Firefox">Firefox</a></li>
+<li><a href="../en/Chromium.html" title="Chromium">Chromium</a></li>
+<li><a href="../en/Opera.html" title="Opera">Opera</a></li>
+<li><a href="../en/Pdnsd.html" title="Pdnsd">Pdnsd</a></li>
+<li><a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a></li>
+</ul>
+</div>
+<p><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=profile-sync-daemon">profile-sync-daemon</a></span> (psd) is a tiny pseudo-daemon designed to manage browser profile(s) in tmpfs and to periodically sync back to the physical disc (HDD/SSD). This is accomplished by an innovative use of rsync to maintain synchronization between a tmpfs copy and media-bound backup of the browser profile(s). Additionally, psd features several crash recovery features.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Occasionally, updates/changes are made to the default config file <code>/usr/share/psd/psd.conf</code> upstream. The user copy <code>$XDG_CONFIG_HOME/psd/psd.conf</code> will need to be diffed against it. On Arch Linux, pacman should notify the user to do this. Users of other package managers and/or distros will need to periodically diff the files manually.</div>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> psd can slow down <a rel="nofollow" class="external text" href="https://www.reddit.com/r/archlinux/comments/4l7gvm/very_slow_when_login/d3lrx9y/">login</a>, as that is when it copies your browser cache to RAM.</div>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Design_goals_and_benefits_of_psd"><span class="tocnumber">1</span> <span class="toctext">Design goals and benefits of psd</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Setup_and_installation"><span class="tocnumber">2</span> <span class="toctext">Setup and installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Edit_the_config_file"><span class="tocnumber">2.1</span> <span class="toctext">Edit the config file</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Supported_browsers"><span class="tocnumber">3</span> <span class="toctext">Supported browsers</span></a></li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Using_psd"><span class="tocnumber">4</span> <span class="toctext">Using psd</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Preview_(parse)_mode"><span class="tocnumber">4.1</span> <span class="toctext">Preview (parse) mode</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Clean_mode"><span class="tocnumber">4.2</span> <span class="toctext">Clean mode</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Start_and_stop_psd"><span class="tocnumber">4.3</span> <span class="toctext">Start and stop psd</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Supported_distros"><span class="tocnumber">4.4</span> <span class="toctext">Supported distros</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Sync_at_more_frequent_intervals_(optional)"><span class="tocnumber">4.5</span> <span class="toctext">Sync at more frequent intervals (optional)</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#FAQ"><span class="tocnumber">5</span> <span class="toctext">FAQ</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#What_is_overlayfs_mode?"><span class="tocnumber">5.1</span> <span class="toctext">What is overlayfs mode?</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#I_need_more_memory_to_accommodate_my_profile/profiles_in_/run/user/xxxx._How_can_I_allocate_more?"><span class="tocnumber">5.2</span> <span class="toctext">I need more memory to accommodate my profile/profiles in /run/user/xxxx. How can I allocate more?</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Why_do_I_have_another_browser_profile_directory_%22foo-back-ovfs%22_when_I_enable_overlayfs?"><span class="tocnumber">5.3</span> <span class="toctext">Why do I have another browser profile directory "foo-back-ovfs" when I enable overlayfs?</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#My_system_crashed_and_did_not_sync_back._What_do_I_do?"><span class="tocnumber">5.4</span> <span class="toctext">My system crashed and did not sync back. What do I do?</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Where_can_I_find_this_snapshot?"><span class="tocnumber">5.5</span> <span class="toctext">Where can I find this snapshot?</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#How_can_I_restore_the_snapshot?"><span class="tocnumber">5.6</span> <span class="toctext">How can I restore the snapshot?</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Can_psd_delete_the_snapshots_automatically?"><span class="tocnumber">5.7</span> <span class="toctext">Can psd delete the snapshots automatically?</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19"><a href="#Support"><span class="tocnumber">6</span> <span class="toctext">Support</span></a></li>
+<li class="toclevel-1 tocsection-20"><a href="#psd_on_other_distros"><span class="tocnumber">7</span> <span class="toctext">psd on other distros</span></a></li>
+<li class="toclevel-1 tocsection-21"><a href="#See_also"><span class="tocnumber">8</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Design_goals_and_benefits_of_psd">Design goals and benefits of psd</span></h2>
+<ol>
+<li>Transparent user experience</li>
+<li>Reduced wear to physical drives</li>
+<li>Speed</li>
+</ol>
+<p>Since the profile(s), browser cache*, etc. are relocated into <a href="../en/Tmpfs.html" title="Tmpfs">tmpfs</a> (RAM disk), the corresponding I/O associated with using the browser is also redirected from the physical drive to RAM, thus reducing wear to the physical drive and also greatly improving browser speed and responsiveness.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Some browsers such as Chrome/Chromium, Firefox (since v21) and Midori actually keep their cache directories <b>separately</b> from their profile directory. It is not within the scope of profile-sync-daemon to modify this behavior; users are encouraged to refer to the <a href="../en/Chromium.html#Cache_in_tmpfs" class="mw-redirect" title="Chromium tweaks">Chromium tweaks#Cache in tmpfs</a> section for Chromium and to the <a href="../en/Firefox/Profile_on_RAM.html" class="mw-redirect" title="Firefox on RAM">Firefox on RAM</a> article for several workarounds.</div>
+<h2><span class="mw-headline" id="Setup_and_installation">Setup and installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=profile-sync-daemon">profile-sync-daemon</a></span> package.
+</p>
+<h3><span class="mw-headline" id="Edit_the_config_file">Edit the config file</span></h3>
+<p>Run psd the first time which will create <code>$XDG_CONFIG_HOME/psd/psd.conf</code> (referred to hereafter as the config file) which contains all settings.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Any edits made to this file while psd is active will be applied only after psd has been restarted from the systemd user service.</div>
+<pre>$ psd
+First time running psd so please edit /home/facade/.config/psd/psd.conf to your liking and run again.
+</pre>
+<ul>
+<li>Optionally enable the use of overlayfs to improve sync speed and to use a smaller memory footprint. Do this in the USE_OVERLAYFS variable. The user will require sudo rights to <code>/usr/bin/psd-overlay-helper</code> to use this option and the kernel must support overlayfs version 22 or higher. See the FAQ below for additional details.</li>
+<li>Optionally define which browsers are to be managed in the BROWSERS array. If none are defined, the default is all detected browsers.</li>
+<li>Optionally disable the use of crash-recovery snapshots (not recommended). Do this in the USE_BACKUPS variable.</li>
+<li>Optionally define the number of crash-recovery snapshots to keep. Do this in the BACKUP_LIMIT variable.</li>
+</ul>
+<p>Example:  Let's say that Chromium, Opera and Midori are installed but only Chromium and Opera are to be sync'ed to tmpfs since the user keeps Midori as a backup browser and it is seldom used:
+</p>
+<pre># List browsers separated by spaces to include in the sync. Useful if you do not
+# wish to have all possible browser profiles sync'ed which is the default if
+# this variable is left commented.
+#
+# Possible values:
+#  chromium
+#  chromium-dev
+#  conkeror.mozdev.org
+#  epiphany
+#  firefox
+#  firefox-trunk
+#  google-chrome
+#  google-chrome-beta
+#  google-chrome-unstable
+#  heftig-aurora
+#  icecat
+#  inox
+#  luakit
+#  midori
+#  opera
+#  opera-beta
+#  opera-developer
+#  opera-legacy
+#  otter-browser
+#  qupzilla
+#  qutebrowser
+#  palemoon
+#  rekonq
+#  seamonkey
+#  surf
+#  vivaldi
+#  vivaldi-snapshot
+#
+BROWSERS=(chromium opera)
+</pre>
+<p>Beginning with version 5.54 of psd, native support for <a href="#What_is_overlayfs_mode?">overlayfs</a> is included. This feature requires at least a Linux kernel version of 3.18.0 or greater.
+</p>
+<h2><span class="mw-headline" id="Supported_browsers">Supported browsers</span></h2>
+<p>Currently, the following browsers are auto-detected and managed:
+</p>
+<ul>
+<li><a href="../en/Chromium.html" title="Chromium">Chromium</a></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/chromium-dev/">chromium-dev</a></span><sup><small>AUR</small></sup>
+</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/conkeror-git/">conkeror-git</a></span><sup><small>AUR</small></sup>
+</li>
+<li><a href="../en/GNOME/Web.html" class="mw-redirect" title="Epiphany">Epiphany</a></li>
+<li>
+<a href="../en/Firefox.html" title="Firefox">Firefox</a> (all flavors including stable, beta, and nightly)</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/google-chrome/">google-chrome</a></span><sup><small>AUR</small></sup>
+</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/google-chrome-beta/">google-chrome-beta</a></span><sup><small>AUR</small></sup>
+</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/google-chrome-dev/">google-chrome-dev</a></span><sup><small>AUR</small></sup>
+</li>
+<li>
+<a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=117157">heftig's version of Aurora</a>: An Arch Linux-only browser</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/icecat/">icecat</a></span><sup><small>AUR</small></sup>
+</li>
+<li><a href="../en/Luakit.html" title="Luakit">Luakit</a></li>
+<li><a href="../en/Midori.html" title="Midori">Midori</a></li>
+<li><a href="../en/Opera.html" title="Opera">Opera</a></li>
+<li><a href="../en/Otter_Browser.html" title="Otter Browser">Otter Browser</a></li>
+<li><a href="../en/Qutebrowser.html" title="Qutebrowser">Qutebrowser</a></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/palemoon/">palemoon</a></span><sup><small>AUR</small></sup> / <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/palemoon-bin/">palemoon-bin</a></span><sup><small>AUR</small></sup>
+</li>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=seamonkey">seamonkey</a></span></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://aur.archlinux.org/packages/surf/">surf</a></span><sup><small>AUR</small></sup>
+</li>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=vivaldi">vivaldi</a></span></li>
+</ul>
+<h2><span class="mw-headline" id="Using_psd">Using psd</span></h2>
+<h3>
+<span id="Preview_.28parse.29_mode"></span><span class="mw-headline" id="Preview_(parse)_mode">Preview (parse) mode</span>
+</h3>
+<p>The 'parse' option can be called to show users exactly what <i>psd</i> will do/is doing based on <code>$XDG_CONFIG_HOME/psd/psd.conf</code> as well printout useful information such as profile size, paths, and if any recovery snapshots have been created.
+</p>
+<pre>$ psd p
+Profile-sync-daemon v6.03 on Arch Linux.
+
+ Systemd service is currently active.
+ Systemd resync service is currently active.
+ Overlayfs v23 is currently active.
+
+Psd will manage the following per /home/facade/.config/psd/psd.conf settings:
+
+ browser/psname:  chromium/chromium
+ owner/group:     facade/100
+ sync target:     /home/facade/.config/chromium
+ tmpfs dir:       /run/user/1000/facade-chromium
+ profile size:    93M
+ overlayfs size:  39M
+ recovery dirs:   2 &lt;- delete with the c option
+  dir path/size:  /home/facade/.config/chromium-backup-crashrecovery-20150117_171359 (92M)
+  dir path/size:  /home/facade/.config/chromium-backup-crashrecovery-20150119_112204 (93M)
+
+ browser/psname:  firefox/firefox
+ owner/group:     facade/100
+ sync target:     /mnt/data/docs/facade/mozilla/firefox/f8cv8bfu.default
+ tmpfs dir:       /run/user/1000/facade-firefox-f8cv8bfu.default
+ profile size:    145M
+ overlayfs size:  13M
+ recovery dirs:   none
+</pre>
+<p>As shown in the output and as stated above, if no specific browser or subset of browsers are defined in the BROWSERS array, <i>psd</i> will sync ALL supported profiles that it finds for the given user(s).
+</p>
+<h3><span class="mw-headline" id="Clean_mode">Clean mode</span></h3>
+<p>The clean mode will delete ALL recovery snapshots that have accumulated. Run this only if you are sure that you want to delete them.
+</p>
+<pre>$ psd c
+
+Profile-sync-daemon v6.03 on Arch Linux.
+
+Deleting 2 crashrecovery dirs for profile /home/facade/.config/chromium
+ /home/facade/.config/chromium-backup-crashrecovery-20150117_171359
+ /home/facade/.config/chromium-backup-crashrecovery-20150119_112204
+</pre>
+<h3><span class="mw-headline" id="Start_and_stop_psd">Start and stop psd</span></h3>
+<p>With the release of the version 6.x series of psd, the only init system that is officially supported is systemd. Psd ships with a systemd user service to start or stop it (psd.service). Additionally, a provided resync-timer will run an hourly resync from tmpfs back to the disk. The resync-timer is started automatically with psd.service so there is no need to attempt to start the timer.
+</p>
+<p>For users unfamiliar with systemd user mode, use the following commands to enable the psd service:
+</p>
+<pre>$ systemctl --user [option] psd.service
+</pre>
+<p>Available options are <code>start</code>, <code>stop</code>,<code>restart</code>, <code>enable</code>, <code>disable</code> and <code>status</code>.
+</p>
+<h3><span class="mw-headline" id="Supported_distros">Supported distros</span></h3>
+<p>Since psd is just a bash script with a systemd service, it should run on any flavor of Linux running systemd. Around a dozen distros provide an official package or user-maintained option to install psd. One can also build psd from source. See the official website for available packages and installation instructions.
+</p>
+<h3>
+<span id="Sync_at_more_frequent_intervals_.28optional.29"></span><span class="mw-headline" id="Sync_at_more_frequent_intervals_(optional)">Sync at more frequent intervals (optional)</span>
+</h3>
+<p>The package provided re-sync timer triggers once per hour. Users may optionally redefine this behavior simply by <a href="../en/Systemd.html#Editing_provided_units" title="Systemd">extending the systemd unit</a>. The example below changes the timer to sync once every ten minutes:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">~/.config/systemd/user/psd-resync.timer.d/frequency.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Unit]
+Description=Timer for Profile-sync-daemon
+
+[Timer]
+OnUnitActiveSec=
+OnUnitActiveSec=10m
+</pre>
+<p>See <span class="plainlinks archwiki-template-man" title="$ man 5 systemd.timer"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/systemd.timer.5">systemd.timer(5)</a></span> for additional options.
+</p>
+<h2><span class="mw-headline" id="FAQ">FAQ</span></h2>
+<h3>
+<span id="What_is_overlayfs_mode.3F"></span><span class="mw-headline" id="What_is_overlayfs_mode?">What is overlayfs mode?</span>
+</h3>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> There are several versions of overlayfs available to the Linux kernel in production in various distros. Versions 22 and lower have a module called 'overlayfs' while newer versions (23 and higher) have a module called 'overlay' -- note the lack of the 'fs' in the newer version. Psd will automatically detect the overlayfs available to your kernel if it is configured to use one of them.</div>
+<p>Overlayfs is a simple union file-system mainlined in the Linux kernel version 3.18.0. Starting with psd version 5.54, overlayfs can be used to reduce the memory footprint of psd's tmpfs space and to speed up sync and unsync operations. The magic is in how the overlay mount only writes out data that has changed rather than the entire profile. The same recovery features psd uses in its default mode are also active when running in overlayfs mode. Overlayfs mode is enabled by uncommenting the <i>USE_OVERLAYFS="yes</i>" line in <code>$XDG_CONFIG_HOME/psd/psd.conf</code> followed by a <a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Restart">restart</a> of the daemon.
+</p>
+<p>Since version 6.05 of psd, users wanting to take advantage of this mode MUST have <a href="../en/Sudo.html" title="Sudo">sudo</a> rights (without password prompt) to <code>/usr/bin/psd-overlay-helper</code> or global sudo rights. The following line in <code>/etc/sudoers</code> will supply a <a href="../en/Users_and_groups.html" class="mw-redirect" title="User">user</a> with these rights (replace "user" with your actual username). Add it using <a href="../en/Sudo.html#Using_visudo" title="Sudo">visudo</a>:
+</p>
+<pre>user ALL=(ALL) NOPASSWD: /usr/bin/psd-overlay-helper
+</pre>
+<p>See the example in the PREVIEW MODE section above which shows a system using overlayfs to illustrate the memory savings that can be achieved. Note the "overlayfs size" report compared to the total "profile size" report for each profile. Be aware that these numbers will change depending on how much data is written to the profile, but in common use cases the overlayfs size will always be less than the profile size.
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Usage of <i>psd</i> in overlayfs mode (in particular, <i>psd-overlay-helper</i>) may lead to privilege escalation. <a rel="nofollow" class="external autonumber" href="https://github.com/graysky2/profile-sync-daemon/issues/235">[1]</a>
+</div>
+<h3>
+<span id="I_need_more_memory_to_accommodate_my_profile.2Fprofiles_in_.2Frun.2Fuser.2Fxxxx._How_can_I_allocate_more.3F"></span><span class="mw-headline" id="I_need_more_memory_to_accommodate_my_profile/profiles_in_/run/user/xxxx._How_can_I_allocate_more?">I need more memory to accommodate my profile/profiles in /run/user/xxxx. How can I allocate more?</span>
+</h3>
+<p>The  standard way of controlling the size of /run/user is the RuntimeDirectorySize directive in <code>/etc/systemd/logind.conf</code> (see the man page for logind.conf for more). By default, 10% of physical memory is used but one can increase it safely. Remember that tmpfs only consumes what is actually used; the number specified here is just a maximum allowed.
+</p>
+<h3>
+<span id="Why_do_I_have_another_browser_profile_directory_.22foo-back-ovfs.22_when_I_enable_overlayfs.3F"></span><span class="mw-headline" id='Why_do_I_have_another_browser_profile_directory_"foo-back-ovfs"_when_I_enable_overlayfs?'>Why do I have another browser profile directory "foo-back-ovfs" when I enable overlayfs?</span>
+</h3>
+<p>The way overlayfs works is to mount a read-only base copy (so-called lower dir) of the profile, and manage the new data on top of that. In order to avoid resyncing to the read-only file system, a copy is used instead. So using overlayfs is a trade off: faster initial sync times and less memory usage vs. disk space in the home dir.
+</p>
+<h3>
+<span id="My_system_crashed_and_did_not_sync_back._What_do_I_do.3F"></span><span class="mw-headline" id="My_system_crashed_and_did_not_sync_back._What_do_I_do?">My system crashed and did not sync back. What do I do?</span>
+</h3>
+<p>Odds are the "last good" backup of your browser profiles is just fine still sitting happily on your filesystem. Upon restarting <code>psd</code> (on a reboot for example), a check is performed to see if the symlink to the tmpfs copy of your profile is invalid. If it is invalid, <i>psd</i> will snapshot the "last good" backup before it rotates it back into place. This is more for a sanity check that <i>psd</i> did no harm and that any data loss was a function of something else.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Users can disable the snapshot/backup feature entirely by uncommenting and setting the USE_BACKUPS variable to 'no' in <code>$XDG_CONFIG_HOME/psd/psd.conf</code> if desired.</div>
+<h3>
+<span id="Where_can_I_find_this_snapshot.3F"></span><span class="mw-headline" id="Where_can_I_find_this_snapshot?">Where can I find this snapshot?</span>
+</h3>
+<p>It depends on the browser. You will find the snapshot in the same directory as the browser profile and it will contain a date-time-stamp that corresponds to the time at which the recovery took place. For example, chromium will be <code>~/.config/chromium-backup-crashrecovery-20130912_153310</code> -- of course, the date_time suffix will be different for you.
+</p>
+<h3>
+<span id="How_can_I_restore_the_snapshot.3F"></span><span class="mw-headline" id="How_can_I_restore_the_snapshot?">How can I restore the snapshot?</span>
+</h3>
+<ul>
+<li>Stop <code>psd</code>.</li>
+<li>Confirm that there is no symlink to the tmpfs browser profile directory. If there is, <i>psd</i> did not stop correctly for other reasons.</li>
+<li>Move the "bad" copy of the profile to a backup (do not blindly delete anything).</li>
+<li>Copy the snapshot directory to the name that browser expects.</li>
+</ul>
+<p>Example using Chromium:
+</p>
+<pre>mv ~/.config/chromium ~/.config/chromium-bad
+cp -a ~/.config/chromium-backup-crashrecovery-20130912_153310 ~/.config/chromium
+</pre>
+<p>At this point you can launch chromium which will use the backup snapshot you just copied into place. If all is well, close the browser and restart psd. You may safely delete <code>~/.config/chromium-backup-crashrecovery-20130912_153310</code> at this point.
+</p>
+<h3>
+<span id="Can_psd_delete_the_snapshots_automatically.3F"></span><span class="mw-headline" id="Can_psd_delete_the_snapshots_automatically?">Can psd delete the snapshots automatically?</span>
+</h3>
+<p>Yes, run psd with the "clean" switch to delete snapshots.
+</p>
+<h2><span class="mw-headline" id="Support">Support</span></h2>
+<p>Post in the <a rel="nofollow" class="external text" href="https://bbs.archlinux.org/viewtopic.php?pid=1026974">discussion thread</a> with comments or concerns.
+</p>
+<h2><span class="mw-headline" id="psd_on_other_distros">psd on other distros</span></h2>
+<p><i>psd</i> is a bash script and should therefore run on any Linux distro.  Around a dozen distros provide an official package or user-maintained option to install psd.  See the <a rel="nofollow" class="external text" href="https://github.com/graysky2/profile-sync-daemon#installation-from-distro-packages">official website</a> for available packages and installation instructions.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external free" href="http://www.webupd8.org/2013/02/keep-your-browser-profiles-in-tmpfs-ram.html">http://www.webupd8.org/2013/02/keep-your-browser-profiles-in-tmpfs-ram.html</a></li>
+<li><a rel="nofollow" class="external free" href="http://bernaerts.dyndns.org/linux/250-ubuntu-tweaks-ssd">http://bernaerts.dyndns.org/linux/250-ubuntu-tweaks-ssd</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Web_browser.html" title="Category:Web browser">Web browser</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Profile-sync-daemon&amp;oldid=640893">https://wiki.archlinux.org/index.php?title=Profile-sync-daemon&amp;oldid=640893</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 7 November 2020, at 08:01.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

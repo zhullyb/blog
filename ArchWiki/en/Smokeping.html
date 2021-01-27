@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Smokeping - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Smokeping rootpage-Smokeping skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Smokeping</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p><a rel="nofollow" class="external text" href="https://oss.oetiker.ch/smokeping/index.en.html">Smokeping</a>
+allows you to probe a list of servers, store that data using
+RRDtool, and generate statistical charts based on RRDtool's
+output. Smokeping consists of two parts. A daemon runs in the
+background pinging and collecting data at set intervals. A web
+interface displays that data in the form of graphs.
+</p>
+<p>This wiki page covers a basic setup of the smokeping daemon and the CGI webinterface.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Optional_Prerequisites"><span class="tocnumber">1.1</span> <span class="toctext">Optional Prerequisites</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-3">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4">
+<a href="#Editing_the_config_file"><span class="tocnumber">2.1</span> <span class="toctext">Editing the config file</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#Notes_on_the_smokeping_configuration_file_syntax"><span class="tocnumber">2.1.1</span> <span class="toctext">Notes on the smokeping configuration file syntax</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href="#Setup_the_rest_of_the_system"><span class="tocnumber">2.2</span> <span class="toctext">Setup the rest of the system</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Start_and_enable_daemon"><span class="tocnumber">2.3</span> <span class="toctext">Start and enable daemon</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Setup_web_frontend"><span class="tocnumber">3</span> <span class="toctext">Setup web frontend</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Apache"><span class="tocnumber">3.1</span> <span class="toctext">Apache</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Caddy"><span class="tocnumber">3.2</span> <span class="toctext">Caddy</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Lighttpd"><span class="tocnumber">3.3</span> <span class="toctext">Lighttpd</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Nginx"><span class="tocnumber">3.4</span> <span class="toctext">Nginx</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13"><a href="#Advanced_Configuration"><span class="tocnumber">4</span> <span class="toctext">Advanced Configuration</span></a></li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Notes"><span class="tocnumber">5</span> <span class="toctext">Notes</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#Smoketrace_(Tr.cgi)"><span class="tocnumber">5.1</span> <span class="toctext">Smoketrace (Tr.cgi)</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>This section covers the installation of <a rel="nofollow" class="external text" href="https://oss.oetiker.ch/smokeping/index.en.html">Smokeping</a> using the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=smokeping">smokeping</a></span> package. FastCGI on Apache will be setup as described in <a href="../en/Apache_HTTP_Server/mod_fcgid.html" class="mw-redirect" title="Apache and FastCGI">Apache and FastCGI</a>.
+</p>
+<p>The smokeping package consists of two parts:
+</p>
+<ul>
+<li>The smokeping daemon and configs in <code>/etc/smokeping/</code>. This daemon performs the monitoring.</li>
+<li>The smokeping "htdocs" in <code>/srv/http/smokeping</code>. These will be used by the web interface.</li>
+</ul>
+<p>In addition to the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=smokeping">smokeping</a></span> package, you will need:
+</p>
+<ul>
+<li>A tool that smokeping can use for monitoring. <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fping">fping</a></span> is the simplest and default method for simple ping probes.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=apache">apache</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=mod_fcgid">mod_fcgid</a></span> for the web interface if you're using Apache.</li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fcgiwrap">fcgiwrap</a></span> and start and enable fcgiwrap.socket if you're using Nginx</li>
+<li>An image cache directory that the FastCGI script can write to, e.g. <code>/srv/smokeping/imgcache</code>
+</li>
+<li>A data directory that the smokeping daemon can write to, and the FastCGI script can read, e.g. <code>/srv/smokeping/data</code>
+</li>
+<li>To ensure that the main config file is readable by the smokeping daemon.</li>
+</ul>
+<h3><span class="mw-headline" id="Optional_Prerequisites">Optional Prerequisites</span></h3>
+<p>If you want to use other probes such as the DNS or http probe you will
+need other packages as shown below. The configuration of these will is not covered by this wiki page.
+</p>
+<table class="wikitable">
+<tbody>
+<tr>
+<th>Probe</th>
+<th>Package Needed
+</th>
+</tr>
+<tr>
+<td>Curl</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=curl">curl</a></span>
+</td>
+</tr>
+<tr>
+<td>DNS</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span> (for the dig utility)
+</td>
+</tr>
+<tr>
+<td>EchoPing</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=echoping">echoping</a></span>
+</td>
+</tr>
+<tr>
+<td>SSH</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openssh">openssh</a></span>
+</td>
+</tr>
+<tr>
+<td>TelnetIOSPing</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-net-telnet">perl-net-telnet</a></span>
+</td>
+</tr>
+<tr>
+<td>AnotherDNS</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-net-dns">perl-net-dns</a></span>
+</td>
+</tr>
+<tr>
+<td>LDAP</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-ldap">perl-ldap</a></span>
+</td>
+</tr>
+<tr>
+<td>LDAP (tls)</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-io-socket-ssl">perl-io-socket-ssl</a></span>
+</td>
+</tr>
+<tr>
+<td>Authen</td>
+<td>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=perl-authen-radius">perl-authen-radius</a></span>
+</td>
+</tr>
+</tbody>
+</table>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Smokeping requires you to edit a few files. The unedited files end
+with the <code>.dist</code> extension. Rename the <code>.dist</code>
+files in <code>/etc/smokeping</code> to remove the suffix. The <i>find</i> command does this and
+prints out each file that is being renamed and needs editing:
+</p>
+<pre># cd /etc/smokeping
+# find . -name '*.dist' -print -execdir sh -c 'mv {} $(basename {} .dist)' \;
+# mv /srv/http/smokeping/smokeping.fcgi.dist /srv/http/smokeping/smokeping.fcgi
+</pre>
+<h3><span class="mw-headline" id="Editing_the_config_file">Editing the config file</span></h3>
+<p>Next, edit the <code>/etc/smokeping/config</code> file; this is smokeping's main config file. A brief description of the sections is followed by a complete example.
+</p>
+<p>The <i>General</i> section of the <code>/etc/smokeping/config</code> file is the easiest to edit. Personalize the
+top of the config file to match your information. The comments describe each field. Note that if you do not have the <code>sendmail</code> program installed (ie from postfix or sendmail) then use something else instead like <code>/bin/false</code>. The file you specify must exist or smokeping will error out.
+</p>
+<p>The <i>Alerts</i> section is not needed in this minimal example, so it can be either commented out or removed.
+</p>
+<p>The <i>Database</i> section does not require any changes.
+</p>
+<p>In the <i>Presentation</i> section the path to the template filename needs to be updated.
+</p>
+<p>The <i>Probes</i> section specifies which probes are active. By default only the <i>FPing</i> probe is enabled. This section does not require any changes.
+</p>
+<p>The <i>Slaves</i> section is not needed in this minimal example, so it can be either commented out or removed. Note that if you use the <code>smokeping_secrets</code> setting in the <i>Slaves</i> section, you will have to make that file unreadable to the rest of the world, or else smokeping will error: <code>chmod 600 /etc/smokeping/smokeping_secrets</code>.
+</p>
+<p>The <i>Targets</i> section specifies which hosts will be probed (pinged in our example). Customize it so that it probes the host(s) you would like to collect statistics on, as shown in the example below.
+</p>
+<p>You can learn more about the Smokeping config
+file with the examples at
+<a rel="nofollow" class="external free" href="http://oss.oetiker.ch/smokeping/doc/smokeping_examples.en.html">http://oss.oetiker.ch/smokeping/doc/smokeping_examples.en.html</a>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/smokeping/config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">*** General ***
+
+owner     = Your Name Here                            # your name
+contact   = your.email@host.bla                       # your email
+mailhost  = your.smtp.server.bla                      # your mail server
+sendmail  = /bin/false                                # where the sendmail program is
+imgcache  = /srv/smokeping/imgcache                   # filesystem directory where we store files
+imgurl    = imgcache                                  # URL directory to find them
+datadir   = /srv/smokeping/data                       # where we share data between the daemon and webapp
+piddir    = /var/run                                  # filesystem directory to store PID file
+cgiurl    = http://localhost/smokeping/smokeping.fcgi  # exterior URL
+smokemail = /etc/smokeping/smokemail   
+tmail     = /etc/smokeping/tmail
+syslogfacility = local0
+# each probe is now run in its own process
+# disable this to revert to the old behaviour
+# concurrentprobes = no
+
+*** Database ***
+
+step     = 300
+pings    = 20
+
+# consfn mrhb steps total
+
+AVERAGE  0.5   1  1008
+AVERAGE  0.5  12  4320
+    MIN  0.5  12  4320
+    MAX  0.5  12  4320
+AVERAGE  0.5 144   720
+    MAX  0.5 144   720
+    MIN  0.5 144   720
+
+*** Presentation ***
+
+template = /etc/smokeping/basepage.html
+
++ charts
+
+menu = Charts
+title = The most interesting destinations
+++ stddev
+sorter = StdDev(entries=&gt;4)
+title = Top Standard Deviation
+menu = Std Deviation
+format = Standard Deviation %f
+
+++ max
+sorter = Max(entries=&gt;5)
+title = Top Max Roundtrip Time
+menu = by Max
+format = Max Roundtrip Time %f seconds
+
+++ loss
+sorter = Loss(entries=&gt;5)
+title = Top Packet Loss
+menu = Loss
+format = Packets Lost %f
+
+++ median
+sorter = Median(entries=&gt;5)
+title = Top Median Roundtrip Time
+menu = by Median
+format = Median RTT %f seconds
+
++ overview 
+
+width = 600
+height = 50
+range = 10h
+
++ detail
+
+width = 600
+height = 200
+unison_tolerance = 2
+
+"Last 3 Hours"    3h
+"Last 30 Hours"   30h
+"Last 10 Days"    10d
+"Last 400 Days"   400d
+
+*** Probes ***
+
++ FPing
+
+binary = /usr/bin/fping
+
+*** Targets ***
+
+probe = FPing
+
+menu = Top
+title = Network Latency Grapher
+remark = Welcome to the SmokePing website of Arch User. \
+         Here you will learn all about the latency of our network.
+
++ targets
+menu = Targets
+title = Targets
+
+++ CloudflareDNS
+ 
+menu = Cloudflare DNS
+title = Cloudflare DNS server
+host = 1.1.1.1
+
+++ GoogleDNS
+
+menu = Google DNS
+title = Google DNS server
+host = 8.8.8.8
+
+++ MultiHost
+
+menu = Multihost example
+title = CloudflareDNS and Google DNS
+host = /targets/CloudflareDNS /targets/GoogleDNS
+</pre>
+<h4><span class="mw-headline" id="Notes_on_the_smokeping_configuration_file_syntax">Notes on the smokeping configuration file syntax</span></h4>
+<p>Each <b>+</b> character defines a section in the hierarchy. Spaces are not allowed in the section names. Period and forward slashes should probably also be avoided in section names. This is probably because the RRD files are stored under the data directory with the same exact names as the sections.
+</p>
+<p>In the <i>Targets</i> section, you can define <code>host</code> as either a real host name or the path to another section to generate a multiple host chart, as shown in the <code>MultiHost</code> example above.
+</p>
+<h3><span class="mw-headline" id="Setup_the_rest_of_the_system">Setup the rest of the system</span></h3>
+<p>Setup the extra directories referenced by the configuration file:
+</p>
+<pre># mkdir -p /srv/smokeping/data
+# mkdir -p /srv/smokeping/imgcache
+# chown -R smokeping:smokeping /srv/smokeping
+# chown -R http:http /srv/smokeping/imgcache
+# chmod a+rx /srv/smokeping
+# chmod -R a+rx /srv/smokeping/data
+</pre>
+<p>Since the smokeping configuration is read by both the smokeping daemon and the FastCGI scripts, so it needs to be readable:
+</p>
+<pre># chmod a+rx /etc/smokeping
+# chmod a+r /etc/smokeping/config
+</pre>
+<h3><span class="mw-headline" id="Start_and_enable_daemon">Start and enable daemon</span></h3>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> and enable <code>smokeping.service</code>. Then check that it is running.
+</p>
+<h2><span class="mw-headline" id="Setup_web_frontend">Setup web frontend</span></h2>
+<h3><span class="mw-headline" id="Apache">Apache</span></h3>
+<p>Edit <code>/etc/httpd/conf/httpd.conf</code> so that it includes:
+</p>
+<pre>LoadModule fcgid_module modules/mod_fcgid.so
+&lt;IfModule fcgid_module&gt;
+  AddHandler fcgid-script .fcgi
+&lt;/IfModule&gt;
+
+Alias /smokeping/imgcache /srv/smokeping/imgcache
+Alias /smokeping /srv/http/smokeping
+
+&lt;Directory "/srv/smokeping/imgcache"&gt;
+  AllowOverride all
+  Require all granted
+&lt;/Directory&gt;
+
+&lt;Directory "/srv/http/smokeping"&gt;
+ Options FollowSymLinks ExecCGI
+ AllowOverride all
+ Require all granted
+&lt;/Directory&gt;
+</pre>
+<p><a href="../en/Systemd.html#Using_units" class="mw-redirect" title="Start">Start</a> Apache via the <code>httpd.service</code>.
+</p>
+<p>Check that <a rel="nofollow" class="external free" href="http://localhost/smokeping/smokeping.fcgi">http://localhost/smokeping/smokeping.fcgi</a> loads. The first data should appear after a couple of minutes.
+</p>
+<p>If the fonts in the graphs are unreadable, you may need to install the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ttf-dejavu">ttf-dejavu</a></span> package.
+</p>
+<h3><span class="mw-headline" id="Caddy">Caddy</span></h3>
+<p>Thanks to the <a rel="nofollow" class="external text" href="https://caddy.community/t/smokeping-caddyfile/3560/8">Caddy community</a> and with this config file <a rel="nofollow" class="external text" href="https://s.natalian.org/2018-03-27/config">/etc/smokeping/config</a> and with <code>sudo systemctl enable fcgiwrap.socket</code>
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/caddy/caddy.conf.d/smokeping.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">smokeping.example.com {
+
+        log stdout
+        errors
+
+        tls john@example.com
+        root /srv/http/smokeping
+
+        fastcgi / unix:/var/run/fcgiwrap.sock {
+                env SCRIPT_FILENAME /srv/http/smokeping/smokeping.fcgi.dist
+        }
+}
+
+smokeping.example.com/js {
+        root /srv/http/smokeping/js
+}
+
+
+smokeping.example.com/css {
+        root /srv/http/smokeping/css
+}
+
+
+smokeping.example.com/cache {
+        root /var/cache/smokeping
+}
+</pre>
+<p>An updated version of this Caddy conf for smokeping - <a rel="nofollow" class="external free" href="https://gist.github.com/Strykar/4df1eb8aebc4d5f7039f6045301352c7">https://gist.github.com/Strykar/4df1eb8aebc4d5f7039f6045301352c7</a>
+</p>
+<h3><span class="mw-headline" id="Lighttpd">Lighttpd</span></h3>
+<p>First install <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=lighttpd">lighttpd</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=fcgi">fcgi</a></span>.
+</p>
+<p>Edit the <a href="../en/Lighttpd.html" title="Lighttpd">Lighttpd</a> configuration file and ensure you have at least all of the following configuration directives:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/lighttpd/lighttpd.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">server.document-root    = "/srv/http"
+server.follow-symlink   = "enable"
+
+server.modules += ("mod_fastcgi")
+fastcgi.server = (
+        ".fcgi" =&gt;
+        ((
+                "bin-path" =&gt; "/srv/http/smokeping/smokeping.fcgi",
+                "host" =&gt; "localhost",
+                "port" =&gt; 8001,
+        )),
+)</pre>
+<p>Start and enable the server:
+</p>
+<pre>$ systemctl start lighttpd
+$ systemctl enable lighttpd
+</pre>
+<p><a href="../en/Systemd.html" title="Systemd">Systemd</a> should show <code>smokeping_cgi</code> being managed by <code>lighttpd.service</code>.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ systemctl status lighttpd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">● lighttpd.service - Lighttpd Web Server
+   Loaded: loaded (/usr/lib/systemd/system/lighttpd.service; enabled; vendor preset: disabled)
+   Active: active (running) since Wed 2018-12-26 14:34:42 PST; 1 day 7h ago
+  Process: 17117 ExecReload=/bin/kill -HUP $MAINPID (code=exited, status=0/SUCCESS)
+ Main PID: 28321 (lighttpd-angel)
+    Tasks: 6 (limit: 4915)
+   Memory: 128.9M
+   CGroup: /system.slice/lighttpd.service
+           ├─17119 /usr/bin/lighttpd -D -f /etc/lighttpd/lighttpd.conf
+           ├─17126 /usr/bin/perl /usr/bin/smokeping_cgi /etc/smokeping/config
+           ├─17127 /usr/bin/perl /usr/bin/smokeping_cgi /etc/smokeping/config
+           ├─17128 /usr/bin/perl /usr/bin/smokeping_cgi /etc/smokeping/config
+           ├─17129 /usr/bin/perl /usr/bin/smokeping_cgi /etc/smokeping/config
+           └─28321 /usr/bin/lighttpd-angel -D -f /etc/lighttpd/lighttpd.conf</pre>
+<p>Finally, add a symbolic link to allow images to load:
+</p>
+<pre># ln -s -t /srv/http/smokeping /srv/smokeping/imgcache
+</pre>
+<h3><span class="mw-headline" id="Nginx">Nginx</span></h3>
+<p>Ensure that <code>fcgiwrap.socket</code> and <code>nginx.service</code> are both running via systemctl.
+</p>
+<p>Add a server block for smokeping to <code>/etc/nginx/nginx.conf</code>, following is an example for a TLS enabled block.
+</p>
+<pre>   server {
+       server_name smokeping.example.com;
+       listen 443 ssl http2;
+       listen [::]:443 ssl http2;
+       root /srv/http/smokeping/;
+       index smokeping.fcgi;
+       gzip off;
+       location ~ \.fcgi$ {
+           fastcgi_intercept_errors on;
+           include /etc/nginx/fastcgi_params;
+           fastcgi_param SCRIPT_FILENAME /srv/http/smokeping/smokeping.fcgi;
+           fastcgi_pass unix:/var/run/fcgiwrap.sock;
+       }
+       location /imgcache {
+           alias /srv/smokeping/imgcache;
+           gzip off;
+       }
+   }
+</pre>
+<p>Verify that your config is fine via <code>nginx -t</code> as the root user and reload the configuration via <code>nginx -s reload</code> as the root user.
+</p>
+<h2><span class="mw-headline" id="Advanced_Configuration">Advanced Configuration</span></h2>
+<p>Smokeping is a powerful tool that can be configured in many ways. You can setup many different types of probes. You can setup slave smokeping servers that can send their statistics and show you probes from other servers. You can also create your custom probes in perl. These options are currently not covered by this guide, please consult the documentation on the <a rel="nofollow" class="external text" href="http://oss.oetiker.ch/smokeping/index.en.html">Smokeping website</a> instead. Also see - <a rel="nofollow" class="external free" href="https://github.com/oetiker/SmokePing/wiki/FAQ">https://github.com/oetiker/SmokePing/wiki/FAQ</a>
+</p>
+<h2><span class="mw-headline" id="Notes">Notes</span></h2>
+<h3>
+<span id="Smoketrace_.28Tr.cgi.29"></span><span class="mw-headline" id="Smoketrace_(Tr.cgi)">Smoketrace (Tr.cgi)</span>
+</h3>
+<p>The <a rel="nofollow" class="external text" href="http://oss.oetiker.ch/smokeping/doc/smoketrace.en.html">SmokeTraceroute</a> utility is gone since v2.5.0 according to the <a rel="nofollow" class="external text" href="http://oss.oetiker.ch/smokeping/pub/CHANGES">release notes</a>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Network_monitoring.html" title="Category:Network monitoring">Network monitoring</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Smokeping&amp;oldid=636499">https://wiki.archlinux.org/index.php?title=Smokeping&amp;oldid=636499</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 25 September 2020, at 12:43.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

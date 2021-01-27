@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Moving an existing install into (or out of) a virtual machine (Português) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Moving_an_existing_install_into_or_out_of_a_virtual_machine_Português rootpage-Moving_an_existing_install_into_or_out_of_a_virtual_machine_Português skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Moving an existing install into (or out of) a virtual machine (Português)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Status de tradução:</strong> Esse artigo é uma tradução de <a href="../en/Moving_an_existing_install_into_(or_out_of)_a_virtual_machine.html" title="Moving an existing install into (or out of) a virtual machine">Moving an existing install into (or out of) a virtual machine</a>. Data da última tradução: 2019-12-15. Você pode ajudar a sincronizar a tradução, se houver <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Moving_an_existing_install_into_(or_out_of)_a_virtual_machine&amp;diff=0&amp;oldid=590842">alterações</a> na versão em inglês.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artigos relacionados</p>
+<ul>
+<li><a href="../pt/VirtualBox.html" title="VirtualBox (Português)">VirtualBox</a></li>
+<li><a href="../en/VMware.html" title="VMware">VMware</a></li>
+<li><a href="../en/QEMU.html" title="QEMU">QEMU</a></li>
+<li><a href="../en/Migrate_installation_to_new_hardware.html" title="Migrate installation to new hardware">Migrar instalação para novo hardware</a></li>
+</ul>
+</div>
+<p>Este artigo descreve como transferir sua instalação atual do Arch Linux para dentro ou fora de um ambiente virtual (por exemplo, QEMU, VirtualBox, VMware). Uma máquina virtual ("VM", abreviadamente) usa hardware diferente, que precisa ser endereçado regenerando a imagem initramfs e possivelmente ajustando o fstab - especialmente se for um <a href="../en/Solid_state_drive.html" class="mw-redirect" title="SSD">SSD</a>.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Movendo_para_fora_da_uma_VM"><span class="tocnumber">1</span> <span class="toctext">Movendo para fora da uma VM</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Configurar_uma_pasta_compartilhada"><span class="tocnumber">1.1</span> <span class="toctext">Configurar uma pasta compartilhada</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Transferir_o_sistema"><span class="tocnumber">1.2</span> <span class="toctext">Transferir o sistema</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Entrar_em_chroot_e_reinstalar_o_gerenciador_de_boot"><span class="tocnumber">1.3</span> <span class="toctext">Entrar em chroot e reinstalar o gerenciador de boot</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Ajustar_o_fstab"><span class="tocnumber">1.4</span> <span class="toctext">Ajustar o fstab</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Gerar_novamente_a_imagem_initramfs"><span class="tocnumber">1.5</span> <span class="toctext">Gerar novamente a imagem initramfs</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7">
+<a href="#Movendo_para_dentro_de_uma_VM"><span class="tocnumber">2</span> <span class="toctext">Movendo para dentro de uma VM</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Criar_o_cont%C3%AAiner"><span class="tocnumber">2.1</span> <span class="toctext">Criar o contêiner</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Transferir_o_sistema_2"><span class="tocnumber">2.2</span> <span class="toctext">Transferir o sistema</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Converter_o_cont%C3%AAiner_para_um_formato_compat%C3%ADvel"><span class="tocnumber">2.3</span> <span class="toctext">Converter o contêiner para um formato compatível</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Entrar_em_chroot_e_reinstalar_o_gerenciador_de_boot_2"><span class="tocnumber">2.4</span> <span class="toctext">Entrar em chroot e reinstalar o gerenciador de boot</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Ajustar_o_fstab_2"><span class="tocnumber">2.5</span> <span class="toctext">Ajustar o fstab</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Desabilitar_quaisquer_arquivos_relacionados_a_Xorg"><span class="tocnumber">2.6</span> <span class="toctext">Desabilitar quaisquer arquivos relacionados a Xorg</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Gerar_novamente_a_imagem_initramfs_2"><span class="tocnumber">2.7</span> <span class="toctext">Gerar novamente a imagem initramfs</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#Solu%C3%A7%C3%A3o_de_problemas"><span class="tocnumber">3</span> <span class="toctext">Solução de problemas</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#%22mount:_o_dispositivo_especial_/dev/loop5p1_n%C3%A3o_existe%22"><span class="tocnumber">3.1</span> <span class="toctext">"mount: o dispositivo especial /dev/loop5p1 não existe"</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#%22Waiting_10_seconds_for_device_/dev/sda1;_ERROR:_Unable_to_find_root_device_'/dev/sda1'%22"><span class="tocnumber">3.2</span> <span class="toctext">"Waiting 10 seconds for device /dev/sda1; ERROR: Unable to find root device '/dev/sda1'"</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#%22Missing_operating_system._FATAL:_INT18:_BOOT_FAILURE%22"><span class="tocnumber">3.3</span> <span class="toctext">"Missing operating system. FATAL: INT18: BOOT FAILURE"</span></a></li>
+<li class="toclevel-2 tocsection-19"><a href="#Me_pede_a_senha_de_root,_para_manuten%C3%A7%C3%A3o"><span class="tocnumber">3.4</span> <span class="toctext">Me pede a senha de root, para manutenção</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Movendo_para_fora_da_uma_VM">Movendo para fora da uma VM</span></h2>
+<p>Mover para fora de um ambiente virtual é relativamente fácil.
+</p>
+<h3><span class="mw-headline" id="Configurar_uma_pasta_compartilhada">Configurar uma pasta compartilhada</span></h3>
+<p>A configuração de uma pasta compartilhada entre a máquina virtual convidada e o host depende do hipervisor usado. Por favor, refira-se à sua página wiki ou manual específico.
+</p>
+<p>Se você ainda não possui uma partição ext4, veja <a href="../pt/File_systems.html" class="mw-redirect" title="Sistemas de arquivos">Sistemas de arquivos</a>.
+</p>
+<p>Se você estiver no Windows, instale <a rel="nofollow" class="external text" href="http://www.ext2fsd.com/">Ext2Fsd</a> para poder montar volumes ext.
+</p>
+<h3><span class="mw-headline" id="Transferir_o_sistema">Transferir o sistema</span></h3>
+<p>Na máquina virtual, abra um terminal e <a href="../en/Rsync.html" title="Rsync">transfira</a> o sistema:
+</p>
+<pre># rsync -aAXv /* /path/to/shared/folder --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*/.gvfs}
+</pre>
+<h3><span class="mw-headline" id="Entrar_em_chroot_e_reinstalar_o_gerenciador_de_boot">Entrar em chroot e reinstalar o gerenciador de boot</span></h3>
+<p>Inicialize uma distribuição GNU/Linux "live", monte a partição root e faça <a href="../pt/Chroot.html" title="Chroot (Português)">chroot</a> nela.
+</p>
+<p>Reinstale seu gerenciador de boot: <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a>, <a href="../pt/GRUB.html" title="GRUB (Português)">GRUB</a> ou <a href="../pt/Systemd-boot.html" title="Systemd-boot (Português)">systemd-boot</a>. Não se esqueça de atualizar o arquivo de configuração: <code>syslinux.cfg</code> para o Syslinux, <code>grub.cfg</code> para o Grub ou as entradas de inicialização do systemd-boot localizadas em <code>/boot/loader/entries/</code>.
+</p>
+<h3><span class="mw-headline" id="Ajustar_o_fstab">Ajustar o fstab</span></h3>
+<p>Como toda a sua árvore raiz foi transferida para uma única partição, edite o arquivo <a href="../pt/Fstab.html" title="Fstab (Português)">fstab</a> para refletir a(s) partição(ões) correta(s).
+</p>
+<p>Verifique com o comando <code>blkid</code>, já que <code>lsblk</code> não é muito útil dentro de um chroot.
+</p>
+<h3><span class="mw-headline" id="Gerar_novamente_a_imagem_initramfs">Gerar novamente a imagem initramfs</span></h3>
+<p>Como o hardware mudou, enquanto você ainda está no chroot, gere novamente a imagem do initramfs:
+</p>
+<pre># mkinitcpio -p linux 
+</pre>
+<p>E é basicamente isso.
+</p>
+<p>É provável que você precise configurar a rede, já que a máquina virtual provavelmente estava usando as configurações de rede do sistema operacional do host. Veja <a href="../pt/Network_configuration.html" class="mw-redirect" title="Configuração de rede">Configuração de rede</a>.
+</p>
+<h2><span class="mw-headline" id="Movendo_para_dentro_de_uma_VM">Movendo para dentro de uma VM</span></h2>
+<p>Mover para <i>dentro</i> de um ambiente virtual exige um pouco mais de esforço.
+</p>
+<h3>
+<span id="Criar_o_cont.C3.AAiner"></span><span class="mw-headline" id="Criar_o_contêiner">Criar o contêiner</span>
+</h3>
+<p>Isso criará uma imagem bruta de 10 GB:
+</p>
+<pre># dd if=/dev/zero of=/media/Backup/backup.img bs=1024 count=10482381
+</pre>
+<div class="archwiki-template-box archwiki-template-box-tip">
+<strong>Dica:</strong> Usar <code>fallocate</code> é muito mais rápido:
+<pre># fallocate -l 10GiB -o 1024 /media/Backup/backup.img
+</pre>
+</div>
+<p>Se você quiser criar um com o tamanho exato de sua partição raiz, execute <code>fdisk -l</code> e use o valor da coluna <code>Blocos</code> para o parâmetro <code>count=</code>. Note que você irá transferir toda a sua árvore raiz, de modo que inclua as pastas <code>/boot</code> e <code>/home</code>. Se você tiver partições separadas para essas, precisará considerá-las ao criar o contêiner.
+</p>
+<p>Agora carregue o módulo necessário e monte-o como um dispositivo de loopback, em <code>/dev/loop5</code> (por exemplo):
+</p>
+<pre># modprobe loop
+# losetup /dev/loop5 /media/Backup/backup.img
+</pre>
+<p>Em seguida, particione o dispositivo <code>/dev/loop5</code> executando sua ferramenta de <a href="../pt/Partitioning.html#Ferramentas_de_particionamento" class="mw-redirect" title="Particionamento">particionamento favorita</a>. Crie uma tabela de partição nela (por exemplo, <code>msdos</code>), escolha o <a href="../pt/Partitioning.html#Esquema_de_parti%C3%A7%C3%A3o" class="mw-redirect" title="Esquema de partição">esquema de partição</a> e crie as partições. Em seguida, crie um <a href="../pt/File_systems.html" class="mw-redirect" title="Sistema de arquivos">sistema de arquivos</a> nas partições, que aparecerão como <code>/dev/loop5p1</code>, <code>/dev/loop5p2</code>, etc.
+</p>
+<h3><span class="mw-headline" id="Transferir_o_sistema_2">Transferir o sistema</span></h3>
+<p>Monte o dispositivo de loopback e <a href="../en/Rsync.html" title="Rsync">transfira</a> o sistema:
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Se o contêiner foi salvo em algum lugar diferente de <code>/mnt</code> ou <code>/media</code>, não se esqueça de adicioná-lo à lista de exclusões.</div>
+<pre># mkdir /mnt/Virtual
+# mount /dev/loop5p1 /mnt/Virtual
+# rsync -aAXv /* /mnt/Virtual --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*/.gvfs}
+</pre>
+<h3>
+<span id="Converter_o_cont.C3.AAiner_para_um_formato_compat.C3.ADvel"></span><span class="mw-headline" id="Converter_o_contêiner_para_um_formato_compatível">Converter o contêiner para um formato compatível</span>
+</h3>
+<p>Escolha o comando apropriado, dependendo da máquina virtual desejada.
+</p>
+<p>Para converter em um contêiner de <b>KVM</b>, use <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=qemu">qemu</a></span> com a seguinte linha de comando:
+</p>
+<pre>$ qemu-img convert -c -f raw -O qcow /media/backup.img /media/backup.qcow2
+</pre>
+<p>Para converter em um contêiner do <b>VirtualBox</b>, use o <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=virtualbox">virtualbox</a></span> com a seguinte linha de comando:
+</p>
+<pre>$ VBoxManage convertfromraw --format VDI /media/backup.img /media/backup.vdi
+</pre>
+<p>Para converter em um contêiner do <b>VMware</b>, use o <i>virtualbox</i> com a seguinte linha de comando:
+</p>
+<pre>$ VBoxManage convertfromraw --format VMDK /media/backup.img /media/backup.vmdk
+</pre>
+<h3><span class="mw-headline" id="Entrar_em_chroot_e_reinstalar_o_gerenciador_de_boot_2">Entrar em chroot e reinstalar o gerenciador de boot</span></h3>
+<p>Conecte o contêiner à VM, juntamente com um LiveCD do Linux (por exemplo, o ISO do Arch Linux mais recente) no CD-ROM virtual da VM, em seguida, inicie a VM e faça <a href="../pt/Chroot.html" title="Chroot (Português)">chroot</a> nela:
+</p>
+<pre># mount /dev/sda1 /mnt
+# arch-chroot /mnt /bin/bash
+</pre>
+<p>Reinstale o <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a> ou o <a href="../pt/GRUB.html" title="GRUB (Português)">GRUB</a>. Não esqueça de atualizar seu arquivo de configuração:
+</p>
+<ul><li>Para o Syslinux, deve ser <code>APPEND root=/dev/sda1 ro</code> no <code>syslinux.cfg</code>.</li></ul>
+<ul><li>Para o GRUB, é recomendado que você gere de novo automaticamente um <code>grub.cfg</code>.</li></ul>
+<h3><span class="mw-headline" id="Ajustar_o_fstab_2">Ajustar o fstab</span></h3>
+<p>Como toda a sua árvore raiz foi transferida para uma única partição, edite o arquivo <a href="../pt/Fstab.html" title="Fstab (Português)">fstab</a>. Você pode usar o UUID ou o rótulo, se quiser, mas eles são mais úteis em configurações de várias unidades e várias unidades (para evitar confusões). Por enquanto, <code>/dev/sda1</code> para todo o seu sistema está ótimo.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">tmpfs                    /tmp      tmpfs     nodev,nosuid          0   0
+/dev/sda1                /         ext4      defaults,noatime      0   1</pre>
+<h3><span class="mw-headline" id="Desabilitar_quaisquer_arquivos_relacionados_a_Xorg">Desabilitar quaisquer arquivos relacionados a Xorg</span></h3>
+<p>Ter uma entrada <code>nvidia</code>, <code>nouveau</code>, <code>radeon</code>, <code>intel</code>, etc. na seção <code>Device</code> de uma dos arquivos de configuração do Xorg evitará que ele seja iniciado, já que você estará usando hardware <i>emulado</i> (incluindo a placa de vídeo). Portanto, é recomendável mover/renomear ou excluir o seguinte:
+</p>
+<pre># mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
+# mv /etc/X11/xorg.conf.d/10-monitor /etc/X11/xorg.conf.d/10-monitor.bak
+</pre>
+<h3><span class="mw-headline" id="Gerar_novamente_a_imagem_initramfs_2">Gerar novamente a imagem initramfs</span></h3>
+<p>Como o hardware mudou, enquanto você ainda está no chroot, gere novamente a imagem do initramfs e faça um desligamento adequado:
+</p>
+<pre># mkinitcpio -p linux
+# exit
+# umount -R /mnt
+# poweroff
+</pre>
+<p>Por fim, retire o LiveCD (o arquivo ISO), para que você não inicialize novamente nele e inicie a máquina virtual.
+</p>
+<p>Aproveite o seu novo ambiente virtual.
+</p>
+<h2>
+<span id="Solu.C3.A7.C3.A3o_de_problemas"></span><span class="mw-headline" id="Solução_de_problemas">Solução de problemas</span>
+</h2>
+<h3>
+<span id=".22mount:_o_dispositivo_especial_.2Fdev.2Floop5p1_n.C3.A3o_existe.22"></span><span class="mw-headline" id='"mount:_o_dispositivo_especial_/dev/loop5p1_não_existe"'>"mount: o dispositivo especial /dev/loop5p1 não existe"</span>
+</h3>
+<p>Use <code>losetup --partscan</code>, por exemplo:
+</p>
+<pre># losetup --partscan /dev/loop5 /media/Backup/backup.img
+</pre>
+<p>Isso deve criar nós de dispositivo para cada partição que você criou dentro do dispositivo de loop.
+</p>
+<h3>
+<span id=".22Waiting_10_seconds_for_device_.2Fdev.2Fsda1.3B_ERROR:_Unable_to_find_root_device_.27.2Fdev.2Fsda1.27.22"></span><span class="mw-headline" id="&quot;Waiting_10_seconds_for_device_/dev/sda1;_ERROR:_Unable_to_find_root_device_'/dev/sda1'&quot;">"Waiting 10 seconds for device /dev/sda1; ERROR: Unable to find root device '/dev/sda1'"</span>
+</h3>
+<pre>Waiting 10 seconds for device /dev/sda1 ...
+ERROR: Unable to find root device '/dev/sda1'.
+You are being dropped to a recovery shell
+    Type 'exit' to try and continue booting
+sh: cannot access tty; job control turned off
+[rootfs /]# _
+</pre>
+<p>Isso provavelmente significa que você não executou <code>poweroff</code> como <i>você foi orientado</i> e fechou a VM com o botão "Fechar", que é o equivalente a uma queda de energia. Agora você precisa gerar novamente sua imagem de initramfs. Para fazer isso, você pode iniciar a VM usando a entrada reserva. Se você não tiver uma entrada reserva, pressione <code>Tab</code> (para Syslinux) ou <code>e</code> (para GRUB) e renomeie-a para <code>initramfs-linux-fallback.img</code>. Depois de inicializar, abra um terminal e execute:
+</p>
+<pre># mkinitcpio -p linux
+# poweroff
+</pre>
+<h3>
+<span id=".22Missing_operating_system._FATAL:_INT18:_BOOT_FAILURE.22"></span><span class="mw-headline" id='"Missing_operating_system._FATAL:_INT18:_BOOT_FAILURE"'>"Missing operating system. FATAL: INT18: BOOT FAILURE"</span>
+</h3>
+<ul><li>Você precisa instalar ou reinstalar um gerenciador de boot. Veja <a href="../pt/Arch_boot_process.html#Gerenciador_de_boot" class="mw-redirect" title="Processo de inicialização do Arch">Processo de inicialização do Arch#Gerenciador de boot</a>.</li></ul>
+<ul><li>Você está usando um sistema de arquivos <a href="../en/Btrfs.html" title="Btrfs">Btrfs</a> com compressão para <code>/boot</code>, do qual o <a href="../en/Syslinux.html" title="Syslinux">Syslinux</a> atualmente não consegue inicializar.</li></ul>
+<ul><li>A ordem de inicialização do BIOS ou das configurações da VM não está configurada corretamente. Certifique-se de que a unidade que contém o gerenciador de boot seja a primeira a ser inicializada.</li></ul>
+<h3>
+<span id="Me_pede_a_senha_de_root.2C_para_manuten.C3.A7.C3.A3o"></span><span class="mw-headline" id="Me_pede_a_senha_de_root,_para_manutenção">Me pede a senha de root, para manutenção</span>
+</h3>
+<pre>:: Checking Filesystems                        [BUSY]
+fsck.ext4: Unable to resolve '...'
+</pre>
+<p>Isso significa que você esqueceu de adicionar o UUID da unidade, o rótulo ou o nome do dispositivo em <code>/etc/fstab</code>. O UUID é diferente toda vez que você o formata (ou, neste caso, cria um do zero), e eles provavelmente não coincidem. Verifique com <code>blkid</code>.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Categories</a>: <ul>
+<li><a href="../pt/Category:Installation_process.html" title="Category:Installation process (Português)">Installation process (Português)</a></li>
+<li><a href="../pt/Category:Virtualization.html" title="Category:Virtualization (Português)">Virtualization (Português)</a></li>
+</ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Moving_an_existing_install_into_(or_out_of)_a_virtual_machine_(Portugu%C3%AAs)&amp;oldid=617222">https://wiki.archlinux.org/index.php?title=Moving_an_existing_install_into_(or_out_of)_a_virtual_machine_(Português)&amp;oldid=617222</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 31 May 2020, at 01:00.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

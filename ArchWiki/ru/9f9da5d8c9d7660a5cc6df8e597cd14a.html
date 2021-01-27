@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Samba (Русский)/Active Directory domain controller (Русский) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Samba_Русский_Active_Directory_domain_controller_Русский rootpage-Samba_Русский skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Samba (Русский)/Active Directory domain controller (Русский)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"><span class="subpages">&lt; <a href="../ru/Samba.html" title="Samba (Русский)">Samba (Русский)</a></span></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Состояние перевода:</strong> На этой странице представлен перевод статьи <a href="../en/Samba/Active_Directory_domain_controller.html" title="Samba/Active Directory domain controller">Samba/Active Directory domain controller</a>. Дата последней синхронизации: 3 сентября 2015. Вы можете <a href="../ru/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Русский)">помочь</a> синхронизировать перевод, если в английской версии произошли <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Samba/Active_Directory_domain_controller&amp;diff=0&amp;oldid=398112">изменения</a>.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Ссылки по теме</p>
+<ul>
+<li><a href="../ru/Active_Directory_integration.html" class="mw-redirect" title="Интеграция Active Directory">Интеграция Active Directory</a></li>
+<li><a href="../ru/Samba.html" title="Samba (Русский)">Samba (Русский)</a></li>
+<li><a href="../en/SOGo.html" title="SOGo">SOGo</a></li>
+</ul>
+</div>
+<p>Эта статья объясняет, как настроить новый контроллер домена Active Directory. Предполагается, что после установки все файлы настроек находятся в неизменённом состоянии. Эта статья была написана и протестирована на свежей установке, без каких-либо других установок (сетевое соединение статического IPv4, назначение имени хоста, добавление <a href="../ru/OpenSSH.html" class="mw-redirect" title="Secure Shell (Русский)">OpenSSH</a> и <a href="../ru/Vim.html" title="Vim (Русский)">Vim</a>), которые не должны иметь никакого влияния на настройки <a href="../ru/Samba.html" title="Samba (Русский)">Samba</a>. Большинство приведенных ниже команд потребует повышенных привелегий (прав суперпользователя). Несмотря на здравый смысл, проще запустить несколько этих коротких команд из сессии root, чем получать права по мере необходимости.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0"><span class="tocnumber">1</span> <span class="toctext">Установка</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#%D0%A0%D0%B5%D0%B7%D0%B5%D1%80%D0%B2%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"><span class="tocnumber">2</span> <span class="toctext">Резервирование</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#%D0%9E%D0%B1%D1%8A%D1%8F%D1%81%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BF%D0%B0%D1%80%D0%B0%D0%BC%D0%B5%D1%82%D1%80%D0%BE%D0%B2_(%D0%B0%D1%80%D0%B3%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%BE%D0%B2)"><span class="tocnumber">2.1</span> <span class="toctext">Объяснение параметров (аргументов)</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Interactive_provision_explanations"><span class="tocnumber">2.2</span> <span class="toctext">Interactive provision explanations</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0_%D0%B4%D0%B5%D0%BC%D0%BE%D0%BD%D0%BE%D0%B2"><span class="tocnumber">3</span> <span class="toctext">Настройка демонов</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#NTPD"><span class="tocnumber">3.1</span> <span class="toctext">NTPD</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#BIND"><span class="tocnumber">3.2</span> <span class="toctext">BIND</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#%D0%9A%D0%BB%D0%B8%D0%B5%D0%BD%D1%82%D1%81%D0%BA%D0%B8%D0%B5_%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D1%8B_Kerberos"><span class="tocnumber">3.3</span> <span class="toctext">Клиентские утилиты Kerberos</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#DNS"><span class="tocnumber">3.4</span> <span class="toctext">DNS</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Samba"><span class="tocnumber">3.5</span> <span class="toctext">Samba</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11">
+<a href="#%D0%A2%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8"><span class="tocnumber">4</span> <span class="toctext">Тестирование установки</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#DNS_2"><span class="tocnumber">4.1</span> <span class="toctext">DNS</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#%D0%90%D1%83%D1%82%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F_NT"><span class="tocnumber">4.2</span> <span class="toctext">Аутентификация NT</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Kerberos"><span class="tocnumber">4.3</span> <span class="toctext">Kerberos</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15">
+<a href="#%D0%A0%D0%B0%D1%81%D1%88%D0%B8%D1%80%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0"><span class="tocnumber">5</span> <span class="toctext">Расширенная настройка</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#DNS_3"><span class="tocnumber">5.1</span> <span class="toctext">DNS</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#SSL"><span class="tocnumber">5.2</span> <span class="toctext">SSL</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#DHCP"><span class="tocnumber">5.3</span> <span class="toctext">DHCP</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19"><a href="#%D0%A7%D1%82%D0%BE_%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C_%D0%B4%D0%B0%D0%BB%D1%8C%D1%88%D0%B5"><span class="tocnumber">6</span> <span class="toctext">Что делать дальше</span></a></li>
+</ul>
+</div>
+
+<h2>
+<span id=".D0.A3.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BA.D0.B0"></span><span class="mw-headline" id="Установка">Установка</span>
+</h2>
+<p>Полностью функциональный Samba 4 DC требует несколько программ, помимо тех, которые включенны в дистрибутив Samba. <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Установите</a> пакеты <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind-tools">bind-tools</a></span><sup>[<a href="../en/ArchWiki:Requests.html#Broken_package_links" class="mw-redirect" title="ArchWiki:Requests">ссылка недействительна</a>: replaced by <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span>]</sup>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=krb5">krb5</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntp">ntp</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openldap">openldap</a></span>, и <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=samba">samba</a></span>.
+</p>
+<p>Кроме того, Самба содержит свой собственный полнофункциональный DNS-сервер, но многие администраторы предпочитают использовать пакет ISC BIND. 
+Если вам нужна поддержка DNS зон для внешних доменов, вам настоятельно рекомендуется использовать <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span>. Для совместного использования принтеров, воспользуйтесь <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cups">cups</a></span>. При необходимости, поставьте пакет(ы) <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span> и/или <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=cups">cups</a></span>.
+</p>
+<h2>
+<span id=".D0.A0.D0.B5.D0.B7.D0.B5.D1.80.D0.B2.D0.B8.D1.80.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5"></span><span class="mw-headline" id="Резервирование">Резервирование</span>
+</h2>
+<p>Первый шаг к созданию домена Active Directory является создание резервов. Если это первый контроллер домена в новом домене (как предполагает это руководство), это подразумевает создание внутреннего LDAP, Kerberos и DNS-серверов и выполнение всех базовых настроек, необходимых для каталога. Вы должны быть в курсе потенциальных ошибок, созданных этими индивидуальными компонентами и работающих, как единое целое. Причина этой трудности в том, что разработчики Samba решили не использовать сервер MIT Kerberos или Heimdal или сервер OpenLDAP в пользу выбора внутренних версих этих программ. Выше были установлены пакеты сервера только для клиентских программ. С Samba 4 резервирование проще. Выполните следующую команду:
+</p>
+<pre># samba-tool domain provision --use-rfc2307 --use-xattrs=yes --interactive
+</pre>
+<h3>
+<span id=".D0.9E.D0.B1.D1.8A.D1.8F.D1.81.D0.BD.D0.B5.D0.BD.D0.B8.D0.B5_.D0.BF.D0.B0.D1.80.D0.B0.D0.BC.D0.B5.D1.82.D1.80.D0.BE.D0.B2_.28.D0.B0.D1.80.D0.B3.D1.83.D0.BC.D0.B5.D0.BD.D1.82.D0.BE.D0.B2.29"></span><span class="mw-headline" id="Объяснение_параметров_(аргументов)">Объяснение параметров (аргументов)</span>
+</h3>
+<dl>
+<dt>--use-rfc2307</dt>
+<dd>этот параметр добавляет POSIX атрибуты (UID / GID) на схеме AD. Это понадобится при аутендификации клиентов Linux, BSD, or OS X (в том числе на локальной машине) в дополнение к Microsoft Windows.</dd>
+</dl>
+<dl>
+<dt>--use-xattrs=yes</dt>
+<dd>этот параметр включает расширенное использование атрибутов unix (ACLs) для файлов, размещенных на этом сервере. Если вы не будете открывать доступ файлов на контроллере домена, пропустите этот аргумент (но это не рекомендуется). Вы также должны убедиться, что все файловые системы, которые будут принимать открыт доступ Samba, установлены с поддержкой ACL's.</dd>
+</dl>
+<dl>
+<dt>--interactive</dt>
+<dd>этот параметр заставляет сценарий резерва запускаться в интерактивном режиме. Alternately, you can review the help for the provision step by running <code>samba-tool domain provision --help</code>.</dd>
+</dl>
+<h3><span class="mw-headline" id="Interactive_provision_explanations">Interactive provision explanations</span></h3>
+<dl>
+<dt>Realm</dt>
+<dd>
+<b>INTERNAL.DOMAIN.COM</b> - должен быть таким же, как и домен DNS в верхнем регистре. Является общим для использования внутреннего только суб-домена, чтобы отделить внутреннюю область от ваших внешних доменов DNS, но это не обязательно.</dd>
+</dl>
+<dl>
+<dt>Domain</dt>
+<dd>
+<b>INTERNAL</b> - тут указывается доменное имя NetBIOS, как правило, leftmost DNS-суб-домен, но может быть все что угодно. Внутреннее имя, например, будет не наглядным. Возможно, будет уместно название компании или инициалы. Это должно вводится во всех шапках, и содержать максимум 15 символов, для совместимости со старыми клиентами.</dd>
+</dl>
+<dl>
+<dt>Server Role</dt>
+<dd>
+<b>dc</b> - Этот пункт предполагает, что в новом домене установлен первый DC. Если вы выберите что-то другое, то остальная часть статьи, вероятно, будет бесполезна для вас.</dd>
+</dl>
+<dl>
+<dt>DNS Backend</dt>
+<dd>
+<b>BIND9_DLZ</b> или <b>SAMBA_INTERNAL</b> - This is down to personal preference of the server admin. Again, if you are hosting DNS for external domains, you are strongly encouraged to use the <b>BIND9_DLZ</b> backend so that flat zone files can continue to be used and existing transfer rules can co-exist with the internal DNS server. Если вы не уверены, используйте бакэнд <b>SAMBA_INTERNAL</b>.</dd>
+</dl>
+<dl>
+<dt>Administrator password</dt>
+<dd>
+<b>xxxxxxxx</b> - Вы должны задать <i>сложный</i> пароль для аккаунта администратора. Минимальным требованием являются: одна буква в верхнем регистре, одна цифра, и не менее восьми символов. Если вы попытаетесь использовать пароль, который не отвечает требованиям сложности, инициализации не удастся.</dd>
+</dl>
+<h2>
+<span id=".D0.9D.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0_.D0.B4.D0.B5.D0.BC.D0.BE.D0.BD.D0.BE.D0.B2"></span><span class="mw-headline" id="Настройка_демонов">Настройка демонов</span>
+</h2>
+<h3><span class="mw-headline" id="NTPD">NTPD</span></h3>
+<p>Создайте подходящую настройку сервера времени NTP. Для пояснения и настройки дополнительных опций смотрите <a href="../ru/Network_Time_Protocol_daemon.html" title="Network Time Protocol daemon (Русский)">Ntpd</a>.
+Создать резервную копию файла по умолчанию:
+</p>
+<pre># mv /etc/ntp.conf{,.default}
+</pre>
+<p>Создайте файл <code>/etc/ntp.conf</code> со следующим содержимым:
+</p>
+<pre># Начало /etc/ntp.conf
+
+# Ассоцииация с публичным пулом серверов NTP
+server 0.pool.ntp.org
+server 1.pool.ntp.org
+server 2.pool.ntp.org
+
+# Расположение drift file
+driftfile /var/lib/ntp/ntpd.drift
+
+# Расположение файла log'ов
+logfile /var/log/ntpd
+
+# Расположение каталога обновлений
+ntpsigndsocket /var/lib/samba/ntp_signd/
+
+# Ограничения
+restrict default kod limited nomodify notrap nopeer mssntp
+restrict 127.0.0.1
+restrict ::1
+restrict 0.pool.ntp.org mask 255.255.255.255 nomodify notrap nopeer noquery
+restrict 1.pool.ntp.org mask 255.255.255.255 nomodify notrap nopeer noquery
+restrict 2.pool.ntp.org mask 255.255.255.255 nomodify notrap nopeer noquery
+
+# Конец /etc/ntp.conf
+</pre>
+<p><br>
+Создайте каталог и установите права:
+</p>
+<pre># install -d /var/lib/samba/ntp_signd
+# chown root:ntp /var/lib/samba/ntp_signd
+# chmod 0750 /var/lib/samba/ntp_signd
+</pre>
+<p>Включите и запустите службу <code>ntpd</code>.
+</p>
+<h3><span class="mw-headline" id="BIND">BIND</span></h3>
+<p>Если вы решили использовать <b>BIND9_DLZ</b> DNS бэкенд, <a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">установите</a> пакет <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=bind">bind</a></span> и создайте следующую конфигурацию BIND. Смотрите <a href="../en/BIND.html" title="BIND">BIND</a> для объяснения, и дополнительных опций настройки. Замените символы <b>x</b> на верные, подходящие значения:
+Для начала, создайте резервную копию файла настроек по умолчанию:
+</p>
+<pre># mv /etc/named.conf{,.default}
+</pre>
+<p>Создайте файл <code>/etc/named.conf</code>:
+</p>
+<pre>//Begin /etc/named.conf
+
+// Global options
+options {
+    auth-nxdomain yes;
+    datasize default;
+    directory "/var/named";
+    empty-zones-enable no;
+    pid-file "/run/named/named.pid";
+    tkey-gssapi-keytab "/var/lib/samba/private/dns.keytab";
+    forwarders { <b>xxx.xxx.xxx.xxx</b>; <b>xxx.xxx.xxx.xxx</b>; };
+//  Uncomment the next line to enable IPv6
+//    listen-on-v6 { any; };
+//  Add this for no IPv4:
+//    listen-on { none; };
+    notify no;
+//  Add any subnets or hosts you want to allow to use this DNS server (use "; " delimiter)
+    allow-query     { <b>xxx.xxx.xxx.xxx/xx</b>; 127.0.0.0/8; };
+//  Add any subnets or hosts you want to allow to use recursive queries
+    allow-recursion { <b>xxx.xxx.xxx.xxx/xx</b>; 127.0.0.0/8; };
+//  Add any subnets or hosts you want to allow dynamic updates from
+    allow-update    { <b>xxx.xxx.xxx.xxx/xx</b>; 127.0.0.0/8; };
+    version none;
+    hostname none;
+    server-id none;
+};
+
+//Root servers (required zone for recursive queries)
+zone "." IN {
+    type hint;
+    file "root.hint";
+};
+
+//Required localhost forward-/reverse zones
+zone "localhost" IN {
+    type master;
+    file "localhost.zone";
+//  allow-transfer { any; };
+};
+zone "0.0.127.in-addr.arpa" IN {
+    type master;
+    file "127.0.0.zone";
+//  allow-transfer { any; };
+};
+// Uncomment the following zone for IPv6 support
+//zone "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa" IN {
+//    type master;
+//    file "localhost.ip6.zone";
+//    allow-transfer { any; };
+//};
+
+//Load AD integrated zones
+dlz "AD DNS Zones" {
+    database "dlopen /usr/lib/samba/bind9/dlz_bind9_10.so";
+};
+
+//Log settings
+logging {
+   channel xfer-log {
+       file "/var/log/named.log";
+       print-category yes;
+       print-severity yes;
+       print-time yes;
+       severity info;
+    };
+    category xfer-in { xfer-log; };
+    category xfer-out { xfer-log; };
+    category notify { xfer-log; };
+};
+
+//End /etc/named.conf
+</pre>
+<p>Установка разрешений:
+</p>
+<pre># chgrp named /var/lib/samba/private/dns.keytab
+# chmod g+r /var/lib/samba/private/dns.keytab
+# touch /var/log/named.log
+# chown root:named /var/log/named.log
+# chmod 664 /var/log/named.log
+</pre>
+<p>Включите и запустите службу <code>named</code>.
+</p>
+<p>Good values for forwarders are your ISP's DNS servers. Google (8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, и 2001:4860:4860::8844) и OpenDNS (208.67.222.222, 208.67.220.220, 2620:0:ccc::2 and 2620:0:ccd::2) provide suitable public DNS servers free of charge. Соответствующие значения для подсетей характерны для вашей сети.
+</p>
+<h3>
+<span id=".D0.9A.D0.BB.D0.B8.D0.B5.D0.BD.D1.82.D1.81.D0.BA.D0.B8.D0.B5_.D1.83.D1.82.D0.B8.D0.BB.D0.B8.D1.82.D1.8B_Kerberos"></span><span class="mw-headline" id="Клиентские_утилиты_Kerberos">Клиентские утилиты Kerberos</span>
+</h3>
+<p>Шаг инициализации выше, создал совершенно правильный файл krb5.conf для использования с Samba 4 DC. Установите его с помощью следующих команд:
+</p>
+<pre># mv /etc/krb5.conf{,.default}
+# cp /var/lib/samba/private/krb5.conf /etc
+</pre>
+<h3><span class="mw-headline" id="DNS">DNS</span></h3>
+<p>Сейчас вам нужно будет начать использовать локальный сервер DNS. Если ваши файлы настройки интерфейса используют Resolvconf, перенастройте их соответствующим образом. Создайте <code>/etc/resolv.conf.tail</code> (не забудьте заменить <b>internal.domain.tld</b> с внутреннего домена):
+</p>
+<pre># Samba configuration
+search <b>internal.domain.tld</b>
+# If using IPv6, uncomment the following line
+#nameserver ::1
+nameserver 127.0.0.1
+</pre>
+<p>Установите права и пересоздайте новый файл <code>/etc/resolv.conf</code>
+</p>
+<pre># chmod 644 /etc/resolv.conf.tail
+# resolvconf -u
+</pre>
+<h3><span class="mw-headline" id="Samba">Samba</span></h3>
+<p>Включите и запустите службу <code>samba</code>. Если вы намерены использовать утилиты LDB utilities, вам также понадобится создать файл <code>/etc/profile.d/sambaldb.sh</code> чтобы задать <b>LDB_MODULES_PATH</b>:
+</p>
+<pre>export LDB_MODULES_PATH="${LDB_MODULES_PATH}:/usr/lib/samba/ldb"
+</pre>
+<p>Установка разрешения и выполнения на файл:
+</p>
+<pre># chmod 0755 /etc/profile.d/sambaldb.sh
+# . /etc/profile.d/sambaldb.sh
+</pre>
+<h2>
+<span id=".D0.A2.D0.B5.D1.81.D1.82.D0.B8.D1.80.D0.BE.D0.B2.D0.B0.D0.BD.D0.B8.D0.B5_.D1.83.D1.81.D1.82.D0.B0.D0.BD.D0.BE.D0.B2.D0.BA.D0.B8"></span><span class="mw-headline" id="Тестирование_установки">Тестирование установки</span>
+</h2>
+<h3><span class="mw-headline" id="DNS_2">DNS</span></h3>
+<p>Во-первых, убедитесь, что DNS-работает, как и ожидалось. Выполните следующие команды, заменяя соответствующие значения для <b>internal.domain.com</b> и <b>server</b>:
+</p>
+<pre># host -t SRV _ldap._tcp.<b>internal.domain.com</b>.
+# host -t SRV _kerberos._udp.<b>internal.domain.com</b>.
+# host -t A <b>server</b>.<b>internal.domain.com</b>.
+</pre>
+<p>Вы должны получить результат, похожий на следующий:
+</p>
+<pre>_ldap._tcp.internal.domain.com has SRV record 0 100 389 server.internal.domain.com.
+_kerberos._udp.internal.domain.com has SRV record 0 100 88 server.internal.domain.com.
+server.internal.domain.com has address xxx.xxx.xxx.xxx</pre>
+<h3>
+<span id=".D0.90.D1.83.D1.82.D0.B5.D0.BD.D1.82.D0.B8.D1.84.D0.B8.D0.BA.D0.B0.D1.86.D0.B8.D1.8F_NT"></span><span class="mw-headline" id="Аутентификация_NT">Аутентификация NT</span>
+</h3>
+<p>Убедитесь, что проверка подлинности пароля работает, как и ожидалось:
+</p>
+<pre># smbclient //localhost/netlogon -U Administrator -c 'ls'
+</pre>
+<p>Вам будет предложено ввести пароль (тот, который вы выбрали ранее), и после получите список каталогов:
+</p>
+<pre>Domain=[INTERNAL] OS=[Unix] Server=[Samba 4.1.2]
+  .                                   D        0  Wed Nov 27 23:59:07 2013
+  ..                                  D        0  Wed Nov 27 23:59:12 2013
+
+		50332 blocks of size 2097152. 47185 blocks available</pre>
+<h3><span class="mw-headline" id="Kerberos">Kerberos</span></h3>
+<p>Проверьте раоту KDC. Замените <b>INTERNAL.DOMAIN.COM</b> используя заглавные буквы:
+</p>
+<pre># kinit administrator@<b>INTERNAL.DOMAIN.COM</b>
+</pre>
+<p>Вам будет предложено ввести пароль и вы получите результат, похожий на следующий:
+</p>
+<pre>Warning: Your password will expire in 41 days on Wed 08 Jan 2014 11:59:11 PM CST</pre>
+<p>Убедитесь, что вы на самом деле получил тикет:
+</p>
+<pre># klist
+</pre>
+<p>Вы должны получить результат, похожий на:
+</p>
+<pre>Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: administrator@INTERNAL.DOMAIN.COM
+
+Valid starting       Expires              Service principal
+11/28/2013 00:22:17  11/28/2013 10:22:17  krbtgt/INTERNAL.DOMAIN.COM@INTERNAL.DOMAIN.COM
+	renew until 11/29/2013 00:22:14</pre>
+<p>В качестве последнего испытания, используйте smbclient с недавно приобретенным тикетом. Замените <b>server</b> на правильное имя сервера:
+</p>
+<pre># smbclient //<b>server</b>/netlogon -k -c 'ls'
+</pre>
+<p>Вывод должен быть такой же, как при тестировании парольной аутентификации выше.
+</p>
+<h2>
+<span id=".D0.A0.D0.B0.D1.81.D1.88.D0.B8.D1.80.D0.B5.D0.BD.D0.BD.D0.B0.D1.8F_.D0.BD.D0.B0.D1.81.D1.82.D1.80.D0.BE.D0.B9.D0.BA.D0.B0"></span><span class="mw-headline" id="Расширенная_настройка">Расширенная настройка</span>
+</h2>
+<h3><span class="mw-headline" id="DNS_3">DNS</span></h3>
+<p>Вы также должны создать зону обратного просмотра для каждой подсети в вашей среде DNS. Важно, что это хранится в DNS Samba как противоположность BIND для обеспечения динамического обновления клиентов. Для каждой подсети, создайте зону обратного просмотра с помощью следующих команд. Замените <b>server</b>.<b>internal</b>.<b>domain</b>.<b>tld</b> и <b>xxx</b>.<b>xxx</b>.<b>xxx</b> с соответствующими значениями. Для <b>xxx</b>.<b>xxx</b>.<b>xxx</b>, используйте первые три байта подсети в обратном порядке (например: 192.168.0.0/24 станет 0.168.192):
+</p>
+<pre># samba-tool dns zonecreate <b>server</b>.<b>internal</b>.<b>domain</b>.<b>tld</b> <b>xxx</b>.<b>xxx</b>.<b>xxx</b>.in-addr.arpa
+</pre>
+<p>Теперь добавьте запись для вашего сервера (если ваш сервер multi-homed, добавьте для каждой подсети) снова заменяя соответствующие значения, как указано выше. <b>zzz</b> будет замененён четвёртым октетом IP для сервера:
+</p>
+<pre># samba-tool dns add <b>server</b>.<b>internal</b>.<b>domain</b>.<b>tld</b> <b>xxx</b>.<b>xxx</b>.<b>xxx</b>.in-addr.arpa <b>zzz</b> PTR <b>server</b>.<b>internal</b>.<b>domain</b>.<b>tld</b>
+</pre>
+<p>Перезапустите службу <code>samba</code>. При использовании BIND для DNS, перезапустите также сервис <code>named</code>.
+</p>
+<p>Наконец, проверьте поиск. Замените <b>xxx</b>.<b>xxx</b>.<b>xxx</b>.<b>xxx</b> с IP вашего сервера:
+</p>
+<pre># host -t PTR <b>xxx</b>.<b>xxx</b>.<b>xxx</b>.<b>xxx</b>
+</pre>
+<p>Вы должны получить результат, похожий на следующий:
+</p>
+<pre>xxx.xxx.xxx.xxx.in-addr.arpa domain name pointer server.internal.domain.tld.
+</pre>
+<h3><span class="mw-headline" id="SSL">SSL</span></h3>
+<p>По умолчанию, поддержка SSL не включена, однако, сертификат по умолчанию был создан когда поднимался DC. Для использования ключей по умолчанию, добавьте следующие строки в секцию "<b>[global]</b>" файла <code>/etc/samba/smb.conf</code>:
+</p>
+<pre>        tls enabled  = yes
+        tls keyfile  = tls/key.pem
+        tls certfile = tls/cert.pem
+        tls cafile   = tls/ca.pem
+</pre>
+<p>Если необходим доверенный сертификат, создайте ключ подписи и запрос на сертификат с помощью следующих команд (убедитесь, что общее имя совпадает с полным доменным именем сервера и не вводите пароль):
+</p>
+<pre># cd /var/lib/samba/private/tls
+# openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out <b>NETBIOS</b>_KEY.pem
+# openssl req -new -key <b>NETBIOS</b>_KEY.pem -out <b>NETBIOS</b>_CSR.pem
+</pre>
+<p>Получите выбранной сертификации подписанный CSR, имя соответствующее (<b>NETBIOS</b>_CERT.pem для этого примера), и положите в этуже папку. 
+</p>
+<p>Если вашему сертификату авторизации также нужен сертификат интермедиа, положите его тамже, и используйте <b>tls cafile</b> Parmeter (иначе оставьте <b>tls cafile</b> пустым).
+</p>
+<p>Чтобы изменения вступили в силу, перезапустите <code>samba</code>.
+</p>
+<h3><span class="mw-headline" id="DHCP">DHCP</span></h3>
+<p>Следует отметить, что с помощью этого метода, повлиеяем на функциональность windows клиентов, так как они будут по-прежнему пытаться обновить DNS самостоятельно и будет отказано в разрешении сделать так, как запись будет принадлежать пользователю DHCP. Вы должны создать объект групповой политики (GPO), чтобы преодолеть это, но, к сожалению, Samba 4 еще не имеют утилиту командной строки для изменения объектов GPO, так что вам будет нужен установленный в Windows PC RSAT. Просто создайте выделенный GPO с помощью редактора групповой политики (Group Policy Editor), применяются только к подразделениям, которые содержат рабочие станции (так, что серверы можно по-прежнему обновлять с помощью 'ipconfig /registerdns') и настройте следующие параметры:
+</p>
+<pre>Computer Configuration
+  Policies
+    Administrative Templates
+      Network
+        DNS Client
+          Dynamic Update = Disabled
+          Register PTR Records = Disabled</pre>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Установите</a> пакет <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=dhcp">dhcp</a></span>.
+</p>
+<p>Создайте непривилегированного пользователя в AD для выполнения обновления. При запросе пароля, используйте безопасный пароль. Достаточно 63 случайных, смешанных, буквенно-циферных символов. 
+По желанию samba-tool также берет случайный аргумент:
+</p>
+<pre># samba-tool user create dhcp --description="Unprivileged user for DNS updates via DHCP server"
+</pre>
+<p>Since this is a service account, disabling password expiration on the user account is recommended, but not required:
+</p>
+<pre># samba-tool user setexpiry dhcp --noexpiry
+</pre>
+<p>Дайте пользователю привелегии администратора DNS:
+</p>
+<pre># samba-tool group addmembers DnsAdmins dhcp
+</pre>
+<p>Экспорт учетных данных пользователей private keytab:
+</p>
+<pre># samba-tool domain exportkeytab --principal=dhcp@<b>INTERNAL</b>.<b>DOMAIN</b>.<b>TLD</b> dhcpd.keytab
+# install -vdm 755 /etc/dhcpd
+# mv dhcpd.keytab /etc/dhcpd
+# chown root:root /etc/dhcpd/dhcpd.keytab
+# chmod 400 /etc/dhcpd/dhcpd.keytab
+</pre>
+<p>Теперь, когда пользователь будет создан, создайте сценарий для выполнения обновления <code>/usr/local/sbin/samba-dnsupdate.sh</code>:
+</p>
+<pre>#!/bin/bash
+# Begin samba-dnsupdate.sh
+# Author: DJ Lucas &lt;dj_AT_linuxfromscratch_DOT_org&gt;
+# kerberos_creds() courtesy of Sergey Urushkin
+# http://www.kuron-germany.de/michael/blog/wp-content/uploads/2012/03/dhcpdns-sergey2.txt
+
+# DHCP server should be authoritative for its own records, sleep for 5 seconds
+# to allow unconfigured Windows hosts to create their own DNS records
+# In order to use this script you should disable dynamic updates by hosts that
+# will receive addresses from this DHCP server. Instructions are found here:
+# https://wiki.archlinux.org/index.php/Samba_4_Active_Directory_Domain_Controller#DHCP
+sleep 5
+
+checkvalues()
+{
+        [ -z "${2}" ] &amp;&amp; echo "Error: argument '${1}' requires a parameter." &amp;&amp; exit 1
+
+        case ${2} in
+
+                -*)
+                        echo "Error: Invalid parameter '${2}' passed to ${1}."
+                        exit 1
+                ;;
+
+                *)
+                        return 0
+                ;;
+        esac
+}
+
+showhelp()
+{
+echo -e "\n"`basename ${0}` "uses samba-tool to update DNS records in Samba 4's DNS"
+echo "server when using INTERNAL DNS or BIND9 DLZ plugin."
+echo ""
+echo "    Command line options (and variables):"
+echo ""
+echo "      -a | --action      Action for this script to perform"
+echo "                         ACTION={add|delete}"
+echo "      -c | --krb5cc      Path of the krb5 credential cache (optional)"
+echo "                         Default: KRB5CC=/run/dhcpd.krb5cc"
+echo "      -d | --domain      The DNS domain/zone to be updated"
+echo "                         DOMAIN={domain.tld}"
+echo "      -h | --help        Show this help message and exit"
+echo "      -H | --hostname    Hostname of the record to be updated"
+echo "                         HNAME={hostname}"
+echo "      -i | --ip          IP address of the host to be updated"
+echo "                         IP={0.0.0.0}"
+echo "      -k | --keytab      Krb5 keytab to be used for authorization (optional)"
+echo "                         Default: KEYTAB=/etc/dhcp/dhcpd.keytab"
+echo "      -m | --mitkrb5     Use MIT krb5 client utilities"
+echo "                         MITKRB5={YES|NO}"
+echo "      -n | --nameserver  DNS server to be updated (must use FQDN, not IP)"
+echo "                         NAMESERVER={server.internal.domain.tld}"
+echo "      -p | --principal   Principal used for DNS updates"
+echo "                         PRINCIPAL={user@domain.tld}"
+echo "      -r | --realm       Authentication realm"
+echo "                         REALM={DOMAIN.TLD}"
+echo "      -z | --zone        Then name of the zone to be updated in AD.
+echo "                         ZONE={zonename}
+echo ""
+echo "Example: $(basename $0) -d domain.tld -i 192.168.0.x -n 192.168.0.x \\"
+echo "             -r DOMAIN.TLD -p user@domain.tld -H HOSTNAME -m"
+echo ""
+}
+
+# Process arguments
+[ -z "$1" ] &amp;&amp; showhelp &amp;&amp; exit 1
+while [ -n "$1" ]; do
+        case $1 in
+
+                -a | --action)
+                        checkvalues ${1} ${2}
+                        ACTION=${2}
+                        shift 2
+                ;;
+
+                -c | --krb5cc)
+                        checkvalues ${1} ${2}
+                        KRB5CC=${2}
+                        shift 2
+                ;;
+
+                -d | --domain)
+                        checkvalues ${1} ${2}
+                        DOMAIN=${2}
+                        shift 2
+                ;;
+
+                -h | --help)
+                        showhelp
+                        exit 0
+                ;;
+
+                -H | --hostname)
+                        checkvalues ${1} ${2}
+                        HNAME=${2%%.*}
+                        shift 2
+                ;;
+
+                -i | --ip)
+                        checkvalues ${1} ${2}
+                        IP=${2}
+                        shift 2
+                ;;
+
+                -k | --keytab)
+                        checkvalues ${1} ${2}
+                        KEYTAB=${2}
+                        shift 2
+                ;;
+
+                -m | --mitkrb5)
+                        KRB5MIT=YES
+                        shift 1
+                ;;
+
+                -n | --nameserver)
+                        checkvalues ${1} ${2}
+                        NAMESERVER=${2}
+                        shift 2
+                ;;
+
+                -p | --principal)
+                        checkvalues ${1} ${2}
+                        PRINCIPAL=${2}
+                        shift 2
+                ;;
+
+                -r | --realm)
+                        checkvalues ${1} ${2}
+                        REALM=${2}
+                        shift 2
+                ;;
+
+                -z | --zone)
+                        checkvalues ${1} ${2}
+                        ZONE=${2}
+                        shift 2
+                ;;
+
+                *)
+                        echo "Error!!! Unknown command line opion!"
+                        echo "Try" `basename $0` "--help."
+                        exit 1
+                ;;
+        esac
+done
+
+# Sanity checking
+[ -z "$ACTION" ] &amp;&amp; echo "Error: action not set." &amp;&amp; exit 2
+case "$ACTION" in
+        add | Add | ADD)
+                ACTION=ADD
+        ;;
+        del | delete | Delete | DEL | DELETE)
+                ACTION=DEL
+        ;;
+        *)
+                echo "Error: invalid action \"$ACTION\"." &amp;&amp; exit 3
+        ;;
+esac
+[ -z "$KRB5CC" ] &amp;&amp; KRB5CC=/run/dhcpd.krb5cc
+[ -z "$DOMAIN" ] &amp;&amp; echo "Error: invalid domain." &amp;&amp; exit 4
+[ -z "$HNAME" ] &amp;&amp; [ "$ACTION" == "ADD" ] &amp;&amp; \
+     echo "Error: hostname not set." &amp;&amp; exit 5
+[ -z "$IP" ] &amp;&amp; echo "Error: IP address not set." &amp;&amp; exit 6
+[ -z "$KEYTAB" ] &amp;&amp; KEYTAB=/etc/dhcp/dhcpd.keytab
+[ -z "$NAMESERVER" ] &amp;&amp; echo "Error: nameservers not set." &amp;&amp; exit 7
+[ -z "$PRINCIPAL" ] &amp;&amp; echo "Error: principal not set." &amp;&amp; exit 8
+[ -z "$REALM" ] &amp;&amp; echo "Error: realm not set." &amp;&amp; exit 9
+[ -z "$ZONE" ] &amp;&amp; echo "Error: zone not set." &amp;&amp; exit 10
+
+# Disassemble IP for reverse lookups
+OCT1=$(echo $IP | cut -d . -f 1)
+OCT2=$(echo $IP | cut -d . -f 2)
+OCT3=$(echo $IP | cut -d . -f 3)
+OCT4=$(echo $IP | cut -d . -f 4)
+RZONE="$OCT3.$OCT2.$OCT1.in-addr.arpa"
+
+kerberos_creds() {
+export KRB5_KTNAME="$KEYTAB"
+export KRB5CCNAME="$KRB5CC"
+
+if [ "$KRB5MIT" = "YES" ]; then
+    KLISTARG="-s"
+else
+    KLISTARG="-t"
+fi
+
+klist $KLISTARG || kinit -k -t "$KEYTAB" -c "$KRB5CC" "$PRINCIPAL" || { logger -s -p daemon.error -t dhcpd kinit for dynamic DNS failed; exit 11; }
+}
+
+
+add_host(){
+    logger -s -p daemon.info -t dhcpd Adding A record for host $HNAME with IP $IP to zone $ZONE on server $NAMESERVER
+    samba-tool dns add $NAMESERVER $ZONE $HNAME A $IP -k yes
+}
+
+
+delete_host(){
+    logger -s -p daemon.info -t dhcpd Removing A record for host $HNAME with IP $IP from zone $ZONE on server $NAMESERVER
+    samba-tool dns delete $NAMESERVER $ZONE $HNAME A $IP -k yes
+}
+
+
+update_host(){
+    logger -s -p daemon.info -t dhcpd Removing A record for host $HNAME with IP $CURIP from zone $ZONE on server $NAMESERVER
+    samba-tool dns delete $NAMESERVER $ZONE $HNAME A $CURIP -k yes
+    add_host
+}
+
+
+add_ptr(){
+    logger -s -p daemon.info -t dhcpd Adding PTR record $OCT4 with hostname $HNAME to zone $RZONE on server $NAMESERVER
+    samba-tool dns add $NAMESERVER $RZONE $OCT4 PTR $HNAME.$DOMAIN -k yes
+}
+
+
+delete_ptr(){
+    logger -s -p daemon.info -t dhcpd Removing PTR record $OCT4 with hostname $HNAME from zone $RZONE on server $NAMESERVER
+    samba-tool dns delete $NAMESERVER $RZONE $OCT4 PTR $HNAME.$DOMAIN -k yes
+}
+
+
+update_ptr(){
+    logger -s -p daemon.info -t dhcpd Removing PTR record $OCT4 with hostname $CURHNAME from zone $RZONE on server $NAMESERVER
+    samba-tool dns delete $NAMESERVER $RZONE $OCT4 PTR $CURHNAME -k yes
+    add_ptr
+}
+
+
+case "$ACTION" in
+    ADD)
+        kerberos_creds
+        host -t A $HNAME.$DOMAIN &gt; /dev/null
+        if [ "${?}" == 0 ]; then
+          CURIP=$(host -t A $HNAME.$DOMAIN | cut -d " " -f 4 )
+          if [[ "$CURIP" != "$IP" ]]; then
+             update_host
+          fi
+        else
+           add_host
+        fi
+       
+        host -t PTR $IP &gt; /dev/null
+        if [ "${?}" == 0 ]; then
+           CURHNAME=$(host -t PTR $IP | cut -d " " -f 5 | rev | cut -c 2- | rev)
+           if [[ "$CURHNAME" != "$HNAME.$DOMAIN" ]]; then 
+              update_ptr
+           fi
+        else
+           add_ptr
+        fi
+    ;;
+
+    DEL)
+        kerberos_creds
+        host -t A $HNAME.$DOMAIN &gt; /dev/null
+        if [ "${?}" == 0 ]; then
+            delete_host
+        fi
+
+        host -t PTR $IP &gt; /dev/null
+        if [ "${?}" == 0 ]; then
+            delete_ptr
+        fi
+    ;;
+
+    *)
+        echo "Error: Invalid action '$ACTION'!" &amp;&amp; exit 12
+    ;;
+
+esac
+
+# End samba-dnsupdate.sh
+</pre>
+<p>Службе dhcpd нужно будет использовать быстрый выход сценария оболочки, чтобы избежать блокировки запросов и задержек. Создайте скрипт <code>/etc/dhcpd/update.sh</code> со следующими командами (подставляя правильные значения для <b>server</b>, <b>internal</b>.<b>domain</b>.<b>tld</b>, и <b>INTERNAL</b>.<b>DOMAIN</b>.<b>TLD</b>):
+</p>
+<pre>#!/bin/bash
+# Begin /etc/dhcpd/update.sh
+
+# Variables
+KRB5CC="/run/dhcpd4.krb5cc"
+KEYTAB="/etc/dhcpd/dhcpd.keytab"
+DOMAIN="<b>internal</b>.<b>domain</b>.<b>tld</b>"
+REALM="<b>INTERNAL</b>.<b>DOMAIN</b>.<b>TLD</b>"
+PRINCIPAL="dhcp@${REALM}"
+NAMESERVER="<b>server</b>.${DOMAIN}"
+ZONE="${DOMAIN}"
+
+ACTION=$1
+IP=$2
+HNAME=$3
+
+export KRB5CC KEYTAB DOMAIN REALM PRINCIPAL NAMESERVER ZONE ACTION IP HNAME
+
+/usr/local/sbin/samba-dnsupdate.sh -m &amp;
+
+# End /etc/dhcpd/update.sh
+</pre>
+<p>Настройте сервер dhcpd после статьи <a href="/index.php?title=DHCPD&amp;action=edit&amp;redlink=1" class="new" title="DHCPD (page does not exist)">DHCPD</a>, и добавьте все следующие декларации подсети в файл <code>/etc/dhcpd.conf</code>, который обеспечит службу DHCP:
+</p>
+<pre>  on commit {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "add", ClientIP, ClientName);
+  }
+
+  on release {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "delete", ClientIP, ClientName);
+  }
+
+    on expiry {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "delete", ClientIP, ClientName);
+</pre>
+<p>Вот полный пример файла <code>/etc/dhcpd.conf</code> для образца:
+</p>
+<pre># Begin /etc/dhcpd.conf
+
+# No DHCP service in the DMZ.
+subnet 192.168.2.0 netmask 255.255.255.0 {
+}
+
+# Internal subnet
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.100 192.168.1.199;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.254;
+  option domain-name "internal.domain.tld";
+  option domain-name-servers 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  default-lease-time 28800;
+  max-lease-time 43200;
+  authoritative;
+
+  on commit {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "add", ClientIP, ClientName);
+  }
+
+  on release {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "delete", ClientIP, ClientName);
+  }
+
+    on expiry {
+    set ClientIP = binary-to-ascii(10, 8, ".", leased-address);
+    set ClientName = pick-first-value(option host-name, host-decl-name);
+    execute("/etc/dhcpd/update.sh", "delete", ClientIP, ClientName);
+  }
+}
+
+# End /etc/dhcpd.conf
+</pre>
+<p>Установите права:
+</p>
+<pre># chmod 750 /usr/local/sbin/samba-dnsupdate.sh
+# chmod 750 /etc/dhcpd/update.sh
+</pre>
+<p>Наконец, включите и запустите (или перезапустите) службу <code>dhcpd4</code>.
+</p>
+<h2>
+<span id=".D0.A7.D1.82.D0.BE_.D0.B4.D0.B5.D0.BB.D0.B0.D1.82.D1.8C_.D0.B4.D0.B0.D0.BB.D1.8C.D1.88.D0.B5"></span><span class="mw-headline" id="Что_делать_дальше">Что делать дальше</span>
+</h2>
+<p>Если вы зашли настолько далеко, что не покинули указанных выше испытаний, - вы на верном пути. Поздравляем! Вот некоторые темы, по расширению вашего сервера AD:
+</p>
+<p><a href="../en/Active_Directory_integration.html" title="Active Directory integration">Active Directory integration</a> - This article explains how to attach Linux clients to an Active Directory domain.
+</p>
+<p><a href="../en/SOGo.html" title="SOGo">SOGo</a> - The OpenChange project provides a Microsoft Exchange compatible mail server using only open source software.
+</p>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../ru/Category:Network_sharing.html" title="Category:Network sharing (Русский)">Network sharing (Русский)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_broken_package_links.html" title="Category:Pages with broken package links">Pages with broken package links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Samba_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Active_Directory_domain_controller_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)&amp;oldid=626729">https://wiki.archlinux.org/index.php?title=Samba_(Русский)/Active_Directory_domain_controller_(Русский)&amp;oldid=626729</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 25 July 2020, at 06:53.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Advanced traffic control - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Advanced_traffic_control rootpage-Advanced_traffic_control skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Advanced traffic control</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>The Linux kernel's network stack has network traffic control and shaping features. The <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iproute2">iproute2</a></span> package installs the <code>tc</code> command to control these via the command line. 
+</p>
+<p>The goal of this article is to show how to shape the traffic by using queueing disciplines. For instance, if you ever had to forbid downloads or torrents on a network that you admin, and not because you were against those services, but because users were "abusing" the bandwidth, then you could use queueing disciplines to allow that kind of traffic and, at the same time, be sure that one user cannot slowdown the entire network.
+</p>
+<p>This is an advanced article; you are expected to have certain knowledge of network devices, iptables, etc.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Queuing"><span class="tocnumber">1</span> <span class="toctext">Queuing</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2">
+<a href="#Classless_Qdiscs"><span class="tocnumber">1.1</span> <span class="toctext">Classless Qdiscs</span></a>
+<ul>
+<li class="toclevel-3 tocsection-3"><a href="#fifo_fast"><span class="tocnumber">1.1.1</span> <span class="toctext">fifo_fast</span></a></li>
+<li class="toclevel-3 tocsection-4"><a href="#Token_Bucket_Filter_(TBF)"><span class="tocnumber">1.1.2</span> <span class="toctext">Token Bucket Filter (TBF)</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href="#Stochastic_Fairness_Queueing_(SFQ)"><span class="tocnumber">1.1.3</span> <span class="toctext">Stochastic Fairness Queueing (SFQ)</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#CoDel_and_Fair_Queueing_CoDel"><span class="tocnumber">1.1.4</span> <span class="toctext">CoDel and Fair Queueing CoDel</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-7">
+<a href="#Classful_Qdiscs"><span class="tocnumber">1.2</span> <span class="toctext">Classful Qdiscs</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#Hierarchical_Token_Bucket_(HTB)"><span class="tocnumber">1.2.1</span> <span class="toctext">Hierarchical Token Bucket (HTB)</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9">
+<a href="#Filters"><span class="tocnumber">2</span> <span class="toctext">Filters</span></a>
+<ul>
+<li class="toclevel-2 tocsection-10"><a href="#Using_tc_only"><span class="tocnumber">2.1</span> <span class="toctext">Using tc only</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Using_tc_+_iptables"><span class="tocnumber">2.2</span> <span class="toctext">Using tc + iptables</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-12"><a href="#Example_of_ingress_traffic_shaping_with_SNAT"><span class="tocnumber">3</span> <span class="toctext">Example of ingress traffic shaping with SNAT</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Queuing">Queuing</span></h2>
+<p>Queuing controls how data is <b>sent</b>; receiving data is much more reactive with fewer network-oriented controls. However, since TCP/IP packets are sent using a slow start the system starts sending the packets slow and keeps sending them faster and faster until packets start getting rejected - it is therefore possible to control how much traffic is received on a LAN by dropping packets that arrive at a router before they get forwarded. There are more relevant details, but they do not touch directly on queuing logic.
+</p>
+<p>In order to be the ones fully controlling the shape of the traffic, we need to be the slowest link of the chain. That is, if the connection has a maximum download speed of 500k, if you do not limit of the output to 450k or below it is going to be the modem shaping the traffic instead of us.
+</p>
+<p>Each network device has a <i>root</i> where a qdisc can be set. This root has a fq_codel qdisc by default. (more info below)
+</p>
+<p>There are two kind of disciplines: classful and classless. 
+</p>
+<p>Classful qdiscs allow you to create classes, which work like branches on a tree. You can then set rules to filter packets into each class. Each class can itself have assigned other classful or classless qdisc.
+</p>
+<p>Classless qdiscs do not allow to add more qdiscs to it.
+</p>
+<p>Before starting to configure qdiscs, first we need to remove any existing qdisc from the root. This will remove any qdisc from the eth0 device:
+</p>
+<pre># tc qdisc del root dev eth0 
+</pre>
+<h3><span class="mw-headline" id="Classless_Qdiscs">Classless Qdiscs</span></h3>
+<p>These are queues that do basic management of traffic by reordering, slowing or dropping packets. This qdiscs do not allow the creation of classes.
+</p>
+<h4><span class="mw-headline" id="fifo_fast">fifo_fast</span></h4>
+<p>This was the default qdisc up until systemd 217. In every network device where no custom qdisc configuration has been applied, fifo_fast is the qdisc set on the root.  fifo means <i>First In First Out</i>, that is, the first packet to get in, is going to be the first to be sent. This way, no package gets special treatment.
+</p>
+<h4>
+<span id="Token_Bucket_Filter_.28TBF.29"></span><span class="mw-headline" id="Token_Bucket_Filter_(TBF)">Token Bucket Filter (TBF)</span>
+</h4>
+<p>This qdisc allows bytes to pass, as long certain rate limit is not passed. 
+</p>
+<p>It works by creating a virtual bucket and then dropping tokens at certain speed, filling that bucket. Each package takes a virtual token from the bucket, and uses it to get a permission to pass. If too many packets arrive, the bucket will have no more tokens left and the remaining packets are going to wait certain time for new tokens. If the tokens do not arrive fast enough, the packets are going to be dropped. On the opposite case (too few packets sent), the tokens can be used to allow some burst (uploading spikes) to happen. 
+</p>
+<p>That means this qdisc is useful to slow down an interface.
+</p>
+<p>Example:
+</p>
+<p>Uploading can fill a modem's queue and, as result, while you are uploading a huge file, the interactivity is destroyed.
+</p>
+<pre># tc qdisc add dev ppp0 root tbf rate 220kbit latency 50ms burst 1540
+</pre>
+<p>Note the above upload speed should be changed to your upload speed minus a small few percent (to be the slowest link of the chain). This configuration sets a TBF for the <code>ppp0</code> device, limiting the upload speed to 220k, setting a latency of 50ms for a package before being dropped, and a burst of 1540.
+It works by keeping the queueing on the Linux machine (where it can be shaped) instead of the modem.
+</p>
+<h4>
+<span id="Stochastic_Fairness_Queueing_.28SFQ.29"></span><span class="mw-headline" id="Stochastic_Fairness_Queueing_(SFQ)">Stochastic Fairness Queueing (SFQ)</span>
+</h4>
+<p>This is a round-robin qdisc. Each conversation is set on a fifo queue, and on each round, each conversation has the possibility to send data. That is why it is called "Fairness".
+It is also called "Stochastic" because it does not really create a queue for each conversation, instead it uses a hashing algorithm. For the hash, there is a chance for multiple sessions on the same bucket. To solve this, SFQ changes its hashing algorithm often to prevent that this becomes noticeable.
+</p>
+<p>Example:
+</p>
+<p>This configuration sets SFQ on the root on the eth0 device, configuring it to perturb (alter) its hashing algorithm every 10 seconds.
+</p>
+<pre># tc qdisc add dev eth0 root sfq perturb 10
+</pre>
+<h4><span class="mw-headline" id="CoDel_and_Fair_Queueing_CoDel">CoDel and Fair Queueing CoDel</span></h4>
+<p>Since systemd 217, fq_codel is the default. <a href="https://en.wikipedia.org/wiki/CoDel" class="extiw" title="wikipedia:CoDel">CoDel</a> (Controlled Delay) is an attempt to limit buffer bloating and minimize latency in saturated network links by distinguishing good queues (that empty quickly) from bad queues that stay saturated and slow. The <a href="https://en.wikipedia.org/wiki/Fair_queueing" class="extiw" title="wikipedia:Fair queueing">fair queueing</a> Codel utilizes fair queues to more readily distribute available bandwidth between Codel flows. The configuration options are limited intentionally, since the algorithm is designed to work with dynamic networks, and there are some corner cases to consider that are discussed on the <a rel="nofollow" class="external text" href="http://www.bufferbloat.net/projects/codel/wiki">bufferbloat wiki concerning Codel</a>, including issues on very large switches and sub megabit connections. 
+</p>
+<p>Additional information is available via the <span class="plainlinks archwiki-template-man" title="$ man 8 tc-codel"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/tc-codel.8">tc-codel(8)</a></span> and <span class="plainlinks archwiki-template-man" title="$ man 8 tc-fq_codel"><a rel="nofollow" class="external text" href="https://man.archlinux.org/man/tc-fq_codel.8">tc-fq_codel(8)</a></span>. 
+</p>
+<div class="archwiki-template-box archwiki-template-box-warning">
+<strong>Warning:</strong> Make sure your ethernet driver supports Byte Queue Limits before using CoDel. <a rel="nofollow" class="external text" href="http://www.bufferbloat.net/projects/bloat/wiki/BQL_enabled_drivers">Here is a list of drivers supported as of kernel 3.6</a>
+</div>
+<h3><span class="mw-headline" id="Classful_Qdiscs">Classful Qdiscs</span></h3>
+<p>Classful qdiscs are very useful if you have different kinds of traffic which should have differing treatment.
+A classful qdisc allows you to have branches. The branches are called classes.
+</p>
+<p>Setting a classful qdisc requires that you name each class. To name a class,the <code>classid</code> parameter is used . The <code>parent</code> parameter, as the name indicates, points to the parent of the class.
+</p>
+<p>All the names should be set as <code>x:y</code> where <code>x</code> is the name of the root, and <code>y</code> is the name of the class. Normally, the root is called <code>1:</code> and its children are things like <code>1:10</code>
+</p>
+<h4>
+<span id="Hierarchical_Token_Bucket_.28HTB.29"></span><span class="mw-headline" id="Hierarchical_Token_Bucket_(HTB)">Hierarchical Token Bucket (HTB)</span>
+</h4>
+<p>HTB is well suited for setups where you have a fixed amount of bandwidth which you want to divide for different purposes, giving each purpose a guaranteed bandwidth, with the possibility of specifying how much bandwidth can be borrowed.
+Here is an example with comments explaining what each line does:
+</p>
+<pre># This line sets a HTB qdisc on the root of eth0, and it specifies that the class 1:30 is used by default. It sets the name of the root as 1:, for future references.
+tc qdisc add dev eth0 root handle 1: htb default 30
+
+# This creates a class called 1:1, which is direct descendant of root (the parent is 1:), this class gets assigned also an HTB qdisc, and then it sets a max rate of 6mbits, with a burst of 15k
+tc class add dev eth0 parent 1: classid 1:1 htb rate 6mbit burst 15k
+
+# The previous class has this branches:
+
+# Class 1:10, which has a rate of 5mbit
+tc class add dev eth0 parent 1:1 classid 1:10 htb rate 5mbit burst 15k
+
+# Class 1:20, which has a rate of 3mbit
+tc class add dev eth0 parent 1:1 classid 1:20 htb rate 3mbit ceil 6mbit burst 15k
+
+# Class 1:30, which has a rate of 1kbit. This one is the default class.
+tc class add dev eth0 parent 1:1 classid 1:30 htb rate 1kbit ceil 6mbit burst 15k
+
+# Martin Devera, author of HTB, then recommends SFQ for beneath these classes:
+tc qdisc add dev eth0 parent 1:10 handle 10: sfq perturb 10
+tc qdisc add dev eth0 parent 1:20 handle 20: sfq perturb 10
+tc qdisc add dev eth0 parent 1:30 handle 30: sfq perturb 10
+</pre>
+<h2><span class="mw-headline" id="Filters">Filters</span></h2>
+<p>Once a classful qdisc is set on root (which may contain classes with more classful qdiscs), it is necessary to use filters to indicate which package should be processed by which class.
+</p>
+<p>On a classless-only environment, filters are not necessary.
+</p>
+<p>You can filter packets by using tc, or a combination of tc + iptables.
+</p>
+<h3><span class="mw-headline" id="Using_tc_only">Using tc only</span></h3>
+<p>Here is an example explaining a filter:
+</p>
+<pre># This command adds a filter to the qdisc 1: of dev eth0, set the
+# priority of the filter to 1, matches packets with a
+# destination port 22, and make the class 1:10 process the
+# packets that match.
+tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dport 22 0xffff flowid 1:10
+
+# This filter is attached to the qdisc 1: of dev eth0, has a
+# priority of 2, and matches the ip address 4.3.2.1 exactly, and
+# matches packets with a source port of 80, then makes class
+# 1:11 process the packets that match
+tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip src 4.3.2.1/32 match ip sport 80 0xffff flowid 1:11
+</pre>
+<h3>
+<span id="Using_tc_.2B_iptables"></span><span class="mw-headline" id="Using_tc_+_iptables">Using tc + iptables</span>
+</h3>
+<p>iptables has a method called fwmark that can be used to mark packets across interfaces.
+</p>
+<p>First, this makes packets marked with 6, to be processed by the 1:30 class
+</p>
+<pre># tc filter add dev eth0 protocol ip parent 1: prio 1 handle 6 fw flowid 1:30
+</pre>
+<p>This sets that mark 6, using iptables
+</p>
+<pre># iptables -A PREROUTING -t mangle -i eth0 -j MARK --set-mark 6
+</pre>
+<p>You can then use iptables normally to match packets and then mark them with fwmark.
+</p>
+<h2><span class="mw-headline" id="Example_of_ingress_traffic_shaping_with_SNAT">Example of ingress traffic shaping with SNAT</span></h2>
+<p>Qdiscs on ingress traffic provide only policing with no shaping. In order to shape ingress, the IFB (Intermediate Functional Block) device has to be used. However, another problem arises if SNAT or MASQUERADE is in use, as all incoming traffic has the same destination address. The Qdisc intercepts the incoming traffic on the external interface before reverse NAT translation so it can only see the router's IP as destination of the packets.
+</p>
+<p>The following solution is implemented on OpenWRT and can be applied to Archlinux: First the outgoing packets are marked with MARK and the corresponding connections (and related connections) with CONNMARK. On the incoming packets an ingress u32 filter redirects the traffic to IFB (action mirred), and also retrieves the mark of the packet from CONNTRACK (action connmark) thus providing information as to which IP behind the NAT initiated the traffic). 
+</p>
+<p>This function is integrated in kernel since <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=linux">linux</a></span>-3.19 and in <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=iproute2">iproute2</a></span> since 4.1. 
+</p>
+<p>The following is a small script with only 2 HTB classes on ingress to demonstrate it. Traffic defaults to class 3:30. Outgoing traffic from 192.168.1.50 (behind NAT) to the Internet is marked with "3" and thus incoming packets from the Internet going to 192.168.1.50 are marked also with "3" and are classified on 3:33. 
+</p>
+<pre>#!/bin/sh -x
+
+# Maximum allowed downlink. Set to 90% of the achievable downlink in kbits/s
+DOWNLINK=1800
+
+# Interface facing the Internet
+EXTDEV=enp0s3
+
+# Load IFB, all other modules all loaded automatically
+modprobe ifb
+ip link set dev ifb0 down
+
+# Clear old queuing disciplines (qdisc) on the interfaces and the MANGLE table
+tc qdisc del dev $EXTDEV root    2&gt; /dev/null &gt; /dev/null
+tc qdisc del dev $EXTDEV ingress 2&gt; /dev/null &gt; /dev/null
+tc qdisc del dev ifb0 root       2&gt; /dev/null &gt; /dev/null
+tc qdisc del dev ifb0 ingress    2&gt; /dev/null &gt; /dev/null
+iptables -t mangle -F
+iptables -t mangle -X QOS
+
+# appending "stop" (without quotes) after the name of the script stops here.
+if [ "$1" = "stop" ]
+then
+        echo "Shaping removed on $EXTDEV."
+        exit
+fi
+
+ip link set dev ifb0 up
+
+# HTB classes on IFB with rate limiting
+tc qdisc add dev ifb0 root handle 3: htb default 30
+tc class add dev ifb0 parent 3: classid 3:3 htb rate ${DOWNLINK}kbit
+tc class add dev ifb0 parent 3:3 classid 3:30 htb rate 400kbit ceil ${DOWNLINK}kbit
+tc class add dev ifb0 parent 3:3 classid 3:33 htb rate 1400kbit ceil ${DOWNLINK}kbit
+
+# Packets marked with "3" on IFB flow through class 3:33
+tc filter add dev ifb0 parent 3:0 protocol ip handle 3 fw flowid 3:33
+
+# Outgoing traffic from 192.168.1.50 is marked with "3"
+iptables -t mangle -N QOS
+iptables -t mangle -A FORWARD -o $EXTDEV -j QOS
+iptables -t mangle -A OUTPUT -o $EXTDEV -j QOS
+iptables -t mangle -A QOS -j CONNMARK --restore-mark
+iptables -t mangle -A QOS -s 192.168.1.50 -m mark --mark 0 -j MARK --set-mark 3
+iptables -t mangle -A QOS -j CONNMARK --save-mark
+
+# Forward all ingress traffic on internet interface to the IFB device
+tc qdisc add dev $EXTDEV ingress handle ffff:
+tc filter add dev $EXTDEV parent ffff: protocol ip \
+        u32 match u32 0 0 \
+        action connmark \
+        action mirred egress redirect dev ifb0 \
+        flowid ffff:1
+
+exit 0
+</pre>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://lartc.org">Linux Advanced Routing &amp; Traffic Control</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tc_(Linux)" class="extiw" title="wikipedia:Tc (Linux)">Wikipedia page for the tc command</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Networking.html" title="Category:Networking">Networking</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Advanced_traffic_control&amp;oldid=533572">https://wiki.archlinux.org/index.php?title=Advanced_traffic_control&amp;oldid=533572</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 12 August 2018, at 13:23.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

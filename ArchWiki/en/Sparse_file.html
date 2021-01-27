@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Sparse file - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Sparse_file rootpage-Sparse_file skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Sparse file</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>According to <a href="https://en.wikipedia.org/wiki/Sparse_file" class="extiw" title="wikipedia:Sparse file">Wikipedia</a>, in computer science, a sparse file is a type of computer file that attempts to use file system space more efficiently when blocks allocated to the file are mostly empty. This is achieved by writing brief information (metadata) representing the empty blocks to disk instead of the actual "empty" space which makes up the block, using less disk space. The full block size is written to disk as the actual size only when the block contains "real" (non-empty) data.
+</p>
+<p>When reading sparse files, the file system transparently converts metadata representing empty blocks into "real" blocks filled with zero bytes at runtime. The application is unaware of this conversion.
+</p>
+<p>Most modern file systems support sparse files, including most Unix variants and NTFS, but notably not Apple's HFS+. Sparse files are commonly used for <a href="https://en.wikipedia.org/wiki/Disk_image" class="extiw" title="wikipedia:Disk image">disk images</a> (not to be confused with <a href="https://en.wikipedia.org/wiki/Sparse_image" class="extiw" title="wikipedia:Sparse image">sparse images</a>), database snapshots, log files and in scientific applications.
+</p>
+<p>The advantage of sparse files is that storage is only allocated when actually needed: disk space is saved, and large files can be created even if there is insufficient free space on the file system.
+</p>
+<p>Disadvantages are that sparse files may become fragmented; file system free space reports may be misleading; filling up file systems containing sparse files can have unexpected effects; and copying a sparse file with a program that does not explicitly support them may copy the entire file, including the empty blocks which are not on explicitly stored on the disk, which wastes the benefits of the sparse property of the file.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1">
+<a href="#Creating_sparse_files"><span class="tocnumber">1</span> <span class="toctext">Creating sparse files</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Making_existing_files_sparse"><span class="tocnumber">1.1</span> <span class="toctext">Making existing files sparse</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Formatting_the_file_with_a_filesystem"><span class="tocnumber">1.2</span> <span class="toctext">Formatting the file with a filesystem</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Mounting_the_file_at_boot"><span class="tocnumber">1.3</span> <span class="toctext">Mounting the file at boot</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-5">
+<a href="#Copying_the_sparse_file"><span class="tocnumber">2</span> <span class="toctext">Copying the sparse file</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#Copying_with_cp"><span class="tocnumber">2.1</span> <span class="toctext">Copying with cp</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Archiving_with_tar"><span class="tocnumber">2.2</span> <span class="toctext">Archiving with tar</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8">
+<a href="#Resizing_the_sparse_file"><span class="tocnumber">3</span> <span class="toctext">Resizing the sparse file</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Growing_the_file"><span class="tocnumber">3.1</span> <span class="toctext">Growing the file</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#Sources"><span class="tocnumber">4</span> <span class="toctext">Sources</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Creating_sparse_files">Creating sparse files</span></h2>
+<p>The <i>truncate</i> utility can create sparse files. This command creates a 512 MiB sparse file:
+</p>
+<pre>$ truncate -s 512M file.img
+</pre>
+<p>The <a href="../en/Dd.html" title="Dd">dd</a> utility can also be used, for example:
+</p>
+<pre>$ dd if=/dev/zero of=file.img bs=1 count=0 seek=512M
+</pre>
+<p>Sparse files have different <i>apparent file sizes</i> (the maximum size to which they may expand) and <i>actual file sizes</i> (how much space is allocated for data on disk).  To check the file's <i>apparent size</i>, just run:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h --apparent-size file.img</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">512M    file.img
+</pre>
+<p>and, to check the <i>actual size</i> of the file on disk:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h file.img</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">0       file.img
+</pre>
+<p>As you can see, although the apparent size of the file is 512 MiB, its "actual" size is really zero—that's because due to the nature and beauty of sparse files, it will "expand" arbitrarily to minimize the space required to store its contents.
+</p>
+<h3><span class="mw-headline" id="Making_existing_files_sparse">Making existing files sparse</span></h3>
+<p>The <i>fallocate</i> utility can make existing files sparse on supported file systems:
+</p>
+<pre>$ cp file.img copy.img --sparse=never
+$ du -h copy.img 
+512M    copy.img
+</pre>
+<pre>$ fallocate -d copy.img
+$ du -h copy.img
+0       copy.img
+</pre>
+<h3><span class="mw-headline" id="Formatting_the_file_with_a_filesystem">Formatting the file with a filesystem</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Sparse files don't have to contain a file system, the purpose should be explained. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sparse_file">Talk:Sparse file#</a>)</div>
+</div>
+<p>Now that we've created the sparse file, it's time to format it with a filesystem; for example ReiserFS:
+</p>
+<pre>$ mkfs.reiserfs -f -q file.img
+</pre>
+<p>We can now check its size to see how the filesystem has affected it:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h --apparent-size file.img</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">512M    file.img
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h file.img</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">33M     file.img
+</pre>
+<p>As you may have expected, formatting it with the filesystem has increased its actual size, but left its apparent size the same.  Now we can create a directory which we will use to mount our file:
+</p>
+<pre># mkdir <i>mountpoint</i>
+# mount -o loop file.img <i>mountpoint</i>
+</pre>
+<p>Tada! We now have both a file and a folder into which we may store <i>almost</i> 512 MiB worth of information!
+</p>
+<h3><span class="mw-headline" id="Mounting_the_file_at_boot">Mounting the file at boot</span></h3>
+<p>To mount the sparse image automatically at boot, add an entry to your <a href="../en/Fstab.html" title="Fstab">fstab</a>:
+</p>
+<pre><i>/path/to/file.img</i>  <i>/path/to/mountpoint</i>  reiserfs  loop,defaults  0  0
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> Be sure to include the <code>loop</code> option, otherwise it will not mount.</div>
+<h2><span class="mw-headline" id="Copying_the_sparse_file">Copying the sparse file</span></h2>
+<h3><span class="mw-headline" id="Copying_with_cp">Copying with cp</span></h3>
+<p>Normally, <a href="../en/Core_utilities.html" class="mw-redirect" title="Cp">cp</a> is good at detecting whether a file is sparse, so it suffices to run:
+</p>
+<pre>$ cp <i>file.img</i> <i>new_file.img</i>
+</pre>
+<p>Then <code><i>new_file.img</i></code> will be sparse. However, <i>cp</i> does have a <code>--sparse=<i>when</i></code> option. This is especially useful if a sparse file has somehow become non sparse (i.e. the empty blocks have been written out to disk in full). Disk space can be recovered by:
+</p>
+<pre>$ cp --sparse=always <i>new_file.img</i> <i>recovered_file.img</i>
+</pre>
+<h3><span class="mw-headline" id="Archiving_with_tar">Archiving with tar</span></h3>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Informal writing, see <a href="../en/Help:Style.html#Language_register" title="Help:Style">Help:Style#Language register</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sparse_file">Talk:Sparse file#</a>)</div>
+</div>
+<p>One day, you may decide to back up your well-loved sparse file, and choose the <a href="../en/Archiving_and_compression.html" class="mw-redirect" title="Tar">tar</a> utility for that very purpose; however, you soon realize you have a problem:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h file.img</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">33M     file.img
+</pre>
+<pre>$ tar -cf file.tar file.img
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h file.tar</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">513M    file.tar
+</pre>
+<p>Apparently, even though the current size of the sparse file is only 33 MB, archiving it with tar created an archive of the <b>ENTIRE SIZE OF THE FILE!</b>  Luckily for you, though, tar has a `--sparse' (`-S') flag, that when used in conjunction with the `--create' (`-c') operation, tests all files for sparseness while archiving. If tar finds a file to be sparse, it uses a sparse representation of the file in the archive.  This is useful when archiving files, such as dbm files, likely to contain many nulls, and dramatically decreases the amount of space needed to store such an archive.
+</p>
+<pre>$ tar -Scf file.tar file.img
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">$ du -h file.tar</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">12K     file.tar
+</pre>
+<p>Problem solved.
+</p>
+<h2><span class="mw-headline" id="Resizing_the_sparse_file">Resizing the sparse file</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a><b>This article or section needs language, wiki syntax or style improvements. See <a href="../en/Help:Style.html" title="Help:Style">Help:Style</a> for reference.</b><a href="../File:Tango-edit-clear.png" class="image"><img alt="Tango-edit-clear.png" src="../File:Tango-edit-clear.png" decoding="async" width="48" height="48"></a></p>
+<div>
+<b>Reason:</b> Dependence on <a href="#Formatting_the_file_with_a_filesystem">#Formatting the file with a filesystem</a> is not apparent, not every sparse file contains a file system. Also too informal writing, see <a href="../en/Help:Style.html#Language_register" title="Help:Style">Help:Style#Language register</a>. (Discuss in <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php/Talk:Sparse_file">Talk:Sparse file#</a>)</div>
+</div>
+<p>Before we resize the file, let's populate it with a couple small files for testing purposes:
+</p>
+<pre>$ for f in {1..5}; do touch folder/file${f}; done
+</pre>
+<pre>$ ls folder/
+file1  file2  file3  file4  file5
+</pre>
+<p>Now, let's add some content to one of the files:
+</p>
+<pre>$ echo "This is a test to see if it works..." &gt;&gt; folder/file1
+</pre>
+<pre>$ cat folder/file1
+This is a test to see if it works...
+</pre>
+<h3><span class="mw-headline" id="Growing_the_file">Growing the file</span></h3>
+<p>Should you ever need to grow the file, you may do the following:
+</p>
+<pre># umount folder
+
+# dd if=/dev/zero of=file.img bs=1 count=0 seek=1G
+0+0 records in
+0+0 records out
+0 bytes (0 B) copied, 2.2978e-05 s, 0.0 kB/s
+</pre>
+<p>This will increase its size to 1 Gb, and leave its information intact.  Next, we need to increase the size of its filesystem:
+</p>
+<pre># resize_reiserfs file.img
+resize_reiserfs 3.6.21 (2009 www.namesys.com)
+
+ReiserFS report:
+blocksize             4096
+block count           262144 (131072)
+free blocks           253925 (122857)
+bitmap block count    8 (4)
+
+Syncing..done
+
+
+resize_reiserfs: Resizing finished successfully.
+</pre>
+<p>...and, remount it:
+</p>
+<pre># mount -o loop file.img folder
+</pre>
+<p>Checking its size gives us:
+</p>
+<pre># du -h --apparent-size file.img
+1.0G    file.img
+
+# du -h file.img
+33M     file.img
+</pre>
+<p>...and to check for consistency:
+</p>
+<pre># df -h folder
+Filesystem            Size  Used Avail Use% Mounted on
+/tmp/file.img         1.0G   33M  992M   4% /tmp/folder
+</pre>
+<pre># ls folder
+file1  file2  file3  file4  file5
+
+# cat folder/file1
+This is a test to see if it works...
+</pre>
+<h2><span class="mw-headline" id="Sources">Sources</span></h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Sparse_file" class="extiw" title="wikipedia:Sparse file">wikipedia:Sparse_file</a></li>
+<li>
+<a rel="nofollow" class="external free" href="http://www.apl.jhu.edu/Misc/Unix-info/tar/tar_85.html">http://www.apl.jhu.edu/Misc/Unix-info/tar/tar_85.html</a><sup title="Last check status: domain name not resolved">[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">dead link</a> 2020-04-03 ⓘ]</sup>
+</li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:File_systems.html" title="Category:File systems">File systems</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden categories: <ul>
+<li><a href="../en/Category:Pages_or_sections_flagged_with_Template:Style.html" title="Category:Pages or sections flagged with Template:Style">Pages or sections flagged with Template:Style</a></li>
+<li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li>
+</ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Sparse_file&amp;oldid=603842">https://wiki.archlinux.org/index.php?title=Sparse_file&amp;oldid=603842</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 3 April 2020, at 09:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

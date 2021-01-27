@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Upside Down Ternet - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Upside_Down_Ternet rootpage-Upside_Down_Ternet skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Upside Down Ternet</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>This article explains how to create a transparent <a href="../en/Squid.html" title="Squid">Squid</a> proxy server using <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=imagemagick">imagemagick</a></span>'s mogrify to flip the images upside down. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuration"><span class="tocnumber">2</span> <span class="toctext">Configuration</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Router_Setup"><span class="tocnumber">2.1</span> <span class="toctext">Router Setup</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Starting"><span class="tocnumber">3</span> <span class="toctext">Starting</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#See_also"><span class="tocnumber">4</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p><a href="../en/Help:Reading.html#Installation_of_packages" class="mw-redirect" title="Install">Install</a> the <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=squid">squid</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=apache">apache</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=wget">wget</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=imagemagick">imagemagick</a></span> packages from the <a href="../en/Official_repositories.html" title="Official repositories">official repositories</a>.
+</p>
+<h2><span class="mw-headline" id="Configuration">Configuration</span></h2>
+<p>Create <code>flip.pl</code> and place it in your <code>/usr/local/bin</code> folder
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/usr/local/bin/flip.pl</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">#!/usr/bin/perl
+$|=1;
+$count = 0;
+$pid = $$;
+while (&lt;&gt;) {
+       @splitted=split(/ /,$_);
+       chomp $_;
+       if ($_ =~ /(.*\.jpg)/i) {
+               $url = $1;
+               system("/usr/bin/wget", "-q", "-O","/srv/http/images/$pid-$count.jpg", "$url");
+               system("/usr/bin/mogrify", "-flip","/srv/http/images/$pid-$count.jpg");
+               print "http://127.0.0.1/images/$pid-$count.jpg\n";
+       }
+       elsif ($_ =~ /(.*\.gif)/i) {
+               $url = $1;
+               system("/usr/bin/wget", "-q", "-O","/srv/http/images/$pid-$count.gif", "$url");
+               system("/usr/bin/mogrify", "-flip","/srv/http/images/$pid-$count.gif");
+               print "http://127.0.0.1/images/$pid-$count.gif\n";
+       }
+       elsif ($_ =~ /(.*\.png)/i) {
+               $url = $1;
+               system("/usr/bin/wget", "-q", "-O","/srv/http/images/$pid-$count.png", "$url");
+               system("/usr/bin/mogrify", "-flip","/srv/http/images/$pid-$count.png");
+               print "http://127.0.0.1/images/$pid-$count.png\n";
+       }
+       else {
+               print "$splitted[0]\n";
+       }
+       $count++;
+}
+</pre>
+<p>Now we need to modify the permissions so that it's executable
+</p>
+<pre># chmod 755 /usr/local/bin/flip.pl</pre>
+<p>Next, while not necessary, does clean up the Squid config file a lot making it easier on the eyes
+</p>
+<pre># sed -i "/^#/d;/^ *$/d" /etc/squid/squid.conf</pre>
+<p>Now, edit your squid.conf file and append this to the bottom
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">squid.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">url_rewrite_program /usr/local/bin/flip.pl
+</pre>
+<p>Also find the line for <code>http_port</code> and make it now read
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">squid.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">http_port 3128 intercept</pre>
+<p>Finally, we have to create the folders for the images to be flipped in and set their permissions
+</p>
+<p><i>The directory where the images are to be stored must be owned by the proxy user.</i>
+</p>
+<pre># mkdir /srv/http/images
+# chown proxy:proxy /srv/http/images
+# chmod 755 /srv/http/images
+</pre>
+<p>Finally, add the http user to the proxy group
+</p>
+<pre># usermod -aG proxy http</pre>
+<p>Verify that the http user is a member of the proxy group
+</p>
+<pre># groups http</pre>
+<p>or
+</p>
+<pre># id -Gn http</pre>
+<h3><span class="mw-headline" id="Router_Setup">Router Setup</span></h3>
+<p>You will need to edit <a href="../en/Iptables.html" title="Iptables">iptables</a> on your router or gateway to redirect http traffic to your proxy.
+</p>
+<p>If you have DD-WRT on your router, this is easily done by going to Administration -&gt; Commands and pasting the following into the box.
+</p>
+<pre>#!/bin/sh
+PROXY_IP=192.168.1.
+PROXY_PORT=3128
+LAN_IP=`nvram get lan_ipaddr`
+LAN_NET=$LAN_IP/`nvram get lan_netmask`
+iptables -t nat -A PREROUTING -i br0 -s $LAN_NET -d $LAN_NET -p tcp --dport 80 -j ACCEPT
+iptables -t nat -A PREROUTING -i br0 -s ! $PROXY_IP -p tcp --dport 80 -j DNAT --to $PROXY_IP:$PROXY_PORT
+iptables -t nat -I POSTROUTING -o br0 -s $LAN_NET -d $PROXY_IP -p tcp -j SNAT --to $LAN_IP
+iptables -I FORWARD -i br0 -o br0 -s $LAN_NET -d $PROXY_IP -p tcp --dport $PROXY_PORT -j ACCEPT
+</pre>
+<h2><span class="mw-headline" id="Starting">Starting</span></h2>
+<p>Configure <code>httpd.service</code> and <code>squid.service</code> to start on boot.
+</p>
+<p>Read <a href="../en/Daemons.html" title="Daemons">Daemons</a> for more information.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="http://www.ex-parrot.com/pete/upside-down-ternet.html">Original Upside-Down-Ternet Link</a></li>
+<li><a rel="nofollow" class="external text" href="https://help.ubuntu.com/community/Upside-Down-TernetHowTo">Ubuntu HowTo</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.dd-wrt.com/wiki/index.php/Squid_Transparent_Proxy">Transparent Proxy with DD-WRT</a></li>
+<li><a rel="nofollow" class="external text" href="http://xkcd.com/341/">Upside-Down-Ternet XKCD</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Proxy_servers.html" title="Category:Proxy servers">Proxy servers</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Upside_Down_Ternet&amp;oldid=548926">https://wiki.archlinux.org/index.php?title=Upside_Down_Ternet&amp;oldid=548926</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 20 October 2018, at 16:56.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

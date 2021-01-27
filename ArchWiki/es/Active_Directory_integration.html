@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Active Directory integration (Español) - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Active_Directory_integration_Español rootpage-Active_Directory_integration_Español skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Active Directory integration (Español)</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Estado de la traducción:</strong> este artículo es una traducción de <a href="../en/Active_Directory_integration.html" class="mw-redirect" title="Active Directory Integration">Active Directory Integration</a> revisada por última vez el <b>2019-07-19</b>. Si advierte que la versión inglesa <a rel="nofollow" class="external text" href="https://wiki.archlinux.org/index.php?title=Active_Directory_Integration&amp;diff=0&amp;oldid=574158">ha cambiado</a> puede actualizar la traducción <a href="../es/ArchWiki:f6ecee2fb17812f6654b3a6ff807d392.html" class="mw-redirect" title="ArchWiki:Translation Team/Contributing (Español)">usted mismo</a> o avisar al <a href="../es/ArchWiki:Translation_Team.html" title="ArchWiki:Translation Team (Español)">equipo de traducción</a>.</div>
+<div class="archwiki-template-meta-related-articles-start">
+<p>Artículos relacionados</p>
+<ul>
+<li><a href="../es/Samba.html" title="Samba (Español)">Samba</a></li>
+<li><a href="../en/Samba/Active_Directory_domain_controller.html" title="Samba/Active Directory domain controller">Samba/Controlador del dominio de Active Directory</a></li>
+<li><a href="../en/SOGo.html" title="SOGo">SOGo</a></li>
+</ul>
+</div>
+<p>De <a href="https://en.wikipedia.org/wiki/es:Active_Directory" class="extiw" title="wikipedia:es:Active Directory">Wikipedia</a>:
+</p>
+<dl><dd>Active Directory (AD) o Directorio Activo son los términos que utiliza Microsoft para referirse a su implementación de <a href="https://en.wikipedia.org/wiki/es:Servicio_de_directorio" class="extiw" title="wikipedia:es:Servicio de directorio">servicio de directorio</a> en una red distribuida de computadores.</dd></dl>
+<p>Este artículo describe cómo integrar el sistema Arch Linux con un dominio de red Window utilizando <a href="../es/Samba.html" title="Samba (Español)">Samba</a>.
+</p>
+<p>Antes de continuar tiene que existir un dominio de Active Directory y tener un usuario con los permisos apropiados en el dominio para: listar usuarios y añadir cuentas en el ordenador (Unirse al dominio).
+</p>
+<p>Este documento no tiene la intención de hacer una guía completa de Active Directory o Samba. Consulte en la sección de recursos para información adicional.
+</p>
+<p>El servidor Active Directory es una localización central para la administración de la red y seguridad. Es el responsable de autentificar y autorizar todos los usuarios y ordenadores a través de la red de dominio de Window asignando y forzando políticas de seguridad para todos los ordenadores en una red e instalar o actualizar software en la red de ordenadores. Por ejemplo, cuando un usuario inicia sesión en un ordenador que es parte de un dominio Window su Active Directory es el que verifica la contraseña y especifíca si es un administrador del sistema o un usuario normal. Los ordenadores servidores en los cuales se está ejecutando el Active Directory son llamados controladores de dominio.
+</p>
+<p>Active Directory utiliza las versiones dos y tres del <a href="https://en.wikipedia.org/wiki/es:Protocolo_Ligero_de_Acceso_a_Directorios" class="extiw" title="wikipedia:es:Protocolo Ligero de Acceso a Directorios">protocolo ligero de acceso a directorios (LDAP)</a>, una versión de Microsoft de <a href="../en/Kerberos.html" title="Kerberos">Kerberos</a> y DNS.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Terminolog%C3%ADa"><span class="tocnumber">1</span> <span class="toctext">Terminología</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Configuraci%C3%B3n_de_Active_Directory"><span class="tocnumber">2</span> <span class="toctext">Configuración de Active Directory</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Consideraciones_GPO"><span class="tocnumber">2.1</span> <span class="toctext">Consideraciones GPO</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4">
+<a href="#Configuraci%C3%B3n_del_anfitri%C3%B3n_Linux"><span class="tocnumber">3</span> <span class="toctext">Configuración del anfitrión Linux</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#Instalaci%C3%B3n"><span class="tocnumber">3.1</span> <span class="toctext">Instalación</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Actualizar_DNS"><span class="tocnumber">3.2</span> <span class="toctext">Actualizar DNS</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Configurar_NTP"><span class="tocnumber">3.3</span> <span class="toctext">Configurar NTP</span></a></li>
+<li class="toclevel-2 tocsection-8">
+<a href="#Kerberos"><span class="tocnumber">3.4</span> <span class="toctext">Kerberos</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Crear_un_ticket_de_Kerberos"><span class="tocnumber">3.4.1</span> <span class="toctext">Crear un ticket de Kerberos</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Validar_el_ticket"><span class="tocnumber">3.4.2</span> <span class="toctext">Validar el ticket</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#pam_winbind.conf"><span class="tocnumber">3.5</span> <span class="toctext">pam_winbind.conf</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Samba"><span class="tocnumber">3.6</span> <span class="toctext">Samba</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Unirse_al_dominio"><span class="tocnumber">3.7</span> <span class="toctext">Unirse al dominio</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-14">
+<a href="#Iniciar_y_comprobar_servicios"><span class="tocnumber">4</span> <span class="toctext">Iniciar y comprobar servicios</span></a>
+<ul>
+<li class="toclevel-2 tocsection-15"><a href="#Iniciar_Samba"><span class="tocnumber">4.1</span> <span class="toctext">Iniciar Samba</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Comprobar_Winbind"><span class="tocnumber">4.2</span> <span class="toctext">Comprobar Winbind</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Comprobar_nsswitch"><span class="tocnumber">4.3</span> <span class="toctext">Comprobar nsswitch</span></a></li>
+<li class="toclevel-2 tocsection-18"><a href="#Comprobar_comandos_de_Samba"><span class="tocnumber">4.4</span> <span class="toctext">Comprobar comandos de Samba</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-19">
+<a href="#Configurar_PAM"><span class="tocnumber">5</span> <span class="toctext">Configurar PAM</span></a>
+<ul>
+<li class="toclevel-2 tocsection-20">
+<a href="#system-auth"><span class="tocnumber">5.1</span> <span class="toctext">system-auth</span></a>
+<ul>
+<li class="toclevel-3 tocsection-21"><a href="#Secci%C3%B3n_%22auth%22"><span class="tocnumber">5.1.1</span> <span class="toctext">Sección "auth"</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#Secci%C3%B3n_%22account%22"><span class="tocnumber">5.1.2</span> <span class="toctext">Sección "account"</span></a></li>
+<li class="toclevel-3 tocsection-23"><a href="#Secci%C3%B3n_%22password%22"><span class="tocnumber">5.1.3</span> <span class="toctext">Sección "password"</span></a></li>
+<li class="toclevel-3 tocsection-24"><a href="#Secci%C3%B3n_%22session%22"><span class="tocnumber">5.1.4</span> <span class="toctext">Sección "session"</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-25">
+<a href="#passwd"><span class="tocnumber">5.2</span> <span class="toctext">passwd</span></a>
+<ul>
+<li class="toclevel-3 tocsection-26"><a href="#Secci%C3%B3n_%22password%22_2"><span class="tocnumber">5.2.1</span> <span class="toctext">Sección "password"</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27"><a href="#Comprobar_inicio_de_sesi%C3%B3n"><span class="tocnumber">5.3</span> <span class="toctext">Comprobar inicio de sesión</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-28"><a href="#Configurar_recursos_compartidos"><span class="tocnumber">6</span> <span class="toctext">Configurar recursos compartidos</span></a></li>
+<li class="toclevel-1 tocsection-29">
+<a href="#A%C3%B1adir_un_ordenador_al_archivo_keytab_y_activar_ssh_kerberizado_sin_contrase%C3%B1a_al_ordenador"><span class="tocnumber">7</span> <span class="toctext">Añadir un ordenador al archivo keytab y activar ssh kerberizado sin contraseña al ordenador</span></a>
+<ul>
+<li class="toclevel-2 tocsection-30"><a href="#Crear_un_archivo_keytab_del_ordenador"><span class="tocnumber">7.1</span> <span class="toctext">Crear un archivo keytab del ordenador</span></a></li>
+<li class="toclevel-2 tocsection-31"><a href="#Activar_la_autentificaci%C3%B3n_keytab"><span class="tocnumber">7.2</span> <span class="toctext">Activar la autentificación keytab</span></a></li>
+<li class="toclevel-2 tocsection-32"><a href="#Preparar_sshd_en_el_servidor"><span class="tocnumber">7.3</span> <span class="toctext">Preparar sshd en el servidor</span></a></li>
+<li class="toclevel-2 tocsection-33"><a href="#A%C3%B1adir_las_opciones_necesarias_en_el_cliente"><span class="tocnumber">7.4</span> <span class="toctext">Añadir las opciones necesarias en el cliente</span></a></li>
+<li class="toclevel-2 tocsection-34"><a href="#Comprobar_la_ejecuci%C3%B3n"><span class="tocnumber">7.5</span> <span class="toctext">Comprobar la ejecución</span></a></li>
+<li class="toclevel-2 tocsection-35"><a href="#Ajuste_preciso_para_un_manejo_completo_de_kerberos_sin_contrase%C3%B1a."><span class="tocnumber">7.6</span> <span class="toctext">Ajuste preciso para un manejo completo de kerberos sin contraseña.</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-36">
+<a href="#Generar_Keytabs_de_usuarios_que_sean_aceptados_por_AD"><span class="tocnumber">8</span> <span class="toctext">Generar Keytabs de usuarios que sean aceptados por AD</span></a>
+<ul>
+<li class="toclevel-2 tocsection-37"><a href="#Es_bueno_conocer"><span class="tocnumber">8.1</span> <span class="toctext">Es bueno conocer</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-38">
+<a href="#V%C3%A9ase_tambi%C3%A9n"><span class="tocnumber">9</span> <span class="toctext">Véase también</span></a>
+<ul>
+<li class="toclevel-2 tocsection-39"><a href="#Soluciones_comerciales"><span class="tocnumber">9.1</span> <span class="toctext">Soluciones comerciales</span></a></li>
+<li class="toclevel-2 tocsection-40"><a href="#Versiones_de_c%C3%B3digo_abierto"><span class="tocnumber">9.2</span> <span class="toctext">Versiones de código abierto</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>
+<span id="Terminolog.C3.ADa"></span><span class="mw-headline" id="Terminología">Terminología</span>
+</h2>
+<p>Si no está familiarizado con la terminología de Active Directory aquí tiene algunas palabras que son de ayuda conocer.
+</p>
+<ul>
+<li>
+<b>Dominio</b> : El nombre usado para agrupar ordenadores y cuentas.</li>
+<li>
+<b>SID</b> : Casa ordenador que se une al dominio como miembro tiene que tener un único SID o identificador del sistema.</li>
+<li>
+<b>SMB</b> : Servidor de mensajes en bloque (Server Message Block).</li>
+<li>
+<b>NETBIOS</b>:  Protocolo de nombres de red (Network naming protocol) utilizado como alternativa a DNS. Más antiguo pero todavía utilizado en la red de Window.</li>
+<li>
+<b>WINS</b>: Servicio de información de nombres de Windows (Windows Information Naming Service). Utilizado para resolver nombres Netbios a hosts Windows.</li>
+<li>
+<b>Winbind</b>: Protocolo de autentificación de Windows.</li>
+</ul>
+<h2>
+<span id="Configuraci.C3.B3n_de_Active_Directory"></span><span class="mw-headline" id="Configuración_de_Active_Directory">Configuración de Active Directory</span>
+</h2>
+<p>Esta sección funciona con las configuraciones por defecto en Windows Server 2012 R2.
+</p>
+<h3><span class="mw-headline" id="Consideraciones_GPO">Consideraciones GPO</span></h3>
+<p>La firma digital esta activada por defecto en Windows Server y tiene que estar activada en los niveles cliente y servidor. Para ciertas versiones de Samba los clientes Linux pueden experimentar problemas conectando al dominio y/o a recursos compartidos. Se recomienda que añada los siguientes parámetros a su archivo <code>smb.conf</code>: 
+</p>
+<pre>client signing = auto 
+server signing = auto
+</pre>
+<p>Si esto no lo soluciona puede desactivar <i>Firmar digitalmente las comunicaciones (Siempre)</i> en las directivas de grupo AD (Active Directory). En su editor de directivas de grupo AD localice:
+</p>
+<p>En <i>Directivas locales &gt; Directivas de seguridad &gt; Servidor de red Microsoft &gt; Firmar digitalmente las comunicaciones (Siempre)</i> activar <i>Definir esta directiva</i> y utilice el botón de selección <i>desactivar</i>.
+</p>
+<p>Si utiliza  Windows Server 2008 R2 necesita modificar esto en <i>GPO para directivas de controlador de dominio por defecto &gt; Ajustes del ordenador &gt; Directivas &gt; Ajustes de Windows &gt; Ajustes de Seguridad &gt; Directivas locales &gt; Opciones de seguridad &gt; Cliente de red Microsoft: Firmar digitalmente las comunicaciones (Siempre)</i>.
+</p>
+<p>Por favor tenga en cuenta que desactivando esta GPO (Objeto directiva de grupo) afecta a la seguridad de todos los miembros del dominio.
+</p>
+<h2>
+<span id="Configuraci.C3.B3n_del_anfitri.C3.B3n_Linux"></span><span class="mw-headline" id="Configuración_del_anfitrión_Linux">Configuración del anfitrión Linux</span>
+</h2>
+<p>Los siguientes pasos son para comenzar a configurar el anfitrión. Necesitará root o acceso sudo para completar estos pasos.
+</p>
+<h3>
+<span id="Instalaci.C3.B3n"></span><span class="mw-headline" id="Instalación">Instalación</span>
+</h3>
+<p><a href="../es/Help:Reading.html#Instalaci%C3%B3n_de_paquetes" title="Help:Reading (Español)">Instale</a> los siguientes paquetes:
+</p>
+<ul>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=samba">samba</a></span>, vea también <a href="../es/Samba.html" title="Samba (Español)">Samba</a>
+</li>
+<li><span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=pam-krb5">pam-krb5</a></span></li>
+<li>
+<span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=ntp">ntp</a></span> or <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=openntpd">openntpd</a></span>, vea también <a href="../es/Network_Time_Protocol_daemon.html" title="Network Time Protocol daemon (Español)">NTPd</a> o <a href="../en/OpenNTPD.html" title="OpenNTPD">OpenNTPD</a>
+</li>
+</ul>
+<h3><span class="mw-headline" id="Actualizar_DNS">Actualizar DNS</span></h3>
+<p>Active Directory es muy dependiente de DNS. Necesitará actualizar <code>/etc/resolv.conf</code> para utilizar uno o más controladores de dominio de Active Directory:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/resolv.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">nombreServidor &lt;IP1&gt;
+nombreServidor &lt;IP2&gt;
+</pre>
+<p>Reemplaze &lt;IP1&gt; y &lt;IP2&gt; con unas direcciones IP válidas para los servidores de AD. Si su dominio de AD no permite reenvio de DNS o recursión puede necesitar añadir resolutores adicionales.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Si su maquina tiene un arranque dual Windows y Linux debe de utilizar un nombre DNS y un nombre netbios diferente para la configuración Linux si ambos sistemas operativos son miembros del mismo dominio.</div>
+<h3><span class="mw-headline" id="Configurar_NTP">Configurar NTP</span></h3>
+<p>Lea <a href="../es/System_time.html#Sincronizaci%C3%B3n_del_reloj" title="System time (Español)">Sincronización del reloj</a> para configurar el servicio NTP.
+</p>
+<p>En la configuración del servidor NTP utilice la dirección IP del los servidores AD que normalmente ejecutan NTP como servicio.
+Otra manera es utilizar otros servidores NTP conocidos proporcionados por la sincronización de los servidores de Active directory a la misma capa.
+</p>
+<p>Asegúrese que el servicio está configurado para sincronizar la hora automáticamente bastante pronto en el inicio.
+</p>
+<h3><span class="mw-headline" id="Kerberos">Kerberos</span></h3>
+<p>Supongamos que su AD se llama ejemplo.com y que su AD está controlado por dos controladores de dominio, el primario y el secundario que se llaman PDC (Primary Domain Controler) y BDC, pdc.ejemplo.com y bdc.ejemplo.com respectivamente. Las direcciones IP serán 192.168.1.2 y 192.168.1.3 en este ejemplo. Tenga en cuenta la sintaxis, las mayúsculas son muy importantes aquí.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/krb5.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[libdefaults]
+        default_realm 	= 	EJEMPLO.COM
+	clockskew 	= 	300
+	ticket_lifetime	=	1d
+        forwardable     =       true
+        proxiable       =       true
+        dns_lookup_realm =      true
+        dns_lookup_kdc  =       true
+	
+[realms]
+	EJEMPLO.COM = {
+		kdc 	= 	PDC.EJEMPLO.COM
+                admin_server = PDC.EJEMPLO.COM
+		default_domain = EJEMPLO.COM
+	}
+	
+[domain_realm]
+        .kerberos.server = EJEMPLO.COM
+	.ejemplo.com = EJEMPLO.COM
+	ejemplo.com = EJEMPLO.COM
+	ejemplo	= EJEMPLO.COM
+
+[appdefaults]
+	pam = {
+	ticket_lifetime 	= 1d
+	renew_lifetime 		= 1d
+	forwardable 		= true
+	proxiable 		= false
+	retain_after_close 	= false
+	minimum_uid 		= 0
+	debug 			= false
+	}
+
+[logging]
+	default 		= FILE:/var/log/krb5libs.log
+	kdc 			= FILE:/var/log/kdc.log
+        admin_server            = FILE:/var/log/kadmind.log
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Heimdal 1.3.1 encriptación DES en desuso que se requiere para la autentificación antes del Windows Server 2008. Probablemente tendrá que añadir <pre>allow_weak_crypto = true</pre> a la sección <code>[libdefaults]</code>.</div>
+<h4><span class="mw-headline" id="Crear_un_ticket_de_Kerberos">Crear un ticket de Kerberos</span></h4>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> Las claves y los comandos son específicos para cada usuario: sudo debe ser root, por tanto su cuenta no elevada puede conectarse a un usuario de AD diferente con una clave separada. Si solo tiene un dominio no es necesario escribir @EJEMPLO.COM</div>
+<p>Ahora puede buscar los controladores del dominio de AD y pedir a un ticket a kerberos (<b>las mayúsculas son necesarias</b>):
+</p>
+<pre>kinit administrator@EJEMPLO.COM</pre>
+<p>Puede utilizar cualquier usuario que tenga permisos como Administrador de Dominio.
+</p>
+<h4><span class="mw-headline" id="Validar_el_ticket">Validar el ticket</span></h4>
+<p>Ejecute <b>klist</b> para verificar que recibiste el token. Debe de ver algo similar a:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># klist</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> Ticket cache: FILE:/tmp/krb5cc_0
+ Default principal: administrator@EJEMPLO.COM
+ 
+ Valid starting    Expires           Service principal 
+ 02/04/12 21:27:47 02/05/12 07:27:42 krbtgt/EJEMPLO.COM@EJEMPLO.COM
+         renew until 02/05/12 21:27:47
+</pre>
+<h3><span class="mw-headline" id="pam_winbind.conf">pam_winbind.conf</span></h3>
+<p>Si recibe errores de estado diciendo que el archivo /etc/security/pam_winbind.conf no se encuentra cree el archivo y añada lo siguiente:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/security/pam_winbind.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[global]
+  debug = no
+  debug_state = no
+  try_first_pass = yes
+  krb5_auth = yes
+  krb5_ccache_type = FILE
+  cached_login = yes
+  silent = no
+  mkhomedir = yes
+</pre>
+<p>Con estos ajustes winbind creará fichas de usuario sobre la marcha (krb5_ccache_type = FILE) en el inicio de sesión y los mantiene. Puede verificar esto ejecutando simplemente klist en una consola después de iniciar sesión con un usuario de AD pero sin necesidad de ejecutar kinit. Puede necesitar permisos adicionales en /etc/krb5.keytab por ejemplo 640 en vez de 600 para hacer que funcione (vea este ejemplo <a rel="nofollow" class="external text" href="https://bugs.archlinux.org/task/52621">FS#52621</a>).
+</p>
+<h3><span class="mw-headline" id="Samba">Samba</span></h3>
+<p>Samba es un programa de software libre que re-implementa el protocolo de red SMB/CIFS. También incluye utilidades para las máquinas Linux para actuar como servidores de red Windows y clientes.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> La configuración puede variar bastante dependiendo de como se despliegue el entorno Windows. Prepárese para problemas e investigación</div>
+<p>En esta sección nos centraremos primero en hacer que la autentificación funcione editando primero la sección 'Global'. Más tarde volveremos atrás y añadiremos comparticiones.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Global]
+  netbios name = MYARCHLINUX
+  workgroup = EJEMPLO
+  realm = EJEMPLO.COM
+  server string = %h ArchLinux Host
+  security = ads
+  encrypt passwords = yes
+  password server = pdc.ejemplo.com
+  client signing = auto
+  server signing = auto
+
+  idmap config * : backend = tdb
+  idmap config * : range = 10000-20000
+
+  winbind use default domain = Yes
+  winbind enum users = Yes
+  winbind enum groups = Yes
+  winbind nested groups = Yes
+  winbind separator = +
+  winbind refresh tickets = yes
+  winbind offline logon = yes
+  winbind cache time = 300
+
+  template shell = /bin/bash
+  template homedir = /home/%D/%U
+   
+  preferred master = no
+  dns proxy = no
+  wins server = pdc.ejemplo.com
+  wins proxy = no
+
+  inherit acls = Yes
+  map acl inherit = Yes
+  acl group control = yes
+
+  load printers = no
+  debug level = 3
+  use sendfile = no
+</pre>
+<h3><span class="mw-headline" id="Unirse_al_dominio">Unirse al dominio</span></h3>
+<p>Necesita una cuenta de AD con permisos de administrados para hacer esto. Supongamos que la cuenta se llama Administrador. El comando es 'net ads join'.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># net ads join -U Administrador</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Administrador's password: xxx
+Using short domain name -- EJEMPLO
+Joined 'MYARCHLINUX' to realm 'EJEMPLO.COM'
+</pre>
+<h2><span class="mw-headline" id="Iniciar_y_comprobar_servicios">Iniciar y comprobar servicios</span></h2>
+<h3><span class="mw-headline" id="Iniciar_Samba">Iniciar Samba</span></h3>
+<p>¡Milagrosamente no habrá reiniciado aún! Bien. Si esta en una sesión X quitela, de esta forma podrá probar iniciar sesión en otra consola mientras que esté aún con la sesión iniciada.
+</p>
+<p>Active e inicie los demonios individuales de Samba <code>smbd.service</code>, <code>nmbd.service</code>, y <code>winbindd.service</code>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Nota:</strong> En <span class="plainlinks archwiki-template-pkg"><a rel="nofollow" class="external text" href="https://archlinux.org/packages/?name=samba">samba</a></span> 4.8.0-1, los demonios unitarios de Samba se han renombrado a <code>smbd.service</code>, <code>nmbd.service</code>, y <code>winbindd.service</code> a <code>smb.service</code>, <code>nmb.service</code>, y <code>winbind.service</code>.</div>
+<p>Lo siguiente que necesitará es modificar la configuración NSSwitch que es la que le dice a Linux como obtener la información de varias fuentes y en qué orden. En este caso dependemos del Active Directory como fuentes adicionales para Usuarios, Grupos, y Hosts.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/nsswitch.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> passwd:            files winbind
+ shadow:            files winbind
+ group:             files winbind 
+ 
+ hosts:             files dns wins
+</pre>
+<h3><span class="mw-headline" id="Comprobar_Winbind">Comprobar Winbind</span></h3>
+<p>Vamos a comprobar si winbind es capaz de listar el AD. El siguiente comando debe de devolver una lista de usuarios de AD:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># wbinfo -u</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">administrator
+guest
+krbtgt
+test.user
+</pre>
+<ul><li>Note que creamos un usuario de Active Directory llamado 'test.user' en el controlador de dominio.</li></ul>
+<p>Podemos hacer lo mismo para grupos de AD:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># wbinfo -g</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">domain computers
+domain controllers
+schema admins
+enterprise admins
+cert publishers
+domain admins
+domain users
+domain guests
+group policy creator owners
+ras and ias servers
+allowed rodc password replication group
+denied rodc password replication group
+read-only domain controllers
+enterprise read-only domain controllers
+dnsadmins
+dnsupdateproxy
+</pre>
+<h3><span class="mw-headline" id="Comprobar_nsswitch">Comprobar nsswitch</span></h3>
+<p>Para asegurarse que su host es capaz de listar el domino para usuarios y grupos podemos comprobar los ajustes nsswitch utilizando el comando 'getent'.
+</p>
+<p>Si los usuarios de su Controlador de Dominio no se ven pruebe añadir las siguiente línea a su archivo smb.conf:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">winbind trusted domains only = no
+</pre>
+<p>La siguiente salida muestra como se ve una instalación de ArchLinux:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getent passwd</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/bin/false
+daemon:x:2:2:daemon:/sbin:/bin/false
+mail:x:8:12:mail:/var/spool/mail:/bin/false
+ftp:x:14:11:ftp:/srv/ftp:/bin/false
+http:x:33:33:http:/srv/http:/bin/false
+nobody:x:99:99:nobody:/:/bin/false
+dbus:x:81:81:System message bus:/:/bin/false
+ntp:x:87:87:Network Time Protocol:/var/empty:/bin/false
+avahi:x:84:84:avahi:/:/bin/false
+administrador:*:10001:10006:Administrador:/home/EJEMPLO/administrador:/bin/bash
+guest:*:10002:10007:Guest:/home/EJEMPLO/guest:/bin/bash
+krbtgt:*:10003:10006:krbtgt:/home/EJEMPLO/krbtgt:/bin/bash
+test.user:*:10000:10006:Test User:/home/EJEMPLO/test.user:/bin/bash
+</pre>
+<p>Y para los grupos:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># getent group</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">root:x:0:root
+bin:x:1:root,bin,daemon
+daemon:x:2:root,bin,daemon
+sys:x:3:root,bin
+adm:x:4:root,daemon
+tty:x:5:
+disk:x:6:root
+lp:x:7:daemon
+mem:x:8:
+kmem:x:9:
+wheel:x:10:root
+ftp:x:11:
+mail:x:12:
+uucp:x:14:
+log:x:19:root
+utmp:x:20:
+locate:x:21:
+rfkill:x:24:
+smmsp:x:25:
+http:x:33:
+games:x:50:
+network:x:90:
+video:x:91:
+audio:x:92:
+optical:x:93:
+floppy:x:94:
+storage:x:95:
+scanner:x:96:
+power:x:98:
+nobody:x:99:
+users:x:100:
+dbus:x:81:
+ntp:x:87:
+avahi:x:84:
+domain computers:x:10008:
+domain controllers:x:10009:
+schema admins:x:10010:administrador
+enterprise admins:x:10011:administrador
+cert publishers:x:10012:
+domain admins:x:10013:test.user,administrador
+domain users:x:10006:
+domain guests:x:10007:
+group policy creator owners:x:10014:administrador
+ras and ias servers:x:10015:
+allowed rodc password replication group:x:10016:
+denied rodc password replication group:x:10017:krbtgt
+read-only domain controllers:x:10018:
+enterprise read-only domain controllers:x:10019:
+dnsadmins:x:10020:
+dnsupdateproxy:x:10021:
+</pre>
+<h3><span class="mw-headline" id="Comprobar_comandos_de_Samba">Comprobar comandos de Samba</span></h3>
+<p>Pruebe algunos comandos net para ver si Samba se puede comunicar con el AD:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># net ads info</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[2012/02/05 20:21:36.473559,  0] param/loadparm.c:7599(lp_do_parameter)
+  Ignoring unknown parameter "idmapd backend"
+LDAP server: 192.168.1.2
+LDAP server name: PDC.ejemplo.com
+Realm: EJEMPLO.COM
+Bind Path: dc=EJEMPLO,dc=COM
+LDAP port: 389
+Server time: Sun, 05 Feb 2012 20:21:33 CST
+KDC server: 192.168.1.2
+Server time offset: -3
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># net ads lookup</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[2012/02/05 20:22:39.298823,  0] param/loadparm.c:7599(lp_do_parameter)
+  Ignoring unknown parameter "idmapd backend"
+Information for Domain Controller: 192.168.1.2
+
+Response Type: LOGON_SAM_LOGON_RESPONSE_EX
+GUID: 2a098512-4c9f-4fe4-ac22-8f9231fabbad
+Flags:
+        Is a PDC:                                   yes
+        Is a GC of the forest:                      yes
+        Is an LDAP server:                          yes
+        Supports DS:                                yes
+        Is running a KDC:                           yes
+        Is running time services:                   yes
+        Is the closest DC:                          yes
+        Is writable:                                yes
+        Has a hardware clock:                       yes
+        Is a non-domain NC serviced by LDAP server: no
+        Is NT6 DC that has some secrets:            no
+        Is NT6 DC that has all secrets:             yes
+Forest:                 ejemplo.com
+Domain:                 ejemplo.com
+Domain Controller:      PDC.ejemplo.com
+Pre-Win2k Domain:       EJEMPLO
+Pre-Win2k Hostname:     PDC
+Server Site Name :              Office
+Client Site Name :              Office
+NT Version: 5
+LMNT Token: ffff
+LM20 Token: ffff
+</pre>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># net ads status -U administrador%password | less</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+objectClass: computer
+cn: myarchlinux
+distinguishedName: CN=myarchlinux,CN=Computers,DC=leafscale,DC=inc
+instanceType: 4
+whenCreated: 20120206043413.0Z
+whenChanged: 20120206043414.0Z
+uSNCreated: 16556
+uSNChanged: 16563
+name: myarchlinux
+objectGUID: 2c24029c-8422-42b2-83b3-a255b9cb41b3
+userAccountControl: 69632
+badPwdCount: 0
+codePage: 0
+countryCode: 0
+badPasswordTime: 0
+lastLogoff: 0
+lastLogon: 129729780312632000
+localPolicyFlags: 0
+pwdLastSet: 129729764538848000
+primaryGroupID: 515
+objectSid: S-1-5-21-719106045-3766251393-3909931865-1105
+...&lt;snip&gt;...
+</pre>
+<h2><span class="mw-headline" id="Configurar_PAM">Configurar PAM</span></h2>
+<p>Ahora cambiaremos varias reglas en PAM para permitir que los usuarios de Active Directory puedan utilizar el sistema para cosas como iniciar sesión y acceso sudo. Cuando se cambian estas reglas note que el orden de estos elementos y cualquier cosa que este marcado como <b>required</b> (requerido) o <b>sufficient</b> (suficiente) es crítico para que funcione como se espera. No debe desviarse de estas reglas a no haya ser que sepa como escribir reglas PAM.
+</p>
+<p>En el caso de inicios de sesión primero PAM debe de preguntar por las cuentas AD y por las cuentas locales si no encuentra ninguna cuenta de AD. Por lo tanto añadiremos entradas para incluir <code>pam_winbind.so</code> en el proceso de autentificación.
+</p>
+<p>La configuración PAM de Arch Linux mantiene el proceso central de autentificación en <code>/etc/pam.d/system-auth</code>. Iniciando con la configuración de stock de <code>pambase</code>, cambiela como prosigue:
+</p>
+<h3><span class="mw-headline" id="system-auth">system-auth</span></h3>
+<h4>
+<span id="Secci.C3.B3n_.22auth.22"></span><span class="mw-headline" id='Sección_"auth"'>Sección "auth"</span>
+</h4>
+<p>Encuentre la línea:
+</p>
+<pre>auth required pam_unix.so ...
+</pre>
+<p>Elimínela y reemplacela con:
+</p>
+<pre>auth [success=1 default=ignore] pam_localuser.so
+auth [success=2 default=die] pam_winbind.so
+auth [success=1 default=die] pam_unix.so nullok
+auth requisite pam_deny.so
+</pre>
+<h4>
+<span id="Secci.C3.B3n_.22account.22"></span><span class="mw-headline" id='Sección_"account"'>Sección "account"</span>
+</h4>
+<p>Encuentre la línea:
+</p>
+<pre>account required pam_unix.so
+</pre>
+<p>Mantenla y añada esto debajo:
+</p>
+<pre>account [success=1 default=ignore] pam_localuser.so
+account required pam_winbind.so
+</pre>
+<h4>
+<span id="Secci.C3.B3n_.22password.22"></span><span class="mw-headline" id='Sección_"password"'>Sección "password"</span>
+</h4>
+<p>Encuentre la línea:
+</p>
+<pre>password required pam_unix.so ...
+</pre>
+<p>Elimínela y reemplacela con:
+</p>
+<pre>password [success=1 default=ignore] pam_localuser.so
+password [success=2 default=die] pam_winbind.so
+password [success=1 default=die] pam_unix.so sha512 shadow
+password requisite pam_deny.so
+</pre>
+<h4>
+<span id="Secci.C3.B3n_.22session.22"></span><span class="mw-headline" id='Sección_"session"'>Sección "session"</span>
+</h4>
+<p>Encuentre la línea:
+</p>
+<pre>session required pam_unix.so
+</pre>
+<p>Mantenla y añada esta línea justo encima de ella:
+</p>
+<pre>session required pam_mkhomedir.so skel=/etc/skel/ umask=0022
+</pre>
+<p>Debajo de la línea pam_unix añada esto:
+</p>
+<pre>session [success=1 default=ignore] pam_localuser.so
+session required pam_winbind.so
+</pre>
+<h3><span class="mw-headline" id="passwd">passwd</span></h3>
+<h4>
+<span id="Secci.C3.B3n_.22password.22_2"></span><span class="mw-headline" id='Sección_"password"_2'>Sección "password"</span>
+</h4>
+<p>Para que los usuarios de Active Directory que han iniciado sesión puedan cambiar sus contraseñas con el comando 'passwd' el archivo <code>/etc/pam.d/passwd</code> tiene que incluir información de system-auth.
+</p>
+<p>Encuentre la línea:
+</p>
+<pre>password required pam_unix.so sha512 shadow nullok
+</pre>
+<p>Elimínela y reemplacela con:
+</p>
+<pre>password include system-auth
+</pre>
+<h3>
+<span id="Comprobar_inicio_de_sesi.C3.B3n"></span><span class="mw-headline" id="Comprobar_inicio_de_sesión">Comprobar inicio de sesión</span>
+</h3>
+<p>Ahora inicie una nueva sesión con consola (o ssh) e intente iniciar sesión con las credenciales de AD. El nombre del dominio es opcional como se establece en la configuración de Winbind como 'default realm'. Por favor tenga en cuenta que en el caso de ssh necesitará modificar el archivo <code>/etc/ssh/sshd_config</code> para permitir la autentificación kerberos <code>(KerberosAuthentication yes)</code>.
+</p>
+<pre>test.user
+EJEMPLO+test.user
+</pre>
+<p>Ambos comandos deben funcionar. Debe notar que <code>/home/example/test.user</code> se creará automáticamente.
+<b>Inicie sesión utilizando una cuenta de Linux. Compruebe si puede iniciar sesión como root - ¡pero tenga en cuenta que tiene que iniciar sesión como root en al menos una sesión!</b>
+</p>
+<h2><span class="mw-headline" id="Configurar_recursos_compartidos">Configurar recursos compartidos</span></h2>
+<p>Antes se omitió la configuración de recursos compartidos. Ahora que todo funciona vuelva a <code>/etc/samba/smb.conf</code> y añada los recursos del host que quiere que estén disponibles en la red de Windows.
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[MyShare]
+  comment = Ejemplo de recurso compartido
+  path = /srv/exports/myshare
+  read only = no
+  browseable = yes
+  valid users = @NETWORK+"Domain Admins" NETWORK+test.user
+</pre>
+<p>En el ejemplo anterior la palabra <b>NETWORK</b> se tiene que utilizar. No lo sustituya erróneamente por su nombre de dominio. Para añadir grupos preceda el símbolo '@' del grupo. Note que <code>Domain Admins</code> está entre comillas para que Samba lo sustituya cuando lea el archivo de configuración.
+</p>
+<h2>
+<span id="A.C3.B1adir_un_ordenador_al_archivo_keytab_y_activar_ssh_kerberizado_sin_contrase.C3.B1a_al_ordenador"></span><span class="mw-headline" id="Añadir_un_ordenador_al_archivo_keytab_y_activar_ssh_kerberizado_sin_contraseña_al_ordenador">Añadir un ordenador al archivo keytab y activar ssh kerberizado sin contraseña al ordenador</span>
+</h2>
+<p>Esto explica cómo generar un ordenador al archivo keytab por el cual puede necesitar, por ejemplo, activar ssh kerberizado sin contraseña a tu ordenador desde otros ordenadores del dominio. El escenario que se plantea es que tenga un grupo de sistemas en su dominio y solo añadió un servidor/espacio de trabajo utilizando la descripción de arriva a su dominio del cual muchos usuarios necesitan ssh para trabajar, por ejemplo, con un espacio de trabajo GPU o con un nodo computacional OpenMP, etc. En este caso puede que no quiera introducir la contraseña cada vez que entre al servidor. Por otra parte muchos usuarios utilizan la autentificación por llave, en este supuesto a lo mejor no puede darle las credenciales necesarias para montar recursos compartidos kerberizados NFSv4, por ejemplo. Esto le ayudará activar los accesos sin contraseña desde sus clientes a la maquina en cuestion utilizando seguimiento de ticket kerberos.
+</p>
+<h3><span class="mw-headline" id="Crear_un_archivo_keytab_del_ordenador">Crear un archivo keytab del ordenador</span></h3>
+<p>Ejecute 'net ads keytab create -U administrador' como root para crear el archivo keytab del ordenador en /etc/krb5.keytab. Mostrará una advertencia de que necesita activar la autentificación keytab en su archivo de configuración, por tanto hágalo en el paso siguiente. En este caso específico hubo problemas cuando se creó el archivo keytab porque ya existía. En este caso el comando se queda sin responder. Para solucionarlo renombre el archivo /etc/krb5.keytab existente y ejecute el comando de nuevo, debería funcionar.
+</p>
+<pre># net ads keytab create -U administrador</pre>
+<p>verifique el contenido de su keytab ejecutando:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># klist -k /etc/krb5.keytab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">Keytab name: FILE:/etc/krb5.keytab
+KVNO Principal
+---- --------------------------------------------------------------------------
+   4 host/myarchlinux.ejemplo.com@EJEMPLO.COM
+   4 host/myarchlinux.ejemplo.com@EJEMPLO.COM
+   4 host/myarchlinux.ejemplo.com@EJEMPLO.COM
+   4 host/myarchlinux.ejemplo.com@EJEMPLO.COM
+   4 host/myarchlinux.ejemplo.com@EJEMPLO.COM
+   4 host/MYARCHLINUX@EJEMPLO.COM
+   4 host/MYARCHLINUX@EJEMPLO.COM
+   4 host/MYARCHLINUX@EJEMPLO.COM
+   4 host/MYARCHLINUX@EJEMPLO.COM
+   4 host/MYARCHLINUX@EJEMPLO.COM
+   4 MYARCHLINUX$@EJEMPLO.COM
+   4 MYARCHLINUX$@EJEMPLO.COM
+   4 MYARCHLINUX$@EJEMPLO.COM
+   4 MYARCHLINUX$@EJEMPLO.COM
+   4 MYARCHLINUX$@EJEMPLO.COM
+</pre>
+<h3>
+<span id="Activar_la_autentificaci.C3.B3n_keytab"></span><span class="mw-headline" id="Activar_la_autentificación_keytab">Activar la autentificación keytab</span>
+</h3>
+<p>Ahora necesita decirle a winbind que utilice el archivo añadiendo estas lineas a /etc/samba/smb.conf:
+</p>
+<pre> kerberos method = secrets and keytab
+ dedicated keytab file = /etc/krb5.keytab
+</pre>
+<p>Se verá algo parecido a esto:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/samba/smb.conf</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">[Global]
+  netbios name = MYARCHLINUX
+  workgroup = EJEMPLO
+  realm = EJEMPLO.COM
+  server string = %h ArchLinux Host
+  security = ads
+  encrypt passwords = yes
+  password server = pdc.ejemplo.com
+  kerberos method = secrets and keytab
+  dedicated keytab file = /etc/krb5.keytab
+
+  idmap config * : backend = tdb
+  idmap config * : range = 10000-20000
+
+  winbind use default domain = Yes
+  winbind enum users = Yes
+  winbind enum groups = Yes
+  winbind nested groups = Yes
+  winbind separator = +
+  winbind refresh tickets = yes
+
+  template shell = /bin/bash
+  template homedir = /home/%D/%U
+   
+  preferred master = no
+  dns proxy = no
+  wins server = pdc.ejemplo.com
+  wins proxy = no
+
+  inherit acls = Yes
+  map acl inherit = Yes
+  acl group control = yes
+
+  load printers = no
+  debug level = 3
+  use sendfile = no
+</pre>
+<p>Reinicie el demonio winbind utilizando 'systemctl restart winbindd.service' con privilegios root.
+</p>
+<pre># systemctl restart winbindd.service</pre>
+<p>Compruebe que todo funciona obteniendo un ticket del ordenador desde su sistema ejecutando
+</p>
+<pre># kinit MYARCHLINUX$ -kt /etc/krb5.keytab</pre>
+<p>No debe de devolver ningún resultado pero ejecutando 'klist' debe mostrarse su sth así:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># klist</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;"> Ticket cache: FILE:/tmp/krb5cc_0
+ Default principal: MYARCHLINUX$@EJEMPLO.COM
+ 
+ Valid starting    Expires           Service principal 
+ 02/04/12 21:27:47 02/05/12 07:27:42 krbtgt/EJEMPLO.COM@EJEMPLO.COM
+         renew until 02/05/12 21:27:47
+</pre>
+<p>Algunos errores comunes aquí son
+</p>
+<ul>
+<li>Olvidar los $ finales o</li>
+<li>Ignorar la sensibilidad de mayúsculas que son necesarias para las entradas en el keytab (en general no puede haber muchos fallos con todas las mayúsculas).</li>
+</ul>
+<h3><span class="mw-headline" id="Preparar_sshd_en_el_servidor">Preparar sshd en el servidor</span></h3>
+<p>Todo lo que necesita hacer es añadir algunas opciones a su configuración sshd_config y reiniciar sshd.service.
+</p>
+<p>Edite /etc/ssh/sshd_config como sigue en los lugares adecuados:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;"># /etc/ssh/sshd_config</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">
+
+...
+
+# Cámbiela a no para desactivar las contraseñas s/key
+ChallengeResponseAuthentication no
+
+# Opciones Kerberos
+KerberosAuthentication yes
+#KerberosOrLocalPasswd yes
+KerberosTicketCleanup yes
+KerberosGetAFSToken yes
+
+# Opciones GSSAPI
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+
+...
+
+</pre>
+<p>Reinicie el sshd.service utilizando:
+</p>
+<pre># systemctl restart sshd.service</pre>
+<h3>
+<span id="A.C3.B1adir_las_opciones_necesarias_en_el_cliente"></span><span class="mw-headline" id="Añadir_las_opciones_necesarias_en_el_cliente">Añadir las opciones necesarias en el cliente</span>
+</h3>
+<p>Primero necesita asegurarse que los tickets de su cliente se puede transferir. Esto normalmente es un estándar pero es mejor comprobarlo de todas formas. Tiene que mirar la opción transferible y establecerlo a 'true' en el archivo /etc/krb5.conf.
+</p>
+<pre>forwardable     =       true</pre>
+<p>Después añada las siguientes opciones
+</p>
+<pre> GSSAPIAuthentication yes
+ GSSAPIDelegateCredentials yes
+</pre>
+<p>a su archivo .ssh/config para decirle a ssh que utilice estas opciones. Alternativamente se puede invocar directamente con la opción -o en el comando ssh (vea 'man ssh' para más información).
+</p>
+<h3>
+<span id="Comprobar_la_ejecuci.C3.B3n"></span><span class="mw-headline" id="Comprobar_la_ejecución">Comprobar la ejecución</span>
+</h3>
+<p>En el cliente:
+</p>
+<p>Asegúrese que tiene un ticket válido - si tiene dudas ejecute 'kinit'.
+</p>
+<p>Después utilice ssh para conectarse a su ordenador.
+</p>
+<pre>ssh myarchlinux.ejemplo.com </pre>
+<p>Debe comprobar que se conecta sin necesidad de introducir su contraseña.
+</p>
+<p>Si tiene una llave de autentificación adicional debe realizar
+</p>
+<pre>ssh -v myarchlinux.ejemplo.com </pre>
+<p>para ver cual método de autentificación utiliza actualmente.
+</p>
+<p>Para depuración puede activar en el servidor DEBUG3 y mirar en el journal utilizando <a href="../en/Systemd/Journal.html" class="mw-redirect" title="Journalctl">journalctl</a>.
+</p>
+<h3>
+<span id="Ajuste_preciso_para_un_manejo_completo_de_kerberos_sin_contrase.C3.B1a."></span><span class="mw-headline" id="Ajuste_preciso_para_un_manejo_completo_de_kerberos_sin_contraseña.">Ajuste preciso para un manejo completo de kerberos sin contraseña.</span>
+</h3>
+<p>En el caso de que sus clientes no estén utilizando cuentas de dominio en sus ordenadores locales (por cualquier razón) puede ser difícil decirle a kinit antes que a ssh el espacio de trabajo. Sin embargo una solución posible es la que se propone en el siguiente apartado.
+</p>
+<h2><span class="mw-headline" id="Generar_Keytabs_de_usuarios_que_sean_aceptados_por_AD">Generar Keytabs de usuarios que sean aceptados por AD</span></h2>
+<p>En el sistema deje que el usuario ejecute:
+</p>
+<pre>ktutil
+addent -password -p username@EJEMPLO.COM -k 1 -e RC4-HMAC
+- introduzca la contraseña del usuario -
+wkt username.keytab
+q
+</pre>
+<p>Ahora compruebe el archivo con:
+</p>
+<pre>kinit username@EJEMPLO.COM -kt username.keytab</pre>
+<p>No debe pedirle contraseña y no debe devolverle ningún comentario. Si funcionó ya estaría hecho; simplemente añada la linea de arriba en su ~./bashrc - ahora puede obtener tickets de kerberos sin escribir ninguna contraseña y puede conectar a su espacio de trabajo sin escribir la contraseña mientras este completamente kerberizado y habilitado para la autentificación a través de NFSv4 y CIFS via tickets. 
+</p>
+<h3><span class="mw-headline" id="Es_bueno_conocer">Es bueno conocer</span></h3>
+<p>El archivo 'username.keytab' no es exclusivo del ordenador y puede copiarse. Ej. se copio archivos desde un ordenador Linux a un ordenador Mac ya que los comandos de Mac son diferentes.
+</p>
+<h2>
+<span id="V.C3.A9ase_tambi.C3.A9n"></span><span class="mw-headline" id="Véase_también">Véase también</span>
+</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/es:Active_Directory" class="extiw" title="wikipedia:es:Active Directory">Wikipedia - Active Directory</a></li>
+<li><a href="https://en.wikipedia.org/wiki/es:Samba_(software)" class="extiw" title="wikipedia:es:Samba (software)">Wikipedia - Samba</a></li>
+<li><a href="https://en.wikipedia.org/wiki/es:Kerberos" class="extiw" title="wikipedia:es:Kerberos">Wikipedia - Kerberos</a></li>
+<li><a rel="nofollow" class="external text" href="http://www.samba.org/samba/docs">Samba - Documentation</a></li>
+<li>
+<a rel="nofollow" class="external text" href="http://wiki.samba.org/index.php/Samba_&amp;_Active_Directory">Samba Wiki - Samba &amp; Active Directory</a><sup>[<a href="https://en.wikipedia.org/wiki/Wikipedia:Link_rot" class="extiw" title="wikipedia:Wikipedia:Link rot">enlace roto</a> 2020-08-02]</sup>
+</li>
+<li><a rel="nofollow" class="external text" href="http://www.samba.org/samba/docs/man/manpages-3/smb.conf.5.html"><code>smb.conf(5)</code> manpage</a></li>
+</ul>
+<h3><span class="mw-headline" id="Soluciones_comerciales">Soluciones comerciales</span></h3>
+<ul>
+<li>Centrify</li>
+<li>Likewise</li>
+</ul>
+<h3>
+<span id="Versiones_de_c.C3.B3digo_abierto"></span><span class="mw-headline" id="Versiones_de_código_abierto">Versiones de código abierto</span>
+</h3>
+<ul>
+<li>
+<a rel="nofollow" class="external text" href="https://github.com/BeyondTrust/pbis-open/">PowerBroker Identity Services Open</a>: anteriormente también adquirida por BeyondTrust</li>
+<li><a rel="nofollow" class="external text" href="https://www.centrify.com/express/linux/">Centrify Express para Linux</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface">
+<div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../es/Category:Directory_services.html" title="Category:Directory services (Español)">Directory services (Español)</a></li></ul>
+</div>
+<div id="mw-hidden-catlinks" class="mw-hidden-catlinks mw-hidden-cats-hidden">Hidden category: <ul><li><a href="../en/Category:Pages_with_dead_links.html" title="Category:Pages with dead links">Pages with dead links</a></li></ul>
+</div>
+</div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Active_Directory_integration_(Espa%C3%B1ol)&amp;oldid=628249">https://wiki.archlinux.org/index.php?title=Active_Directory_integration_(Español)&amp;oldid=628249</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 2 August 2020, at 09:18.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>

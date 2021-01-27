@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Overlay filesystem - ArchWiki</title>
+<link rel="stylesheet" href="../ArchWikiOffline.css">
+<meta name="ResourceLoaderDynamicStyles" content="">
+<meta name="generator" content="MediaWiki 1.35.0">
+<meta name="robots" content="noindex,follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="ArchWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel="license" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="ArchWiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Overlay_filesystem rootpage-Overlay_filesystem skin-vector action-view skin-vector-legacy">
+<div id="content" class="mw-body" role="main" style="margin: 0">
+	<a id="top"></a>
+	<div id="siteNotice" class="mw-body-content"></div>
+	<div class="mw-indicators mw-body-content">
+	</div>
+	<h1 id="firstHeading" class="firstHeading" lang="en">Overlay filesystem</h1>
+	<div id="bodyContent" class="mw-body-content">
+		<div id="siteSub" class="noprint">From ArchWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+<div class="warningbox">The printable version is no longer supported and may have rendering errors. Please update your browser bookmarks and please use the default browser print function instead.</div>
+<div class="mw-parser-output">
+<p>From <a rel="nofollow" class="external text" href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e9be9d5e76e34872f0c37d72e25bc27fe9e2c54c">the initial kernel commit</a>:
+</p>
+<dl><dd>Overlayfs allows one, usually read-write, directory tree to be overlaid onto another, read-only directory tree. All modifications go to the upper, writable layer. This type of mechanism is most often used for live CDs but there is a wide variety of other uses.</dd></dl>
+<dl><dd>The implementation differs from other "union filesystem" implementations in that after a file is opened all operations go directly to the underlying, lower or upper, filesystems. This simplifies the implementation and allows native performance in these cases.</dd></dl>
+<p>Overlayfs has been in the Linux kernel since 3.18.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading">
+<input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none"><div class="toctitle" lang="en" dir="ltr">
+<h2 id="mw-toc-heading">Contents</h2>
+<span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+</div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Installation"><span class="tocnumber">1</span> <span class="toctext">Installation</span></a></li>
+<li class="toclevel-1 tocsection-2">
+<a href="#Usage"><span class="tocnumber">2</span> <span class="toctext">Usage</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Read-only_overlay"><span class="tocnumber">2.1</span> <span class="toctext">Read-only overlay</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#See_also"><span class="tocnumber">3</span> <span class="toctext">See also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Installation">Installation</span></h2>
+<p>Overlayfs is enabled in the default kernel and the <code>overlay</code> module is automatically loaded upon issuing a mount command.
+</p>
+<h2><span class="mw-headline" id="Usage">Usage</span></h2>
+<p>To mount an overlay use the following <code>mount</code> options:
+</p>
+<pre># mount -t overlay overlay -o lowerdir=<i>/lower</i>,upperdir=<i>/upper</i>,workdir=<i>/work</i> <i>/merged</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The working directory (<code>workdir</code>) needs to be an empty directory on the same filesystem mount as the upper directory.</div>
+<ul>
+<li>The lower directory can be read-only or could be an overlay itself.</li>
+<li>The upper directory is normally writable.</li>
+<li>The workdir is used to prepare files as they are switched between the layers.</li>
+</ul>
+<p>The lower directory can actually be a list of directories separated by <code>:</code>, all changes in the <code>merged</code> directory are still reflected in <code>upper</code>.
+</p>
+<p>Example:
+</p>
+<pre># mount -t overlay overlay -o lowerdir=<i>/lower1:/lower2:/lower3</i>,upperdir=<i>/upper</i>,workdir=<i>/work</i> <i>/merged</i>
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note">
+<strong>Note:</strong> The order of lower directories is the rightmost is the lowest, thus the upper directory is on top of the first directory in the left-to-right list of lower directories; NOT on top of the last directory in the list, as the order (or logic) might seem to suggest.
+<p>The above example will have the order:
+</p>
+<pre>/upper
+/lower1 
+/lower2
+/lower3
+</pre>
+</div>
+<p>To add an overlayfs entry to <code>/etc/fstab</code> use the following format:
+</p>
+<pre style="margin-bottom: 0; border-bottom:none; padding-bottom:0.8em;">/etc/fstab</pre>
+<pre style="margin-top: 0; border-top-style:dashed; padding-top: 0.8em;">overlay <i>/merged</i> overlay noauto,x-systemd.automount,lowerdir=<i>/lower</i>,upperdir=<i>/upper</i>,workdir=<i>/work</i> 0 0</pre>
+<p>The <code>noauto</code> and <code>x-systemd.automount</code> mount options are necessary to prevent systemd from hanging on boot because it failed to mount the overlay. The overlay is now mounted whenever it is first accessed and requests are buffered until it is ready. See <a href="../en/Fstab.html#Automount_with_systemd" title="Fstab">fstab#Automount with systemd</a>.
+</p>
+<h3><span class="mw-headline" id="Read-only_overlay">Read-only overlay</span></h3>
+<p>Sometimes, it is only desired to create a read-only view of the combination of two or more directories. In that case, it can be created in an easier manner, as the directories <code>upper</code> and <code>work</code> are <b>not</b> required:
+</p>
+<pre># mount -t overlay overlay -o lowerdir=<i>/lower1:/lower2</i> <i>/merged</i>
+</pre>
+<p>When <code>upperdir</code> is not specified, the overlay is automatically mounted as read-only.
+</p>
+<h2><span class="mw-headline" id="See_also">See also</span></h2>
+<ul>
+<li><a rel="nofollow" class="external text" href="https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html">Overlay Filesystem documentation</a></li>
+<li><a rel="nofollow" class="external text" href="https://www.datalight.com/blog/2016/01/27/explaining-overlayfs-%E2%80%93-what-it-does-and-how-it-works">Explaining overlayfs - What it does and how it works</a></li>
+<li><a href="https://en.wikipedia.org/wiki/OverlayFS" class="extiw" title="wikipedia:OverlayFS">Wikipedia:OverlayFS</a></li>
+</ul>
+</div>
+</div>
+<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks">
+<a href="../Special:Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="../en/Category:Stackable_file_systems.html" title="Category:Stackable file systems">Stackable file systems</a></li></ul>
+</div></div>
+	</div>
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" style="margin: 0">
+	<ul id="footer-info">
+		<li>Retrieved from "<a dir="ltr" href="https://wiki.archlinux.org/index.php?title=Overlay_filesystem&amp;oldid=632559">https://wiki.archlinux.org/index.php?title=Overlay_filesystem&amp;oldid=632559</a>"</li>
+		<li id="footer-info-lastmod"> This page was last edited on 19 August 2020, at 10:32.</li>
+		<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+	<br>
+</ul>
+	<ul id="footer-places">
+		<li id="footer-places-privacy"><a href="../en/ArchWiki:Privacy_policy.html" title="ArchWiki:Privacy policy">Privacy policy</a></li>
+		<li id="footer-places-about"><a href="../en/ArchWiki:About.html" title="ArchWiki:About">About ArchWiki</a></li>
+		<li id="footer-places-disclaimer"><a href="../en/ArchWiki:General_disclaimer.html" title="ArchWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+	<ul id="footer-icons" class="noprint">
+		<li id="footer-copyrightico">
+	</ul>
+	<div style="clear: both;"></div>
+</footer>
+
+
+
+</body>
+</html>
