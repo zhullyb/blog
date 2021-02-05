@@ -1,8 +1,8 @@
 _date=$(date +%Y-%m-%d)
 _url=$(kdialog --inputbox url)
-_title=$(kdialog --inputbox title)
-_catagories=$(kdialog --inputbox catagories)
-_tags=$(kdialog --inputbox tags)
+_title=$(kdialog --inputbox 标题)
+_catagories=$(kdialog --inputbox 分类)
+_tags=$(kdialog --inputbox 标签)
 touch "$_date-$_url.md"
 echo "---
 layout:     post
