@@ -1,12 +1,11 @@
 ---
 layout:     post
-title:      使用Motrix接管Linux下Firefox的下载
+title:      使用Motrix接管Firefox的下载
 date:       2020-03-01
 author:     竹林里有冰
 tags:
     - Linux
-    - 技术文档
-    - 教程
+    - Windows
     - 网络
 ---
 
