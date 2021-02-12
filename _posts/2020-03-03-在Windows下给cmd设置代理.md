@@ -5,8 +5,6 @@ date:       2020-03-03
 author:     竹林里有冰
 tags:
     - Windows
-    - 技术文档
-    - 教程
     - 网络
 ---
 

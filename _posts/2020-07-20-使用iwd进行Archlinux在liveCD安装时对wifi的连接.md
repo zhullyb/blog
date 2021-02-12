@@ -4,7 +4,7 @@ title:      使用iwd进行Archlinux在liveCD安装时对wifi的连接
 date:       2020-07-20
 author:     竹林里有冰
 categories: Shell
-tags:       Linux 网络 教程
+tags:       Linux 网络
 ---
 
 * content

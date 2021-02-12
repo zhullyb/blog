@@ -6,8 +6,6 @@ author:     竹林里有冰
 categories: Shell
 tags:
     - Linux
-    - 教程
-    - 技术文档
 ---
 
 * content

@@ -4,7 +4,7 @@ title:      UOS到底有没有Secure Boot签名/UOS引导怎么修复
 date:       2020-12-22
 author:     竹林里有冰
 categories: Linux
-tags:       Linux 引导 Grub 大佬对话笔记
+tags:       Linux 大佬对话笔记
 ---
 
 * content
