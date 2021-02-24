@@ -7,4 +7,5 @@ type: page
 ---
 
 - [ ] 个人Magisk源
+- [ ] https://gitlab.com/NickCao/experiments/-/blob/master/workers/r.js
 
