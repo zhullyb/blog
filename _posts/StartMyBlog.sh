@@ -1,4 +1,4 @@
-_date=$(date +%Y-%m-%d)
+_date=$(date -u +%Y-%m-%d)
 _url=$(kdialog --inputbox url)
 _title=$(kdialog --inputbox 标题)
 _catagories=$(kdialog --inputbox 分类)
