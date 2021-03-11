@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      火狐?冰狗!!!
+title:      FireFox? IceDoge!!!
 date:       2021-02-27
 author:     竹林里有冰
 categories: Linux
