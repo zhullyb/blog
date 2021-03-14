@@ -50,3 +50,5 @@ export DESKTOP_SESSION=plasma
 startplasma-x11&
 ```
 Ps: 在第二行中，wiki中让我们使用exec，代表当xorg桌面会话结束后自动退出当前用户，而我不想退出，所以没加
+
+至此，我们的startx就已经配置完成了，重启后只需要在tty界面登录用户后输入```startx```并回车即可进入图形化界面。
