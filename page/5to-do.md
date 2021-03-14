@@ -8,6 +8,6 @@ type: page
 
 - [ ] 个人Magisk源
 - [x] https://gitlab.com/NickCao/experiments/-/blob/master/workers/r.js
-- [ ] 扔掉sddm教程
+- [x] 扔掉sddm教程
 - [ ] 创建个人Arch源教程
 
