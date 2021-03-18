@@ -47,7 +47,7 @@ cp /etc/X11/xinit/xinitrc ~/.xinitrc
 
 ```
 export DESKTOP_SESSION=plasma
-startplasma-x11&
+startplasma-x11
 ```
 Ps: 在第二行中，wiki中让我们使用exec，代表当xorg桌面会话结束后自动退出当前用户，而我不想退出，所以没加
 
