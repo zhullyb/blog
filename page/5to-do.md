@@ -16,4 +16,5 @@ type: page
   3. 干掉keyring验证
   4. wifi-menu回归
 - [ ] gitlab-ci实现自动的markdown转html
+- [ ] latte-dock配置备份
 
