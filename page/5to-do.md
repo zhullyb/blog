@@ -15,5 +15,5 @@ type: page
   2. 国内镜像源
   3. 干掉keyring验证
   4. wifi-menu回归
-- [ ] 
+- [ ] gitlab-ci实现自动的markdown转html
 
