@@ -19,7 +19,7 @@ CyberOS是一款基于Archlinux的发行版，拥有其自主开发的桌面环�
 
 CyberOS的源如下: 
 
-https://dir.omame.tech/cyber/
+> https://dir.omame.tech/cyber/
 
 因此，我们在```/etc/pacman.conf```下添加一段
 
