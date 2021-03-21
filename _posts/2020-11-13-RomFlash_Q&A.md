@@ -42,7 +42,7 @@ tags:       Rom
 
 带不带vendor或者firmware其实很容易判断，打开zip包看一眼就知道了，如图：
 
-![图为小米8带gapps带firmware的derpfest](https://od.zhullyb.workers.dev/?file=/PicBed/IMG_20201113_213237.jpg)
+![图为小米8带gapps带firmware的derpfest](https://od.zhullyb.top/?file=/PicBed/IMG_20201113_213237.jpg)
 
 至于没有firmware的包直接用最新开发版的firmware就可以了。
 
