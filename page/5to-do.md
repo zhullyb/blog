@@ -15,7 +15,7 @@ type: page
   2. 国内镜像源
   3. 干掉keyring验证
   4. wifi-menu回归
-- [ ] Plasma启动速度慢的原因排查
+- [ ] Plasma启动速度慢的原因排查(看startx留下的log)
 - [ ] latte-dock配置备份
 - [ ] ~~gitlab-ci实现自动的markdown转html~~
 
