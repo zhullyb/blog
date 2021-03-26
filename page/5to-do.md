@@ -8,11 +8,11 @@ type: page
 
 - [ ] 个人Magisk源
 - [ ] 创建个人Arch源教程
-- [ ] 定制Archiso
+- [x] 定制Archiso
   1. cjktty
   2. 国内镜像源
   3. 干掉keyring验证
-  4. wifi-menu回归
+  4. ~~wifi-menu回归~~
 - [ ] Plasma启动速度慢的原因排查(看startx留下的log)
 - [x] latte-dock配置备份
 - [x] startx教程
