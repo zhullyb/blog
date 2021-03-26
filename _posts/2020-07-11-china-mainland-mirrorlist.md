@@ -57,6 +57,10 @@ http://mirrors.zju.edu.cn/
 
 https://mirrors.bfsu.edu.cn/
 
+#### 北京大学
+
+https://mirrors.pku.edu.cn/Mirrors
+
 #### 北京交通大学
 
 https://mirror.bjtu.edu.cn/
