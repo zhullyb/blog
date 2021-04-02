@@ -21,7 +21,7 @@ tags:       Rom
 
 1. 仅接受邮箱反馈 zhullyb@outlook.com
 
-2. 请在默认Kernel，卸载所有模块，删除所有调度，卸载所有奇奇怪怪的软件(比如黑阈或者Thanos)的情况下进行反馈，具体原因请看[这里](https://zhullyb.gitee.io/2020/11/13/RomFlash_Q&A/#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%BA%E8%B0%83%E5%8F%8D%E9%A6%88%E9%97%AE%E9%A2%98%E6%97%B6%E4%B8%8D%E8%A6%81%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E4%BF%AE%E6%94%B9)
+2. 请在默认Kernel，卸载所有模块，删除所有调度，卸载所有奇奇怪怪的软件(比如黑阈或者Thanos)的情况下进行反馈，具体原因请看[这里](2020/11/13/RomFlash_Q&A/#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%BA%E8%B0%83%E5%8F%8D%E9%A6%88%E9%97%AE%E9%A2%98%E6%97%B6%E4%B8%8D%E8%A6%81%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E4%BF%AE%E6%94%B9)
 
 3. 仅接受Rom最新版本的问题反馈
 
