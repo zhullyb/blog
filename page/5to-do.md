@@ -16,7 +16,7 @@ type: page
   1. cjktty
   2. 国内镜像源
   3. 干掉keyring验证
-  4. ~~wifi-menu回归~~
+  4. wifi-menu回归
 - [x] latte-dock配置备份
 - [x] startx教程
 - [x] https://gitlab.com/NickCao/experiments/-/blob/master/workers/r.js
