@@ -1,8 +1,12 @@
 _date=$(date -u +%Y-%m-%d)
-_url=$(kdialog --inputbox url)
-_title=$(kdialog --inputbox 标题（Shell/Rom/Android/汉化/Linux）)
-_catagories=$(kdialog --inputbox 分类（Android/Fun/Linux/Python/Rom/Rom编译/Windows/大佬对话笔记/网络）)
-_tags=$(kdialog --inputbox 标签)
+echo "输入url"
+read _url
+echo "输入文章标题"
+read _title
+echo "输入分类（现存: Shell/Rom/Android/汉化/Linux）"
+read _catagories
+echo "输入标签（现存: Android/Fun/Linux/Python/Rom/Rom编译/Windows/大佬对话笔记/网络）"
+read _tags
 touch "$_date-$_url.md"
 echo "---
 layout:     post
