@@ -16,7 +16,7 @@ tags:       Android Linux Rom编译 Python
 
 ```bash
 git clone https://github.com/vm03/payload_dumper.git
-cd payloader_dumper
+cd payload_dumper
 mv path/to/payload.bin payload_dumper
 python payload_dumper.py payload.bin
 ```
