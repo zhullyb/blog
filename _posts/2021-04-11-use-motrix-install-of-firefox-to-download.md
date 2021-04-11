@@ -19,7 +19,7 @@ tags:       笔记
 
 但是Motrix没有推出适用于Firefox的接管浏览器下载功能的插件，于是只能用[aria2的插件](https://addons.mozilla.org/firefox/addon/aria2-integration)。
 
-主要的配置过程我就图解了。
+主要的配置过程我就图解了，退出前记得保存配置。
 
 ![](https://storage.zhullyb.top/PicBed/2021-04-11_14-29.png?raw)
 
