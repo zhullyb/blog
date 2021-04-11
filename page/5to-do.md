@@ -6,10 +6,10 @@ icon: play
 type: page
 ---
 
-- [ ] 创建个人Arch源教程
-- [ ] yay教程
-- [ ] Plasma启动速度慢的原因排查(看startx留下的log)
-- [ ] gpg key 签名
+- [x] ~~创建个人Arch源教程~~
+- [x] yay教程
+- [x] ~~Plasma启动速度慢的原因排查(看startx留下的log)~~
+- [x] gpg key 签名
   1. 源签名
   2. commit签名
 - [x] 定制Archiso
