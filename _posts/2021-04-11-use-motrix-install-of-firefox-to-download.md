@@ -9,13 +9,13 @@ tags:       笔记
 
 * content
 {:toc}
-> 本文是一篇个人笔记，不具有太强的技术性，仅仅是为后来者指个方向
+> 本文是一篇个人笔记，不具有太强的技术性，仅仅是为后来者指个方向。
 
 熟悉我的人都知道，我是一个Firefox的忠实用户，原因有二：
 
 ​	一/ Firefox国际版同步功能国内可用
 
-​	二/ [moz://a](moz://a)（Firefox用户应该能打开这个链接）
+​	二/ moz://a（Firefox用户应该能在地址栏直接访问这个链接）
 
 但是Motrix没有推出适用于Firefox的接管浏览器下载功能的插件，于是只能用[aria2的插件](https://addons.mozilla.org/firefox/addon/aria2-integration)。
 
