@@ -21,7 +21,7 @@ tags:       笔记
 
 主要的配置过程我就图解了。
 
-![](https://od.zhullyb.workers.dev/?file=/PicBed/2021-04-11_14-29.png)
+![](https://storage.zhullyb.top/PicBed/2021-04-11_14-29.png?raw)
 
-![](https://od.zhullyb.workers.dev/?file=/PicBed/2021-04-11_14-35.png)
+![](https://storage.zhullyb.top/PicBed/2021-04-11_14-35.png?raw)
 
