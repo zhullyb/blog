@@ -5,7 +5,7 @@ echo "输入文章标题"
 read _title
 echo "输入分类（现存: Shell/Rom/Android/汉化/Linux）"
 read _catagories
-echo "输入标签（现存: Android/Fun/Linux/Python/Rom/Rom编译/Windows/大佬对话笔记/网络）"
+echo "输入标签（现存: Android/Fun/Linux/Python/Rom/Rom编译/Windows/大佬对话笔记/网络/笔记）"
 read _tags
 touch "$_date-$_url.md"
 echo "---
