@@ -9,6 +9,7 @@ tags:       笔记
 
 * content
 {:toc}
+
 > 最近基本固定了在Archlinux上的常用软件，也供各位参考一下。
 >
 > 我是KDE用户，所以KDE家的软件会用得比较多。
