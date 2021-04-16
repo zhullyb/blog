@@ -1,6 +1,6 @@
 ---
 zlayout:     post
-title:      记一次在Gitlab部署Jekyll博客时遇到的报错、
+title:      记一次在Gitlab部署Jekyll博客时遇到的jekyll-github-metadata报错问题
 date:       2021-04-16
 author:     竹林里有冰
 categories: Other
@@ -9,6 +9,7 @@ tags:       笔记
 
 * content
 {:toc}
+
 我的博客是挂在GitlabPages上的，在为博客更换主题的时候遇到了一点点小麻烦。
 
 报错如图：
