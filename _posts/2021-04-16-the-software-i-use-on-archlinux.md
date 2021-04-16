@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      在Archlinux上常用软件
+title:      我在Archlinux上的常用软件
 date:       2021-04-16
 author:     竹林里有冰
 categories: Linux
