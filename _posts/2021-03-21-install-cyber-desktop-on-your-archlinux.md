@@ -9,6 +9,7 @@ tags:       Linux
 
 * content
 {:toc}
+
 CyberOS是一款基于Archlinux的发行版，拥有其自主开发的桌面环境，如图。
 
 ![](https://storage.zhullyb.top/PicBed/CyberOS.png?raw)

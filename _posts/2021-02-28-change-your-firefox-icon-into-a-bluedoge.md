@@ -9,6 +9,7 @@ tags:       Linux Fun
 
 * content
 {:toc}
+
 事情的起因是这样的。
 
 > Solidot

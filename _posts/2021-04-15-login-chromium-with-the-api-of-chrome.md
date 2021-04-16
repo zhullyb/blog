@@ -9,6 +9,7 @@ tags:       笔记
 
 * content
 {:toc}
+
 今年两三月的时候，Google限制了chromium的同步api次数，导致各个发行版内置的chromium将不再能继续使用Google的数据同步功能。
 
 今天在翻 archlinuxcn 的群组的时候翻到了一段脚本: [https://gist.github.com/foutrelis/14e339596b89813aa9c37fd1b4e5d9d5](https://gist.github.com/foutrelis/14e339596b89813aa9c37fd1b4e5d9d5)
