@@ -6,6 +6,7 @@ icon: play
 type: page
 ---
 
+- [ ] 桌面环境对比评测
 - [x] ~~创建个人Arch源教程~~
 - [x] yay教程
 - [x] ~~Plasma启动速度慢的原因排查(看startx留下的log)~~
