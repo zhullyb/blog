@@ -11,7 +11,7 @@ type: page
 
 ## 关于我
 
-​		Hey，我是**竹林里有冰(zhullyb)**，一只高中生，目前是crDroid的小米8官方维护者。
+​		Hey，我是**竹林里有冰(zhullyb)**，一只高中生。
 
 ## 联系我
 
@@ -22,7 +22,7 @@ type: page
 
 ## 友情链接
 
-[ALK阿狸控](https://alkalikong233.github.io) \| [PedroZ的杂物间](https://pedroz.top)
+[PedroZ的杂物间](https://pedroz.top)
 
 ## Comments
 
