@@ -1,14 +1,10 @@
 ---
-layout:     post
 title:      我在Archlinux上的常用软件
 date:       2021-04-16
 author:     竹林里有冰
 categories: Linux
 tags:       笔记
 ---
-
-* content
-{:toc}
 
 > 最近基本固定了在Archlinux上的常用软件，也供各位参考一下。
 >

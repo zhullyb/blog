@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      repo笔记
 date:       2020-07-11
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Shell
 tags:		Linux 笔记
 ---
 
-* content
-{:toc}
 
 ### 清除同步过程中产生的不完整碎片文件
 
@@ -26,7 +23,21 @@ rm -rf */*/*/*/objects/pack/tmp_pack_*
 ##### 下载脚本
 
 ```shell
-curl https://raw.githubusercontent.com/zhullyb/repo.sh/master/repo.sh > repo.sh
+echo #!/bin/bash
+echo "======start repo sync======"
+repo sync  --force-sync --current-branch --no-tags --no-clone-bundle --optimized-fetch --prune -j$(nproc --all)
+while [ $? == 1 ]; do
+echo "======sync failed, re-sync again======"
+sleep 3
+repo sync  --force-sync --current-branch --no-tags --no-clone-bundle --optimized-fetch --prune -j$(nproc --all)
+done
+ > repo.sh
+```
+
+**授予运行权限**
+
+```bash
+chmod a+x repo.sh
 ```
 
 ##### 运行脚本

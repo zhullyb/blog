@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      在Windows下给cmd设置代理
 date:       2020-03-03
 author:     竹林里有冰
@@ -8,8 +7,6 @@ tags:
     - 网络
 ---
 
-* content
-{:toc}
 
 ## cmd打开方法
 按住```win```+```R```键，调出一个运行框，接着输入```cmd```并回车即可

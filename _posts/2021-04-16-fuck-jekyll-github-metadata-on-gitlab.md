@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      记一次在Gitlab部署Jekyll博客时遇到的jekyll-github-metadata报错问题
 date:       2021-04-16
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Other
 tags:       笔记
 ---
 
-* content
-{:toc}
 
 我的博客是挂在GitlabPages上的，在为博客更换主题的时候遇到了一点点小麻烦。
 
@@ -27,7 +24,6 @@ Configuration file: /builds/zhullyb/test/_config.yml
        Jekyll Feed: Generating feed for posts
    GitHub Metadata: No GitHub API authentication could be found. Some fields may be missing or have incorrect data.
    GitHub Metadata: Error processing value 'url':
-  Liquid Exception: No repo name found. Specify using PAGES_REPO_NWO environment variables, 'repository' in your configuration, or set up an 'origin' git remote pointing to your github.com repository. in /_layouts/post.html
              ERROR: YOUR SITE COULD NOT BE BUILT:
                     ------------------------------------
                     No repo name found. Specify using PAGES_REPO_NWO environment variables, 'repository' in your configuration, or set up an 'origin' git remote pointing to your github.com repository.

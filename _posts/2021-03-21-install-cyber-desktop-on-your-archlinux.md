@@ -1,14 +1,10 @@
 ---
-layout:     post
 title:      在Archlinux上安装CyberOS的DesktopEnvironment
 date:       2021-03-21
 author:     竹林里有冰
 categories: Linux
 tags:       Linux
 ---
-
-* content
-{:toc}
 
 CyberOS是一款基于Archlinux的发行版，拥有其自主开发的桌面环境，如图。
 

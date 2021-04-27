@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      UOS到底有没有Secure Boot签名/UOS引导怎么修复
 date:       2020-12-22
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Linux
 tags:       Linux 大佬对话笔记
 ---
 
-* content
-{:toc}
 
 以下内容来自2020年12月22日晚上的大佬对话，非本人原创。
 

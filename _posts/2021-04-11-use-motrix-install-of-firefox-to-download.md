@@ -1,14 +1,10 @@
 ---
-layout:     post
 title:      使用Motrix接管Firefox的下载
 date:       2021-04-11
 author:     竹林里有冰
 categories: 
 tags:       笔记
 ---
-
-* content
-{:toc}
 
 > 本文是一篇个人笔记，不具有太强的技术性，仅仅是为后来者指个方向。
 

@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      为什么我不推荐Manjaro
 date:       2021-01-01
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Linux
 tags:       Linux
 ---
 
-* content
-{:toc}
 说起Linux发行版，很多人都会去推荐Manjaro给新手使用，原因很简单——安装简单、有庞大的AUR和ArchlinuxCN提供软件、有丰富的ArchWiki以供新手查阅。那么，为什么大多数Archlinux用户（包括我）始终不推荐Manjaro作为自己使用的发行版呢。
 
 ***

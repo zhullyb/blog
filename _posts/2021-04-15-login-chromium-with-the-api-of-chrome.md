@@ -1,14 +1,10 @@
 ---
-layout:     post
 title:      使用Chrome的同步api为chromium开启同步功能
 date:       2021-04-15
 author:     竹林里有冰
 categories: Linux
 tags:       笔记
 ---
-
-* content
-{:toc}
 
 今年两三月的时候，Google限制了chromium的同步api次数，导致各个发行版内置的chromium将不再能继续使用Google的数据同步功能。
 

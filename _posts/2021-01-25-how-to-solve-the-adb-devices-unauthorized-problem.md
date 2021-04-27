@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      如何解决adb未授权的问题
 date:       2021-01-25
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Shell Android Linux
 tags:       Android Linux Rom编译
 ---
 
-* content
-{:toc}
 在调试安卓设备的时候，我们经常会遇到adb未授权的问题，本方案适用于未开机时遇到以下两种情况。
 
 1. 当我们编译eng的时候，adb应该会默认授权所有设备，但是有部分Rom并不会。

@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      虚拟Python环境
 date:       2021-01-20
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Linux
 tags:       Rom编译 Python Linux
 ---
 
-* content
-{:toc}
 在python使用中，我们经常会遇到本地默认python版本与程序所需要的python版本不一致的问题，此时我们需要创建一个虚拟的python环境。
 
 ## 安装目标python版本

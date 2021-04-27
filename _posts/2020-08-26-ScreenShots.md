@@ -1,5 +1,4 @@
 ---
-layout:     post
 title:      ScreenShots
 date:       2020-08-26
 author:     竹林里有冰
@@ -7,8 +6,6 @@ categories: Android
 tags:       Rom
 ---
 
-* content
-{:toc}
 ![](https://storage.zhullyb.top/PicBed/Screenshot_20200826-050019_Lawnchair.png?raw)
 
 ![](https://storage.zhullyb.top/PicBed/Screenshot_20200826-050033_Lawnchair.png?raw)

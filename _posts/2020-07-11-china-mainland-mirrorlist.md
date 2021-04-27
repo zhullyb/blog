@@ -1,15 +1,10 @@
 ---
-layout:     post
 title:      国内Linux镜像源列表
 date:       2020-07-11
 author:     竹林里有冰
 tags:
     - Linux
 ---
-
-* content
-{:toc}
-
 
 ## 企业镜像
 
