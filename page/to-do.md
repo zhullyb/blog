@@ -6,6 +6,7 @@ type: page
 ---
 
 - [ ] 桌面环境对比评测
+- [ ] motrix火狐插件https://github.com/gautamkrishnar/motrix-webextension
 - [x] cloudflare-wrangler-16.1
 - [x] ~~创建个人Arch源教程~~
 - [x] yay教程
