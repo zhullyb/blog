@@ -12,7 +12,7 @@ tags:       笔记
 
 浏览器：Firefox，Chromium备用（主要是使用chromium的网页翻译功能，还有就是打开一些对Firefox不太友好的网站）
 
-下载器：curl,wget，motrix	根据不同使用场景更换下载器
+下载器：curl，wget，motrix	根据不同使用场景更换下载器
 
 终端：konsole
 
