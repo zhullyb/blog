@@ -1,7 +1,9 @@
 ---
-title:      UOS到底有没有Secure Boot签名/UOS引导怎么修复
-date:       2020-12-22
-tags:       Linux 大佬对话笔记
+title: UOS到底有没有Secure Boot签名/UOS引导怎么修复
+date: 2020-12-22
+tags: 
+      - Linux
+      - 大佬对话笔记
 ---
 
 
@@ -14,7 +16,6 @@ tags:       Linux 大佬对话笔记
 **某dalao:**
 
 > 用的是ubuntu的
->
 
 **吃瓜群众:**
 
@@ -23,12 +24,10 @@ tags:       Linux 大佬对话笔记
 **某dalao:**
 
 > 这就不得不讲到另一个槽点了s
->
 
 **吃瓜群众:**
 
 > ubuntu给他们签？
->
 
 **某dalao:**
 
@@ -49,5 +48,4 @@ tags:       Linux 大佬对话笔记
 > 因为没人会教你建一个ubuntu目录，然后把deepin目录的内容复制进去）
 >
 > 如果不做这一步，任你怎么grub-install啊，update-grub啊，引导就还是坏的
->
 
