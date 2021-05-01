@@ -1,7 +1,9 @@
 ---
-title:      如何解决adb未授权的问题
-date:       2021-01-25
-tags:       Android Linux Rom编译
+title: 如何解决adb未授权的问题
+date: 2021-01-25
+tags: - Android
+      - Linux
+      - Rom编译
 ---
 
 在调试安卓设备的时候，我们经常会遇到adb未授权的问题，本方案适用于未开机时遇到以下两种情况。
