@@ -1,7 +1,8 @@
 ---
-title:      FireFox? IceDoge!!!
-date:       2021-02-27
-tags:       Linux Fun
+title: FireFox? IceDoge!!!
+date: 2021-02-27
+tags: - Linux
+      - Fun
 ---
 
 事情的起因是这样的。
