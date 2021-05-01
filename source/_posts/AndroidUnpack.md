@@ -1,7 +1,8 @@
 ---
 title: 安卓解包笔记
 date: 2020-08-10
-tags: - Android
+tags: 
+      - Android
       - Rom编译
       - Linux
 ---

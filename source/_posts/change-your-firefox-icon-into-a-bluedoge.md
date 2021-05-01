@@ -1,7 +1,8 @@
 ---
 title: FireFox? IceDoge!!!
 date: 2021-02-27
-tags: - Linux
+tags: 
+      - Linux
       - Fun
 ---
 

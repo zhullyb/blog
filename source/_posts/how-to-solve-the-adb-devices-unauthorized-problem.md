@@ -1,7 +1,8 @@
 ---
 title: 如何解决adb未授权的问题
 date: 2021-01-25
-tags: - Android
+tags: 
+      - Android
       - Linux
       - Rom编译
 ---

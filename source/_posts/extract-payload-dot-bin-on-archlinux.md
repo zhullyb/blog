@@ -1,7 +1,8 @@
 ---
 title: 在Archlinux上解包A/B机型的payload.bin
 date: 2021-02-07
-tags: - Android
+tags: 
+      - Android
       - Linux
       - Rom编译
       - Python
