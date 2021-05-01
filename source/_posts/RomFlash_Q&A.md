@@ -2,7 +2,6 @@
 title:      刷机常见问题Q&A
 date:       2020-11-13
 author:     竹林里有冰
-categories: Rom
 tags:       Rom
 ---
 

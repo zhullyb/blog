@@ -2,7 +2,6 @@
 title:      yay进阶
 date:       2021-04-04
 author:     竹林里有冰
-categories: 汉化
 tags:       Linux
 ---
 

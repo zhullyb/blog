@@ -2,7 +2,6 @@
 title:      抛弃DisplayManager，拥抱startx
 date:       2021-03-14
 author:     竹林里有冰
-categories: Linux
 tags:       Linux
 ---
 

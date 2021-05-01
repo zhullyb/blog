@@ -2,7 +2,6 @@
 title:      记一次在Gitlab部署Jekyll博客时遇到的jekyll-github-metadata报错问题
 date:       2021-04-16
 author:     竹林里有冰
-categories: Other
 tags:       笔记
 ---
 

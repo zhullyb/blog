@@ -2,7 +2,6 @@
 title:      如何解决adb未授权的问题
 date:       2021-01-25
 author:     竹林里有冰
-categories: Shell Android Linux
 tags:       Android Linux Rom编译
 ---
 

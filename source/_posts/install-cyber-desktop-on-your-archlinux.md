@@ -2,7 +2,6 @@
 title:      在Archlinux上安装CyberOS的DesktopEnvironment
 date:       2021-03-21
 author:     竹林里有冰
-categories: Linux
 tags:       Linux
 ---
 

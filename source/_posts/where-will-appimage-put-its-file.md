@@ -2,7 +2,6 @@
 title:      Appimage的文件储存在哪里
 date:       2021-04-13
 author:     竹林里有冰
-categories: Linux
 tags:       大佬对话笔记
 ---
 

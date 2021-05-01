@@ -2,7 +2,6 @@
 title:      No Hello
 date:       2020-10-08
 author:     竹林里有冰
-categories: 汉化
 tags:       
 ---
 

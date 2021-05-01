@@ -2,7 +2,6 @@
 title:      Rom自身bug反馈须知
 date:       2020-12-19
 author:     竹林里有冰
-categories: Rom
 tags:       Rom
 ---
 
