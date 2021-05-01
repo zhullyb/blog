@@ -1,7 +1,6 @@
 ---
 title:      FireFox? IceDoge!!!
 date:       2021-02-27
-author:     竹林里有冰
 tags:       Linux Fun
 ---
 
@@ -28,7 +27,6 @@ tags:       Linux Fun
 
 # This script will change icon of you Firefox Browser into a bluedoge
 # Depend on imagemagick
-# Remember to run it without root authority
 
 cd ~
 curl https://www.mozilla.org/media/img/logos/firefox/logo-nightdoge-lg-high-res.14f40a7985fe.png > logo-nightdoge-lg-high-res.14f40a7985fe.png

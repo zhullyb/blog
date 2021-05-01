@@ -1,7 +1,6 @@
 ---
 title:      安卓解包笔记
 date:       2020-08-10
-author:     竹林里有冰
 tags:       Android Rom编译 Linux
 ---
 

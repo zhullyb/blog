@@ -1,7 +1,6 @@
 ---
 title:      git笔记
 date:       2020-07-11
-author:     竹林里有冰
 tags:		Linux 笔记 
 ---
 

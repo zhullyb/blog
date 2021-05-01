@@ -1,7 +1,6 @@
 ---
 title:      你在哪里能找到我的Rom
 date:       2020-07-12
-author:     竹林里有冰
 tags:
     - Rom
 ---

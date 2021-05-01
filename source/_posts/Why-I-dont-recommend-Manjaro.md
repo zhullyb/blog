@@ -1,7 +1,6 @@
 ---
 title:      为什么我不推荐Manjaro
 date:       2021-01-01
-author:     竹林里有冰
 tags:       Linux
 ---
 

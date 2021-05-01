@@ -1,7 +1,6 @@
 ---
 title:      ScreenShots
 date:       2020-08-26
-author:     竹林里有冰
 tags:       Rom
 ---
 

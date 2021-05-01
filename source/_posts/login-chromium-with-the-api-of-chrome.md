@@ -1,7 +1,6 @@
 ---
 title:      使用Chrome的同步api为chromium开启同步功能
 date:       2021-04-15
-author:     竹林里有冰
 tags:       笔记
 ---
 

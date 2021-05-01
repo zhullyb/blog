@@ -1,7 +1,6 @@
 ---
 title:      群公告
 date:       2020-07-27
-author:     竹林里有冰
 tags:       
 ---
 

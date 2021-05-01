@@ -1,7 +1,6 @@
 ---
 title:      虚拟Python环境
 date:       2021-01-20
-author:     竹林里有冰
 tags:       Rom编译 Python Linux
 ---
 
