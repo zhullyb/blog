@@ -7,6 +7,8 @@ date: 2021-05-01 23:53:19
 
 ##### [VirtualBox启动安装于物理硬盘上的其他系统](https://blog.lilydjwg.me/2018/2/14/start-local-other-os-in-virtualbox.212161.html)
 
+**[Windows Thin PC  汉化+激活](https://www.jianshu.com/p/a996816ca3a2)**
+
 ### 工具类
 
 ##### [PDF转换](https://pdfcandy.com/)
