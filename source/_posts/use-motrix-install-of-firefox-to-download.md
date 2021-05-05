@@ -16,7 +16,7 @@ tags:       笔记
 
 主要的配置过程我就图解了，退出前记得保存配置。
 
-![](https://storage.zhullyb.top/PicBed/2021-04-11_14-29.png?raw)
+![](https://storage.zhullyb.workers.dev/PicBed/2021-04-11_14-29.png?raw)
 
-![](https://storage.zhullyb.top/PicBed/2021-04-11_14-35.png?raw)
+![](https://storage.zhullyb.workers.dev/PicBed/2021-04-11_14-35.png?raw)
 

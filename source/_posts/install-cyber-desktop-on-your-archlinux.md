@@ -6,7 +6,7 @@ tags:       Linux
 
 CyberOS是一款基于Archlinux的发行版，拥有其自主开发的桌面环境，如图。
 
-![](https://storage.zhullyb.top/PicBed/CyberOS.png?raw)
+![](https://storage.zhullyb.workers.dev/PicBed/CyberOS.png?raw)
 
 既然是基于Archlinux，想必CyberOS也会有*.pkg.tar.zst/xz的安装包，理应也会有对应的源。在虚拟机中安装以后，果然发现了CyberOS的源。
 
