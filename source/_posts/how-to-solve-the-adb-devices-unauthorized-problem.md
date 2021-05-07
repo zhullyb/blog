@@ -19,13 +19,13 @@ tags:
 
 2. 找到你电脑的adbkey公钥，一般叫做```adbkey.pub```
 
-3. ```bash
+3. ```
    adb push ${the/location/to/your/key} /data/misc/adb/adb_keys
    ```
 
    比如我就是
 
-   ```bash
+   ```
    adb push ~/.android/adbkey.pub /data/misc/adb/adb_keys
    ```
 
