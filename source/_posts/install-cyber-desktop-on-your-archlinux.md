@@ -14,14 +14,14 @@ CyberOS是一款基于Archlinux的发行版，拥有其自主开发的桌面环�
 
 CyberOS的源如下: 
 
-> https://dir.omame.tech/cyber/
+> https://dir.omame.tech/mirrors/cyberos/
 
 因此，我们在```/etc/pacman.conf```下添加一段
 
 ```
 [cyber]
 SigLevel = Never
-Server = https://dir.omame.tech/cyber
+Server = https://dir.omame.tech/mirrors/cyberos/cyber/os/$arch
 ```
 
 Ps: 我这里偷了个懒，没有安装keyring，直接禁用了签名验证。如果你想要安装他们的keyring，可以直接从他们的Github下载安装。
