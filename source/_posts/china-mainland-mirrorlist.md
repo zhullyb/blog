@@ -1,6 +1,6 @@
 ---
-title:      国内Linux镜像源列表
-date:       2020-07-11
+title: 国内Linux镜像源列表
+date: 2020-07-11
 tags:
     - Linux
 ---
@@ -38,6 +38,8 @@ tags:
 [https://mirrors.tuna.tsinghua.edu.cn/](https://mirrors.tuna.tsinghua.edu.cn/)
 
 [https://opentuna.cn/](https://opentuna.cn/)
+
+> farseerfc: tuna 有兩個服務器互相負載均衡，這倆服務器之間不同步，就偶爾遇到版本回退。
 
 #### 中国科技大学
 
