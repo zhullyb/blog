@@ -4,6 +4,8 @@ date: 2021-05-01 23:53:19
 ---
 
 - [ ] 桌面环境对比评测
+- [ ] hp1020打印机驱动
+- [ ] Arch使用经验
 - [ ] 双系统蓝牙问题
 - [x] https://github.com/juicyfx/vercel-examples
 - [x] ~~motrix火狐插件https://github.com/gautamkrishnar/motrix-webextension~~
