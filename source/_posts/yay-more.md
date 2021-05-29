@@ -1,7 +1,7 @@
 ---
 title:      yay进阶
 date:       2021-04-04
-tags:       Linux
+tags:       Archlinux
 ---
 
 > yay是一个AUR Helper，他可以执行pacman的几乎所有操作，并在此基础上添加了很多额外用法。
