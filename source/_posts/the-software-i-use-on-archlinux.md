@@ -1,7 +1,8 @@
 ---
 title:      我在Archlinux上的常用软件
 date:       2021-04-16
-tags:       笔记
+tags: - 笔记
+      - Archlinux
 ---
 
 > 最近基本固定了在Archlinux上的常用软件，也供各位参考一下。
