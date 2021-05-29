@@ -134,6 +134,6 @@ EOF' > /usr/bin/pacsync
 
 `/etc/pacman.d/mirrorlist`中存放其他国内镜像源地址（按照同步速度从上到下）
 
-以后的同步命令为 `sudo pacsync && sudo pacman -Su && yay -Sua`
+以后的同步命令为 `sudo pacsync && yay -Su`
 
 觉得命令过长的话设置alias可以是个不错的选择。
