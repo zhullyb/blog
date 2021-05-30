@@ -4,11 +4,10 @@ date: 2021-05-01 23:53:19
 ---
 
 - [ ] 桌面环境对比评测
-- [ ] 双系统蓝牙问题
+- [x] 双系统蓝牙问题
 - [x] https://github.com/juicyfx/vercel-examples
 - [x] cloudflare-wrangler-16.1
 - [x] yay教程
-- [x] ~~Plasma启动速度慢的原因排查(看startx留下的log)~~
 - [x] gpg key 签名
   1. 源签名
   2. commit签名
