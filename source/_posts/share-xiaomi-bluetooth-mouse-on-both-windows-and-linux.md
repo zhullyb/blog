@@ -1,7 +1,8 @@
 ---
 title: 在Windows与Linux双系统下共享蓝牙小米鼠标
 date: 2021-05-30
-tags: -	Linux
+tags: 
+      - Linux
       - Archlinux
       - Windows
 ---
