@@ -18,15 +18,19 @@ tags: -	Linux
 
 在Windows中，使用管理员权限打开`cmd.exe`
 
+![在Windows下使用管理员权限打开cmd](https://storage.zhullyb.top/PicBed/2021-05-30_20-27.png?raw)
+
 cd到PsExec解压目录，使用如下命令将我们所需要的蓝牙密钥信息保存到C盘根目录下。
 
 ```cmd
 psexec.exe -s -i regedit /e C:\BTKeys.reg HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\BTHPORT\Parameters\Keys
 ```
 
+![使用psexec获取蓝牙信息](https://storage.zhullyb.top/PicBed/2021-05-30_21-11.png?raw)
+
 根目录的BTkeys.reg可以直接用记事本打开，内容大概是下面这个样子
 
-![](https://storage.zhullyb.top/PicBed/2021-05-30_21-29.png?raw)
+![BTkeys.reg](https://storage.zhullyb.top/PicBed/2021-05-30_21-29.png?raw)
 
 > 为了方便后面的解说，我用各种颜色标注了起来。
 
