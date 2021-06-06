@@ -131,8 +131,12 @@ oepnharmony目录下，`.repo`文件夹内是你从git服务器上下载下来�
 
 
 
-![这里是包含.repo原始数据的全部大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_172041.png?raw)
+![这里是OpenHarmony包含.repo原始数据的全部大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_172041.png?raw)
 
-![这里是.repo原始数据的大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_172056.png?raw)
+![这里是OpenHarmony的.repo原始数据的大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_172056.png?raw)
 
-我提供个参考数据，AOSP源码不含.repo原始数据的大小是40G，就openharmony这个代码量，恐怕很难让我相信这是一个兼容安卓应用的系统的完整代码。
+**我提供个参考数据，AOSP源码不含.repo原始数据的大小是40G，就openharmony这个代码量，恐怕很难让我相信这是一个兼容安卓应用的系统的完整代码。**
+
+![这里是AOSP的.repo原始数据大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_210140.png?raw)
+
+![这里是AOSP包含.repo原始数据的大小](https://storage.zhullyb.top/PicBed/Screenshot_20210606_211653.png?raw)
