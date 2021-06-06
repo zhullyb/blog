@@ -13,14 +13,18 @@ tags:
 - 6G磁盘剩余空间
 - 互联网（如果使用手机流量的话大概是1.5G）
 
-首先，设置git用户名和邮箱
+0. #### 安装git
+
+   没什么好说的，不再赘述。
+
+1. #### 设置git用户名和邮箱
 
 ```
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 ```
 
-下载repo（这个大多数发行版自己都有打包，但是都比较滞后，不如直接下载最新版的二进制文件设置好path变量直接用）
+2. #### 下载repo（这个大多数发行版自己都有打包，但是都比较滞后，不如直接下载最新版的二进制文件设置好path变量直接用）
 
 ```bash
 mkdir -p ~/bin
@@ -38,33 +42,41 @@ EOF
 source ~/.bashrc
 ```
 
-新建一个文件夹以同步源码
+3. #### 新建一个文件夹以同步源码
 
 ```bash
 mkdir openharmony
 ```
 
-进入这个文件夹
+4. #### 进入这个文件夹
 
 ```bash
 cd openharmony
 ```
 
-初始化repo
+5. #### 初始化repo
 
 ```bash
 repo init -u https://gitee.com/openharmony/manifest.git --depth=1
 ```
 
-注:  `--depth=1`是为了仅保留一层commit记录，防止过多的历史commit占用空间，如果你想保留历史commit，那可以把这里的`--depth=1`去掉。
+​	注:  `--depth=1`是为了仅保留一层commit记录，防止过多的历史commit占用空间，如果你想保留历	史commit，那可以把这里的`--depth=1`去掉。
 
-使用repo正式开始同步源码
+6. #### 使用repo正式开始同步源码
 
 ```bash
 repo sync
 ```
 
 repo在sync的时候其实可以加很多选项，可以通过`repo help`自行研究，我自己常用的是`repo sync  --force-sync --current-branch --no-tags --no-clone-bundle --optimized-fetch --prune -j$(nproc --all) -f1`
+
+看到以下提示代表同步成功
+
+```
+repo sync has finished successfully.
+```
+
+### 后话
 
 结果就当源码下载好并开始checkout后，出现了以下错误
 
@@ -85,12 +97,6 @@ sudo pacman -S git-lfs	#别的发行版请自行查找相关安装方法
 ```
 
 于是乎，安装好`git-lfs`重新sync源码
-
-看到以下提示代表同步成功
-
-```
-repo sync has finished successfully.
-```
 
 oepnharmony目录下，`.repo`文件夹内是你从git服务器上下载下来的原始数据，repo将在所有数据下载完成以后将他们自动checkout成代码。
 
