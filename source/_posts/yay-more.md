@@ -1,6 +1,7 @@
 ---
 title:      yay进阶
 date:       2021-04-04
+updated:	2021-06-06
 tags:       Archlinux
 ---
 
