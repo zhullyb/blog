@@ -77,7 +77,7 @@ tags:
 
 [http://mirror.lzu.edu.cn/](http://mirror.lzu.edu.cn/)
 
-#### 南京大学
+#### 南京大学（2021-05-29发现无法访问，具体情况未知）
 
 [http://mirrors.nju.edu.cn/](http://mirrors.nju.edu.cn/)
 
@@ -88,6 +88,10 @@ tags:
 #### 南京邮电大学
 
 [http://mirrors.njupt.edu.cn/](http://mirrors.njupt.edu.cn/)
+
+#### 山东大学
+
+[http://mirrors.sdu.edu.cn/](http://mirrors.sdu.edu.cn/)
 
 #### 华中科技大学
 
