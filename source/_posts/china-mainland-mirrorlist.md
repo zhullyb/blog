@@ -23,6 +23,10 @@ tags:
 
 [https://mirrors.huaweicloud.com/](https://mirrors.huaweicloud.com/)
 
+#### 首都在线
+
+[http://mirrors.yun-idc.com/](http://mirrors.yun-idc.com/)
+
 #### 搜狐
 
 [http://mirrors.sohu.com/](http://mirrors.sohu.com/)
@@ -105,6 +109,14 @@ tags:
 
 [http://mirror.dlut.edu.cn/](http://mirror.dlut.edu.cn/)
 
+#### 南洋理工学院
+
+[https://mirror.nyist.edu.cn/](https://mirror.nyist.edu.cn/)
+
+#### 南方科技大学
+
+[https://mirrors.sustech.edu.cn](https://mirrors.sustech.edu.cn)
+
 #### 重庆大学
 
 [http://mirrors.cqu.edu.cn/](http://mirrors.cqu.edu.cn/)
@@ -112,3 +124,7 @@ tags:
 #### 西北农林科技大学
 
 [https://mirrors.nwsuaf.edu.cn/](https://mirrors.nwsuaf.edu.cn/)
+
+#### 山东女子学院
+
+[https://mirrors.sdwu.edu.cn/](https://mirrors.sdwu.edu.cn/)
