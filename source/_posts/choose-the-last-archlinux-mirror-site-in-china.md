@@ -8,7 +8,7 @@ tags: Archlinux
 
 ### 找到最新的Archlinux镜像源
 
-我是testing+ked-unstable用户，平均每天更新4次，对于我而言，选择最新的Archlinux镜像是非常重要的。
+我是testing+kde-unstable用户，平均每天更新4次，对于我而言，选择最新的Archlinux镜像是非常重要的。
 
 Archlinux的主源并不开放给个人用户使用，仅开放给[一级镜像站](https://archlinux.org/mirrors/tier/1/)进行同步，因此我们需要手动寻找国内较新的镜像站。（理论上来说一级镜像站应该比二级镜像站更新，但是有些一级镜像站的同步频率并不高，同步延迟可能会比某些二级镜像站还要高）
 
