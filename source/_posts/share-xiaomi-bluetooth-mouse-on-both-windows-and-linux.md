@@ -7,13 +7,13 @@ tags:
       - Windows
 ---
 
-> 我自己使用的鼠标是一只[小米的无限蓝牙双模鼠标](https://www.mi.com/mouse)。但是由于我的USB借口不是很充裕，我平时还是蓝牙鼠标用的比较多。
+> 我自己使用的鼠标是一只[小米的无线蓝牙双模鼠标](https://www.mi.com/mouse)。但是由于我的USB借口不是很充裕，我平时还是蓝牙鼠标用的比较多。
 >
 > 但是，每当我在Windows和Archlinux上切换时，我不得不重新配对我的蓝牙鼠标。原因我在翻译Archwiki上关于蓝牙鼠标相关叙述时已经解释得非常清楚了，我摘在下面：
 >
 > “首先，计算机保存蓝牙设备的 MAC 地址和配对密钥；然后，蓝牙设备保存计算机的 MAC 地址和配对密钥。这两步通常不会有问题，不过设备蓝牙端口的 MAC 地址在 Linux 和 Windows 上都是相同的 (这在硬件层面上就设定好了)。然而，当在 Windows 或 Linux  中重新配对设备时，它会生成一个新密钥，覆盖了蓝牙设备之前保存的密钥，即与 Windows 配对产生的密钥会覆盖原先与 Linux  配对的密钥，反之亦然。“
 
-先在Linux上链接蓝牙鼠标，再重启到Windows重新配对蓝牙蓝牙鼠标。
+先在Linux上连接蓝牙鼠标，再重启到Windows重新配对蓝牙蓝牙鼠标。
 
 到[微软官网](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec)下载`PsExec.zip`，解压后，记住你所解压的路径。
 
