@@ -10,9 +10,9 @@ tags:
 
 > 就前一阵子，某Q群里的某初中生居然跳上了Fedora这辆灵车，还一直缠着我要我给他整个打rpm包的教程，说什么要复兴FedoraCN之类的我听不懂的话。碰巧听说Fedora似乎还没有wechat-uos，于是我就寻思着给Fedora打一个，顺便熟悉一下dnf的操作。
 
-### 下载
+### 下载链接
 
-如果你是为了这个包而来的而非教程，下载链接你直接拿走吧。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
+如果你是为了这个包而来的，而非教程，下载链接在这里。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
 
 ### 偷包环境
 
@@ -96,7 +96,7 @@ Out-of-date     : No
 
 最终我们可以确定下来需要的依赖为`gtk2,gtk3,libXScrnSaver,nss,bubblewrap,GConf2`。
 
-### 开始打包
+### 准备打包
 
 #### 安装`rpm-tools`
 
