@@ -8,11 +8,13 @@ tags:
     - Fedora
 ---
 
-> 就前一阵子，某Q群里的某初中生居然跳上了Fedora这辆灵车，还一直缠着我要我给他整个打rpm包的教程，说什么要复兴FedoraCN之类的我听不懂的话。碰巧听说Fedora似乎还没有wechat-uos，于是我就寻思着给Fedora打一个，顺便熟悉一下dnf的操作。
+> 前一阵子，某Q群里的某初中生居然跳上了Fedora这辆灵车，还一直缠着我要我给他整个打rpm包的教程，说什么要复兴FedoraCN之类的我听不懂的话。碰巧听说Fedora似乎还没有wechat-uos，于是我就寻思着给Fedora打一个，顺便熟悉一下dnf的操作。
+>
+> 事实上，Fedora和Archlinux的目录结构很相似，理论上来讲Archlinux的大部分包都可以直接解压后塞到Fedora里直接用，对于咱这种日常偷Deb包的Arch用户来说基本没什么难度，唯一的难点在于处理依赖关系。
 
 ### 下载链接
 
-如果你是为了这个包而来的，而非教程，下载链接在这里。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
+如果你是为了wechat-uos这个包而非教程而来的，下载链接在这里。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
 
 ### 偷包环境
 
