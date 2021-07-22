@@ -10,11 +10,15 @@ tags:
 
 > 就前一阵子，某Q群里的某初中生居然跳上了Fedora这辆灵车，还一直缠着我要我给他整个打rpm包的教程，说什么要复兴FedoraCN之类的我听不懂的话。碰巧听说Fedora似乎还没有wechat-uos，于是我就寻思着给Fedora打一个，顺便熟悉一下dnf的操作。
 
-环境: 
+### 下载
 
-​	Archlinux实体机(打包)
+如果你是为了这个包而来的而非教程，下载链接你直接拿走吧。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
 
-​	Fedora虚拟机(依赖查询、测试)
+### 偷包环境
+
+- Archlinux实体机(打包)
+
+- Fedora虚拟机(依赖查询、测试)
 
 ### 准备好wechat-uos
 
@@ -24,7 +28,7 @@ tags:
 yay -S wechat-uos --noconfirm
 ```
 
-### 查找Fedora上的依赖包名
+### 查找wechat-uos在Archlinux上所需的依赖
 
 再去查看`wechat-uos`所需要的依赖
 
@@ -54,7 +58,9 @@ Last Modified   : Sat 20 Feb 2021 06:53:24 AM CST
 Out-of-date     : No
 ```
 
-然后我们需要去Fedora上找一找这些依赖在Fedora上的报名都叫什么。
+### 查找Fedora上的对应依赖包s名
+
+然后我们需要去Fedora上找一找这些依赖在Fedora上的包名都叫什么。
 
 比如这个`bubblewrap`，我们需要的是他提供的`bwrap`，所以我们直接在Fedora上`sudo dnf provides bwrap`
 
@@ -92,19 +98,19 @@ Out-of-date     : No
 
 ### 开始打包
 
-安装`rpm-tools`
+#### 安装`rpm-tools`
 
 ```bash
 sudo pacman -S rpm-tools
 ```
 
-生成工作路径
+#### 生成工作路径
 
 ```bash
 mkdir -pv $HOME/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 ```
 
-编写 spec 文件
+#### 编写 spec 文件
 
 ```bash
 Name: wechat-uos
@@ -144,6 +150,10 @@ AutoReqProv: no
 /usr/share/icons/hicolor/64x64/apps/wechat.png
 ```
 
+#### 处理source
+
+> 一般来说，我们需要配置各种奇奇怪怪的编译命令，但是我这里直接选择了打包二进制文件，一来是减少了对于spec的学习成本，二来是因为wechat-uos本来就不开源，也没什么好编译的。
+
 创建我们`wechat-uos`的二进制文件所需要放入的文件夹。
 
 ```bash
@@ -161,17 +171,25 @@ mkdir $HOME/rpmbuild/BUILDROOT/wechat-uos-2.0.0-1.x86_64/etc/
 touch $HOME/rpmbuild/BUILDROOT/wechat-uos-2.0.0-1.x86_64/etc/lsb-release
 ```
 
-正式打包
+### 正式打包
 
 ```
-rpmbuild -bb --target=i686 SPECS/wechat-uos.spec --nodeps
+rpmbuild -bb --target=x86_64 SPECS/wechat-uos.spec --nodeps
 ```
 
 ![](https://storage.zhullyb.top/PicBed/wechat-uos-for-fedora-packaged-complete.png?raw)
 
+### 安装测试
+
+```bash
+sudo dnf install ./wechat-uos-2.0.0-1.x86_64.rpm
+```
+
 ![](https://storage.zhullyb.top/PicBed/wechat-uos-running-on-fedora.png?raw)
 
-**附上本文的参考资料** (为了避免源网页失效，我特意去[互联网档案馆](http://web.archive.org)做了备份)
+### **附上本文的参考资料**
+
+> 为了避免源网页失效，我特意去[互联网档案馆](http://web.archive.org)做了备份
 
 「[RPM打包原理、示例、详解及备查](https://blog.csdn.net/get_set/article/details/53453320)」							 「[Archive](http://web.archive.org/web/20210722180835/https://blog.konghy.cn/2015/11/13/rpmbuild/)」
 
