@@ -12,6 +12,8 @@ tags:
 >
 > 事实上，Fedora和Archlinux的目录结构很相似，理论上来讲Archlinux的大部分包都可以直接解压后塞到Fedora里直接用，对于咱这种日常偷Deb包的Arch用户来说基本没什么难度，唯一的难点在于处理依赖关系。
 
+Tips1: 使用电脑端的访客可以在页面左下角打开侧栏以获取目录。
+
 ### 下载链接
 
 如果你是为了wechat-uos这个包而非教程而来的，下载链接在这里。[https://zhullyb.lanzoui.com/ikN55rqr7ah](https://zhullyb.lanzoui.com/ikN55rqr7ah)
@@ -206,3 +208,7 @@ rpm的打包工具是我近期**最**想吐槽的东西了，主要槽点有两�
 「[在 Ubuntu 下直接将二进制文件制作成 rpm 包](https://blog.konghy.cn/2015/11/13/rpmbuild/)」		「[Archive](http://web.archive.org/web/20210722180859/http://blog.sina.cn/dpool/blog/s/blog_6a5aee670101r1si.html)」
 
 「[解除RPM包的依赖的方法](http://blog.sina.cn/dpool/blog/s/blog_6a5aee670101r1si.html)」											「[Archive](http://web.archive.org/web/20210722180936/https://blog.csdn.net/get_set/article/details/53453320)」
+
+
+
+*本文同时发布于「[知乎专栏](https://zhuanlan.zhihu.com/p/392650904)」，如果你恰好有知乎帐号的话或许可以考虑帮我点个赞？*
