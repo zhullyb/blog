@@ -1,9 +1,7 @@
 ---
-title: About
+title: Hello, it's zhullyb here.
 date: 2021-05-01 23:53:19
 ---
-
-# Hello, it's zhullyb here.
 
 一只准高三的中二青年
 
@@ -17,7 +15,6 @@ date: 2021-05-01 23:53:19
 - Email：zhullyb@outlook.com
 - [Weibo](https://weibo.com/u/6141899043)
 - [知乎](https://www.zhihu.com/people/zhu-lin-li-you-bing)
-
 
 
 
