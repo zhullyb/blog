@@ -5,7 +5,9 @@ date: 2021-05-01 23:53:19
 
 ### 教程类
 
-##### [VirtualBox启动安装于物理硬盘上的其他系统](https://blog.lilydjwg.me/2018/2/14/start-local-other-os-in-virtualbox.212161.html)
+##### **[VirtualBox启动安装于物理硬盘上的其他系统](https://blog.lilydjwg.me/2018/2/14/start-local-other-os-in-virtualbox.212161.html)**
+
+**[Arch Linux devtools 简介 – 在干净的环境里编译软件包](https://felixc.at/2017/08/introduction-to-arch-linux-devtools-build-packages-from-a-clean-chroot/)**
 
 **[Windows Thin PC  汉化+激活](https://www.jianshu.com/p/a996816ca3a2)**
 
@@ -15,7 +17,7 @@ date: 2021-05-01 23:53:19
 
 ##### [TPD Quick Fix](https://ptstpd.lenovo.com.cn/home#/index)
 
-[cloudflare mirror](https://cloudflaremirrors.com/)
+**[cloudflare mirror](https://cloudflaremirrors.com/)**
 
 ### 资源类
 
@@ -53,7 +55,5 @@ ZF3R0-FHED2-M80TY-8QYGC-NPKYF
 
 ##### 软碟通激活码：
 
-```
-Guanjiu	A06C-83A7-701D-6CFC		#简体中文版
-Home	4BA9-0D54-214A-C938		#多语言版
-```
+> Guanjiu	A06C-83A7-701D-6CFC		#简体中文版
+> Home	4BA9-0D54-214A-C938		#多语言版

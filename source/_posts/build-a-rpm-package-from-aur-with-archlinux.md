@@ -60,7 +60,7 @@ Last Modified   : Sat 20 Feb 2021 06:53:24 AM CST
 Out-of-date     : No
 ```
 
-### 查找Fedora上的对应依赖包s名
+### 查找Fedora上的对应依赖包名
 
 然后我们需要去Fedora上找一找这些依赖在Fedora上的包名都叫什么。
 
