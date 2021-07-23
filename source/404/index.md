@@ -5,7 +5,6 @@ layout: 404
 permalink: /404
 ---
 
-```js
 // 404 page not found.
 if (!found) {
   throw ("(╯°□°)╯︵ ┻━┻");
