@@ -8,6 +8,9 @@ date: 2021-05-01 23:53:19
 > ——2021-7-24
 
 **朝色のBLOG: [https://blog.zhaose.cyou/](https://blog.zhaose.cyou/)**
+
+**Alex Blog: [http://alex.coal.pub/](http://alex.coal.pub/)**
+
 **Web-Worker: [https://web-worker.cn/](https://web-worker.cn/)**
 **PedroZ的杂物间: [https://pedroz.top/](https://pedroz.top/)**
 
