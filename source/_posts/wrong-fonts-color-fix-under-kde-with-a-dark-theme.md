@@ -27,19 +27,7 @@ tags:
 使用如下命令
 
 ```bash
-bwrap --dev-bind / / --tmpfs $HOME wemeet
-```
-
-如果遇到以下报错
-
-> No protocol specified
-> Unable to init server: 无法连接：拒绝连接
-> Error: cannot open display: :0
-
-则需要使用
-
-```bash
-bwrap --dev-bind / / --tmpfs $HOME --ro-bind $XAUTHORITY $XAUTHORITY wemeet
+bwrap --dev-bind / / --tmpfs $HOME/.config wemeet
 ```
 
 软件启动确认没有问题后，我们可以更改腾讯会议desktop中的启动命令
