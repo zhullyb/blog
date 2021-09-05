@@ -1,7 +1,8 @@
 ---
 title: 禁止deepin-wine-tim使用simsun字体渲染
 date: 2021-04-27
-tags: - Archlinux
+tags:
+      - Archlinux
       - Linux
       - Bwrap
 ---
