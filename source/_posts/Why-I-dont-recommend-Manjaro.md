@@ -48,11 +48,11 @@ Archlinux在2020年10月17日将grpc从1.30更新到了1.32，qv2ray开发者反
 
 #### Manjaro 没有 Archive 源
 
-Archlinux拥有一个[archive源](https://archive.archlinux.org/)，通过Archive源，你可以将你的系统滚到任何一天的状态，比如在你不知道更新了什么滚炸了以后，你可以用Archive源会滚到三天前的状态，等bug修复完以后再用回正常的Archlinux源。况且，这个Archive源在国内拥有[tuna](https://arch-archive.tuna.tsinghua.edu.cn/)和[bfsu](https://mirrors.bfsu.edu.cn/archlinux-archive/)两个镜像源（虽然这两个镜像源并不是完整的镜像，而是每隔7天镜像一次），不会存在访问速度过慢的状况。有名的downgrade软件也是基于Archive源使用的。而Manjaro？很遗憾，没有。
+Archlinux拥有一个[archive源](https://archive.archlinux.org/)，通过Archive源，你可以将你的系统滚到任何一天的状态，比如在你不知道更新了什么滚炸了以后，你可以用Archive源回滚到三天前的状态，等bug修复完以后再用回正常的Archlinux源。况且，这个Archive源在国内拥有[tuna](https://arch-archive.tuna.tsinghua.edu.cn/)和[bfsu](https://mirrors.bfsu.edu.cn/archlinux-archive/)两个镜像源（虽然这两个镜像源并不是完整的镜像，而是每隔7天镜像一次），不会存在访问速度过慢的状况。有名的downgrade软件也是基于Archive源使用的。而Manjaro？很遗憾，没有。
 
 ### 写在最后
 
-如果你有一定的Linux基础，阅读了我上面的科普以后仍然要去使用Manjaro也没有关系，但是记得**遵守一下几点以确保你在Arch社区不会被打死**。
+如果你有一定的Linux基础，阅读了我上面的科普以后仍然要去使用Manjaro也没有关系，但是记得**遵守以下几点以确保你在Arch社区不会被打死**。
 
 - 谨慎使用AUR和ArchlinuxCN
 - 使用AUR和ArchlinuxCN时遇到问题请不要反馈
