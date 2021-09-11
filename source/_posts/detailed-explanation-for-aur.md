@@ -51,6 +51,8 @@ makepkg会调用`curl` / `git`下载PKGBUILD中`source=()`部分中以`http(s)`�
 
 ## PartⅡ常见错误解决方案
 
+如果有其他情况觉得可以完善的，欢迎在评论区留言。
+
 ### 1. base-devel 没有安装
 
 正如上面所说的，没有安装`base-devel`组，赶紧补上! 
@@ -107,3 +109,26 @@ PKGBUILD: line XXX XXX: command not found
 
 如果结果一致，那么说明并不是网络波动导致的检验值不符，而是维护者没有及时跟进导致的，你可以使用`yay -S $pkgname --skipchecksums`的方式跳过验证校验值的过程，或者你可以修改PKGBUILD中的校验值为`"SKIP"`来跳过某一文件的校验后手动`makepkg`。
 
+### 4. tuna反代受限
+
+tuna的服务器只有一个ip，但当使用他提供的AUR的反代服务时，全国的使用者都会被AUR认为是tuna这一个ip，过大的请求数量可能导致tuna的服务器超出AUR每天给每个ip限制的请求次数。
+
+***
+
+具体表现: 
+
+```
+Rate limit reached
+```
+
+解决方案，改回AUR的服务器，使用自己的ip进行请求
+
+```bash
+yay --aururl "https://aur.archlinux.org" --save
+```
+
+
+
+## 写在最后
+
+关于AUR使用的更多细节可以阅读 [《yay进阶》](https://blog.zhullyb.top/2021/04/04/yay-more/)
