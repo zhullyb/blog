@@ -3,7 +3,7 @@ title: Hello, it's zhullyb here.
 date: 2021-05-01 23:53:19
 ---
 
-一只准高三的中二青年
+一只高三的中二青年
 
 喜欢Archlinux，同时也是小米8的crDroid Official Maintainer。
 
