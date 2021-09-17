@@ -166,7 +166,7 @@ mkdir $HOME/rpmbuild/BUILDROOT/wechat-uos-2.0.0-1.x86_64
 
 将我们的wechat-uos直接放入对应的文件夹中
 
-![解压原先打包好的wechat-uos](https://storage.zhullyb.top/PicBed/preparing-the-source-for-wechat-uos.png?raw)
+![解压原先打包好的wechat-uos](https://pp1.edgepic.com/2021/09/17/bda910917093156.png)
 
 补上我们的`/etc/lsb-release`
 
@@ -181,7 +181,7 @@ touch $HOME/rpmbuild/BUILDROOT/wechat-uos-2.0.0-1.x86_64/etc/lsb-release
 rpmbuild -bb --target=x86_64 SPECS/wechat-uos.spec --nodeps
 ```
 
-![打包成功](https://storage.zhullyb.top/PicBed/wechat-uos-for-fedora-packaged-complete.png?raw)
+![打包成功](https://pp1.edgepic.com/2021/09/17/93e5a0917093157.png)
 
 ### 安装测试
 
@@ -189,7 +189,7 @@ rpmbuild -bb --target=x86_64 SPECS/wechat-uos.spec --nodeps
 sudo dnf install ./wechat-uos-2.0.0-1.x86_64.rpm
 ```
 
-![测试通过](https://storage.zhullyb.top/PicBed/wechat-uos-running-on-fedora.png?raw)
+![测试通过](https://pp1.edgepic.com/2021/09/17/2c7790917093158.png)
 
 ### 写在最后
 
