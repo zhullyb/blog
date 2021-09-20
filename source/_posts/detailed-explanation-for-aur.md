@@ -91,7 +91,7 @@ PKGBUILD: line XXX XXX: command not found
    >
    > yay存放PKGBUILD的默认路径是在`$HOME/.cache/yay/$pkgname`下面，具体可以参考我的另一篇关于[yay的用法详解](https://blog.zhullyb.top/2021/04/04/yay-more/#builddir-lt-dir-gt)的博客。
 
-   我在这里再讲一种使用 [*fastgit*](http://fastgit.org/) 作为反代加速github下载的方法。
+   **我在这里再讲一种使用 [*fastgit*](http://fastgit.org/) 作为反代加速github下载的方法。**
 
    当你的yay出现这个询问菜单时，（也就是出现`Diffs to show`/`显示哪些差异？`字样时）
 
