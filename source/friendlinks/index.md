@@ -20,7 +20,7 @@ date: 2021-05-01 23:53:19
          clear: both;
          }
          .card {
-         width: 45%;
+         width: 100%;
          font-size: 1rem;
          padding: 10px 20px;
          border-radius: 4px;
@@ -31,9 +31,9 @@ date: 2021-05-01 23:53:19
          .card:nth-child(odd) {
          float: left;
          }
-         .card:nth-child(even) {
+/*         .card:nth-child(even) {
          float: right;
-         }
+         }*/
          .card:hover {
          transform: scale(1.1);
          box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.12), 0 0 6px 0 rgba(0, 0, 0, 0.04);
