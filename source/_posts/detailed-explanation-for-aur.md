@@ -91,6 +91,20 @@ PKGBUILD: line XXX XXX: command not found
    >
    > yay存放PKGBUILD的默认路径是在`$HOME/.cache/yay/$pkgname`下面，具体可以参考我的另一篇关于[yay的用法详解](https://blog.zhullyb.top/2021/04/04/yay-more/#builddir-lt-dir-gt)的博客。
 
+   我在这里再讲一种使用 [*fastgit*](http://fastgit.org/) 作为反代加速github下载的方法。
+
+   当你的yay出现这个询问菜单时，（也就是出现`Diffs to show`/`显示哪些差异？`字样时）
+
+   ![](https://pp1.edgepic.com/2021/09/20/84c980920075223.png)
+
+   我们再开一个终端，输入
+
+   ```bash
+   sed -i "s|github.com|hub.fastgit.org|g" $HOME/.cache/yay/*/PKGBUILD
+   ```
+
+   接着就下一步安装即可。
+
 2. #### 链接失效
 
    这种情况多见于维护者维护不到位，上游放出了新版本包并删除老版本包以后维护者没有及时跟进的。你可以去逛一逛AUR的评论区查看解决方案，或者去查找上游的最新版本是多少，尝试更改PKGBUILD中的pkgver参数和checksum以后尝试makepkg。
