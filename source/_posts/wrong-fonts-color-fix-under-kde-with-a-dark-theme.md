@@ -2,6 +2,7 @@
 title: 使用fakehome方案暂时解决跑在KDE暗色主题下的程序使用亮色字体的问题
 top: false
 date: 2021-09-05
+type: waline
 tags:
       - Linux
       - Archlinux
