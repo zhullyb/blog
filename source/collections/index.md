@@ -26,19 +26,21 @@ comments: false
 
 [Firefox最新国际版完整包下载地址](https://www.mozilla.org/zh-CN/firefox/all/#product-desktop-release)
 
-#[Firefox国际版FTP服务器](http://ftp.mozilla.org/pub/firefox/releases/)
+[Firefox国际版FTP服务器](http://ftp.mozilla.org/pub/firefox/releases/)
 
-#[VLC](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc/last/)
+[chrome离线安装包](https://www.google.cn/chrome/?standalone=1)
 
-#[vlc安卓版](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc-android/)
+[VLC](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc/last/)
 
-#[IDM破解](https://carrotchou.lanzous.com/b0gwopzc)
+[vlc安卓版](https://mirrors.bfsu.edu.cn/videolan-ftp/vlc-android/)
 
-#[Winrar烈火汉化版](https://carrotchou.lanzous.com/b0gy490d)
+[IDM破解](https://carrotchou.lanzous.com/b0gwopzc)
 
-#[VmwareWorkstationPro官方下载](https://www.vmware.com/products/workstation-pro/workstation-pro-evaluation.html)
+[Winrar烈火汉化版](https://carrotchou.lanzous.com/b0gy490d)
 
-#15系列激活码：
+[VmwareWorkstationPro官方下载](https://www.vmware.com/products/workstation-pro/workstation-pro-evaluation.html)
+
+15系列激活码：
 
 YG5H2-ANZ0H-M8ERY-TXZZZ-YKRV8
 
@@ -52,7 +54,7 @@ ZF582-0NW5N-H8D2P-0XZEE-Z22VA
 
 YA18K-0WY8P-H85DY-L4NZG-X7RAD
 
-#16系列激活码：
+16系列激活码：
 
 ZF3R0-FHED2-M80TY-8QYGC-NPKYF
 
