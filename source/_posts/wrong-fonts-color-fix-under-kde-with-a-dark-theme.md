@@ -42,3 +42,7 @@ sudo $EDITOR /usr/share/applications/wemeetapp.desktop
 ```
 
 将`Exec=`后面的命令改成我们刚刚启动所使用的命令即可。
+
+
+
+> 关键词: bwrap, linux, 暗色模式, 深色模式, 夜间模式, 白色字体, 亮色字体
