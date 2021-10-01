@@ -17,3 +17,7 @@ ui.systemUsesDarkTheme
 ```
 
 将这个选项的**数值**设置为0即可。
+
+![步骤1](https://i.loli.net/2021/10/01/rHD1Znxsh7mVO6G.png)
+
+![步骤2](https://i.loli.net/2021/10/01/1syVleQBgH5rA8J.png)
