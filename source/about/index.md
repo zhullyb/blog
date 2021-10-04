@@ -1,5 +1,6 @@
 ---
 title: Hello, it's zhullyb here.
+layout: about
 date: 2021-05-01 23:53:19
 ---
 
