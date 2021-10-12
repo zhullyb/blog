@@ -8,7 +8,7 @@ date: 2021-05-01 23:53:19
 
 喜欢Archlinux，同时也是小米8的crDroid Official Maintainer。
 
-~~如果你对于我的个人生活感兴趣，或许可以试着打开我的[PrivateBlog](https://priv.zhullyb.top/)？~~
+~~如果你对于我的个人生活感兴趣，或许可以试着打开我的[PrivateBlog](https://priv.zhullyb.top/)？~~别看了，这里已经成为我倾倒负能量的垃圾堆了。
 
 ## My websites
 
